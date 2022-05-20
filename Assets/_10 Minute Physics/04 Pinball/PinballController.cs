@@ -3,25 +3,59 @@ using System.Collections.Generic;
 using UnityEngine;
 using PinballMachine;
 
+
 public class PinballController : MonoBehaviour
 {
+    //Drags
     public GameObject ballGO;
 
-    public GameObject flipperL_a_GO;
-    public GameObject flipperL_b_GO;
+    public GameObject flipper_L_GO;
+    public GameObject flipper_R_GO;
 
+    //Should be ordered counter-clockwise
+    public List<Transform> borderTransforms;
+
+
+    //Settings
     private float flipperRadius = 0.5f;
 
-    //Reuse the ball class from last video
+    private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
+
+
+    //Flipper parts
     private Ball ball;
+
+    //private List<Ball> balls;
+
+    private List<Obstacle> obstacles;
+
+    private List<Flipper> flippers;
+
+    private List<Vector3> border;
+
     
-
-
+    
     private void Update()
     {
-        ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f); 
-    
-        
+        //ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f);
+        //DisplayPinballObjects();
+    }
+
+
+
+    public void DisplayPinballObjectsInEditor()
+    {
+        ////Draw border
+        //List<Vector3> borderVertices = new List<Vector3>();
+
+        //foreach (Transform t in border)
+        //{
+        //    borderVertices.Add(t.position);
+        //}
+
+        //DisplayShapes.DrawLineSegments(borderVertices, Color.white);
+
+        //Debug.DrawLine(Vector3.zero, Vector3.one * 5f, Color.white, 20f);
     }
 
 
@@ -29,8 +63,8 @@ public class PinballController : MonoBehaviour
     private void TestCollision()
     {
         Vector3 p = ballGO.transform.position;
-        Vector3 a = flipperL_a_GO.transform.position;
-        Vector3 b = flipperL_b_GO.transform.position;
+        Vector3 a = flipper_L_GO.transform.position;
+        Vector3 b = flipper_R_GO.transform.position;
 
         float ballRadius = ballGO.transform.localScale.x * 0.5f;
 
@@ -41,7 +75,7 @@ public class PinballController : MonoBehaviour
             flipperColor = Color.red;
         }
 
-        DisplayShapes.DrawCapsule(flipperL_a_GO.transform.position, flipperL_b_GO.transform.position, flipperRadius, flipperColor);
+        DisplayShapes.DrawCapsule(flipper_L_GO.transform.position, flipper_R_GO.transform.position, flipperRadius, flipperColor);
     }
 
 
@@ -92,4 +126,8 @@ public class PinballController : MonoBehaviour
 
         return c;
     }
+
+
+
+    
 }
