@@ -75,4 +75,22 @@ public static class DisplayShapes
         //Display the mesh
         Graphics.DrawMesh(m, Vector3.zero, Quaternion.identity, mat, 0, Camera.main, 0);
     }
+
+
+
+    public static void DrawCapsule(Vector3 a, Vector3 b, float radius, Color color)
+    {
+        //Draw the end points
+        DrawCircle(a, radius, color);
+        DrawCircle(b, radius, color);
+
+        //Draw the two lines connecting the end points
+        Vector3 vecAB = (a - b).normalized;
+
+        //To get the normal to the line flip the coordinates and make one negative
+        Vector3 normalAB = vecAB.Perp();
+
+        DrawLineSegments(new List<Vector3> { a + normalAB * radius, b + normalAB * radius }, color);
+        DrawLineSegments(new List<Vector3> { a - normalAB * radius, b - normalAB * radius }, color);
+    }
 }

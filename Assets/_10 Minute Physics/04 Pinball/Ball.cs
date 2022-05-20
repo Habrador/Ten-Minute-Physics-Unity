@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Billiard
+namespace PinballMachine
 {
     public class Ball
     {
@@ -13,13 +13,18 @@ namespace Billiard
 
         public readonly float radius;
 
+        private float mass;
+        private float restitution;
 
 
-        public Ball(Vector3 ballVel, Transform ballTrans)
+
+        public Ball(Vector3 ballVel, Transform ballTrans, float mass, float restitution)
         {
             this.vel = ballVel;
             this.pos = ballTrans.position;
             this.ballTrans = ballTrans;
+            this.mass = mass;
+            this.restitution = restitution;
 
             this.radius = ballTrans.localScale.x * 0.5f;
         }
@@ -33,19 +38,10 @@ namespace Billiard
 
 
 
-        public void SimulateBall(int subSteps)
+        public void SimulateBall(float dt, Vector3 gravity)
         {
-            float sdt = Time.fixedDeltaTime / (float)subSteps;
-
-            Vector3 gravity = Vector3.zero;
-
-            for (int step = 0; step < subSteps; step++)
-            {
-                vel += gravity * sdt;
-                pos += vel * sdt;
-
-                //Debug.Log(ballVel);
-            }
+            vel += gravity * dt;
+            pos += vel * dt;
 
 
             //WallCollisionDetection();

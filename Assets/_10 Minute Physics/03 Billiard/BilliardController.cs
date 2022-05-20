@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Billiard;
 
 //Based on "Writing a billiard simulation in 10 minutes"
 //https://matthias-research.github.io/pages/tenMinutePhysics/
