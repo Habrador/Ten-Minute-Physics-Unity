@@ -13,7 +13,7 @@ public class PinballController : MonoBehaviour
     public GameObject flipper_R_GO;
 
     //Should be ordered counter-clockwise
-    public List<Transform> borderTransforms;
+    public Transform borderTransformsParent;
 
 
     //Settings
@@ -27,18 +27,40 @@ public class PinballController : MonoBehaviour
 
     //private List<Ball> balls;
 
-    private List<Obstacle> obstacles;
+    private List<Obstacle> obstacles = new List<Obstacle>();
 
-    private List<Flipper> flippers;
+    private List<Flipper> flippers = new List<Flipper>();
 
-    private List<Vector3> border;
+    private List<Vector3> border = new List<Vector3>();
 
-    
-    
+
+
+    private void Start()
+    {
+        //Add the borders
+        foreach (Transform t in borderTransformsParent)
+        {
+            border.Add(t.position);
+        }
+
+        //To close the border
+        border.Add(border[0]);
+
+        borderTransformsParent.gameObject.SetActive(false);
+
+
+        //Add the flippers
+
+    }
+
+
+
     private void Update()
     {
         //ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f);
         //DisplayPinballObjects();
+
+        DisplayShapes.DrawLineSegments(border, Color.white);
     }
 
 

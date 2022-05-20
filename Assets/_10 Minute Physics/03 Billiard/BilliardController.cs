@@ -27,7 +27,9 @@ public class BilliardController : MonoBehaviour
 
     private void Start()
     {
-        ResetSimulation();    
+        ResetSimulation();
+
+        canSimulate = true;
     }
 
 
@@ -65,9 +67,6 @@ public class BilliardController : MonoBehaviour
 
             allBalls.Add(newBall);
         }
-
-
-        canSimulate = true;
     }
 
 
