@@ -1,2 +1,4 @@
-# Ten-Minute-Physics-Unity
-Implementations in Unity of the Ten Minute Physics videos on YouTube 
+# Ten Minute Physics in Unity
+
+Implementations in Unity of the YouTube channel [Ten Minute Physics](https://www.youtube.com/channel/UCTG_vrRdKYfrpqCv_WV4eyA)
+
