@@ -21,7 +21,7 @@ namespace Constraints
 
         public Bead(Transform transform)
         {
-            this.mass = transform.localScale.x;
+            this.mass = transform.localScale.x * 5f;
             this.pos = transform.position;
             this.transform = transform;
             this.radius = transform.localScale.x * 0.5f;

@@ -27,7 +27,7 @@ public class ConstraintsController : MonoBehaviour
 
     //Important to use sub steps or the bead will lose momentum
     //The more time steps the better, but also slower and may lead floating point precision issues
-    private int subSteps = 5;
+    private int subSteps = 20;
 
     //All beads on the constraint
     private List<Bead> allBeads;
@@ -47,7 +47,7 @@ public class ConstraintsController : MonoBehaviour
         allBeads = new List<Bead>();
 
         //Create random balls
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 6; i++)
         {
             GameObject newBallGO = Instantiate(beadGO);
 
