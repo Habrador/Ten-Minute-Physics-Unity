@@ -160,6 +160,6 @@ public class TriplePendulumController : MonoBehaviour
         //Display the historical positions of the pendulum
         List<Vector3> historicalVertices = new List<Vector3>(historicalPositions);
 
-        DisplayShapes.DrawLineSegments(historicalVertices, Color.blue);
+        DisplayShapes.DrawLineSegments(historicalVertices, Color.yellow);
     }
 }
