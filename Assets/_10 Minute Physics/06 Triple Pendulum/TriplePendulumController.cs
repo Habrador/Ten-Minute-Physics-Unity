@@ -4,7 +4,7 @@ using UnityEngine;
 
 //Simulate hard distance constraints (the position between partices is constant) by using Position Based Dynamics
 //Is useful for ropes, cloth, fur, sand, robot arms, etc
-//From https://www.youtube.com/watch?v=XPZEeS70zzU
+//Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class TriplePendulumController : MonoBehaviour
 {
     public Transform ball_1;

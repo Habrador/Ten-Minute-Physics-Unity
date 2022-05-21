@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//Based on "Simulate cannon ball"
-//https://matthias-research.github.io/pages/tenMinutePhysics/
+//Simulate a bouncy cannon ball
+//Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class CannonController : MonoBehaviour
 {
     //How to improve accuracy of simulation?
@@ -23,11 +23,11 @@ public class CannonController : MonoBehaviour
     private Vector3 ballVel;
     private Vector3 ballPos;
 
+    private float ballRadius;
+
     private int subSteps = 5;
 
     private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
-
-    private bool canSimulate = false;
 
 
 
@@ -38,7 +38,7 @@ public class CannonController : MonoBehaviour
 
         ballVel = new Vector3(3f, 5f, 2f);
 
-        canSimulate = true;
+        ballRadius = ballTrans.localScale.y * 0.5f;
     }
 
 
@@ -53,66 +53,52 @@ public class CannonController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!canSimulate)
-        {
-            return;
-        }
-        
-
         //Update pos and vel
         float sdt = Time.fixedDeltaTime / (float)subSteps;
-
-        //Debug.Log(ballPos);
 
         for (int i = 0; i < subSteps; i++)
         {
             ballVel += gravity * sdt;
             ballPos += ballVel * sdt;
-
-            //Debug.Log(ballVel);
         }
 
 
         //Collision detection
 
-        //Make sure the all is within the area, which is 5 m in all directions (except y)
+        //Make sure the ball is within the area, which is 5 m in all directions (except y)
         //If outside, reset ball and mirror velocity
-        float halfSimSize = 5f + 0.1f;
+        float halfSimSize = 5f - ballRadius;
         
+        //x
         if (ballPos.x < -halfSimSize)
         {
             ballPos.x = -halfSimSize;
             ballVel.x *= -1f; 
         }
-        if (ballPos.x > halfSimSize)
+        else if (ballPos.x > halfSimSize)
         {
             ballPos.x = halfSimSize;
             ballVel.x *= -1f;
         }
 
-        if (ballPos.y < 0f + 0.1f)
+        //y
+        if (ballPos.y < 0f + ballRadius)
         {
-            ballPos.y = 0f + 0.1f;
+            ballPos.y = 0f + ballRadius;
             ballVel.y *= -1f;
         }
-        //Sky is the limit
-        //if (ballPos.y > halfSimSize)
-        //{
-        //    ballPos.y = halfSimSize;
-        //    ballVel.y *= -1f;
-        //}
+        //Sky is the limit, so no collision detection in y-positive direction
 
+        //z
         if (ballPos.z < -halfSimSize)
         {
             ballPos.z = -halfSimSize;
             ballVel.z *= -1f;
         }
-        if (ballPos.z > halfSimSize)
+        else if (ballPos.z > halfSimSize)
         {
             ballPos.z = halfSimSize;
             ballVel.z *= -1f;
-        }
-        
+        }   
     }
-    
 }

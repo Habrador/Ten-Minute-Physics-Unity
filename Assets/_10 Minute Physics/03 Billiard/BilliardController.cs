@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Billiard;
 
-//Based on "Writing a billiard simulation in 10 minutes"
-//https://matthias-research.github.io/pages/tenMinutePhysics/
+//Simulate billiard balls with different size
+//Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class BilliardController : MonoBehaviour
 {
     public GameObject ballPrefabGO;
@@ -12,15 +12,13 @@ public class BilliardController : MonoBehaviour
     //Simulation properties
     private int subSteps = 5;
 
-    private bool canSimulate = false;
-
     //How much velocity is lost after collision between balls [0, 1]
     //Is usually called e
     //Elastic: e = 1 means same velocity after collision (if the objects have the same size and same speed)
     //Inelastic: e = 0 means no velocity after collions (if the objects have the same size and same speed) and energy is lost
-    private float restitution = 0.5f;
+    private float restitution = 0.8f;
 
-    private List<Ball> allBalls;
+    private List<BilliardBall> allBalls;
 
 
 
@@ -28,15 +26,13 @@ public class BilliardController : MonoBehaviour
     private void Start()
     {
         ResetSimulation();
-
-        canSimulate = true;
     }
 
 
 
     private void ResetSimulation()
     {
-        allBalls = new List<Ball>();
+        allBalls = new List<BilliardBall>();
 
         //Create random balls
         for (int i = 0; i < 20; i++)
@@ -63,7 +59,7 @@ public class BilliardController : MonoBehaviour
 
             Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
 
-            Ball newBall = new Ball(randomVel, newBallGO.transform);
+            BilliardBall newBall = new BilliardBall(randomVel, newBallGO.transform);
 
             allBalls.Add(newBall);
         }
@@ -75,7 +71,7 @@ public class BilliardController : MonoBehaviour
     private void Update()
     {
         //Update the transform with the position we simulate in FixedUpdate
-        foreach (Ball ball in allBalls)
+        foreach (BilliardBall ball in allBalls)
         {
             ball.UpdateVisualPostion();
         }
@@ -86,21 +82,16 @@ public class BilliardController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!canSimulate)
-        {
-            return;
-        }
-
         for (int i = 0; i < allBalls.Count; i++)
         {
-            Ball ball = allBalls[i];
+            BilliardBall ball = allBalls[i];
 
             ball.SimulateBall(subSteps);
 
             //Check collision with the other balls after this ball in the list of all balls
             for (int j = i + 1; j < allBalls.Count; j++)
             {
-                Ball ballOther = allBalls[j];
+                BilliardBall ballOther = allBalls[j];
 
                 HandleBallCollision(ball, ballOther, restitution);
             }
@@ -111,7 +102,7 @@ public class BilliardController : MonoBehaviour
 
 
 
-    private void HandleBallCollision(Ball b1, Ball b2, float restitution)
+    private void HandleBallCollision(BilliardBall b1, BilliardBall b2, float restitution)
     {
         //Direction from b1 to b2
         Vector3 dir = b2.pos - b1.pos;
@@ -120,7 +111,7 @@ public class BilliardController : MonoBehaviour
         float d = dir.magnitude;
 
         //The balls are not colliding
-        if (d == 0f || d > (b1.radius + b2.radius))
+        if (d == 0f || d > b1.radius + b2.radius)
         {
             return;
         }
@@ -131,10 +122,10 @@ public class BilliardController : MonoBehaviour
 
         //Update positions
 
-        //Correction vector to push the balls apart
+        //The distace each ball should move so they no longer intersect 
         float corr = (b1.radius + b2.radius - d) * 0.5f;
 
-        //Move the balls apart along the dir vector so they no longer intersect
+        //Move the balls apart along the dir vector
         b1.pos += dir * -corr; //-corr because dir goes from b1 to b2
         b2.pos += dir *  corr;
 

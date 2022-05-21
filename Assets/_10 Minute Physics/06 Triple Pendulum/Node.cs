@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class Node
 {
-    //public float radius;
-
     public float mass;
 
     public Vector3 pos;

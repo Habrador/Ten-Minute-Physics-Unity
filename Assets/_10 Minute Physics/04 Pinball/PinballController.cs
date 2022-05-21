@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using PinballMachine;
 
-
+//Simulate a pinball machine
+//Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class PinballController : MonoBehaviour
 {
     //Drags

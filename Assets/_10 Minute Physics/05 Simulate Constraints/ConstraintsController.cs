@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Constraints;
 
+//Simulate beads attached to a circular wire
+//Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class ConstraintsController : MonoBehaviour
 {
     //How to simulate constraints?
