@@ -13,7 +13,7 @@ Simulate a bouncy cannon ball
 
 Simulate billiard balls with different size and mass
 
-<img src="/_media/03-billiarde.png" width="500">
+<img src="/_media/03-billiard.png" width="500">
 
 
 ## 4 
