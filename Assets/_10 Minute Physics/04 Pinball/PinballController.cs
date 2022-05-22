@@ -8,7 +8,8 @@ using PinballMachine;
 public class PinballController : MonoBehaviour
 {
     //Drags
-    public GameObject ballGO;
+    public Transform ballTrans_1;
+    public Transform ballTrans_2;
 
     public GameObject flipper_L_GO;
     public GameObject flipper_R_GO;
@@ -25,11 +26,11 @@ public class PinballController : MonoBehaviour
 
     private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 
+    private float restitution = 1f;
+
 
     //Flipper parts
-    private Ball ball;
-
-    //private List<Ball> balls;
+    private List<PinballBall> balls = new List<PinballBall>();
 
     private List<Obstacle> obstacles = new List<Obstacle>();
 
@@ -53,46 +54,86 @@ public class PinballController : MonoBehaviour
         borderTransformsParent.gameObject.SetActive(false);
 
 
-        //Add the flippers
+        //Add the balls
+        PinballBall ball_1 = new PinballBall(Vector3.zero, ballTrans_1, restitution);
+        PinballBall ball_2 = new PinballBall(Vector3.zero, ballTrans_2, restitution);
 
+        balls.Add(ball_1);
+        balls.Add(ball_2);
+
+
+        //Add the obstales = jet bumpers
+        foreach (Transform t in jetBumpersParent)
+        {
+            float pushVel = 2f;
+
+            float bumperRadius = t.localScale.x;
+
+            Vector3 pos = t.position;
+
+            Obstacle obstacle = new Obstacle(bumperRadius, pos, pushVel);
+        
+            obstacles.Add(obstacle);
+        }
+
+
+        //Add the flippers
+        float flipperRadius = flipper_L_GO.transform.localScale.x * 0.5f;
+
+        float flipperLength = 1.6f;
+
+        float maxRotation = 1f;
+
+        float restAngle = 0.5f;
+
+        float angularVel = 10f;
+
+        float flipperRestitution = 0f;
+
+        Vector3 pos_L = flipper_L_GO.transform.position;
+        Vector3 pos_R = flipper_R_GO.transform.position;
+
+        Flipper flipper_L = new Flipper(flipperRadius, pos_L, flipperLength, -restAngle, maxRotation, angularVel, flipperRestitution);
+        Flipper flipper_R = new Flipper(flipperRadius, pos_R, flipperLength, Mathf.PI + restAngle, maxRotation, angularVel, flipperRestitution);
+
+        flippers.Add(flipper_L);
+        flippers.Add(flipper_R);
     }
 
 
 
     private void Update()
     {
-        //ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f);
-        //DisplayPinballObjects();
-
-        DisplayShapes.DrawLineSegments(border, Color.white);
+        
     }
 
 
 
-    public void DisplayPinballObjectsInEditor()
+    private void LateUpdate()
     {
-        ////Draw border
-        //List<Vector3> borderVertices = new List<Vector3>();
+        //ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f);
+        //DisplayPinballObjects();
 
-        //foreach (Transform t in border)
-        //{
-        //    borderVertices.Add(t.position);
-        //}
+        DisplayShapes.DrawLineSegments(border, Color.white);
 
-        //DisplayShapes.DrawLineSegments(borderVertices, Color.white);
-
-        //Debug.DrawLine(Vector3.zero, Vector3.one * 5f, Color.white, 20f);
+        foreach (Flipper f in flippers)
+        {
+            Vector3 a = f.pos;
+            Vector3 b = f.GetTip();
+        
+            DisplayShapes.DrawCapsule(a, b, f.radius, Color.red);
+        }
     }
 
 
 
     private void TestCollision()
     {
-        Vector3 p = ballGO.transform.position;
+        Vector3 p = ballTrans_1.position;
         Vector3 a = flipper_L_GO.transform.position;
         Vector3 b = flipper_R_GO.transform.position;
 
-        float ballRadius = ballGO.transform.localScale.x * 0.5f;
+        float ballRadius = ballTrans_1.localScale.x * 0.5f;
 
         Color flipperColor = Color.blue;
 

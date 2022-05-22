@@ -6,12 +6,13 @@ namespace PinballMachine
 {
     public class Flipper : MonoBehaviour
     {
-        private float radius;
+        public float radius;
 
-        private Vector3 pos;
+        public Vector3 pos;
 
         private float length;
 
+        //Angles should be in radians!
         private float restAngle;
 
         private float maxRotation;
@@ -19,6 +20,8 @@ namespace PinballMachine
         private float sign;
 
         private float angularVel;
+
+        private float restitution;
 
         //Changing
         private float rotation;
@@ -29,7 +32,7 @@ namespace PinballMachine
 
 
 
-        public Flipper(float radius, Vector3 pos, float length, float restAngle, float maxRotation, float angularVel)
+        public Flipper(float radius, Vector3 pos, float length, float restAngle, float maxRotation, float angularVel, float restitution)
         {
             this.radius = radius;
             this.pos = pos;
@@ -38,6 +41,7 @@ namespace PinballMachine
             this.maxRotation = Mathf.Abs(maxRotation);
             this.sign = Mathf.Sign(maxRotation);
             this.angularVel = angularVel;
+            this.restitution = restitution;
 
             this.rotation = 0f;
             this.currentAngularVel = 0f;
@@ -81,8 +85,8 @@ namespace PinballMachine
         {
             float angle = this.restAngle + this.sign * this.rotation;
 
-            float x = Mathf.Cos(angle * Mathf.Deg2Rad);
-            float y = Mathf.Sin(angle * Mathf.Deg2Rad);
+            float x = Mathf.Cos(angle);
+            float y = Mathf.Sin(angle);
 
             //This one is already normalized
             Vector3 dir = new Vector3(x, y, 0f);
