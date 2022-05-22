@@ -26,7 +26,7 @@ namespace PinballMachine
         //Changing
         private float rotation;
 
-        private float currentAngularVel;
+        public float currentAngularVel;
 
         public float touchIdentifier = -1f; //Is this flipper activated?
 

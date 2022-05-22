@@ -7,11 +7,12 @@ namespace PinballMachine
     //The obstacles within the pinball machine are currently the discs that makes the ball bounce around
     public class Obstacle
     {
-        private float radius;
+        public float radius;
         
-        private Vector3 pos;
-        
-        private float pushVel;
+        public Vector3 pos;
+
+        public float pushVel;
+
 
         public Obstacle(float radius, Vector3 pos, float pushVel)
         {
