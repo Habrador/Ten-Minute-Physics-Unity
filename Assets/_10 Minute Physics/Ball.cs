@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Ball : MonoBehaviour
+//General ball class
+public class Ball
 {
     public Vector3 vel;
     public Vector3 pos;
@@ -13,6 +14,7 @@ public class Ball : MonoBehaviour
 
     public readonly float mass;
 
+
     public Ball(Transform ballTransform, float density = 1f)
     {
         this.pos = ballTransform.position;
@@ -20,4 +22,11 @@ public class Ball : MonoBehaviour
         this.radius = ballTransform.localScale.x * 0.5f;
         this.mass = (4f / 3f) * Mathf.PI * Mathf.Pow(this.radius, 3f) * density;
     }
+
+
+    public void UpdateVisualPosition()
+    {
+        this.ballTransform.position = this.pos;
+    }
+
 }

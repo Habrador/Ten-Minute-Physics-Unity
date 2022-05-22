@@ -22,7 +22,6 @@ public class BilliardController : MonoBehaviour
 
 
 
-
     private void Start()
     {
         ResetSimulation();
@@ -94,7 +93,7 @@ public class BilliardController : MonoBehaviour
                 BilliardBall ballOther = allBalls[j];
 
                 //HandleBallCollision(ball, ballOther, restitution);
-                CustomPhysics.HandleBallCollision(thisBall.ball, ballOther.ball, restitution);
+                CustomPhysics.HandleBallBallCollision(thisBall.ball, ballOther.ball, restitution);
             }
 
             thisBall.HandleWallCollision();

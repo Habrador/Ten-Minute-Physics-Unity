@@ -82,7 +82,7 @@ public class ConstraintsController : MonoBehaviour
         //Update the visual position of the beads
         foreach (Bead b in allBeads)
         {
-            b.transform.position = b.pos;
+            b.UpdateVisualPosition();
         }
     }
 
@@ -115,7 +115,7 @@ public class ConstraintsController : MonoBehaviour
             {
                 for (int j = i + 1; j < allBeads.Count; j++)
                 {
-                    HandleBeadBeadCollision(allBeads[i], allBeads[j], restitution);
+                    CustomPhysics.HandleBallBallCollision(allBeads[i].ball, allBeads[j].ball, restitution);
                 }
             }
         }
@@ -123,56 +123,9 @@ public class ConstraintsController : MonoBehaviour
 
 
 
-    private void HandleBeadBeadCollision(Bead b1, Bead b2, float restitution)
-    {
-        //Direction from b1 to b2
-        Vector3 dir = b2.pos - b1.pos;
-
-        //The distance between the balls
-        float d = dir.magnitude;
-
-        //The balls are not colliding
-        if (d == 0f || d > (b1.radius + b2.radius))
-        {
-            return;
-        }
-
-        //Normalized direction
-        dir = dir.normalized;
-
-
-        //Update positions
-
-        //Correction vector to push the balls apart
-        float corr = (b1.radius + b2.radius - d) * 0.5f;
-
-        //Move the balls apart along the dir vector so they no longer intersect
-        b1.pos += dir * -corr; //-corr because dir goes from b1 to b2
-        b2.pos += dir * corr;
-
-
-        //Update velocities
-
-        //The part of each balls velocity along dir
-        float v1 = Vector3.Dot(b1.vel, dir);
-        float v2 = Vector3.Dot(b2.vel, dir);
-
-        float m1 = b1.mass;
-        float m2 = b2.mass;
-
-        //Assume the objects are stiff
-        float new_v1 = (m1 * v1 + m2 * v2 - m2 * (v1 - v2) * restitution) / (m1 + m2);
-        float new_v2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * restitution) / (m1 + m2);
-
-        //Change velocity components along dir
-        b1.vel += dir * (new_v1 - v1);
-        b2.vel += dir * (new_v2 - v2);
-    }
-
-
-
     private void LateUpdate()
     {    
+        //Draw the circle the beads are attached to
         DisplayShapes.DrawCircle(wireCenter, wireRadius, Color.white);
     }
 }

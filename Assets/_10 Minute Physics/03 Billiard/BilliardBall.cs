@@ -20,7 +20,7 @@ namespace Billiard
 
         public void UpdateVisualPostion()
         {
-            this.ball.ballTransform.position = ball.pos;
+            this.ball.UpdateVisualPosition();
         }
 
 

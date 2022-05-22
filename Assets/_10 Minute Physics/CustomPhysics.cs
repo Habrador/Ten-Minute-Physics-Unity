@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class CustomPhysics
 {
-    public static void HandleBallCollision(Ball b1, Ball b2, float restitution)
+    public static void HandleBallBallCollision(Ball b1, Ball b2, float restitution)
     {
         //Direction from b1 to b2
         Vector3 dir = b2.pos - b1.pos;
