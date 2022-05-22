@@ -84,67 +84,20 @@ public class BilliardController : MonoBehaviour
     {
         for (int i = 0; i < allBalls.Count; i++)
         {
-            BilliardBall ball = allBalls[i];
+            BilliardBall thisBall = allBalls[i];
 
-            ball.SimulateBall(subSteps);
+            thisBall.SimulateBall(subSteps);
 
             //Check collision with the other balls after this ball in the list of all balls
             for (int j = i + 1; j < allBalls.Count; j++)
             {
                 BilliardBall ballOther = allBalls[j];
 
-                HandleBallCollision(ball, ballOther, restitution);
+                //HandleBallCollision(ball, ballOther, restitution);
+                CustomPhysics.HandleBallCollision(thisBall.ball, ballOther.ball, restitution);
             }
 
-            ball.HandleWallCollision();
+            thisBall.HandleWallCollision();
         }
-    }
-
-
-
-    private void HandleBallCollision(BilliardBall b1, BilliardBall b2, float restitution)
-    {
-        //Direction from b1 to b2
-        Vector3 dir = b2.pos - b1.pos;
-
-        //The distance between the balls
-        float d = dir.magnitude;
-
-        //The balls are not colliding
-        if (d == 0f || d > b1.radius + b2.radius)
-        {
-            return;
-        }
-
-        //Normalized direction
-        dir = dir.normalized;
-
-
-        //Update positions
-
-        //The distace each ball should move so they no longer intersect 
-        float corr = (b1.radius + b2.radius - d) * 0.5f;
-
-        //Move the balls apart along the dir vector
-        b1.pos += dir * -corr; //-corr because dir goes from b1 to b2
-        b2.pos += dir *  corr;
-
-
-        //Update velocities
-
-        //The part of each balls velocity along dir
-        float v1 = Vector3.Dot(b1.vel, dir);
-        float v2 = Vector3.Dot(b2.vel, dir);
-
-        float m1 = b1.radius;
-        float m2 = b2.radius;
-
-        //Assume the objects are stiff
-        float new_v1 = (m1 * v1 + m2 * v2 - m2 * (v1 - v2) * restitution) / (m1 + m2);
-        float new_v2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * restitution) / (m1 + m2);
-
-        //Change velocity components along dir
-        b1.vel += dir * (new_v1 - v1);
-        b2.vel += dir * (new_v2 - v2);
     }
 }

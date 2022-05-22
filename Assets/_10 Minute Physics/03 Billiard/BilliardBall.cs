@@ -6,29 +6,21 @@ namespace Billiard
 {
     public class BilliardBall
     {
-        public Vector3 vel;
-        public Vector3 pos;
-
-        private Transform ballTrans;
-
-        public readonly float radius;
-
+        public Ball ball;
 
 
         public BilliardBall(Vector3 ballVel, Transform ballTrans)
         {
-            this.vel = ballVel;
-            this.pos = ballTrans.position;
-            this.ballTrans = ballTrans;
+            this.ball = new Ball(ballTrans);
 
-            this.radius = ballTrans.localScale.x * 0.5f;
+            this.ball.vel = ballVel;
         }
 
 
 
         public void UpdateVisualPostion()
         {
-            ballTrans.position = pos;
+            this.ball.ballTransform.position = ball.pos;
         }
 
 
@@ -41,8 +33,8 @@ namespace Billiard
 
             for (int step = 0; step < subSteps; step++)
             {
-                vel += gravity * sdt;
-                pos += vel * sdt;
+                ball.vel += gravity * sdt;
+                ball.pos += ball.vel * sdt;
             }
         }
 
@@ -52,29 +44,29 @@ namespace Billiard
         {
             //Make sure the ball is within the area, which is 5 m in all directions (except y)
             //If outside, reset ball and mirror velocity
-            float halfSimSize = 5f - radius;
+            float halfSimSize = 5f - ball.radius;
 
-            if (pos.x < -halfSimSize)
+            if (ball.pos.x < -halfSimSize)
             {
-                pos.x = -halfSimSize;
-                vel.x *= -1f;
+                ball.pos.x = -halfSimSize;
+                ball.vel.x *= -1f;
             }
-            if (pos.x > halfSimSize)
+            if (ball.pos.x > halfSimSize)
             {
-                pos.x = halfSimSize;
-                vel.x *= -1f;
+                ball.pos.x = halfSimSize;
+                ball.vel.x *= -1f;
             }
 
             //2d simulation, so no y
-            if (pos.z < -halfSimSize)
+            if (ball.pos.z < -halfSimSize)
             {
-                pos.z = -halfSimSize;
-                vel.z *= -1f;
+                ball.pos.z = -halfSimSize;
+                ball.vel.z *= -1f;
             }
-            if (pos.z > halfSimSize)
+            if (ball.pos.z > halfSimSize)
             {
-                pos.z = halfSimSize;
-                vel.z *= -1f;
+                ball.pos.z = halfSimSize;
+                ball.vel.z *= -1f;
             }
         }
     }

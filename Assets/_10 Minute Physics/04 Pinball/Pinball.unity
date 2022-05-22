@@ -805,7 +805,7 @@ GameObject:
   m_Component:
   - component: {fileID: 752206523}
   m_Layer: 0
-  m_Name: Obstacles
+  m_Name: Jet bumpers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1015,7 +1015,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 959808498}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 5, z: 0}
+  m_LocalPosition: {x: 4, y: 5.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1967,9 +1967,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballGO: {fileID: 1510885911}
-  flipper_L_GO: {fileID: 0}
-  flipper_R_GO: {fileID: 0}
+  flipper_L_GO: {fileID: 879412323}
+  flipper_R_GO: {fileID: 1922237215}
   borderTransformsParent: {fileID: 110601444}
+  jetBumpersParent: {fileID: 752206523}
 --- !u!4 &1753860147
 Transform:
   m_ObjectHideFlags: 0
@@ -2009,7 +2010,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1801677805}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4, y: 5, z: 0}
+  m_LocalPosition: {x: -4, y: 5.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

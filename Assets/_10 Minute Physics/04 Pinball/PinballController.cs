@@ -16,6 +16,9 @@ public class PinballController : MonoBehaviour
     //Should be ordered counter-clockwise
     public Transform borderTransformsParent;
 
+    //The round obstacles making the ball bounce 
+    public Transform jetBumpersParent;
+
 
     //Settings
     private float flipperRadius = 0.5f;

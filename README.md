@@ -18,7 +18,7 @@ Simulate billiard balls with different size and mass
 
 ## 4 
 
-Simulate a flipper game
+Simulate a pinball game
 
 
 ## 5
