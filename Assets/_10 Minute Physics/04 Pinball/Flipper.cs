@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace PinballMachine
 {
-    public class Flipper : MonoBehaviour
+    public class Flipper
     {
         public float radius;
 
@@ -81,6 +81,7 @@ namespace PinballMachine
 
 
 
+        //Get the the tip of the flipper = the other position we need to display it
         public Vector3 GetTip()
         {
             float angle = this.restAngle + this.sign * this.rotation;

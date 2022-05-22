@@ -34,9 +34,16 @@ public class PinballController : MonoBehaviour
 
     private List<Obstacle> obstacles = new List<Obstacle>();
 
-    private List<Flipper> flippers = new List<Flipper>();
+    private Flipper flipper_L;
+    private Flipper flipper_R;
 
     private List<Vector3> border = new List<Vector3>();
+
+
+    //Flipper controls
+    //Needed because we change these in Update, while using them in FixedUpdate
+    private bool is_L_FlipperActivated = false;
+    private bool is_R_FlipperActivated = false;
 
 
 
@@ -93,16 +100,36 @@ public class PinballController : MonoBehaviour
         Vector3 pos_L = flipper_L_GO.transform.position;
         Vector3 pos_R = flipper_R_GO.transform.position;
 
-        Flipper flipper_L = new Flipper(flipperRadius, pos_L, flipperLength, -restAngle, maxRotation, angularVel, flipperRestitution);
-        Flipper flipper_R = new Flipper(flipperRadius, pos_R, flipperLength, Mathf.PI + restAngle, maxRotation, angularVel, flipperRestitution);
-
-        flippers.Add(flipper_L);
-        flippers.Add(flipper_R);
+        flipper_L = new Flipper(flipperRadius, pos_L, flipperLength, -restAngle, maxRotation, angularVel, flipperRestitution);
+        flipper_R = new Flipper(flipperRadius, pos_R, flipperLength, Mathf.PI + restAngle, maxRotation, angularVel, flipperRestitution);
     }
 
 
 
     private void Update()
+    {
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            is_L_FlipperActivated = true;
+        }
+        else
+        {
+            is_L_FlipperActivated = false;
+        }
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            is_R_FlipperActivated = true;
+        }
+        else
+        {
+            is_R_FlipperActivated = false;
+        }
+    }
+
+
+
+    private void FixedUpdate()
     {
         
     }
@@ -116,13 +143,18 @@ public class PinballController : MonoBehaviour
 
         DisplayShapes.DrawLineSegments(border, Color.white);
 
-        foreach (Flipper f in flippers)
-        {
-            Vector3 a = f.pos;
-            Vector3 b = f.GetTip();
-        
-            DisplayShapes.DrawCapsule(a, b, f.radius, Color.red);
-        }
+        DisplayFlipper(flipper_L);
+        DisplayFlipper(flipper_R);
+    }
+
+
+
+    private void DisplayFlipper(Flipper f)
+    {
+        Vector3 a = f.pos;
+        Vector3 b = f.GetTip();
+
+        DisplayShapes.DrawCapsule(a, b, f.radius, Color.red);
     }
 
 

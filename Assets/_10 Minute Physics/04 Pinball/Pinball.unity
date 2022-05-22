@@ -2041,7 +2041,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b14dd3ad3f520ed4d8f7bcfa038c1afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballGO: {fileID: 1510885911}
+  ballTrans_1: {fileID: 1510885912}
+  ballTrans_2: {fileID: 821839207}
   flipper_L_GO: {fileID: 879412323}
   flipper_R_GO: {fileID: 1922237215}
   borderTransformsParent: {fileID: 110601444}
