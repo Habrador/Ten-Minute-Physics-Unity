@@ -17,16 +17,19 @@ public class Ball
 
     public Ball(Transform ballTransform, float density = 1f)
     {
-        this.pos = ballTransform.position;
         this.ballTransform = ballTransform;
-        this.radius = ballTransform.localScale.x * 0.5f;
-        this.mass = (4f / 3f) * Mathf.PI * Mathf.Pow(this.radius, 3f) * density;
+
+        pos = ballTransform.position;
+
+        radius = ballTransform.localScale.x * 0.5f;
+
+        mass = (4f / 3f) * Mathf.PI * Mathf.Pow(radius, 3f) * density;
     }
 
 
     public void UpdateVisualPosition()
     {
-        this.ballTransform.position = this.pos;
+        ballTransform.position = pos;
     }
 
 }

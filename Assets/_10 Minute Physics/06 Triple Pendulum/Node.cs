@@ -34,11 +34,11 @@ public class Node
 
     public void StartStep(float dt, Vector3 gravity)
     {
-        this.vel += gravity * dt;
+        vel += gravity * dt;
 
-        this.prevPos = pos;
+        prevPos = pos;
 
-        this.pos += this.vel * dt;
+        pos += vel * dt;
     }
 
 
@@ -46,6 +46,6 @@ public class Node
     public void EndStep(float dt)
     {
         //v = s / t [m/s]
-        this.vel = (this.pos - this.prevPos) / dt;
+        vel = (pos - prevPos) / dt;
     }
 }
