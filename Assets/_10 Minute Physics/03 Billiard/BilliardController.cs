@@ -10,13 +10,13 @@ public class BilliardController : MonoBehaviour
     public GameObject ballPrefabGO;
 
     //Simulation properties
-    private int subSteps = 5;
+    private readonly int subSteps = 5;
 
     //How much velocity is lost after collision between balls [0, 1]
     //Is usually called e
     //Elastic: e = 1 means same velocity after collision (if the objects have the same size and same speed)
     //Inelastic: e = 0 means no velocity after collions (if the objects have the same size and same speed) and energy is lost
-    private float restitution = 0.8f;
+    private readonly float restitution = 0.8f;
 
     private List<BilliardBall> allBalls;
 

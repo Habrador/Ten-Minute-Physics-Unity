@@ -29,11 +29,16 @@ public class TriplePendulumController : MonoBehaviour
     private void Start()
     {
         //-1 means infinite mass
-        Node wallSection = new Node(-1f, wall.position, wall);
+        Node wallSection = new Node(wall, true);
 
-        Node pendulum_1_Section = new Node(1f, ball_1.position, ball_1);
-        Node pendulum_2_Section = new Node(1.5f, ball_2.position, ball_2);
-        Node pendulum_3_Section = new Node(0.5f, ball_3.position, ball_3);
+        //Give them different radius and thus mass
+        ball_1.localScale = Vector3.one * 1.0f;
+        ball_2.localScale = Vector3.one * 1.5f;
+        ball_3.localScale = Vector3.one * 0.5f;
+
+        Node pendulum_1_Section = new Node(ball_1);
+        Node pendulum_2_Section = new Node(ball_2);
+        Node pendulum_3_Section = new Node(ball_3);
 
         pendulumSections.Add(wallSection);
         pendulumSections.Add(pendulum_1_Section);
@@ -58,7 +63,7 @@ public class TriplePendulumController : MonoBehaviour
     {
         foreach (Node n in pendulumSections)
         {
-            n.trans.position = n.pos;
+            n.UpdateVisualPosition();
         }
     }
 
@@ -95,8 +100,8 @@ public class TriplePendulumController : MonoBehaviour
 
                 //Move the node based on its mass and the mass of the connected node
                 //w = 0 if we have infinite mass, meaning the node is connected to a wall 
-                float w1 = prevNode.mass > 0f ? 1f / prevNode.mass : 0f;
-                float w2 = thisNode.mass > 0f ? 1f / thisNode.mass : 0f;
+                float w1 = !prevNode.isWall ? 1f / prevNode.mass : 0f;
+                float w2 = !thisNode.isWall ? 1f / thisNode.mass : 0f;
 
                 //x1_moveDist = 0.5 * (currentLength - wantedLegth) * (x2-x1).normalized
                 //x2_moveDist = - 0.5 * (currentLength - wantedLegth) * (x2-x1).normalized
