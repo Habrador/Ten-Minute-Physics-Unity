@@ -217,7 +217,7 @@ namespace PinballMachine
 
             //Update vel
 
-            //Collisions can onnly change velocity components along the penetration directions
+            //Collisions can only change velocity components along the penetration direction
             float v = Vector3.Dot(ball.vel, d);
 
             float vNew = Mathf.Abs(v) * restitution;

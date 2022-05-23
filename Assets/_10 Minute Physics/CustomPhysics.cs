@@ -34,6 +34,8 @@ public static class CustomPhysics
 
         //Update velocities
 
+        //Collisions can only change velocity components along the penetration direction
+
         //The part of each balls velocity along dir
         float v1 = Vector3.Dot(b1.vel, dir);
         float v2 = Vector3.Dot(b2.vel, dir);
