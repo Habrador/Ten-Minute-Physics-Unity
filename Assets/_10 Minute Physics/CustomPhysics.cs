@@ -36,18 +36,28 @@ public static class CustomPhysics
 
         //Collisions can only change velocity components along the penetration direction
 
-        //The part of each balls velocity along dir
+        //The part of each balls velocity along dir (penetration direction)
+        //The velocity is now in 1D making it easier to use standardized physics equations
         float v1 = Vector3.Dot(b1.vel, dir);
         float v2 = Vector3.Dot(b2.vel, dir);
 
         float m1 = b1.mass;
         float m2 = b2.mass;
 
-        //Assume the objects are stiff
+        //If we assume the objects are stiff we can calculate the new velocities after collision
         float new_v1 = (m1 * v1 + m2 * v2 - m2 * (v1 - v2) * restitution) / (m1 + m2);
         float new_v2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * restitution) / (m1 + m2);
 
         //Change velocity components along dir
+        //First we need to subtract the old velocity because it doesnt exist anymore
+        //b1.vel -= dir * v1;
+        //b2.vel -= dir * v2;
+
+        //And then add the new velocity
+        //b1.vel += dir * new_v1;
+        //b2.vel += dir * new_v2;
+
+        //Which can be simplified to:
         b1.vel += dir * (new_v1 - v1);
         b2.vel += dir * (new_v2 - v2);
     }
