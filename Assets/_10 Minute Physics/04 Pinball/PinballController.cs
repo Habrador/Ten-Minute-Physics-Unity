@@ -61,7 +61,7 @@ public class PinballController : MonoBehaviour
 
 
         //Add the balls
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 10; i++)
         {
             GameObject newBallGO = Instantiate(ballPrefabGO);
 
@@ -128,7 +128,7 @@ public class PinballController : MonoBehaviour
 
         foreach (PinballBall ball in balls)
         {
-            ball.UpdateVisualPostion();
+            ball.UpdateVisualPosition();
         }
     }
 
@@ -157,21 +157,21 @@ public class PinballController : MonoBehaviour
             {
                 PinballBall otherBall = balls[j];
 
-                CustomPhysics.HandleBallBallCollision(thisBall.ball, otherBall.ball, restitution);
+                CustomPhysics.HandleBallBallCollision(thisBall, otherBall, restitution);
             }
 
             //Collision with obstacles
             foreach (Obstacle obs in obstacles)
             {
-                PinballCollisions.HandleBallObstacleCollision(thisBall.ball, obs);
+                PinballCollisions.HandleBallObstacleCollision(thisBall, obs);
             }
 
             //Collision with flippers
-            PinballCollisions.HandleBallFlipperCollision(thisBall.ball, flipper_L);
-            PinballCollisions.HandleBallFlipperCollision(thisBall.ball, flipper_R);
+            PinballCollisions.HandleBallFlipperCollision(thisBall, flipper_L);
+            PinballCollisions.HandleBallFlipperCollision(thisBall, flipper_R);
 
             //Collision with walls
-            PinballCollisions.HandleBallBorderCollision(thisBall.ball, border, restitution);
+            PinballCollisions.HandleBallBorderCollision(thisBall, border, restitution);
 
         }
     }
