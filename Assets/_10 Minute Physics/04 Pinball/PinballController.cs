@@ -21,8 +21,7 @@ public class PinballController : MonoBehaviour
 
 
     //Settings
-    //private float flipperRadius = 0.5f;
-
+    //Should be less than actual gravity because the balls are rolling on a surface, not falling through air
     private Vector3 gravity = new Vector3(0f, -3f, 0f);
 
     private float restitution = 0.3f;
@@ -180,11 +179,10 @@ public class PinballController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //ball = new Ball(Vector3.zero, ballGO.transform, 0.2f, 0.5f);
-        //DisplayPinballObjects();
-
+        //Display the border
         DisplayShapes.DrawLineSegments(border, Color.white);
 
+        //Display the flippers
         DisplayFlipper(flipper_L);
         DisplayFlipper(flipper_R);
     }
@@ -198,27 +196,4 @@ public class PinballController : MonoBehaviour
 
         DisplayShapes.DrawCapsule(a, b, f.radius, Color.red);
     }
-
-
-
-    private void TestCollision()
-    {
-        //Vector3 p = ballTrans_1.position;
-        //Vector3 a = flipper_L_GO.transform.position;
-        //Vector3 b = flipper_R_GO.transform.position;
-
-        //float ballRadius = ballTrans_1.localScale.x * 0.5f;
-
-        //Color flipperColor = Color.blue;
-
-        //if (IsBallCapsuleColliding(p, ballRadius, a, b, flipperRadius))
-        //{
-        //    flipperColor = Color.red;
-        //}
-
-        //DisplayShapes.DrawCapsule(flipper_L_GO.transform.position, flipper_R_GO.transform.position, flipperRadius, flipperColor);
-    }
-
-
-
 }

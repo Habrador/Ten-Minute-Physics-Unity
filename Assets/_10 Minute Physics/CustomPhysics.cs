@@ -4,25 +4,47 @@ using UnityEngine;
 
 public static class CustomPhysics
 {
+    public static bool AreBallsColliding(Vector3 p1, Vector3 p2, float r1, float r2)
+    {
+        bool areColliding = true;
+
+        //The distance sqr between the balls
+        float dSqr = (p2- p1).sqrMagnitude;
+
+        float minAllowedDistance = r1 + r2;
+
+        //The balls are not colliding (or they are exactly at the same position)
+        //Square minAllowedDistance because we are using distance Square, which is faster 
+        if (dSqr == 0f || dSqr > minAllowedDistance * minAllowedDistance)
+        {
+            areColliding = false;
+        }
+
+        return areColliding;
+    }
+
+
+
     public static void HandleBallBallCollision(Ball b1, Ball b2, float restitution)
     {
+        //Check if the balls are colliding
+        bool areColliding = AreBallsColliding(b1.pos, b2.pos, b1.radius, b2.radius);
+
+        if (!areColliding)
+        {
+            return;
+        }
+
+
+        //Update positions
+
         //Direction from b1 to b2
         Vector3 dir = b2.pos - b1.pos;
 
         //The distance between the balls
         float d = dir.magnitude;
 
-        //The balls are not colliding
-        if (d == 0f || d > b1.radius + b2.radius)
-        {
-            return;
-        }
-
-        //Normalized direction
         dir = dir.normalized;
-
-
-        //Update positions
 
         //The distace each ball should move so they no longer intersect 
         float corr = (b1.radius + b2.radius - d) * 0.5f;
@@ -61,7 +83,4 @@ public static class CustomPhysics
         b1.vel += dir * (new_v1 - v1);
         b2.vel += dir * (new_v2 - v2);
     }
-
-
-
 }

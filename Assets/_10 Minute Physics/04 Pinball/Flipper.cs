@@ -64,6 +64,7 @@ namespace PinballMachine
                 this.rotation = Mathf.Max(this.rotation - dt * angularVel, 0f);
             }
 
+            //omega = alpha / dt as in vel = dist / time
             this.currentAngularVel = this.sign * (this.rotation - prevRotation) / dt;
         }
 

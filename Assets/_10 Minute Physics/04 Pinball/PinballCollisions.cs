@@ -6,28 +6,6 @@ namespace PinballMachine
 {
     public static class PinballCollisions
     {
-        public static bool IsBallCapsuleColliding(Vector3 p, float ballRadius, Vector3 a, Vector3 b, float capsuleRadius)
-        {
-            bool isColliding = false;
-
-            //Find the closest point from the ball to the line segment a-b
-            Vector3 c = GetClosestPointOnLineSegment(p, a, b);
-
-            //Add a fake ball at this point and do circle-circle collision
-            float distancePointLine = (p - c).sqrMagnitude;
-
-            float allowedDistance = ballRadius + capsuleRadius;
-
-            if (distancePointLine < allowedDistance * allowedDistance)
-            {
-                isColliding = true;
-            }
-
-            return isColliding;
-        }
-
-
-
         public static Vector3 GetClosestPointOnLineSegment(Vector3 p, Vector3 a, Vector3 b)
         {
             //Special case when a = b, meaning that the the denominator is 0 and we get an error
@@ -55,40 +33,44 @@ namespace PinballMachine
 
 
 
-        //Similar to ball-ball but obstacles don't move
+        //Similar to ball-ball collision but obstacles don't move
         public static void HandleBallObstacleCollision(Ball ball, Obstacle obs)
         {
-            //Direction from b1 to b2
-            Vector3 dir = ball.pos - obs.pos;
+            //Check if the balls are colliding (obs is assumed to be a ball as well)
+            bool areColliding = CustomPhysics.AreBallsColliding(ball.pos, obs.pos, ball.radius, obs.radius);
 
-            //The distance between the balls
-            float d = dir.magnitude;
-
-            //The balls are not colliding
-            if (d == 0f || d > ball.radius + obs.radius)
+            if (!areColliding)
             {
                 return;
             }
 
+
+            //Update position
+
+            //Direction from obstacle to ball
+            Vector3 dir = ball.pos - obs.pos;
+
+            //The actual distancae
+            float d = dir.magnitude;
+
             //Normalized direction
             dir = dir.normalized;
 
-
-            //Update positions
-
-            //The distace each ball should move so they no longer intersect 
+            //Obstacle if fixed so this is the distace the ball should move to no longer intersect
+            //Which is why theres no 0.5 like inn ball-ball collision
             float corr = ball.radius + obs.radius - d;
 
-            //Move the balls apart along the dir vector
+            //Move the ball along the dir vector
             ball.pos += dir * corr;
 
 
-            //Update velocities
+            //Update velocity
 
-            //The part of each balls velocity along dir
+            //The part of the balls velocity along dir which is the velocity being affected
             float v = Vector3.Dot(ball.vel, dir);
 
-            //Change velocity components along dir
+            //Change velocity components along dir by first removing the old velocity
+            //...then add the new velocity from the jet bumpers which gives the ball a push 
             ball.vel += dir * (obs.pushVel - v);
 
 
@@ -99,18 +81,28 @@ namespace PinballMachine
 
         public static void HandleBallFlipperCollision(Ball ball, Flipper flipper)
         {
+            //First check if they collide
             Vector3 closest = GetClosestPointOnLineSegment(ball.pos, flipper.pos, flipper.GetTip());
 
             Vector3 dir = ball.pos - closest;
 
-            //The distance between the ball and the closest point on the flipper
-            float d = dir.magnitude;
+            //The distance sqr between the ball and the closest point on the flipper
+            float dSqr = dir.sqrMagnitude;
+
+            float minAlloweDistance = ball.radius + flipper.radius;
 
             //The ball is not colliding
-            if (d == 0f || d > ball.radius + flipper.radius)
+            //Square minAlloweDistance because we are using distance square which is faster
+            if (dSqr == 0f || dSqr > minAlloweDistance * minAlloweDistance)
             {
                 return;
             }
+
+
+            //Update position
+
+            //The distance between the ball and the closest point on the flipper
+            float d = dir.magnitude;
 
             dir = dir.normalized;
 
@@ -119,18 +111,15 @@ namespace PinballMachine
 
             ball.pos += dir * corr;
 
+
             //Update velocity
 
             //Calculate the velocity of the flipper at the contact point
 
             //Vector from rotation center to contact point
-            Vector3 radius = closest;
+            Vector3 radius = (closest - flipper.pos) + dir * flipper.radius;
 
-            radius += dir * flipper.radius;
-
-            radius -= flipper.pos;
-
-            //Contact velocity by turning it 90 degress and scaling with angular velocity
+            //Contact velocity by turning the vector 90 degress and scaling with angular velocity
             Vector3 surfaceVel = radius.Perp() * flipper.currentAngularVel;
 
             //The flipper can only modify the component of the balls velocity along the penetration direction dir
@@ -138,26 +127,29 @@ namespace PinballMachine
 
             float vNew = Vector3.Dot(surfaceVel, dir);
 
+            //Remove the balls old velocity and add the new velocity
             ball.vel += dir * (vNew - v);
         }
 
 
 
+        //Assumer the border is counter-clockwise
+        //The first point on the border also has to be included at the end of the list
         public static void HandleBallBorderCollision(Ball ball, List<Vector3> border, float restitution)
         {
-            //We need at least a triangle
-            if (border.Count < 3)
+            //We need at least a triangle (the start and end are the same point, thus the 4)
+            if (border.Count < 4)
             {
                 return;
             }
 
-            //Find closest segment and related data to that segment
-            //Vector3 d = Vector3.zero;
+
+            //Find closest point on the border and related data to the line segment the point is on
             Vector3 closest = Vector3.zero;
             Vector3 ab = Vector3.zero;
-            Vector3 normal = Vector3.zero;
+            Vector3 wallNormal = Vector3.zero;
 
-            float minDist = 0f;
+            float minDistSqr = 0f;
 
             //The border should include both the start and end points which are at the same location
             for (int i = 0; i < border.Count - 1; i++)
@@ -166,54 +158,58 @@ namespace PinballMachine
                 Vector3 b = border[i + 1];
                 Vector3 c = GetClosestPointOnLineSegment(ball.pos, a, b);
 
-                //d = ball.pos - c;
+                //Using the square is faster
+                float testDistSqr = (ball.pos - c).sqrMagnitude;
 
-                float testDist = (ball.pos - c).magnitude;
-
-                //Always run this if the first time so we get data to compare with
-                //Which is maye more efficient than setting some large values in the beginning 
-                if (i == 0 || testDist < minDist)
+                //If the distance is smaller or its the first run of the algorithm
+                if (i == 0 || testDistSqr < minDistSqr)
                 {
-                    minDist = testDist;
+                    minDistSqr = testDistSqr;
 
                     closest = c;
 
                     ab = b - a;
 
-                    normal = ab.Perp();
+                    wallNormal = ab.Perp();
                 }
-
             }
 
-            //Push out
+
+            //Update pos
             Vector3 d = ball.pos - closest;
 
             float dist = d.magnitude;
 
             //Special case if we end up exactly on the border 
+            //If so we use the normal of the line segment to push out the ball
             if (dist == 0f)
             {
-                d = normal;
-                dist = normal.magnitude;
+                d = wallNormal;
+                dist = wallNormal.magnitude;
             }
 
-            d = d.normalized;
+            //The direction from the closest point on the wall to the ball
+            Vector3 dir = d.normalized;
 
-            //If they point in the same direction 
-            if (Vector3.Dot(d, normal) >= 0f)
+            //If they point in the same direction, meaning the ball is to the left of the wall
+            if (Vector3.Dot(dir, wallNormal) >= 0f)
             {
+                //The ball is not colliding with the wall
                 if (dist > ball.radius)
                 {
                     return;
                 }
 
-                ball.pos += d * (ball.radius - dist);
+                //The ball is colliding with the wall, so push it in again
+                ball.pos += dir * (ball.radius - dist);
             }
-            //Push in the opposite direction
+            //Push in the opposite direction because the ball is outside of the wall (to the right)
             else
             {
-                ball.pos += d * -(ball.radius + dist);
+                //We have to push it dist so it ends up on the wall, and then radius so it ends up outside of the wall
+                ball.pos += -dir * (ball.radius + dist);
             }
+
 
             //Update vel
 
@@ -222,6 +218,7 @@ namespace PinballMachine
 
             float vNew = Mathf.Abs(v) * restitution;
 
+            //Remove the old velocity and add the new velocity
             ball.vel += d * (vNew - v);
         }
     }

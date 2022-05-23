@@ -11,6 +11,7 @@ namespace PinballMachine
         
         public Vector3 pos;
 
+        //The velocity the ball gets if it collides with this obstacle
         public float pushVel;
 
 
