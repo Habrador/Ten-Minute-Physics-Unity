@@ -208,7 +208,7 @@ namespace PinballMachine
             else
             {
                 //We have to push it dist so it ends up on the wall, and then radius so it ends up outside of the wall
-                ball.pos += -dir * (ball.radius + dist);
+                ball.pos += dir * -(ball.radius + dist);
             }
 
 
