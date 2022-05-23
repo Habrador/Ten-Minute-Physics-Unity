@@ -72,7 +72,7 @@ public class BilliardController : MonoBehaviour
         //Update the transform with the position we simulate in FixedUpdate
         foreach (BilliardBall ball in allBalls)
         {
-            ball.UpdateVisualPostion();
+            ball.UpdateVisualPosition();
         }
     }
 
@@ -93,7 +93,7 @@ public class BilliardController : MonoBehaviour
                 BilliardBall ballOther = allBalls[j];
 
                 //HandleBallCollision(ball, ballOther, restitution);
-                CustomPhysics.HandleBallBallCollision(thisBall.ball, ballOther.ball, restitution);
+                CustomPhysics.HandleBallBallCollision(thisBall, ballOther, restitution);
             }
 
             thisBall.HandleWallCollision();

@@ -35,3 +35,10 @@ Simulate beads attached to a circular wire
 Simulate the chaotic behavior of a triple pendulum with different mass 
 
 <img src="/_media/06-triple-pendulum.png" width="400">
+
+
+## 8
+
+Interact with a 3d scene
+
+TODO
