@@ -1,6 +1,6 @@
 # Ten Minute Physics in Unity
 
-Implementations in Unity of the YouTube channel [Ten Minute Physics](https://www.youtube.com/channel/UCTG_vrRdKYfrpqCv_WV4eyA)
+Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/)
 
 
 ## 1-2. Cannon ball
@@ -39,6 +39,6 @@ Simulate the chaotic behavior of a triple pendulum with different mass
 
 ## 8. Interaction
 
-Interact with a 3d scene
+Catch and throw a ball with your mouse
 
 TODO
