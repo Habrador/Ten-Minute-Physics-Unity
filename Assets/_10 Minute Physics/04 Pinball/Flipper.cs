@@ -28,7 +28,8 @@ namespace PinballMachine
 
         public float currentAngularVel;
 
-        public float touchIdentifier = -1f; //Is this flipper activated?
+        //Is this flipper activated?
+        public float touchIdentifier = -1f;
 
 
 

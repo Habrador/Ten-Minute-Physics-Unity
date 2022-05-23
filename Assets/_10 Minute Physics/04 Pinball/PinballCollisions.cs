@@ -79,6 +79,7 @@ namespace PinballMachine
 
 
 
+        //Assume the all doesnt affect the flipper and that the restitution is zero 
         public static void HandleBallFlipperCollision(Ball ball, Flipper flipper)
         {
             //First check if they collide
