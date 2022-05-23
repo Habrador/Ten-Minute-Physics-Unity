@@ -20,6 +20,8 @@ Simulate billiard balls with different size and mass
 
 Simulate a pinball game
 
+<img src="/_media/04-pinball.png" width="400">
+
 
 ## 5
 

@@ -8,8 +8,7 @@ using PinballMachine;
 public class PinballController : MonoBehaviour
 {
     //Drags
-    public Transform ballTrans_1;
-    public Transform ballTrans_2;
+    public GameObject ballPrefabGO;
 
     public GameObject flipper_L_GO;
     public GameObject flipper_R_GO;
@@ -62,11 +61,26 @@ public class PinballController : MonoBehaviour
 
 
         //Add the balls
-        PinballBall ball_1 = new PinballBall(Vector3.zero, ballTrans_1, restitution);
-        PinballBall ball_2 = new PinballBall(Vector3.zero, ballTrans_2, restitution);
+        for (int i = 0; i < 20; i++)
+        {
+            GameObject newBallGO = Instantiate(ballPrefabGO);
 
-        balls.Add(ball_1);
-        balls.Add(ball_2);
+            //Random pos
+            float randomPosX = Random.Range(-4f, 4f);
+            float randomPosZ = Random.Range(0f, 5.5f);
+
+            Vector3 randomPos = new Vector3(randomPosX, randomPosZ, 0f);
+
+            //Random size
+            float randomSize = Random.Range(0.3f, 1f);
+
+            newBallGO.transform.position = randomPos;
+            newBallGO.transform.localScale = Vector3.one * randomSize;
+
+            PinballBall newBall = new PinballBall(Vector3.zero, newBallGO.transform, restitution);
+
+            balls.Add(newBall);
+        }
 
 
         //Add the obstales = jet bumpers
