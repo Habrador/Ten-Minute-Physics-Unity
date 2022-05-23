@@ -4,32 +4,24 @@ using UnityEngine;
 
 namespace Constraints
 {
-    public class Bead
+    public class Bead : Ball
     {
         public Vector3 prevPos;
 
-        public Ball ball;
 
-
-        public Bead(Transform ballTransform)
+        public Bead(Transform ballTransform) : base(ballTransform)
         {
-            this.ball = new Ball(ballTransform); 
-        }
-
-
-        public void UpdateVisualPosition()
-        {
-            this.ball.UpdateVisualPosition();
+                
         }
 
 
         public void StartStep(float dt, Vector3 gravity)
         {
-            this.ball.vel += gravity * dt;
+            vel += gravity * dt;
 
-            this.prevPos = this.ball.pos;
+            prevPos = pos;
 
-            this.ball.pos += this.ball.vel * dt;
+            pos += vel * dt;
         }
 
 
@@ -37,7 +29,7 @@ namespace Constraints
         public void KeepOnWire(Vector3 center, float radius)
         {
             //Direction from center to the bead
-            Vector3 dir = this.ball.pos - center;
+            Vector3 dir = pos - center;
 
             float length = dir.magnitude;
 
@@ -51,7 +43,7 @@ namespace Constraints
             //Constraint error: How far should we move the bead?
             float lambda = radius - length;
 
-            this.ball.pos += dir * lambda;
+            pos += dir * lambda;
         }
 
 
@@ -59,7 +51,7 @@ namespace Constraints
         public void EndStep(float dt)
         {
             //v = s / t [m/s]
-            this.ball.vel = (this.ball.pos - this.prevPos) / dt;
+            vel = (pos - prevPos) / dt;
         }
     }
 }

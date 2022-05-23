@@ -9,7 +9,7 @@ namespace Billiard
 
         public BilliardBall(Vector3 ballVel, Transform ballTrans) : base(ballTrans)
         {
-            this.vel = ballVel;
+            vel = ballVel;
         }
 
 
@@ -33,7 +33,7 @@ namespace Billiard
         {
             //Make sure the ball is within the area, which is 5 m in all directions (except y)
             //If outside, reset ball and mirror velocity
-            float halfSimSize = 5f - this.radius;
+            float halfSimSize = 5f - radius;
 
             if (pos.x < -halfSimSize)
             {
