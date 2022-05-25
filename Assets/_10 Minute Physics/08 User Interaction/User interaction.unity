@@ -613,4 +613,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57e6fef547da0b24f95503bc27fd9733, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballTrans: {fileID: 189227683}
+  ballTransform: {fileID: 189227683}
