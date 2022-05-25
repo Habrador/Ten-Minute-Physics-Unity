@@ -6,33 +6,6 @@ namespace PinballMachine
 {
     public static class PinballCollisions
     {
-        public static Vector3 GetClosestPointOnLineSegment(Vector3 p, Vector3 a, Vector3 b)
-        {
-            //Special case when a = b, meaning that the the denominator is 0 and we get an error
-            Vector3 ab = b - a;
-
-            float denominator = Vector3.Dot(ab, ab);
-
-            //If a = b, then return just one of the points
-            if (denominator == 0f)
-            {
-                return a;
-            }
-
-            //Find the closest point from p to the line segment a-b
-            float t = Vector3.Dot(p - a, ab) / denominator;
-
-            //Clamp so we always get a point on the line segment
-            t = Mathf.Clamp01(t);
-
-            //Find the coordinate of this point
-            Vector3 c = a + t * ab;
-
-            return c;
-        }
-
-
-
         //Similar to ball-ball collision but obstacles don't move
         public static void HandleBallObstacleCollision(Ball ball, Obstacle obs)
         {
@@ -83,7 +56,7 @@ namespace PinballMachine
         public static void HandleBallFlipperCollision(Ball ball, Flipper flipper)
         {
             //First check if they collide
-            Vector3 closest = GetClosestPointOnLineSegment(ball.pos, flipper.pos, flipper.GetTip());
+            Vector3 closest = UsefulMethods.GetClosestPointOnLineSegment(ball.pos, flipper.pos, flipper.GetTip());
 
             Vector3 dir = ball.pos - closest;
 
@@ -157,7 +130,7 @@ namespace PinballMachine
             {
                 Vector3 a = border[i];
                 Vector3 b = border[i + 1];
-                Vector3 c = GetClosestPointOnLineSegment(ball.pos, a, b);
+                Vector3 c = UsefulMethods.GetClosestPointOnLineSegment(ball.pos, a, b);
 
                 //Using the square is faster
                 float testDistSqr = (ball.pos - c).sqrMagnitude;
