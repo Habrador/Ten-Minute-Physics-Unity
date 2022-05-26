@@ -38,7 +38,7 @@ public class UserInteractionController : MonoBehaviour
         //Update the visual position of the ball
         ball.UpdateVisualPosition();
 
-        grabber.MyUpdate();
+        grabber.MoveGrab();
     }
 
 
@@ -46,7 +46,15 @@ public class UserInteractionController : MonoBehaviour
     //User interactions should be in LateUpdate
     private void LateUpdate()
     {
-        grabber.MyLateUpdate(ball);
+        if (Input.GetMouseButtonDown(0))
+        {
+            grabber.StartGrab(ball);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            grabber.EndGrab();
+        }
     }
 
 
