@@ -8,14 +8,16 @@ public class UserInteractionController : MonoBehaviour
 {
     public Transform ballTransform;
 
-    public Camera mainCamera;
-
     private InteractiveBall ball;
 
     private int subSteps = 5;
 
     private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 
+    //What we use to grab the balls
+    private Grabber grabber;
+
+    
 
 
     private void Start()
@@ -24,6 +26,9 @@ public class UserInteractionController : MonoBehaviour
         ball = new InteractiveBall(ballTransform);
 
         ball.vel = new Vector3(3f, 5f, 2f);
+
+        //Init the grabber
+        grabber = new Grabber(Camera.main);
     }
 
 
@@ -32,6 +37,8 @@ public class UserInteractionController : MonoBehaviour
     {
         //Update the visual position of the ball
         ball.UpdateVisualPosition();
+
+        grabber.MyUpdate();
     }
 
 
@@ -39,27 +46,7 @@ public class UserInteractionController : MonoBehaviour
     //User interactions should be in LateUpdate
     private void LateUpdate()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            //Debug.Log("Ray fired");
-        
-            //A ray from the mouse into the scene
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
-            //Find if the ray hit a sphere
-            CustomPhysicsRaycast(ray, out CustomHit hit);
-
-            if (hit != null)
-            {
-                Debug.Log("Ray hit");
-            }
-            else
-            {
-                Debug.Log("Ray missed");
-            }
-
-        }
-
+        grabber.MyLateUpdate(ball);
     }
 
 
@@ -75,17 +62,5 @@ public class UserInteractionController : MonoBehaviour
 
         //Collision detection
         ball.HandleWallCollision();
-    }
-
-
-
-    //Cant use Physics.Raycast because we are not using Unitys physics system, so we have to make our own
-    private void CustomPhysicsRaycast(Ray ray, out CustomHit hit)
-    {
-        //hit = null;
-
-        //Assumer we have just spheres, then we need to do ray-sphere collision detection
-        ball.IsRayHitting(ray, out hit);
-    }
-    
+    }    
 }

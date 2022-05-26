@@ -5,6 +5,7 @@ using UnityEngine;
 public class InteractiveBall : Ball
 {
     //Has the user grabbed this ball with the mouse?
+    //So the ball is no longer updating with physics
     public bool isGrabbed = false;
 
 
@@ -24,6 +25,8 @@ public class InteractiveBall : Ball
         isGrabbed = true;
 
         this.pos = pos;
+
+        vel = Vector3.zero;
     }
 
 
@@ -97,7 +100,7 @@ public class InteractiveBall : Ball
 
             //float distance = (ray.origin - intersection).magnitude;
 
-            hit = new CustomHit(dist_i1, ballTransform);
+            hit = new CustomHit(dist_i1, this);
         }
     }
 
@@ -131,23 +134,26 @@ public class InteractiveBall : Ball
         //If outside, reset ball and mirror velocity
         float halfSimSize = 5f - radius;
 
+        //So the ball loses some velocity each time it hits a wall or it will continue forever
+        float bounceVel = -1f * 0.8f;
+
         //x
         if (pos.x < -halfSimSize)
         {
             pos.x = -halfSimSize;
-            vel.x *= -1f;
+            vel.x *= bounceVel;
         }
         else if (pos.x > halfSimSize)
         {
             pos.x = halfSimSize;
-            vel.x *= -1f;
+            vel.x *= bounceVel;
         }
 
         //y
         if (pos.y < 0f + radius)
         {
             pos.y = 0f + radius;
-            vel.y *= -1f;
+            vel.y *= bounceVel;
         }
         //Sky is the limit, so no collision detection in y-positive direction
 
@@ -155,12 +161,12 @@ public class InteractiveBall : Ball
         if (pos.z < -halfSimSize)
         {
             pos.z = -halfSimSize;
-            vel.z *= -1f;
+            vel.z *= bounceVel;
         }
         else if (pos.z > halfSimSize)
         {
             pos.z = halfSimSize;
-            vel.z *= -1f;
+            vel.z *= bounceVel;
         }
     }
 }

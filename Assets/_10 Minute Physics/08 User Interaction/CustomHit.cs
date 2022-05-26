@@ -7,12 +7,12 @@ public class CustomHit
     //The distance along the ray to where the ray hit the object
     public float distance;
 
-    //The transform the ray hit
-    public Transform transform;
+    //The ball the ray hit, which is better than transform because we can get the transform from the ball script
+    public InteractiveBall ball;
 
-    public CustomHit(float distance, Transform transform)
+    public CustomHit(float distance, InteractiveBall ball)
     {
         this.distance = distance;
-        this.transform = transform;
+        this.ball = ball;
     }
 }
