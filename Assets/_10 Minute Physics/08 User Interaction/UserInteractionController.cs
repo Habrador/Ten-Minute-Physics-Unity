@@ -8,6 +8,8 @@ public class UserInteractionController : MonoBehaviour
 {
     public Transform ballTransform;
 
+    public Texture2D cursorTexture;
+
     private InteractiveBall ball;
 
     private int subSteps = 5;
@@ -29,6 +31,10 @@ public class UserInteractionController : MonoBehaviour
 
         //Init the grabber
         grabber = new Grabber(Camera.main);
+
+        Cursor.visible = true;
+
+        Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.ForceSoftware);
     }
 
 
