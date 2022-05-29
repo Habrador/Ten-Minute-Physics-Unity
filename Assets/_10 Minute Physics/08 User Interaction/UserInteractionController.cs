@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UserInteraction;
 
 //Based on "Providing user interaction with a 3d scene"
 //https://matthias-research.github.io/pages/tenMinutePhysics/

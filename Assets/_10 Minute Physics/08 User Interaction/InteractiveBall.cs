@@ -2,122 +2,125 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InteractiveBall : Ball
+namespace UserInteraction
 {
-    //Has the user grabbed this ball with the mouse?
-    //So the ball is no longer updating with physics
-    public bool isGrabbed = false;
-
-
-
-    public InteractiveBall(Transform ballTransform) : base(ballTransform)
+    public class InteractiveBall : Ball
     {
-
-    }
-
-
-    //
-    // Methods related to user interaction with the ball
-    //
-
-    public void StartGrab(Vector3 pos)
-    {
-        isGrabbed = true;
-
-        this.pos = pos;
-
-        vel = Vector3.zero;
-    }
+        //Has the user grabbed this ball with the mouse?
+        //So the ball is no longer updating with physics
+        public bool isGrabbed = false;
 
 
-    public void MoveGrabbed(Vector3 pos)
-    {
-        this.pos = pos;
-    }
 
-
-    public void EndGrab(Vector3 pos, Vector3 vel)
-    {
-        isGrabbed = false;
-
-        this.pos = pos;
-        this.vel = vel;
-    }
-
-
-    public void IsRayHittingThisBall(Ray ray, out CustomHit hit)
-    {
-        hit = null;
-
-        if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
+        public InteractiveBall(Transform ballTransform) : base(ballTransform)
         {
-            hit = new CustomHit(hitDistance, this);
-        }
-    }
 
-
-
-    //
-    // Methods related to the simulation of the ball physics
-    //
-
-    public void SimulateBall(float dt, Vector3 gravity)
-    {
-        if (isGrabbed)
-        {
-            return;
-        }
-    
-        vel += gravity * dt;
-        pos += vel * dt;
-    }
-
-
-
-    public void HandleWallCollision()
-    {
-        if (isGrabbed)
-        {
-            return;
         }
 
-        //Make sure the ball is within the area, which is 5 m in all directions (except y)
-        //If outside, reset ball and mirror velocity
-        float halfSimSize = 5f - radius;
 
-        //So the ball loses some velocity each time it hits a wall or it will continue forever
-        float bounceVel = -1f * 0.8f;
+        //
+        // Methods related to user interaction with the ball
+        //
 
-        //x
-        if (pos.x < -halfSimSize)
+        public void StartGrab(Vector3 pos)
         {
-            pos.x = -halfSimSize;
-            vel.x *= bounceVel;
-        }
-        else if (pos.x > halfSimSize)
-        {
-            pos.x = halfSimSize;
-            vel.x *= bounceVel;
+            isGrabbed = true;
+
+            this.pos = pos;
+
+            vel = Vector3.zero;
         }
 
-        //y
-        if (pos.y < 0f + radius)
-        {
-            pos.y = 0f + radius;
-            vel.y *= bounceVel;
-        }
-        //Sky is the limit, so no collision detection in y-positive direction
 
-        //z
-        if (pos.z < -halfSimSize)
+        public void MoveGrabbed(Vector3 pos)
         {
-            pos.z = -halfSimSize;
-            vel.z *= bounceVel;
+            this.pos = pos;
         }
-        else if (pos.z > halfSimSize)
+
+
+        public void EndGrab(Vector3 pos, Vector3 vel)
         {
-            pos.z = halfSimSize;
-            vel.z *= bounceVel;
+            isGrabbed = false;
+
+            this.pos = pos;
+            this.vel = vel;
+        }
+
+
+        public void IsRayHittingThisBall(Ray ray, out CustomHit hit)
+        {
+            hit = null;
+
+            if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
+            {
+                hit = new CustomHit(hitDistance, this);
+            }
+        }
+
+
+
+        //
+        // Methods related to the simulation of the ball physics
+        //
+
+        public void SimulateBall(float dt, Vector3 gravity)
+        {
+            if (isGrabbed)
+            {
+                return;
+            }
+
+            vel += gravity * dt;
+            pos += vel * dt;
+        }
+
+
+
+        public void HandleWallCollision()
+        {
+            if (isGrabbed)
+            {
+                return;
+            }
+
+            //Make sure the ball is within the area, which is 5 m in all directions (except y)
+            //If outside, reset ball and mirror velocity
+            float halfSimSize = 5f - radius;
+
+            //So the ball loses some velocity each time it hits a wall or it will continue forever
+            float bounceVel = -1f * 0.8f;
+
+            //x
+            if (pos.x < -halfSimSize)
+            {
+                pos.x = -halfSimSize;
+                vel.x *= bounceVel;
+            }
+            else if (pos.x > halfSimSize)
+            {
+                pos.x = halfSimSize;
+                vel.x *= bounceVel;
+            }
+
+            //y
+            if (pos.y < 0f + radius)
+            {
+                pos.y = 0f + radius;
+                vel.y *= bounceVel;
+            }
+            //Sky is the limit, so no collision detection in y-positive direction
+
+            //z
+            if (pos.z < -halfSimSize)
+            {
+                pos.z = -halfSimSize;
+                vel.z *= bounceVel;
+            }
+            else if (pos.z > halfSimSize)
+            {
+                pos.z = halfSimSize;
+                vel.z *= bounceVel;
+            }
         }
     }
 }
