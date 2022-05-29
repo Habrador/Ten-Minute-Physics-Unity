@@ -5,9 +5,11 @@ using UnityEngine;
 public static class StandardizedMethods
 {
     // 
-    // Calculate the center of a circumsphere of a tetrahedron given 4 points on the surface
+    // Calculate the center of a sphere given 4 points on the surface of the sphere
     //
-    public static Vector3 GetCircumCenter(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+
+    //http://rodolphe-vaillant.fr/entry/127/find-a-tetrahedron-circumcenter
+    public static Vector3 GetCircumcenter(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
     {
         Vector3 b = p1 - p0;
         Vector3 c = p2 - p0;
@@ -38,6 +40,8 @@ public static class StandardizedMethods
     //
     // Is a point inside of a mesh?
     //
+
+    //Is needed because we have to fill the mesh with extra vertices so it's no longer hollow
 
     private static Vector3Int[] dirs = {
         new Vector3Int(1, 0, 0),
@@ -88,6 +92,9 @@ public static class StandardizedMethods
         return false;
 
         //Should return location, normal, index, distance
+
+        //The normal of the triangle p1-p2-p3 (oriented counter-clockwise) is:
+        //Vector3.Cross(p2-p1, p3-p1).normalized
 
         //if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
         //{
