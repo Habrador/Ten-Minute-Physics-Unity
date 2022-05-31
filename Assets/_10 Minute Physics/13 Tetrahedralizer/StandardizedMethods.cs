@@ -45,14 +45,14 @@ public static class StandardizedMethods
 
 
     //
-    // Is a point inside of a mesh?
+    // Point-mesh intersection
     //
 
     //Is needed because we have to fill the mesh with extra vertices so it's no longer hollow
 
     private static Vector3Int[] dirs = {
         new Vector3Int(1, 0, 0),
-        new Vector3Int(-1, 0, 0), //Changed -1 from y to x because I think thats a bug in the original code
+        new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
         new Vector3Int(0, -1, 0),
         new Vector3Int(0, 0, 1),
@@ -62,7 +62,7 @@ public static class StandardizedMethods
     //minDist - we are using this method to add extra vertices to inside of the mesh. But the new vertices shouldnt be too close to old faces, so if a new vertex is closer than minDist the its ignored
     public static bool IsPointInsideMesh(List<Triangle> triangles, Vector3 p, float minDist = 0f)
     {
-        //Cast a ray in several directions and use a majority vote
+        //Cast a ray in several directions and use a majority vote to determine if the point is inside of the mesh
         int numIn = 0;
 
         for (int i = 0; i < dirs.Length; i++)
@@ -71,12 +71,14 @@ public static class StandardizedMethods
         
             if (IsRayHittingMesh(ray, triangles, out CustomHit hit))
             {
+                //Is the ray hitting the triangle from the inside?
                 if (Vector3.Dot(hit.normal, dirs[i]) > 0f)
                 {
                     numIn += 1;
                 }
                 
-                //If the new vertex is too close to a mesh triangle, then we dont want it
+                //If the new point is too close to a triangle, then we dont want the point
+                //This is useful if we add points within the mesh and want them distributed equally
                 if (minDist > 0f && hit.distance < minDist)
                 {
                     return false;
@@ -84,6 +86,7 @@ public static class StandardizedMethods
             }
         }
 
+        //If at least 3 rays hits a triangle, then we assume the point is within the mesh
         return numIn > 3;
     }
 

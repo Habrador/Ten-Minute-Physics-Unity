@@ -39,41 +39,40 @@ public class DebugTetrahedralizer : MonoBehaviour
     //Test point mesh intersection
     private void TestPointMesh(Transform meshTransform, Transform testPointTransform)
     {
-        Mesh mesh = meshTransform.GetComponent<MeshFilter>().mesh;
-
-        CustomMesh customMesh = new CustomMesh(mesh);
-
-        //Vector3 pointLocal = meshTransform.InverseTransformPoint(point);
-
         meshTransform.GetComponent<MeshRenderer>().enabled = false;
 
         //Convert to triangle data structure to make it easier to display
         //The triangles are now in global space
         List<Triangle> meshTriangles = ConvertMeshToTriangles(meshTransform);
 
-        //See if the point is intersecting any of the triangles
-        Ray ray = new Ray(testPointTransform.position, testPointTransform.forward);
+        
+        DebugRayTriangleIntersection(meshTriangles, testPointTransform);
 
-        DebugRayTriangleIntersection(meshTriangles, ray);
 
-        DisplayRay(testPointTransform);
-
-        DisplayShapes.DrawWireframeMesh(meshTriangles, 0.02f, false);
-
-        //if (StandardizedMethods.IsPointInsideMesh(customMesh, pointLocal))
-        //{
-        //    Debug.Log("Inside");
-        //}
-        //else
-        //{
-        //    Debug.Log("Outside");
-        //}
+        //DebugPointMeshIntersection(meshTriangles, testPointTransform.position);
     }
 
 
 
-    private void DebugRayTriangleIntersection(List<Triangle> meshTriangles, Ray ray)
+    private void DebugPointMeshIntersection(List<Triangle> meshTriangles, Vector3 point)
     {
+        if (StandardizedMethods.IsPointInsideMesh(meshTriangles, point))
+        {
+            Debug.Log("Inside");
+        }
+        else
+        {
+            Debug.Log("Outside");
+        }
+    }
+
+
+
+    private void DebugRayTriangleIntersection(List<Triangle> meshTriangles, Transform testPointTransform)
+    {
+        //Generate the ray
+        Ray ray = new Ray(testPointTransform.position, testPointTransform.forward);
+
         if (StandardizedMethods.IsRayHittingMesh(ray, meshTriangles, out CustomHit bestHit))
         {
             //Mark the triangle has being hit so we can display it with a different color
@@ -85,6 +84,12 @@ public class DebugTetrahedralizer : MonoBehaviour
         {
             Debug.Log("Miss");
         }
+
+        //Display
+        DisplayRay(testPointTransform);
+
+        //Display the mesh
+        DisplayShapes.DrawWireframeMesh(meshTriangles, 0.02f, false);
     }
 
 
