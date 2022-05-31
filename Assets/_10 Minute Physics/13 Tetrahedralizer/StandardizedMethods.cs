@@ -60,7 +60,7 @@ public static class StandardizedMethods
     };
 
     //minDist - we are using this method to add extra vertices to inside of the mesh. But the new vertices shouldnt be too close to old faces, so if a new vertex is closer than minDist the its ignored
-    public static bool IsPointInsideMesh(CustomMesh tree, Vector3 p, float minDist = 0f)
+    public static bool IsPointInsideMesh(List<Triangle> triangles, Vector3 p, float minDist = 0f)
     {
         //Cast a ray in several directions and use a majority vote
         int numIn = 0;
@@ -69,7 +69,7 @@ public static class StandardizedMethods
         {
             Ray ray = new Ray(p, dirs[i]);
         
-            if (IsRayHittingMesh(ray, tree, out CustomHit hit))
+            if (IsRayHittingMesh(ray, triangles, out CustomHit hit))
             {
                 if (Vector3.Dot(hit.normal, dirs[i]) > 0f)
                 {
@@ -93,60 +93,85 @@ public static class StandardizedMethods
     // Custom raycast
     //
 
-    public static bool IsRayHittingMesh(Ray ray, CustomMesh tree, out CustomHit bestHit)
+    //Should return location, normal, index, distance
+    //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
+    public static bool IsRayHittingMesh(Ray ray, List<Triangle> triangles, out CustomHit bestHit)
     {
         bestHit = null;
 
-        bool isHittingMesh = false;
-
-        //Should return location, normal, index, distance
-
-        //The normal of the triangle p1-p2-p3 (oriented counter-clockwise) is:
-        //Vector3.Cross(p2-p1, p3-p1).normalized
-
-        //if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
-        //{
-        //    hit = new CustomHit(hitDistance, this);
-        //}
-
-        //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
-
-        Vector3[] verts = tree.verts;
-        int[] tris = tree.tris;
-
         float smallestDistance = float.MaxValue;
 
-        //Foreach triangle
-        for (int i = 0; i < tris.Length; i += 3)
+        //Loop through all triangles and find the one thats the closest
+        for (int i = 0; i < triangles.Count; i++)
         {
-            Vector3 a = verts[i + 0];
-            Vector3 b = verts[i + 1];
-            Vector3 c = verts[i + 2];
-
-            if (IsRayHittingTriangle(a, b, c, ray, out CustomHit hit))
+            Triangle t = triangles[i];
+        
+            if (IsRayHittingTriangle(t.a, t.b, t.c, ray, out CustomHit hit))
             {
-                hit.index = i;
-
                 if (hit.distance < smallestDistance)
                 {
                     smallestDistance = hit.distance;
 
                     bestHit = hit;
+
+                    bestHit.index = i;
                 }
             }
         }
 
+        //If at least a triangle was hit
+        bool hitMesh = false;
 
+        if (bestHit != null)
+        {
+            hitMesh = true;
+        }
 
-        return isHittingMesh;
+        return hitMesh;
     }
 
 
 
     //
-    // Ray triangle intersection
+    // Ray-plane intersection
     //
 
+    //https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+    public static bool IsRayHittingPlane(Ray ray, Vector3 planeNormal, Vector3 planePos, out float t)
+    {
+        //Add default because have to
+        t = 0f;
+    
+        //First check if the plane and the ray are perpendicular
+        float NdotRayDirection = Vector3.Dot(planeNormal, ray.direction);
+
+        //If the dot product is almost 0 then ray is perpendicular to the triangle, so no itersection is possible
+        if (Mathf.Abs(NdotRayDirection) < StandardizedMethods.EPSILON)
+        {
+            return false;
+        }
+
+        //Compute d parameter using equation 2 by picking any point on the plane
+        float d = -Vector3.Dot(planeNormal, planePos);
+
+        //Compute t (equation 3)
+        t = -(Vector3.Dot(planeNormal, ray.origin) + d) / NdotRayDirection;
+
+        //Check if the plane is behind the ray
+        if (t < 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    //
+    // Ray-triangle intersection
+    //
+
+    //First do ray-plane itersection and then check if the itersection point is within the triangle
     //https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
     public static bool IsRayHittingTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Ray ray, out CustomHit hit)
     {
@@ -157,33 +182,16 @@ public static class StandardizedMethods
         Vector3 v0v2 = v2 - v0;
         
         //No need to normalize
-        Vector3 N = Vector3.Cross(v0v1, v0v2); 
-        
-        //float area2 = N.magnitude;
+        Vector3 planeNormal = Vector3.Cross(v0v1, v0v2); 
 
 
         //
         // Step 1: Finding P (the intersection point) by turning the triangle into a plane
         //
 
-        float NdotRayDirection = Vector3.Dot(N, ray.direction);
-
-        //If the dot product is almost 0 the ray is parallell to the triangle
-        if (Mathf.Abs(NdotRayDirection) < StandardizedMethods.EPSILON)
+        if (!IsRayHittingPlane(ray, planeNormal, v0, out float t))
         {
-            return false;  
-        }
-            
-        //Compute d parameter using equation 2 by picking any point on the triangle, such as v0
-        float d = -Vector3.Dot(N, v0); //Not sure if - should be before N or outside. It is outside in the example, but also missing completely in the same example
-
-        //Compute t (equation 3)
-        float t = -(Vector3.Dot(N, ray.origin) + d) / NdotRayDirection;
-
-        //Check if the triangle is behind the ray
-        if (t < 0)
-        {
-            return false;  
+            return false;
         }
 
         //Compute the intersection point using equation 1
@@ -204,7 +212,7 @@ public static class StandardizedMethods
         C = Vector3.Cross(edge0, vp0);
 
         //P is on the right side 
-        if (Vector3.Dot(N, C) < 0f)
+        if (Vector3.Dot(planeNormal, C) < 0f)
         {
             return false;
         }
@@ -216,7 +224,7 @@ public static class StandardizedMethods
         C = Vector3.Cross(edge1, vp1);
 
         //P is on the right side 
-        if (Vector3.Dot(N, C) < 0f)
+        if (Vector3.Dot(planeNormal, C) < 0f)
         {
             return false;
         }
@@ -228,7 +236,7 @@ public static class StandardizedMethods
         C = Vector3.Cross(edge2, vp2);
 
         //P is on the right side 
-        if (Vector3.Dot(N, C) < 0f)
+        if (Vector3.Dot(planeNormal, C) < 0f)
         { 
             return false;
         }
@@ -236,7 +244,7 @@ public static class StandardizedMethods
         //This ray hits the triangle
 
         //Calculate the custom data we need
-        hit = new CustomHit(t, P, N.normalized);
+        hit = new CustomHit(t, P, planeNormal.normalized);
 
         return true;  
     }

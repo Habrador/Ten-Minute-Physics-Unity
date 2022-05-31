@@ -174,21 +174,39 @@ public static class DisplayShapes
 
 
     //Draw a wireframe mesh
-    public static void DrawWireframeMesh(List<Triangle> triangles, bool drawNormals = false)
+    public static void DrawWireframeMesh(List<Triangle> triangles, float squeezeDist = 0f, bool drawNormals = false)
     {
         List<Vector3> triangleLineSegments = new List<Vector3>();
+        List<Vector3> intersectedTriangleLineSegments = new List<Vector3>();
         List<Vector3> normalsLineSegments = new List<Vector3>();
 
         foreach (Triangle t in triangles)
         {
-            triangleLineSegments.Add(t.a);
-            triangleLineSegments.Add(t.b);
+            Vector3 a = t.a;
+            Vector3 b = t.b;
+            Vector3 c = t.c;
 
-            triangleLineSegments.Add(t.b);
-            triangleLineSegments.Add(t.c);
+            //Make the triangle smaller to make it easier to see separate triangles
+            if (squeezeDist > 0f)
+            {
+                Vector3 center = t.GetCenter;
 
-            triangleLineSegments.Add(t.c);
-            triangleLineSegments.Add(t.a);
+                a += (center - a).normalized * squeezeDist;
+                b += (center - b).normalized * squeezeDist;
+                c += (center - c).normalized * squeezeDist;
+            }
+
+            List<Vector3> lineSegments = new List<Vector3>() { a, b, b, c, c, a };
+
+            if (!t.isIntersecting)
+            {
+                triangleLineSegments.AddRange(lineSegments);
+            }
+            else
+            {
+                intersectedTriangleLineSegments.AddRange(lineSegments);
+            }
+            
 
             if (drawNormals)
             {
@@ -201,6 +219,7 @@ public static class DisplayShapes
         }
 
         DrawLineSegments(triangleLineSegments, ColorOptions.White);
+        DrawLineSegments(intersectedTriangleLineSegments, ColorOptions.Red);
         DrawLineSegments(normalsLineSegments, ColorOptions.Blue);
     }
 }
