@@ -13,11 +13,119 @@ public static class Tetrahedralizer
     //- minQualityExp - Min Tet Quality Exp [-4, 0]
     //- oneFacePerTet - One Face Per Tet, making it easier to export?????
     //- tetScale - Tet Scale [0.1, 1]
-    public static void CreateTetrahedralization(int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f)
+    public static void CreateTetrahedralization(CustomMesh inputMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f)
     {
         float minQuality = Mathf.Pow(10f, minQualityExp);
 
+        Mesh tetMesh = new Mesh();
 
+        tetMesh.name = "Tets";
+
+
+        //Create vertices from input mesh (which is called tree in the original code)
+        //The guy in the code is adding a very small random value to each coordinate for some reason...
+        //Maybe to avoid issues when the vertices are perpendicular to each other like in the 2d voronoi diagram 
+        //Hes calling it distortion later on 
+        List<Vector3> tetVerts = new List<Vector3>();
+
+        foreach (Vector3 v in inputMesh.vertices)
+        {        
+            Vector3 randomizedVertex = new Vector3(v.x + RandEps(), v.y + RandEps(), v.z + RandEps());
+
+            tetVerts.Add(randomizedVertex);
+        }
+
+        List<Triangle> triangles = inputMesh.GetTriangles();
+
+
+        //Measure vertices
+        float inf = float.MaxValue;
+
+        Vector3 center = Vector3.zero;
+        
+        //Bounds
+        Vector3 bMin = new Vector3(inf, inf, inf);
+        Vector3 bMax = new Vector3(-inf, -inf, -inf);
+
+        foreach (Vector3 p in tetVerts)
+        {
+            center += p;
+
+            bMin.x = Mathf.Min(p.x, bMin.x);
+            bMin.y = Mathf.Min(p.y, bMin.y);
+            bMin.z = Mathf.Min(p.z, bMin.z);
+
+            bMax.x = Mathf.Max(p.x, bMax.x);
+            bMax.y = Mathf.Max(p.y, bMax.y);
+            bMax.z = Mathf.Max(p.z, bMax.z);
+        }
+
+        center /= tetVerts.Count;
+
+        //The distance from the center to the vertex the furthest away
+        float radius = 0f;
+
+        foreach (Vector3 p in tetVerts)
+        {
+            float d = (p - center).magnitude;
+
+            radius = Mathf.Max(radius, d);
+        }
+        
+        
+        //Interior sampling = add new vertices inside of the mesh, which is why we needed the dimensions of the mesh
+        if (resolution > 0)
+        {
+            Vector3 dims = bMax - bMin;
+
+            float dim = Mathf.Max(dims.x, Mathf.Max(dims.y, dims.z));
+
+            float h = dim / resolution;
+
+            for (int xi = 0; xi < (int)(dims.x / h) + 1; xi++)
+            {
+                float x = bMin.x + xi * h + RandEps();
+
+                for (int yi = 0; yi < (int)(dims.y / h) + 1; yi++)
+                {
+                    float y = bMin.y + yi * h + RandEps();
+
+                    for (int zi = 0; zi < (int)(dims.z / h) + 1; zi++)
+                    {
+                        float z = bMin.z + zi * h + RandEps();
+
+                        Vector3 p = new Vector3(x, y, z);
+
+                        if (UsefulMethods.IsPointInsideMesh(triangles, p, 0.5f * h))
+                        {
+                            tetVerts.Add(p);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //Big tet to start with
+        float s = 5f * radius;
+
+        tetVerts.Add(new Vector3(-s, 0f, -s));
+        tetVerts.Add(new Vector3(s, 0f, -s));
+        tetVerts.Add(new Vector3(0f,  s,  s));
+        tetVerts.Add(new Vector3(0f, -s,  s));
+
+
+        //Generate tet ids
+
+        //Returns number of faces = number of triangles (4 per tetra)
+        CreateTetIds(tetVerts, inputMesh, minQuality);
+    }
+
+
+
+    private static void CreateTetIds(List<Vector3> tetVerts, CustomMesh inputMesh, float minQuality)
+    {   
+        
     }
 
 
@@ -83,4 +191,19 @@ public static class Tetrahedralizer
 
         return false;
     }
+
+
+
+    //
+    // Generate a small random value to avoid vertices that are lined up which may cause bugs
+    //
+    private static float RandEps()
+    {
+        float eps = 0.0001f;
+
+        float randomValue = -eps + 2f * Random.Range(0f, 1f) * eps;
+
+        return randomValue;
+    }
+    
 }
