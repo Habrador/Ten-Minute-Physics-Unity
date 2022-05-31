@@ -23,7 +23,7 @@ public static class Tetrahedralizer
 
 
     //
-    // Measure the "quality" for a tetrahedron
+    // Measure the quality of a tetrahedron
     //
 
     //https://www2.mps.mpg.de/homes/daly/CSDS/t4h/tetra.htm
@@ -33,6 +33,7 @@ public static class Tetrahedralizer
         //The ideal volume is calculated for a regular tetrahedron with a side length equal to the average of the 6 distances between the 4 points
         //This ideal tetrahedron has volume L^3 * sqrt(2) / 12
 
+        //The 6 distances between the 4 points
         Vector3 d0 = p1 - p0;
         Vector3 d1 = p2 - p0;
         Vector3 d2 = p3 - p0;
@@ -52,12 +53,13 @@ public static class Tetrahedralizer
         
         float rms = Mathf.Sqrt(ms);
 
-        float s = 12f / Mathf.Sqrt(2f);
+        float vol_ideal = ((rms * rms * rms) * Mathf.Sqrt(2f)) / 12f;
 
-        //The true volume
-        float vol = Vector3.Dot(d0, Vector3.Cross(d1, d2)) / 6f;
+        //The actual volume
+        float vol_actual = Vector3.Dot(d0, Vector3.Cross(d1, d2)) / 6f;
 
-        float quality = s * vol / (rms * rms * rms);
+        //Compare the actual volume with the ideal volume
+        float quality = vol_actual / vol_ideal;
 
         return quality;
     }
@@ -70,11 +72,15 @@ public static class Tetrahedralizer
 
     private static int CompareEdges()
     {
+        Debug.Log("Implement this method!");
+    
         return -1;
     }
 
     private static bool EqualEdges()
     {
+        Debug.Log("Implement this method!");
+
         return false;
     }
 }

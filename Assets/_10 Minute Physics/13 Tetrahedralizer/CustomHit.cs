@@ -10,9 +10,10 @@ public class CustomHit : MonoBehaviour
     public Vector3 location;
     public Vector3 normal; 
 
+    //What is index? Start pos of triangle? 
     public int index;
 
-    public CustomHit(float distance, Vector3 location, Vector3 normal, int index)
+    public CustomHit(float distance, Vector3 location, Vector3 normal, int index = -1)
     {
         this.distance = distance;
         this.location = location;

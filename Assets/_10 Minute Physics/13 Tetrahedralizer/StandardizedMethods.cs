@@ -4,6 +4,13 @@ using UnityEngine;
 
 public static class StandardizedMethods
 {
+    //The value we use to avoid floating point precision issues
+    //http://sandervanrossen.blogspot.com/2009/12/realtime-csg-part-1.html
+    //Unity has a built-in Mathf.Epsilon;
+    //But it's better to use our own so we can test different values
+    public const float EPSILON = 0.00001f;
+
+
     // 
     // Calculate the center of a sphere given 4 points on the surface of the sphere
     //
@@ -52,7 +59,8 @@ public static class StandardizedMethods
         new Vector3Int(0, 0, -1),
     };
 
-    public static bool IsInside(Mesh tree, Vector3 p, float minDist = 0f)
+    //minDist - we are using this method to add extra vertices to inside of the mesh. But the new vertices shouldnt be too close to old faces, so if a new vertex is closer than minDist the its ignored
+    public static bool IsPointInsideMesh(CustomMesh tree, Vector3 p, float minDist = 0f)
     {
         //Cast a ray in several directions and use a majority vote
         int numIn = 0;
@@ -61,14 +69,14 @@ public static class StandardizedMethods
         {
             Ray ray = new Ray(p, dirs[i]);
         
-            if (IsRayHittingMesh(ray, out CustomHit hit))
+            if (IsRayHittingMesh(ray, tree, out CustomHit hit))
             {
                 if (Vector3.Dot(hit.normal, dirs[i]) > 0f)
                 {
                     numIn += 1;
                 }
                 
-                //What is going on here? Maybe related to floating point precision issues???  
+                //If the new vertex is too close to a mesh triangle, then we dont want it
                 if (minDist > 0f && hit.distance < minDist)
                 {
                     return false;
@@ -85,11 +93,11 @@ public static class StandardizedMethods
     // Custom raycast
     //
 
-    public static bool IsRayHittingMesh(Ray ray, out CustomHit hit)
+    public static bool IsRayHittingMesh(Ray ray, CustomMesh tree, out CustomHit bestHit)
     {
-        hit = null;
+        bestHit = null;
 
-        return false;
+        bool isHittingMesh = false;
 
         //Should return location, normal, index, distance
 
@@ -100,5 +108,136 @@ public static class StandardizedMethods
         //{
         //    hit = new CustomHit(hitDistance, this);
         //}
+
+        //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
+
+        Vector3[] verts = tree.verts;
+        int[] tris = tree.tris;
+
+        float smallestDistance = float.MaxValue;
+
+        //Foreach triangle
+        for (int i = 0; i < tris.Length; i += 3)
+        {
+            Vector3 a = verts[i + 0];
+            Vector3 b = verts[i + 1];
+            Vector3 c = verts[i + 2];
+
+            if (IsRayHittingTriangle(a, b, c, ray, out CustomHit hit))
+            {
+                hit.index = i;
+
+                if (hit.distance < smallestDistance)
+                {
+                    smallestDistance = hit.distance;
+
+                    bestHit = hit;
+                }
+            }
+        }
+
+
+
+        return isHittingMesh;
+    }
+
+
+
+    //
+    // Ray triangle intersection
+    //
+
+    //https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+    public static bool IsRayHittingTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Ray ray, out CustomHit hit)
+    {
+        hit = null;
+    
+        //Compute plane's normal
+        Vector3 v0v1 = v1 - v0;
+        Vector3 v0v2 = v2 - v0;
+        
+        //No need to normalize
+        Vector3 N = Vector3.Cross(v0v1, v0v2); 
+        
+        //float area2 = N.magnitude;
+
+
+        //
+        // Step 1: Finding P (the intersection point) by turning the triangle into a plane
+        //
+
+        float NdotRayDirection = Vector3.Dot(N, ray.direction);
+
+        //If the dot product is almost 0 the ray is parallell to the triangle
+        if (Mathf.Abs(NdotRayDirection) < StandardizedMethods.EPSILON)
+        {
+            return false;  
+        }
+            
+        //Compute d parameter using equation 2 by picking any point on the triangle, such as v0
+        float d = -Vector3.Dot(N, v0); //Not sure if - should be before N or outside. It is outside in the example, but also missing completely in the same example
+
+        //Compute t (equation 3)
+        float t = -(Vector3.Dot(N, ray.origin) + d) / NdotRayDirection;
+
+        //Check if the triangle is behind the ray
+        if (t < 0)
+        {
+            return false;  
+        }
+
+        //Compute the intersection point using equation 1
+        Vector3 P = ray.origin + t * ray.direction;
+
+
+        //
+        // Step 2: inside-outside test
+        //
+
+        //Vector perpendicular to triangle's plane
+        Vector3 C;   
+
+        //Edge 0
+        Vector3 edge0 = v1 - v0;
+        Vector3 vp0 = P - v0;
+        
+        C = Vector3.Cross(edge0, vp0);
+
+        //P is on the right side 
+        if (Vector3.Dot(N, C) < 0f)
+        {
+            return false;
+        }
+
+        //Edge 1
+        Vector3 edge1 = v2 - v1;
+        Vector3 vp1 = P - v1;
+        
+        C = Vector3.Cross(edge1, vp1);
+
+        //P is on the right side 
+        if (Vector3.Dot(N, C) < 0f)
+        {
+            return false;
+        }
+
+        //Edge 2
+        Vector3 edge2 = v0 - v2;
+        Vector3 vp2 = P - v2;
+        
+        C = Vector3.Cross(edge2, vp2);
+
+        //P is on the right side 
+        if (Vector3.Dot(N, C) < 0f)
+        { 
+            return false;
+        }
+
+        //This ray hits the triangle
+
+        //Calculate the custom data we need
+        hit = new CustomHit(t, P, N.normalized);
+
+        return true;  
     }
 }

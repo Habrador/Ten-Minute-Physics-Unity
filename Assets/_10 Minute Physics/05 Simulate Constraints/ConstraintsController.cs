@@ -126,6 +126,6 @@ public class ConstraintsController : MonoBehaviour
     private void LateUpdate()
     {    
         //Draw the circle the beads are attached to
-        DisplayShapes.DrawCircle(wireCenter, wireRadius, Color.white);
+        DisplayShapes.DrawCircle(wireCenter, wireRadius, DisplayShapes.ColorOptions.White);
     }
 }

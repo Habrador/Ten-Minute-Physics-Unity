@@ -180,7 +180,7 @@ public class PinballController : MonoBehaviour
     private void LateUpdate()
     {
         //Display the border
-        DisplayShapes.DrawLineSegments(border, Color.white);
+        DisplayShapes.DrawLine(border, DisplayShapes.ColorOptions.White);
 
         //Display the flippers
         DisplayFlipper(flipper_L);
@@ -194,6 +194,6 @@ public class PinballController : MonoBehaviour
         Vector3 a = f.pos;
         Vector3 b = f.GetTip();
 
-        DisplayShapes.DrawCapsule(a, b, f.radius, Color.red);
+        DisplayShapes.DrawCapsule(a, b, f.radius, DisplayShapes.ColorOptions.Red);
     }
 }
