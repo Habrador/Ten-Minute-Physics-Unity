@@ -56,7 +56,7 @@ public class DebugTetrahedralizer : MonoBehaviour
 
     private void DebugPointMeshIntersection(List<Triangle> meshTriangles, Vector3 point)
     {
-        if (StandardizedMethods.IsPointInsideMesh(meshTriangles, point))
+        if (UsefulMethods.IsPointInsideMesh(meshTriangles, point))
         {
             Debug.Log("Inside");
         }
@@ -73,7 +73,7 @@ public class DebugTetrahedralizer : MonoBehaviour
         //Generate the ray
         Ray ray = new Ray(testPointTransform.position, testPointTransform.forward);
 
-        if (StandardizedMethods.IsRayHittingMesh(ray, meshTriangles, out CustomHit bestHit))
+        if (UsefulMethods.IsRayHittingMesh(ray, meshTriangles, out CustomHit bestHit))
         {
             //Mark the triangle has being hit so we can display it with a different color
             meshTriangles[bestHit.index].isIntersecting = true;
