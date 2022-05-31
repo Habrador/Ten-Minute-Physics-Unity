@@ -7,15 +7,14 @@ public class Triangle
 {
     public Vector3 a, b, c;
     public Vector3 normal;
-    public bool isIntersecting;
+    public bool isIntersecting = false;
 
 
-    public Triangle(Vector3 a, Vector3 b, Vector3 c, bool isIntersecting = false)
+    public Triangle(Vector3 a, Vector3 b, Vector3 c)
     {
         this.a = a;
         this.b = b;
         this.c = c;
-        this.isIntersecting = isIntersecting;
 
         normal = CalculateNormal(a, b, c);
     }

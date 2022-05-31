@@ -5,10 +5,10 @@ using UnityEngine;
 //Help class to display geometric shapes
 public static class DisplayShapes
 {
-    private static Material matWhite;
-    private static Material matRed;
-    private static Material matBlue;
-    private static Material matYellow;
+    private static readonly Material matWhite;
+    private static readonly Material matRed;
+    private static readonly Material matBlue;
+    private static readonly Material matYellow;
 
     public enum ColorOptions
     {
@@ -19,17 +19,25 @@ public static class DisplayShapes
 
     static DisplayShapes()
     {
-        matWhite = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-        matWhite.color = Color.white;
+        matWhite = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        {
+            color = Color.white
+        };
 
-        matRed = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-        matRed.color = Color.red;
+        matRed = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        {
+            color = Color.red
+        };
 
-        matBlue = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-        matBlue.color = Color.blue;
+        matBlue = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        {
+            color = Color.blue
+        };
 
-        matYellow = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-        matYellow.color = Color.yellow;
+        matYellow = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        {
+            color = Color.yellow
+        };
     }
 
 

@@ -10,7 +10,7 @@ public class CustomHit
     public Vector3 location;
     public Vector3 normal; 
 
-    //What is index? Start pos of triangle? 
+    //What is index? Start pos of triangle? Is currently the index of the triangle in the list of all triangles
     public int index;
 
     public CustomHit(float distance, Vector3 location, Vector3 normal, int index = -1)

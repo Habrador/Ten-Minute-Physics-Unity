@@ -48,9 +48,8 @@ public static class StandardizedMethods
     // Point-mesh intersection
     //
 
-    //Is needed because we have to fill the mesh with extra vertices so it's no longer hollow
-
-    private static Vector3Int[] dirs = {
+    //The 6 directions we will fire the ray
+    private static readonly Vector3Int[] rayDirections = {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
@@ -65,14 +64,14 @@ public static class StandardizedMethods
         //Cast a ray in several directions and use a majority vote to determine if the point is inside of the mesh
         int numIn = 0;
 
-        for (int i = 0; i < dirs.Length; i++)
+        foreach (Vector3Int rayDir in rayDirections)
         {
-            Ray ray = new Ray(p, dirs[i]);
+            Ray ray = new Ray(p, rayDir);
         
             if (IsRayHittingMesh(ray, triangles, out CustomHit hit))
             {
                 //Is the ray hitting the triangle from the inside?
-                if (Vector3.Dot(hit.normal, dirs[i]) > 0f)
+                if (Vector3.Dot(hit.normal, rayDir) > 0f)
                 {
                     numIn += 1;
                 }
