@@ -4,7 +4,13 @@ using UnityEngine;
 
 //Based on "Writing a Tetrahedralizer for Blender"
 //https://matthias-research.github.io/pages/tenMinutePhysics/
-public class _TetraController : MonoBehaviour
+public class TetraController : MonoBehaviour
 {
-    
+    public Transform meshTransform;
+
+
+    public void TetrahedralizeMesh()
+    {
+        Debug.Log("Hello");
+    }
 }

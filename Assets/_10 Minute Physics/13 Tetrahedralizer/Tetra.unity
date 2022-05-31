@@ -448,8 +448,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 909035444}
-  - component: {fileID: 909035445}
   - component: {fileID: 909035446}
+  - component: {fileID: 909035447}
   m_Layer: 0
   m_Name: Controller
   m_TagString: Untagged
@@ -472,7 +472,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &909035445
+--- !u!114 &909035446
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -481,10 +481,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 909035443}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3dad5c5cd6a66814b88e21285e64135d, type: 3}
+  m_Script: {fileID: 11500000, guid: 7cc7d334a79a70640b9842ba23146e11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &909035446
+  testMeshTransform: {fileID: 1350625232}
+  testPointTransform: {fileID: 1549395723}
+--- !u!114 &909035447
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -493,11 +495,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 909035443}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7cc7d334a79a70640b9842ba23146e11, type: 3}
+  m_Script: {fileID: 11500000, guid: 3dad5c5cd6a66814b88e21285e64135d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testMeshTransform: {fileID: 1012622750}
-  testPointTransform: {fileID: 1549395723}
+  meshTransform: {fileID: 1012622750}
 --- !u!1 &1012622747
 GameObject:
   m_ObjectHideFlags: 0
