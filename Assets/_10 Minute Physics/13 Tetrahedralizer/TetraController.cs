@@ -8,10 +8,12 @@ public class TetraController : MonoBehaviour
 {
     public Transform meshTransform;
 
+    private List<Vector3> debugPoints = new List<Vector3>();
+
 
     public void TetrahedralizeMesh()
     {
-        //Debug.Log("Hello");
+        Debug.Log("Tetrahedralizer started!");
 
         //Settings
         int resolution = 10;
@@ -25,6 +27,18 @@ public class TetraController : MonoBehaviour
         //Convert the mesh to global space
         CustomMesh mesh = new CustomMesh(meshTransform, true);
 
-        Tetrahedralizer.CreateTetrahedralization(mesh, resolution, minQuality, oneFacePerTet, tetScale);
+        Tetrahedralizer.CreateTetrahedralization(mesh, resolution, minQuality, oneFacePerTet, tetScale, debugPoints);
+
+        Debug.Log("Tetrahedralizer completed!");
+    }
+
+
+
+    private void OnDrawGizmos()
+    {
+        //foreach (Vector3 v in debugPoints)
+        //{
+        //    Gizmos.DrawSphere(v, 0.01f);
+        //}
     }
 }

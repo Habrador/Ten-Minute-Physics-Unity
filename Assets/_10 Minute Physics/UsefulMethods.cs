@@ -14,6 +14,23 @@ public static class UsefulMethods
 
 
     //
+    // Generate a small random value 
+    //
+
+    //Is used to avoid vertices to have for example the exact same x coordinate which may cause bugs
+    public static float RandEps()
+    {
+        float eps = 0.0001f;
+
+        //Generate a random value between [-eps, eps]
+        float randomValue = -eps + 2f * Random.Range(0f, 1f) * eps;
+
+        return randomValue;
+    }
+
+
+
+    //
     // The closest point on a ray from a vertex
     //
 
@@ -193,7 +210,7 @@ public static class UsefulMethods
     };
 
     //minDist - we are using this method to add extra vertices to inside of the mesh. But the new vertices shouldnt be too close to old faces, so if a new vertex is closer than minDist the its ignored
-    public static bool IsPointInsideMesh(CustomMesh customMesh, Vector3 p, float minDist = 0f)
+    public static bool IsPointInsideMesh(Vector3[] vertices, int[] triangles, Vector3 p, float minDist = 0f)
     {
         //Cast a ray in several directions and use a majority vote to determine if the point is inside of the mesh
         int numIn = 0;
@@ -202,7 +219,7 @@ public static class UsefulMethods
         {
             Ray ray = new Ray(p, rayDir);
 
-            if (IsRayHittingMesh(ray, customMesh, out CustomHit hit))
+            if (IsRayHittingMesh(ray, vertices, triangles, out CustomHit hit))
             {
                 //Is the ray hitting the triangle from the inside?
                 if (Vector3.Dot(hit.normal, rayDir) > 0f)
@@ -231,17 +248,13 @@ public static class UsefulMethods
 
     //Should return location, normal, index, distance
     //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
-    public static bool IsRayHittingMesh(Ray ray, CustomMesh customMesh, out CustomHit bestHit)
+    public static bool IsRayHittingMesh(Ray ray, Vector3[] vertices, int[] triangles, out CustomHit bestHit)
     {
         bestHit = null;
 
         float smallestDistance = float.MaxValue;
 
         //Loop through all triangles and find the one thats the closest
-        int[] triangles = customMesh.triangles;
-
-        Vector3[] vertices = customMesh.vertices; 
-
         for (int i = 0; i < triangles.Length; i += 3)
         {
             Vector3 a = vertices[triangles[i + 0]];

@@ -21,7 +21,7 @@ public class CustomMesh
 
     public CustomMesh(Transform meshTransform, bool toGlobal)
     {
-        Mesh mesh = meshTransform.GetComponent<MeshFilter>().mesh;
+        Mesh mesh = meshTransform.GetComponent<MeshFilter>().sharedMesh;
     
         if (toGlobal)
         {

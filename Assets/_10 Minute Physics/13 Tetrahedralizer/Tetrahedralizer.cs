@@ -13,7 +13,7 @@ public static class Tetrahedralizer
     //- minQualityExp - Min Tet Quality Exp [-4, 0]
     //- oneFacePerTet - One Face Per Tet, making it easier to export?????
     //- tetScale - Tet Scale [0.1, 1]
-    public static void CreateTetrahedralization(CustomMesh originalMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f)
+    public static void CreateTetrahedralization(CustomMesh originalMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f, List<Vector3> debugPoints = null)
     {
         float minQuality = Mathf.Pow(10f, minQualityExp);
 
@@ -30,7 +30,7 @@ public static class Tetrahedralizer
 
         foreach (Vector3 v in originalMesh.vertices)
         {        
-            Vector3 randomizedVertex = new Vector3(v.x + RandEps(), v.y + RandEps(), v.z + RandEps());
+            Vector3 randomizedVertex = new Vector3(v.x + UsefulMethods.RandEps(), v.y + UsefulMethods.RandEps(), v.z + UsefulMethods.RandEps());
 
             tetVerts.Add(randomizedVertex);
         }
@@ -42,7 +42,9 @@ public static class Tetrahedralizer
 
         //Interior sampling = add new vertices inside of the mesh
         AddInteriorPoints(resolution, originalMesh, tetVerts, bMin, bMax);
-        
+
+        debugPoints.Clear();
+        debugPoints.AddRange(tetVerts);
 
         //Big tet to start with        
         float s = 5f * radius;
@@ -61,6 +63,9 @@ public static class Tetrahedralizer
 
         //Finalize stuff
         
+        //Generate either
+        //- one face per triangle in each tetrahedron
+        //- one non-planar quad-face per tetrahedron (which is better for exporting). So you get two triangles per tetrahedron, and you can figure out the other triangles by using the other two triangles???? If each face in each terahedron has a triangle it makes it difficult to identify a tetrahedron after improting it???
     }
 
 
@@ -123,20 +128,20 @@ public static class Tetrahedralizer
 
         for (int xi = 0; xi < (int)(dims.x / h) + 1; xi++)
         {
-            float x = bMin.x + xi * h + RandEps();
+            float x = bMin.x + xi * h + UsefulMethods.RandEps();
 
             for (int yi = 0; yi < (int)(dims.y / h) + 1; yi++)
             {
-                float y = bMin.y + yi * h + RandEps();
+                float y = bMin.y + yi * h + UsefulMethods.RandEps();
 
                 for (int zi = 0; zi < (int)(dims.z / h) + 1; zi++)
                 {
-                    float z = bMin.z + zi * h + RandEps();
+                    float z = bMin.z + zi * h + UsefulMethods.RandEps();
 
                     Vector3 p = new Vector3(x, y, z);
 
                     //Only add the point if it is within the mesh
-                    if (UsefulMethods.IsPointInsideMesh(originalMesh, p, 0.5f * h))
+                    if (UsefulMethods.IsPointInsideMesh(originalMesh.vertices, originalMesh.triangles, p, 0.5f * h))
                     {
                         tetVerts.Add(p);
                     }
@@ -149,7 +154,23 @@ public static class Tetrahedralizer
 
     private static void CreateTetIds(List<Vector3> tetVerts, CustomMesh inputMesh, float minQuality)
     {   
+        //Start with the first big tetra
         
+
+        //Add all input points one-by-one
+
+            //Search for the tetra the point is in
+
+            //Flood-fill from that tetra to find the tetras that should be removed
+
+            //Remove the tetras
+
+            //Add a tetra-fan at the new point
+
+
+        //Remove the tetras we dont want in the result
+        // - the tetras with low quality
+        // - the tetras that are not part of the original mesh (the center if the tetra is outside of the mesh)
     }
 
 
@@ -214,20 +235,6 @@ public static class Tetrahedralizer
         Debug.Log("Implement this method!");
 
         return false;
-    }
-
-
-
-    //
-    // Generate a small random value to avoid vertices that are lined up which may cause bugs
-    //
-    private static float RandEps()
-    {
-        float eps = 0.0001f;
-
-        float randomValue = -eps + 2f * Random.Range(0f, 1f) * eps;
-
-        return randomValue;
     }
     
 }

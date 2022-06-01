@@ -52,7 +52,7 @@ public class DebugTetrahedralizer : MonoBehaviour
 
     private void DebugPointMeshIntersection(CustomMesh customMesh, Vector3 point)
     {
-        if (UsefulMethods.IsPointInsideMesh(customMesh, point))
+        if (UsefulMethods.IsPointInsideMesh(customMesh.vertices, customMesh.triangles, point))
         {
             Debug.Log("Inside");
         }
@@ -69,7 +69,7 @@ public class DebugTetrahedralizer : MonoBehaviour
         //Generate the ray
         Ray ray = new Ray(testPointTransform.position, testPointTransform.forward);
 
-        if (UsefulMethods.IsRayHittingMesh(ray, customMesh, out CustomHit bestHit))
+        if (UsefulMethods.IsRayHittingMesh(ray, customMesh.vertices, customMesh.triangles, out CustomHit bestHit))
         {        
             Debug.Log("Hit");
         }
