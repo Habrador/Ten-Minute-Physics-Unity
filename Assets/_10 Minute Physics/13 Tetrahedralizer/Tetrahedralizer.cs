@@ -96,10 +96,10 @@ public static class Tetrahedralizer
 
                         Vector3 p = new Vector3(x, y, z);
 
-                        if (UsefulMethods.IsPointInsideMesh(triangles, p, 0.5f * h))
-                        {
-                            tetVerts.Add(p);
-                        }
+                        //if (UsefulMethods.IsPointInsideMesh(triangles, p, 0.5f * h))
+                        //{
+                        //    tetVerts.Add(p);
+                        //}
                     }
                 }
             }

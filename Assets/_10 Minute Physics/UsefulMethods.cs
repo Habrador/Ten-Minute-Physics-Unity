@@ -193,7 +193,7 @@ public static class UsefulMethods
     };
 
     //minDist - we are using this method to add extra vertices to inside of the mesh. But the new vertices shouldnt be too close to old faces, so if a new vertex is closer than minDist the its ignored
-    public static bool IsPointInsideMesh(List<Triangle> triangles, Vector3 p, float minDist = 0f)
+    public static bool IsPointInsideMesh(CustomMesh customMesh, Vector3 p, float minDist = 0f)
     {
         //Cast a ray in several directions and use a majority vote to determine if the point is inside of the mesh
         int numIn = 0;
@@ -202,7 +202,7 @@ public static class UsefulMethods
         {
             Ray ray = new Ray(p, rayDir);
 
-            if (IsRayHittingMesh(ray, triangles, out CustomHit hit))
+            if (IsRayHittingMesh(ray, customMesh, out CustomHit hit))
             {
                 //Is the ray hitting the triangle from the inside?
                 if (Vector3.Dot(hit.normal, rayDir) > 0f)
@@ -231,18 +231,24 @@ public static class UsefulMethods
 
     //Should return location, normal, index, distance
     //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
-    public static bool IsRayHittingMesh(Ray ray, List<Triangle> triangles, out CustomHit bestHit)
+    public static bool IsRayHittingMesh(Ray ray, CustomMesh customMesh, out CustomHit bestHit)
     {
         bestHit = null;
 
         float smallestDistance = float.MaxValue;
 
         //Loop through all triangles and find the one thats the closest
-        for (int i = 0; i < triangles.Count; i++)
-        {
-            Triangle t = triangles[i];
+        int[] triangles = customMesh.triangles;
 
-            if (IsRayHittingTriangle(t.a, t.b, t.c, ray, out CustomHit hit))
+        Vector3[] vertices = customMesh.vertices; 
+
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 a = vertices[triangles[i + 0]];
+            Vector3 b = vertices[triangles[i + 1]];
+            Vector3 c = vertices[triangles[i + 2]];
+
+            if (IsRayHittingTriangle(a, b, c, ray, out CustomHit hit))
             {
                 if (hit.distance < smallestDistance)
                 {

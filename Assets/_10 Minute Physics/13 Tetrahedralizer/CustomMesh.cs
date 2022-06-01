@@ -35,17 +35,26 @@ public class CustomMesh
 
 
 
-    public List<Triangle> GetTriangles()
+    public List<Triangle> GetTriangles(List<int> markedTriangles = null)
     {
         List<Triangle> tris = new List<Triangle>();
 
+        //Debug.Log(vertices.Length);
+        //Debug.Log(triangles.Length);
+
         for (int i = 0; i < triangles.Length; i += 3)
         {
-            Vector3 a = vertices[i + 0];
-            Vector3 b = vertices[i + 1];
-            Vector3 c = vertices[i + 2];
+            Vector3 a = vertices[triangles[i + 0]];
+            Vector3 b = vertices[triangles[i + 1]];
+            Vector3 c = vertices[triangles[i + 2]];
 
             Triangle t = new Triangle(a, b, c);
+
+            //Should this triangle be marked
+            if (markedTriangles != null && markedTriangles.Contains(i))
+            {
+                t.isIntersecting = true;
+            }
 
             tris.Add(t);
         }
