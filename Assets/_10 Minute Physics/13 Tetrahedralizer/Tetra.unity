@@ -484,7 +484,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cc7d334a79a70640b9842ba23146e11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testMeshTransform: {fileID: 1350625232}
+  testMeshTransform: {fileID: 1012622750}
   testPointTransform: {fileID: 1549395723}
 --- !u!114 &909035447
 MonoBehaviour:

@@ -9,18 +9,18 @@ public static class Tetrahedralizer
 
 
     //Called CreateTets in python code
-    //- resolution - Interior resolution [0, 100]
+    //- resolution - Interior resolution [0, 100] - used when we add extra vertices inside of the mesh. 0 means no points added 
     //- minQualityExp - Min Tet Quality Exp [-4, 0]
     //- oneFacePerTet - One Face Per Tet, making it easier to export?????
     //- tetScale - Tet Scale [0.1, 1]
-    public static void CreateTetrahedralization(CustomMesh inputMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f)
+    public static void CreateTetrahedralization(CustomMesh originalMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f)
     {
         float minQuality = Mathf.Pow(10f, minQualityExp);
 
-        Mesh tetMesh = new Mesh();
+        //The mesh where the tetrahedrons will live
+        CustomMesh tetMesh = new CustomMesh();
 
         tetMesh.name = "Tets";
-
 
         //Create vertices from input mesh (which is called tree in the original code)
         //The guy in the code is adding a very small random value to each coordinate for some reason...
@@ -28,24 +28,53 @@ public static class Tetrahedralizer
         //Hes calling it distortion later on 
         List<Vector3> tetVerts = new List<Vector3>();
 
-        foreach (Vector3 v in inputMesh.vertices)
+        foreach (Vector3 v in originalMesh.vertices)
         {        
             Vector3 randomizedVertex = new Vector3(v.x + RandEps(), v.y + RandEps(), v.z + RandEps());
 
             tetVerts.Add(randomizedVertex);
         }
 
-        List<Triangle> triangles = inputMesh.GetTriangles();
-
 
         //Measure vertices
+        MeasureVertices(tetVerts, out Vector3 bMin, out Vector3 bMax, out float radius);
+        
+
+        //Interior sampling = add new vertices inside of the mesh
+        AddInteriorPoints(resolution, originalMesh, tetVerts, bMin, bMax);
+        
+
+        //Big tet to start with        
+        float s = 5f * radius;
+
+        tetVerts.Add(new Vector3(-s, 0f, -s));
+        tetVerts.Add(new Vector3(s, 0f, -s));
+        tetVerts.Add(new Vector3(0f,  s,  s));
+        tetVerts.Add(new Vector3(0f, -s,  s));
+
+
+        //Generate tet ids
+
+        //Returns number of faces = number of triangles (4 per tetra)
+        CreateTetIds(tetVerts, originalMesh, minQuality);
+
+
+        //Finalize stuff
+        
+    }
+
+
+
+    private static void MeasureVertices(List<Vector3> tetVerts, out Vector3 bMin, out Vector3 bMax, out float radius)
+    {
+        //Center of the mesh
+        Vector3 center = Vector3.zero;
+
+        //Bounds of the mesh
         float inf = float.MaxValue;
 
-        Vector3 center = Vector3.zero;
-        
-        //Bounds
-        Vector3 bMin = new Vector3(inf, inf, inf);
-        Vector3 bMax = new Vector3(-inf, -inf, -inf);
+        bMin = new Vector3(inf, inf, inf);
+        bMax = new Vector3(-inf, -inf, -inf);
 
         foreach (Vector3 p in tetVerts)
         {
@@ -62,8 +91,9 @@ public static class Tetrahedralizer
 
         center /= tetVerts.Count;
 
-        //The distance from the center to the vertex the furthest away
-        float radius = 0f;
+
+        //The radius of the mesh: the distance from the center to the vertex the furthest away
+        radius = 0f;
 
         foreach (Vector3 p in tetVerts)
         {
@@ -71,54 +101,48 @@ public static class Tetrahedralizer
 
             radius = Mathf.Max(radius, d);
         }
-        
-        
-        //Interior sampling = add new vertices inside of the mesh, which is why we needed the dimensions of the mesh
-        if (resolution > 0)
+    }
+
+
+
+    //Add points inside of the mesh
+    private static void AddInteriorPoints(int resolution, CustomMesh originalMesh, List<Vector3> tetVerts, Vector3 bMin, Vector3 bMax)
+    {
+        if (resolution <= 0)
         {
-            Vector3 dims = bMax - bMin;
+            return;
+        }
 
-            float dim = Mathf.Max(dims.x, Mathf.Max(dims.y, dims.z));
 
-            float h = dim / resolution;
+        Vector3 dims = bMax - bMin;
 
-            for (int xi = 0; xi < (int)(dims.x / h) + 1; xi++)
+        float dim = Mathf.Max(dims.x, Mathf.Max(dims.y, dims.z));
+
+        //The distance between each new vertex
+        float h = dim / resolution;
+
+        for (int xi = 0; xi < (int)(dims.x / h) + 1; xi++)
+        {
+            float x = bMin.x + xi * h + RandEps();
+
+            for (int yi = 0; yi < (int)(dims.y / h) + 1; yi++)
             {
-                float x = bMin.x + xi * h + RandEps();
+                float y = bMin.y + yi * h + RandEps();
 
-                for (int yi = 0; yi < (int)(dims.y / h) + 1; yi++)
+                for (int zi = 0; zi < (int)(dims.z / h) + 1; zi++)
                 {
-                    float y = bMin.y + yi * h + RandEps();
+                    float z = bMin.z + zi * h + RandEps();
 
-                    for (int zi = 0; zi < (int)(dims.z / h) + 1; zi++)
+                    Vector3 p = new Vector3(x, y, z);
+
+                    //Only add the point if it is within the mesh
+                    if (UsefulMethods.IsPointInsideMesh(originalMesh, p, 0.5f * h))
                     {
-                        float z = bMin.z + zi * h + RandEps();
-
-                        Vector3 p = new Vector3(x, y, z);
-
-                        //if (UsefulMethods.IsPointInsideMesh(triangles, p, 0.5f * h))
-                        //{
-                        //    tetVerts.Add(p);
-                        //}
+                        tetVerts.Add(p);
                     }
                 }
             }
         }
-
-
-        //Big tet to start with
-        float s = 5f * radius;
-
-        tetVerts.Add(new Vector3(-s, 0f, -s));
-        tetVerts.Add(new Vector3(s, 0f, -s));
-        tetVerts.Add(new Vector3(0f,  s,  s));
-        tetVerts.Add(new Vector3(0f, -s,  s));
-
-
-        //Generate tet ids
-
-        //Returns number of faces = number of triangles (4 per tetra)
-        CreateTetIds(tetVerts, inputMesh, minQuality);
     }
 
 

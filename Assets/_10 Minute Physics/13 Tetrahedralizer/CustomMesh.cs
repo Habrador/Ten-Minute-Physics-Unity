@@ -7,7 +7,16 @@ public class CustomMesh
     public Vector3[] vertices;
 
     public int[] triangles;
-    
+
+    public string name;
+
+
+
+    public CustomMesh()
+    {
+
+    }
+
 
 
     public CustomMesh(Transform meshTransform, bool toGlobal)
@@ -35,12 +44,10 @@ public class CustomMesh
 
 
 
+    //A list of all triangles, making it easier to display a triangle with a different color, etc
     public List<Triangle> GetTriangles(List<int> markedTriangles = null)
     {
         List<Triangle> tris = new List<Triangle>();
-
-        //Debug.Log(vertices.Length);
-        //Debug.Log(triangles.Length);
 
         for (int i = 0; i < triangles.Length; i += 3)
         {
