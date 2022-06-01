@@ -247,7 +247,7 @@ public static class UsefulMethods
     //
 
     //Should return location, normal, index, distance
-    //We dont care about the normal of the triangle, just if the ray is hitting a triangle from either side
+    //We dont care about the direction the ray hits - just if the ray is hitting a triangle from either side
     public static bool IsRayHittingMesh(Ray ray, Vector3[] vertices, int[] triangles, out CustomHit bestHit)
     {
         bestHit = null;
