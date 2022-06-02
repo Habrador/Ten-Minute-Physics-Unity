@@ -182,23 +182,27 @@ public static class DisplayShapes
 
 
     //Draw a wireframe mesh
-    public static void DrawWireframeMesh(List<Triangle> triangles, float squeezeDist = 0f, bool drawNormals = false)
+    public static void DrawWireframeMesh(CustomMesh mesh, float squeezeDist = 0f, bool drawNormals = false)
     {
         List<Vector3> triangleLineSegments = new List<Vector3>();
         List<Vector3> intersectedTriangleLineSegments = new List<Vector3>();
         List<Vector3> normalsLineSegments = new List<Vector3>();
 
-        foreach (Triangle t in triangles)
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        bool[] isMarked = mesh.isMarked;
+
+        for (int i = 0; i < triangles.Length; i += 3)
         {
-            Vector3 a = t.a;
-            Vector3 b = t.b;
-            Vector3 c = t.c;
+            Vector3 a = vertices[triangles[i + 0]];
+            Vector3 b = vertices[triangles[i + 1]];
+            Vector3 c = vertices[triangles[i + 2]];
+
+            Vector3 center = (a + b + c) / 3f;
 
             //Make the triangle smaller to make it easier to see separate triangles
             if (squeezeDist > 0f)
             {
-                Vector3 center = t.GetCenter;
-
                 a += (center - a).normalized * squeezeDist;
                 b += (center - b).normalized * squeezeDist;
                 c += (center - c).normalized * squeezeDist;
@@ -206,7 +210,7 @@ public static class DisplayShapes
 
             List<Vector3> lineSegments = new List<Vector3>() { a, b, b, c, c, a };
 
-            if (!t.isIntersecting)
+            if (!isMarked[i])
             {
                 triangleLineSegments.AddRange(lineSegments);
             }
@@ -218,8 +222,8 @@ public static class DisplayShapes
 
             if (drawNormals)
             {
-                Vector3 normalStart = t.GetCenter;
-                Vector3 normalEnd = t.GetCenter + t.normal * 0.2f;
+                Vector3 normalStart = center;
+                Vector3 normalEnd = center + mesh.CalculateNormal(a, b, c) * 0.2f;
 
                 normalsLineSegments.Add(normalStart);
                 normalsLineSegments.Add(normalEnd);

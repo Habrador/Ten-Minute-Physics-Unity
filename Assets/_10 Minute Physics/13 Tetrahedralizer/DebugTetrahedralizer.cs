@@ -42,10 +42,10 @@ public class DebugTetrahedralizer : MonoBehaviour
         CustomMesh customMesh = new CustomMesh(meshTransform, true);
 
         
-        //DebugRayTriangleIntersection(customMesh, testPointTransform);
+        DebugRayTriangleIntersection(customMesh, testPointTransform);
 
 
-        DebugPointMeshIntersection(customMesh, testPointTransform.position);
+        //DebugPointMeshIntersection(customMesh, testPointTransform.position);
     }
 
 
@@ -85,16 +85,13 @@ public class DebugTetrahedralizer : MonoBehaviour
         //Display the mesh
 
         //Mark the triangle has being hit so we can display it with a different color
-        List<int> markedTriangles = null;
-
         if (bestHit != null)
         {
-            markedTriangles = new List<int>() { bestHit.index };
+            customMesh.isMarked[bestHit.index] = true;
         }
 
-        List<Triangle> meshTriangles = customMesh.GetTriangles(markedTriangles);
 
-        DisplayShapes.DrawWireframeMesh(meshTriangles, 0.02f, false);
+        DisplayShapes.DrawWireframeMesh(customMesh, 0.02f, true);
     }
 
 
