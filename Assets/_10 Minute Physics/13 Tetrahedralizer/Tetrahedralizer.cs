@@ -2,9 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Useful for:
+//- Soft-body physics
+//- Procedural destruction
+//- When generating 3d voronoi diagram 
+//- To calculate the volume of a mesh
 //Based on https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/BlenderTetPlugin.py
+//This video is also useful https://www.youtube.com/watch?v=hRz3sh7QQ6w for some of the math
 public static class Tetrahedralizer
 {
+    //The orientation of each triangle in the tetra which has vertices 0-1-2-3
     private static readonly int[,] tetFaces = new int[,] { { 2, 1, 0 }, { 0, 1, 3 }, { 1, 2, 3 }, { 2, 0, 3 } };
 
 
@@ -155,15 +162,20 @@ public static class Tetrahedralizer
     private static void CreateTetIds(List<Vector3> verts, CustomMesh inputMesh, float minQuality)
     {
         //pos in verts list (4 per tetra in the list?) (4 * tetNr + 0) to get the first vertex 
+        //-1 means deletet tetra?
         List<int> tetIds = new List<int>();
+        //???
         List<int> tetMarks = new List<int>();
+        //Neighbor to each tetra face (-1 if no neighbor) - is a position in tetIds
         List<int> neighbors = new List<int>();
 
-        //The normals to each tetra triangle
+        //The normals to each tetra triangle which is the same as the planes normal
         List<Vector3> planesN = new List<Vector3>();
-        //What is D??? You calculate it by using Dot(p0, n) where n is the normal and p0 a triangle vertex
+        //d in the equation of the plane ax + by + cz + d = 0 where n = (a, b, c)
         List<float> planesD = new List<float>();
 
+        //The last tetra id we added, making it faster to figure out in which tetrahedra a new point is added???
+        //So instead of doing point-tetra collision for all tetras, we start by using the last added tetra and fire a ray from its center 
         int tetMark = 0;
         int firstFreeTet = -1;
 
@@ -199,6 +211,7 @@ public static class Tetrahedralizer
         //Vector3 center = Vector3.zero;
 
 
+
         //
         // Main tetrahedralization algorithm starts here
         //
@@ -220,18 +233,15 @@ public static class Tetrahedralizer
 
             int safety = 0;
             
+            //Deletet tras are marked with -1 and each tetra has 4 positions in the array (4 triangles), thus the 4 * tetNr
             while (tetIds[4 * tetNr] < 0)
             {
-                tetNr += 1;
-
-                safety += 1;
-
-                if (safety > 1000000)
+                if (IsStuck(ref safety, "Stuck in infinite loop when finding non-deleted tet"))
                 {
-                    Debug.Log("Stuck in infinite loop when finding non-deleted tet");
-
                     break;
                 }
+
+                tetNr += 1;
             }
 
 
@@ -244,12 +254,8 @@ public static class Tetrahedralizer
 
             while (!found)
             {
-                safety += 1;
-
-                if (safety > 1000000)
+                if (IsStuck(ref safety, "Stuck in infinite loop when searchig for the tetra the point is in"))
                 {
-                    Debug.Log("Stuck in infinite loop when searchig for the tetra the point is in");
-
                     break;
                 }
 
@@ -265,14 +271,21 @@ public static class Tetrahedralizer
                 int id2 = tetIds[4 * tetNr + 2];
                 int id3 = tetIds[4 * tetNr + 3];
 
+                //Create a ray from the tetra center to the new point
+                //Find which face is intersecting this ray, and move across the face to the neighbor
+                //Repeat until you are in the tetra the point p is in
                 Vector3 center = (verts[id0] + verts[id1] + verts[id2] + verts[id3]) * 0.25f;
 
+                //Best ray-intersection point length
                 float minT = float.MaxValue;
 
+                //The face of the tetra we should cross to move closer to the final tetra
                 int minFaceNr = -1;
 
+                //Loop through the tetras 4 faces
                 for (int j = 0; j < 4; j++)
                 {
+                    //Ray-plane intersection
                     Vector3 n = planesN[4 * tetNr + j];
                     float d = planesD[4 * tetNr + j];
 
@@ -286,9 +299,10 @@ public static class Tetrahedralizer
                         continue;
                     }
 
-                    //Time when c -> p hits the face
+                    //Time when center -> p hits the face
                     t = -hc / t;
 
+                    //If the face is infront of the ray and the intersection point is better
                     if (t >= 0f && t < minT)
                     {
                         minT = t;
@@ -296,16 +310,19 @@ public static class Tetrahedralizer
                     }
                 }
                 
+                //We found the tetra the point is in
                 if (minT >= 1f)
                 {
                     found = true;
                 }
+                //Move across the face to the enighboring tetra
                 else
                 {
                     tetNr = neighbors[4 * tetNr + minFaceNr];
                 }
             }
 
+            //Something went wrong, perhaps the start big tetra is too small or some floating point precision issues???
             if (!found)
             {
                 Debug.Log("Failed to insert vertex");
@@ -314,12 +331,200 @@ public static class Tetrahedralizer
             }
 
 
-            //Find violatig tets
+            //Find violating tets
             //Flood-fill from that tetra to find the tetras that should be removed
+            //So we dont need to check all tetras - only the ones that appear during the flood-fill algorithm
+            tetMark += 1;
 
-            //Remove the tetras
+            List<int> violatingTets = new();
+
+            Queue<int> stack = new();
+
+            //Add the first one to the queue because we know its violating
+            stack.Enqueue(tetNr);
+
+            safety = 0;
+
+            while (stack.Count != 0)
+            {
+                if (IsStuck(ref safety, "Stuck in infinite loop when floodfilling violating tetras"))
+                {
+                    break;
+                }
+            
+            
+                tetNr = stack.Dequeue();
+
+                if (tetMarks[tetNr] == tetMark)
+                {
+                    continue;
+                }
+
+                tetMarks[tetNr] = tetMark;
+
+                violatingTets.Add(tetNr);
+
+                //For each neighbor
+                for (int j = 0; j < 4; j++)
+                {
+                    int n = neighbors[4 * tetNr + j];
+
+                    //If there's no neighbor or we have already visited the neighbor
+                    if (n < 0 || tetMarks[n] == tetMark)
+                    {
+                        continue;
+                    }
+
+                    //Delaunay condition test
+                    int id0 = tetIds[4 * n + 0];
+                    int id1 = tetIds[4 * n + 1];
+                    int id2 = tetIds[4 * n + 2];
+                    int id3 = tetIds[4 * n + 3];
+
+                    Vector3 c = UsefulMethods.GetCircumCenter(verts[id0], verts[id1], verts[id2], verts[id3]);
+
+                    float r = (verts[id0] - c).magnitude;
+
+                    //This tetra is violating the delaunay conditional test
+                    if ((p - c).magnitude < r)
+                    {
+                        stack.Enqueue(n);
+                    }
+                }
+            }
+
+            //Remove the tetras that are violating
+            List<Edge> edges = new();
+
+            for (int j = 0; j < violatingTets.Count; j++)
+            {
+                tetNr = violatingTets[j];
+
+                //Copy info before we delete it
+                int[] ids = new int[4];
+                int[] ns = new int[4];
+
+                for (int k = 0; k < 4; k++)
+                {
+                    ids[k] = tetIds[4 * tetNr + k];
+                    ns[k] = neighbors[4 * tetNr + k];
+                }
+
+                //Delete the tet
+                tetIds[4 * tetNr] = -1;
+                tetIds[4 * tetNr + 1] = firstFreeTet;
+                firstFreeTet = tetNr;
+
+                //Visit neighbors
+                for (int k = 0; k < 4; k++)
+                {
+                    int n = ns[k];
+
+                    if (n >= 0 && tetMarks[n] == tetMark)
+                    {
+                        continue;
+                    }
+
+                    //No neighbor or neighbor is not-violating -> we are facing the border
+
+                    //Create new tet
+                    int newTetNr = firstFreeTet;
+
+                    if (newTetNr >= 0)
+                    {
+                        firstFreeTet = tetIds[4 * firstFreeTet + 1];
+                    }
+                    else
+                    {
+                        newTetNr = (int)(tetIds.Count / 4);
+                        
+                        tetMarks.Add(0);
+
+                        for (int l = 0; l < 4; l++)
+                        {
+                            tetIds.Add(-1);
+                            neighbors.Add(-1);
+                            planesN.Add(Vector3.zero);
+                            planesD.Add(0f);
+                        }
+                    }
+
+                    int id0 = ids[tetFaces[k, 2]];
+                    int id1 = ids[tetFaces[k, 1]];
+                    int id2 = ids[tetFaces[k, 0]];
+
+                    tetIds[4 * newTetNr + 0] = id0;
+                    tetIds[4 * newTetNr + 1] = id1;
+                    tetIds[4 * newTetNr + 2] = id2;
+                    tetIds[4 * newTetNr + 3] = i;
+
+                    neighbors[4 * newTetNr] = n;
+
+                    if (n >= 0)
+                    {
+                        for (int l = 0; l < 4; l++)
+                        {
+                            if (neighbors[4 * n + l] == tetNr)
+                            {
+                                neighbors[4 * n + l] = newTetNr;
+                            }
+                        }
+                    }
+
+                    //Will set the neighbors among the new tets later
+
+                    neighbors[4 * newTetNr + 1] = -1;
+                    neighbors[4 * newTetNr + 2] = -1;
+                    neighbors[4 * newTetNr + 3] = -1;
+
+                    for (int l = 0; l < 4; l++)
+                    {
+                        Vector3 p0 = verts[tetIds[4 * newTetNr + tetFaces[l, 0]]];
+                        Vector3 p1 = verts[tetIds[4 * newTetNr + tetFaces[l, 1]]];
+                        Vector3 p2 = verts[tetIds[4 * newTetNr + tetFaces[l, 2]]];
+
+                        Vector3 newN = Vector3.Cross(p1 - p0, p2 - p0).normalized;
+
+                        float newD = Vector3.Dot(newN, p0);
+
+                        planesN[4 * newTetNr + l] = newN;
+                        planesD[4 * newTetNr + l] = newD;
+                    }
+
+                    if (id0 < id1)
+                    {
+                        edges.Add(new Edge(id0, id1, newTetNr, 1));
+                    }
+                    else
+                    {
+                        edges.Add(new Edge(id1, id0, newTetNr, 1));
+                    }
+
+                    if (id1 < id2)
+                    {
+                        edges.Add(new Edge(id1, id2, newTetNr, 2));
+                    }
+                    else
+                    {
+                        edges.Add(new Edge(id2, id1, newTetNr, 2));
+                    }
+
+                    if (id2 < id0)
+                    {
+                        edges.Add(new Edge(id2, id0, newTetNr, 3));
+                    }
+                    else
+                    {
+                        edges.Add(new Edge(id0, id2, newTetNr, 3));
+                    }
+                }
+            }
+
 
             //Add a tetra-fan at the new point
+
+
+            //Fix neighbors
 
         }
 
@@ -379,18 +584,43 @@ public static class Tetrahedralizer
     // Compare edges
     //
 
-    private static int CompareEdges()
+    private static int CompareEdges(Edge e0, Edge e1)
     {
-        Debug.Log("Implement this method!");
-    
-        return -1;
+        if (e0.idA < e1.idA || (e0.idA == e1.idA && e0.idB < e1.idB))
+        {
+            return -1;
+        }
+        else
+        {
+            return 1;
+        }
     }
 
-    private static bool EqualEdges()
+    private static bool EqualEdges(Edge e0, Edge e1)
     {
-        Debug.Log("Implement this method!");
+        bool areEqual = e0.idA == e1.idA && e0.idB == e1.idB;
 
-        return false;
+        return areEqual;
     }
-    
+
+
+
+    //
+    // Help method to avoid getting stuck in infinite loop
+    //
+    private static bool IsStuck(ref int safety, string message)
+    {
+        bool isStuck = false;
+
+        safety += 1;
+
+        if (safety > 1000000)
+        {
+            Debug.Log(message);
+
+            isStuck = true;
+        }
+
+        return isStuck;
+    }
 }

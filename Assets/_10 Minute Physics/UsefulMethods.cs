@@ -167,7 +167,7 @@ public static class UsefulMethods
     //
 
     //http://rodolphe-vaillant.fr/entry/127/find-a-tetrahedron-circumcenter
-    public static Vector3 GetCircumcenter(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    public static Vector3 GetCircumCenter(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
     {
         Vector3 b = p1 - p0;
         Vector3 c = p2 - p0;
