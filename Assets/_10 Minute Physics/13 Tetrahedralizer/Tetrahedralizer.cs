@@ -65,7 +65,7 @@ public static class Tetrahedralizer
         //Generate tet ids
 
         //Returns number of faces = number of triangles (4 per tetra)
-        CreateTetIds(tetVerts, originalMesh, minQuality);
+        List<int> tetIds = CreateTetIds(tetVerts, originalMesh, minQuality);
 
 
         //Finalize stuff
@@ -105,14 +105,18 @@ public static class Tetrahedralizer
 
 
         //The radius of the mesh: the distance from the center to the vertex the furthest away
-        radius = 0f;
+
+        //Using square is faster
+        float radiusSqr = 0f;
 
         foreach (Vector3 p in tetVerts)
         {
-            float d = (p - center).magnitude;
+            float d = (p - center).sqrMagnitude;
 
-            radius = Mathf.Max(radius, d);
+            radiusSqr = Mathf.Max(radiusSqr, d);
         }
+
+        radius = Mathf.Sqrt(radiusSqr);
     }
 
 
@@ -159,7 +163,7 @@ public static class Tetrahedralizer
 
 
 
-    private static void CreateTetIds(List<Vector3> verts, CustomMesh inputMesh, float minQuality)
+    private static List<int> CreateTetIds(List<Vector3> verts, CustomMesh inputMesh, float minQuality)
     {
         //pos in verts list (4 per tetra in the list?) (4 * tetNr + 0) to get the first vertex 
         //-1 means deletet tetra?
@@ -393,7 +397,7 @@ public static class Tetrahedralizer
                 }
             }
 
-            //Remove the tetras that are violating
+            //Remove the tetras that are violating, and create new ones
             List<Edge> edges = new();
 
             for (int j = 0; j < violatingTets.Count; j++)
@@ -521,10 +525,62 @@ public static class Tetrahedralizer
             }
 
 
-            //Add a tetra-fan at the new point
-
-
             //Fix neighbors
+
+            //Sort the edges
+            //https://stackoverflow.com/questions/3163922/sort-a-custom-class-listt
+
+            //List<Edge> sortedEdges = sorted(edges, key = cmp_to_key(compareEdges))
+
+            List<Edge> sortedEdges = new List<Edge>(edges);
+
+            sortedEdges.Sort((e0, e1) =>
+            {
+                if (e0.idA < e1.idA || (e0.idA == e1.idA && e0.idB < e1.idB))
+                {
+                    return -1;
+                }
+                else
+                {
+                    return 1;
+                }
+            });
+
+            int nr = 0;
+            int numEdges = sortedEdges.Count;
+
+            safety = 0;
+
+            while (nr < numEdges)
+            {
+                if (IsStuck(ref safety, "Stuck in infinite loop when fixing edges"))
+                {
+                    break;
+                }
+
+                Edge e0 = sortedEdges[nr];
+                nr += 1;
+
+                if (nr < numEdges && EqualEdges(sortedEdges[nr], e0))
+                {
+                    Edge e1 = sortedEdges[nr];
+
+                    int id0 = tetIds[4 * e0.newTetNr + 0];
+                    int id1 = tetIds[4 * e0.newTetNr + 1];
+                    int id2 = tetIds[4 * e0.newTetNr + 2];
+                    int id3 = tetIds[4 * e0.newTetNr + 3];
+
+                    int jd0 = tetIds[4 * e1.newTetNr + 0];
+                    int jd1 = tetIds[4 * e1.newTetNr + 1];
+                    int jd2 = tetIds[4 * e1.newTetNr + 2];
+                    int jd3 = tetIds[4 * e1.newTetNr + 3];
+
+                    neighbors[4 * e0.newTetNr + e0.unknown] = e1.newTetNr;
+                    neighbors[4 * e1.newTetNr + e1.unknown] = e0.newTetNr;
+
+                    nr += 1;
+                }
+            }
 
         }
 
@@ -532,6 +588,75 @@ public static class Tetrahedralizer
         //Remove the tetras we dont want in the result
         // - the tetras with low quality
         // - the tetras that are not part of the original mesh (the center if the tetra is outside of the mesh)
+        // - the tetras we have deleted
+        // - the tetras that belong to the original big tetra we started with
+
+        int numTets = (int)(tetIds.Count / 4);
+        int num = 0;
+        int numBad = 0;
+
+        for (int i = 0; i < numTets; i++)
+        {
+            int id0 = tetIds[4 * i + 0];
+            int id1 = tetIds[4 * i + 1];
+            int id2 = tetIds[4 * i + 2];
+            int id3 = tetIds[4 * i + 3];
+
+            if (id0 < 0 || id0 >= firstBig || id1 >= firstBig || id2 >= firstBig || id3 >= firstBig)
+            {
+                continue;
+            }
+
+            //The tetrahedron is of low quality
+            Vector3 p0 = verts[id0];
+            Vector3 p1 = verts[id1];
+            Vector3 p2 = verts[id2];
+            Vector3 p3 = verts[id3];
+
+            float quality = Tetrahedron.TetQuality(p0, p1, p2, p3);
+
+            if (quality < minQuality)
+            {
+                numBad += 1;
+
+                continue;
+            }
+
+            //The center of the tetrahedron is outside of the original mesh 
+            Vector3 center = (p0 + p1 + p2 + p3) / 4f;
+
+            if (!UsefulMethods.IsPointInsideMesh(inputMesh.vertices, inputMesh.triangles, center))
+            {
+                continue;
+            }
+
+            tetIds[num] = id0;
+
+            num += 1;
+
+            tetIds[num] = id1;
+
+            num += 1;
+
+            tetIds[num] = id2;
+
+            num += 1;
+
+            tetIds[num] = id3;
+
+            num += 1;
+        }
+
+        //Delete the tets startig at num
+        //del tetIds[num:]
+        tetIds.RemoveRange(num, tetIds.Count - num);
+
+        Debug.Log($"Number of bad tets deleted: {numBad}");
+
+        Debug.Log($"Number of tets created: {(int)(tetIds.Count / 4)}");
+
+        return tetIds;
+
     }
 
 
@@ -540,6 +665,7 @@ public static class Tetrahedralizer
     // Compare edges
     //
 
+    //Used when sorting
     private static int CompareEdges(Edge e0, Edge e1)
     {
         if (e0.idA < e1.idA || (e0.idA == e1.idA && e0.idB < e1.idB))
@@ -552,9 +678,10 @@ public static class Tetrahedralizer
         }
     }
 
+    //Are two edges the same?
     private static bool EqualEdges(Edge e0, Edge e1)
     {
-        bool areEqual = e0.idA == e1.idA && e0.idB == e1.idB;
+        bool areEqual = (e0.idA == e1.idA && e0.idB == e1.idB);
 
         return areEqual;
     }

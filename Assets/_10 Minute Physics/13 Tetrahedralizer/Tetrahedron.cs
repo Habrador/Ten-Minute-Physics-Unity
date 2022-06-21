@@ -14,7 +14,7 @@ public static class Tetrahedron
         Vector3 d1 = p2 - p0;
         Vector3 d2 = p3 - p0;
 
-        float volume = Vector3.Dot(d0, Vector3.Cross(d1, d2)) / 6f;
+        float volume = Vector3.Dot(Vector3.Cross(d1, d2), d0) / 6f;
 
         return volume;
     }
