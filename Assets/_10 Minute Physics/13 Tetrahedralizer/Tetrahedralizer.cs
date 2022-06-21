@@ -18,9 +18,9 @@ public static class Tetrahedralizer
     //Called CreateTets in python code
     //- resolution - Interior resolution [0, 100] - used when we add extra vertices inside of the mesh. 0 means no points added 
     //- minQualityExp - Min Tet Quality Exp [-4, 0]
-    //- oneFacePerTet - One Face Per Tet, making it easier to export?????
-    //- tetScale - Tet Scale [0.1, 1]
-    public static void CreateTetrahedralization(CustomMesh originalMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f, List<Vector3> debugPoints = null)
+    //- oneFacePerTet - One Face Per Tet, making it easier to export if each tetra is defined by a quad
+    //- tetScale - Tet Scale, is used when we show all individual tetras to make them smaller to better see them [0.1, 1]
+    public static CustomMesh CreateTetrahedralization(CustomMesh originalMesh, int resolution = 10, int minQualityExp = -3, bool oneFacePerTet = true, float tetScale = 0.8f, List<Vector3> debugPoints = null)
     {
         float minQuality = Mathf.Pow(10f, minQualityExp);
 
@@ -36,7 +36,7 @@ public static class Tetrahedralizer
         List<Vector3> tetVerts = new List<Vector3>();
 
         foreach (Vector3 v in originalMesh.vertices)
-        {        
+        {
             Vector3 randomizedVertex = new Vector3(v.x + UsefulMethods.RandEps(), v.y + UsefulMethods.RandEps(), v.z + UsefulMethods.RandEps());
 
             tetVerts.Add(randomizedVertex);
@@ -45,7 +45,7 @@ public static class Tetrahedralizer
 
         //Measure vertices
         MeasureVertices(tetVerts, out Vector3 bMin, out Vector3 bMax, out float radius);
-        
+
 
         //Interior sampling = add new vertices inside of the mesh
         AddInteriorPoints(resolution, originalMesh, tetVerts, bMin, bMax);
@@ -58,21 +58,118 @@ public static class Tetrahedralizer
 
         tetVerts.Add(new Vector3(-s, 0f, -s));
         tetVerts.Add(new Vector3(s, 0f, -s));
-        tetVerts.Add(new Vector3(0f,  s,  s));
-        tetVerts.Add(new Vector3(0f, -s,  s));
+        tetVerts.Add(new Vector3(0f, s, s));
+        tetVerts.Add(new Vector3(0f, -s, s));
 
 
         //Generate tet ids
 
         //Returns number of faces = number of triangles (4 per tetra)
-        List<int> tetIds = CreateTetIds(tetVerts, originalMesh, minQuality);
+        List<int> faces = CreateTetIds(tetVerts, originalMesh, minQuality);
 
 
         //Finalize stuff
-        
+
         //Generate either
-        //- one face per triangle in each tetrahedron
-        //- one non-planar quad-face per tetrahedron (which is better for exporting). So you get two triangles per tetrahedron, and you can figure out the other triangles by using the other two triangles???? If each face in each terahedron has a triangle it makes it difficult to identify a tetrahedron after improting it???
+        //- One triangle per face in each tetrahedron
+        //- One quad-face per tetrahedron (which is better for exporting). So you get two triangles per tetrahedron, which includes the 4 vertices of each tetrahedron  
+
+        int numTets = (int)(faces.Count / 4);
+
+        if (oneFacePerTet)
+        {
+            List<Vector3> vertices = originalMesh.vertices;
+
+            int numSrcPoints = vertices.Count;
+
+            int numPoints = tetVerts.Count - 4;
+
+            //Copy vertices in the original mesh without distortion
+            for (int i = 0; i < numSrcPoints; i++)
+            {
+                Vector3 co = vertices[i];
+                tetMesh.vertices.Add(co);
+            }
+            //Copy the other vertices
+            for (int i = numSrcPoints; i < numPoints; i++)
+            {
+                Vector3 p = tetVerts[i];
+                tetMesh.vertices.Add(p);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < numTets; i++)
+            {
+                Vector3 v0 = tetVerts[faces[4 * i + 0]];
+                Vector3 v1 = tetVerts[faces[4 * i + 1]];
+                Vector3 v2 = tetVerts[faces[4 * i + 2]];
+                Vector3 v3 = tetVerts[faces[4 * i + 3]];
+
+                //Need a center so we can scale to tetra to better see all tetras
+                Vector3 center = (v0 + v1 + v2 + v3) / 4f;
+
+                //4 triangles per tetra
+                for (int j = 0; j < 4; j++)
+                {
+                    //3 vertices per triangle
+                    for (int k = 0; k < 3; k++)
+                    {
+                        Vector3 p = tetVerts[faces[4 * i + tetFaces[j, k]]];
+
+                        //Scale the tetra towards the center so we can see it easier
+                        p = center + (p - center) * tetScale;
+
+                        tetMesh.vertices.Add(p);
+                    }
+                }
+            }
+        }
+
+
+        //Build the triangles
+
+        //bm.verts.ensure_lookup_table()
+
+        int nr = 0;
+
+        for (int i = 0; i < numTets; i++)
+        {
+            if (oneFacePerTet)
+            {
+                int id0 = faces[4 * i + 0];
+                int id1 = faces[4 * i + 1];
+                int id2 = faces[4 * i + 2];
+                int id3 = faces[4 * i + 3];
+
+                tetMesh.AddTriangle(id0, id1, id2);
+                tetMesh.AddTriangle(id0, id2, id3);
+            }
+            else
+            {
+                List<Vector3> verts = tetMesh.vertices;
+            
+                for (int j = 0; j < 4; i++)
+                {
+                    //int id0 = verts[nr + 0];
+                    //int id1 = verts[nr + 1];
+                    //int id2 = verts[nr + 2];
+
+                    int id0 = nr + 0;
+                    int id1 = nr + 1;
+                    int id2 = nr + 2;
+
+                    tetMesh.AddTriangle(id0, id1, id2);
+
+                    nr += 3;
+                }
+            }
+        }
+
+        //bm.to_mesh(tetMesh)
+        //tetMesh.update()
+
+        return tetMesh;
     }
 
 
@@ -137,6 +234,9 @@ public static class Tetrahedralizer
         //The distance between each new vertex
         float h = dim / resolution;
 
+        Vector3[] verts = originalMesh.vertices.ToArray();
+        int[] tris = originalMesh.triangles.ToArray();
+
         for (int xi = 0; xi < (int)(dims.x / h) + 1; xi++)
         {
             float x = bMin.x + xi * h + UsefulMethods.RandEps();
@@ -152,7 +252,7 @@ public static class Tetrahedralizer
                     Vector3 p = new Vector3(x, y, z);
 
                     //Only add the point if it is within the mesh
-                    if (UsefulMethods.IsPointInsideMesh(originalMesh.vertices, originalMesh.triangles, p, 0.5f * h))
+                    if (UsefulMethods.IsPointInsideMesh(verts, tris, p, 0.5f * h))
                     {
                         tetVerts.Add(p);
                     }
@@ -595,6 +695,9 @@ public static class Tetrahedralizer
         int num = 0;
         int numBad = 0;
 
+        Vector3[] meshVerts = inputMesh.vertices.ToArray();
+        int[] meshTris = inputMesh.triangles.ToArray();
+
         for (int i = 0; i < numTets; i++)
         {
             int id0 = tetIds[4 * i + 0];
@@ -625,7 +728,7 @@ public static class Tetrahedralizer
             //The center of the tetrahedron is outside of the original mesh 
             Vector3 center = (p0 + p1 + p2 + p3) / 4f;
 
-            if (!UsefulMethods.IsPointInsideMesh(inputMesh.vertices, inputMesh.triangles, center))
+            if (!UsefulMethods.IsPointInsideMesh(meshVerts, meshTris, center))
             {
                 continue;
             }

@@ -27,7 +27,7 @@ public class TetraController : MonoBehaviour
         //Convert the mesh to global space
         CustomMesh mesh = new CustomMesh(meshTransform, true);
 
-        Tetrahedralizer.CreateTetrahedralization(mesh, resolution, minQuality, oneFacePerTet, tetScale, debugPoints);
+        CustomMesh tetras = Tetrahedralizer.CreateTetrahedralization(mesh, resolution, minQuality, oneFacePerTet, tetScale, debugPoints);
 
         Debug.Log("Tetrahedralizer completed!");
     }

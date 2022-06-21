@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class CustomMesh
 {
-    public Vector3[] vertices;
+    public List<Vector3> vertices;
 
-    public int[] triangles;
+    public List<int> triangles;
 
     //Same size as triangles
-    public bool[] isMarked;
+    public List<bool> isMarked;
 
     public string name;
 
@@ -29,8 +29,8 @@ public class CustomMesh
         if (toGlobal)
         {
             Vector3[] verticesLocal = mesh.vertices;
-        
-            vertices = new Vector3[verticesLocal.Length];
+
+            vertices = new List<Vector3>();
 
             for (int i = 0; i < verticesLocal.Length; i++)
             {
@@ -39,13 +39,22 @@ public class CustomMesh
         }
         else
         {
-            vertices = mesh.vertices;
+            vertices = new List<Vector3>(mesh.vertices);
         }
 
-        triangles = mesh.triangles;
+        triangles = new List<int>(mesh.triangles);
 
         //Default is false
-        isMarked = new bool[triangles.Length];
+        isMarked = new List<bool>();
+    }
+
+
+
+    public void AddTriangle(int i0, int i1, int i2)
+    {
+        triangles.Add(i0);
+        triangles.Add(i1);
+        triangles.Add(i2);
     }
 
 

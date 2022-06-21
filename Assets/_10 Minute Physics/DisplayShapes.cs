@@ -188,9 +188,9 @@ public static class DisplayShapes
         List<Vector3> intersectedTriangleLineSegments = new List<Vector3>();
         List<Vector3> normalsLineSegments = new List<Vector3>();
 
-        Vector3[] vertices = mesh.vertices;
-        int[] triangles = mesh.triangles;
-        bool[] isMarked = mesh.isMarked;
+        Vector3[] vertices = mesh.vertices.ToArray();
+        int[] triangles = mesh.triangles.ToArray();
+        bool[] isMarked = mesh.isMarked.ToArray();
 
         for (int i = 0; i < triangles.Length; i += 3)
         {
