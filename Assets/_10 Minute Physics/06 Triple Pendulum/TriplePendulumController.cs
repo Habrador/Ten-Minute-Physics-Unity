@@ -7,54 +7,57 @@ using UnityEngine;
 //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class TriplePendulumController : MonoBehaviour
 {
-    public Transform ball_1;
-    public Transform ball_2;
-    public Transform ball_3;
+    public GameObject ballTransformGO;
     public Transform wall;
 
-    private List<Node> pendulumSections = new List<Node>();
+    private readonly List<Node> pendulumSections = new List<Node>();
 
-    //The distance we want between each node
-    private float sectionLength = 2f;
+    //The total length of the pendulum 
+    private float pendulumLength = 5.5f;
+
+    //How many pendulum sections
+    private int numberOfPendulumSections = 3;
+
+    //How long is a single section?
+    private float SectionLength => pendulumLength / (float)numberOfPendulumSections;
 
     private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 
     //To draw the historical positions of the pendulum
     private Queue<Vector3> historicalPositions = new Queue<Vector3>();
 
-    private int subSteps = 5;
+    private readonly int subSteps = 5;
+
+    private readonly int seed = 1;
 
 
 
     private void Start()
     {
-        //-1 means infinite mass
         Node wallSection = new Node(wall, true);
 
-        //Give them different radius and thus mass
-        ball_1.localScale = Vector3.one * 1.0f;
-        ball_2.localScale = Vector3.one * 1.5f;
-        ball_3.localScale = Vector3.one * 0.5f;
-
-        Node pendulum_1_Section = new Node(ball_1);
-        Node pendulum_2_Section = new Node(ball_2);
-        Node pendulum_3_Section = new Node(ball_3);
-
         pendulumSections.Add(wallSection);
-        pendulumSections.Add(pendulum_1_Section);
-        pendulumSections.Add(pendulum_2_Section);
-        pendulumSections.Add(pendulum_3_Section);
 
-        //To avoid making the pendulum freak out at the start you can make sure that each section has the correct length
-        //for (int i = 1; i < pendulumSections.Count; i++)
-        //{
-        //    Node prevNode = pendulumSections[i - 1]; 
-        //    Node thisNode = pendulumSections[i];
 
-        //    Vector3 dir = prevNode.pos - thisNode.pos;
+        //Add the sections
+        Random.InitState(seed);
 
-        //    thisNode.pos += (dir.magnitude - sectionLength) * dir.normalized;
-        //}
+        Vector3 pendulumStartDir = new Vector3(1f, -0.2f, 0f).normalized;
+
+        for (int i = 0; i < numberOfPendulumSections; i++)
+        {
+            Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (i + 1);
+        
+            GameObject newBall = GameObject.Instantiate(ballTransformGO, pos, Quaternion.identity);
+
+            //newBall.transform.localScale = Vector3.one * Random.Range(0.5f, 1.5f);
+
+            newBall.transform.localScale = Vector3.one * 0.3f;
+
+            Node newSection = new Node(newBall.transform);
+
+            pendulumSections.Add(newSection);
+        }
     }
 
 
@@ -100,8 +103,8 @@ public class TriplePendulumController : MonoBehaviour
 
                 //Move the node based on its mass and the mass of the connected node
                 //w = 0 if we have infinite mass, meaning the node is connected to a wall 
-                float w1 = !prevNode.isWall ? 1f / prevNode.mass : 0f;
-                float w2 = !thisNode.isWall ? 1f / thisNode.mass : 0f;
+                float w1 = !prevNode.isFixed ? 1f / prevNode.mass : 0f;
+                float w2 = !thisNode.isFixed ? 1f / thisNode.mass : 0f;
 
                 //x1_moveDist = 0.5 * (currentLength - wantedLegth) * (x2-x1).normalized
                 //x2_moveDist = - 0.5 * (currentLength - wantedLegth) * (x2-x1).normalized
@@ -115,7 +118,7 @@ public class TriplePendulumController : MonoBehaviour
 
                 //But above can be simplified (according to the video) to:
                 //Which is faster becase we dont need to normalize
-                float correction = (sectionLength - currentLength) / currentLength / (w1 + w2);
+                float correction = (SectionLength - currentLength) / currentLength / (w1 + w2);
 
                 //Move the nodes
                 //Why are we not using the normalized direction?

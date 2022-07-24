@@ -6,12 +6,13 @@ public class Node : Ball
 {
     public Vector3 prevPos;
 
-    public bool isWall;
+    //Is this node attached to a wall? 
+    public bool isFixed;
 
 
     public Node(Transform ballTransform, bool isWall = false) : base(ballTransform)
     {
-        this.isWall = isWall;
+        this.isFixed = isWall;
     }
 
 
