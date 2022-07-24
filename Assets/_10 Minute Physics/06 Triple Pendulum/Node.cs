@@ -10,9 +10,9 @@ public class Node : Ball
     public bool isFixed;
 
 
-    public Node(Transform ballTransform, bool isWall = false) : base(ballTransform)
+    public Node(Transform ballTransform, bool isFixed = false) : base(ballTransform)
     {
-        this.isFixed = isWall;
+        this.isFixed = isFixed;
     }
 
 
@@ -29,7 +29,7 @@ public class Node : Ball
     //Calculate new velocity because the velocity we calculate during integration will explode due to gravity
     public void EndStep(float dt)
     {
-        //v = s / t [m/s]
+        //v = distance / t [m/s]
         vel = (pos - prevPos) / dt;
     }
 }
