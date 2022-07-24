@@ -9,7 +9,7 @@ using UnityEngine;
 //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class NPendulumController : MonoBehaviour
 {
-    public GameObject ballTransformGO;
+    public GameObject ballPrefabGO;
     public Transform wall;
 
     private readonly List<Node> pendulumSections = new List<Node>();
@@ -55,7 +55,7 @@ public class NPendulumController : MonoBehaviour
         {
             Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (n + 1);
         
-            GameObject newBall = GameObject.Instantiate(ballTransformGO, pos, Quaternion.identity);
+            GameObject newBall = GameObject.Instantiate(ballPrefabGO, pos, Quaternion.identity);
 
             //Scale is later turned into mass
             newBall.transform.localScale = Vector3.one * Random.Range(0.1f, 1f);

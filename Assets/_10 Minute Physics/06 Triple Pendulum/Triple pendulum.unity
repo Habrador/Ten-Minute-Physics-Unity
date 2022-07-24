@@ -400,7 +400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d73bc1b6e5f8c468339a7254b0ee88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballTransformGO: {fileID: 5826613971626234203, guid: 78bac9c2d77e67d478be976231c208f7,
+  ballPrefabGO: {fileID: 5826613971626234203, guid: 78bac9c2d77e67d478be976231c208f7,
     type: 3}
   wall: {fileID: 305255283}
 --- !u!1 &1692955182
