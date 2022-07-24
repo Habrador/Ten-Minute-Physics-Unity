@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Simulate a pedulum with n sections
+
 //Simulate hard distance constraints (the position between partices is constant) by using Position Based Dynamics
 //Is useful for ropes, cloth, fur, sand, robot arms, etc
 //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
@@ -26,10 +28,12 @@ public class NPendulumController : MonoBehaviour
     //To draw the historical positions of the pendulum
     private Queue<Vector3> historicalPositions = new Queue<Vector3>();
 
-    private readonly int subSteps = 5;
+    //Fewer susteps results in more damping and less chaos.
+    //The guy in the video is using up to 10k substeps to match the behavior of an actual 3-pendulum
+    private readonly int subSteps = 50;
 
     //To easier replicate a scenario
-    private readonly int seed = 1;
+    private readonly int seed = 0;
 
 
 
@@ -45,21 +49,30 @@ public class NPendulumController : MonoBehaviour
 
 
         //Add the sections
-        Vector3 pendulumStartDir = new Vector3(1f, -0.2f, 0f).normalized;
+        Vector3 pendulumStartDir = new Vector3(1f, -0.6f, 0f).normalized;
 
-        for (int i = 0; i < numberOfPendulumSections; i++)
+        for (int n = 0; n < numberOfPendulumSections; n++)
         {
-            Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (i + 1);
+            Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (n + 1);
         
             GameObject newBall = GameObject.Instantiate(ballTransformGO, pos, Quaternion.identity);
 
-            //newBall.transform.localScale = Vector3.one * Random.Range(0.5f, 1.5f);
+            //Scale is later turned into mass
+            newBall.transform.localScale = Vector3.one * Random.Range(0.1f, 1f);
 
-            newBall.transform.localScale = Vector3.one * 0.3f;
+            //Same mass
+            //newBall.transform.localScale = Vector3.one * 0.3f;
 
             Node newSection = new Node(newBall.transform);
 
             pendulumSections.Add(newSection);
+
+
+            //Change direction to next section to get a more chaotic behavior
+            //Otherwise we get what looks like a rope 
+            float randomZ = Random.Range(0f, 25f);
+
+            pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
         }
     }
 
@@ -67,9 +80,9 @@ public class NPendulumController : MonoBehaviour
 
     private void Update()
     {
-        foreach (Node n in pendulumSections)
+        foreach (Node node in pendulumSections)
         {
-            n.UpdateVisualPosition();
+            node.UpdateVisualPosition();
         }
     }
 
@@ -101,6 +114,7 @@ public class NPendulumController : MonoBehaviour
 
 
 
+    //Simulate the pendulum one step
     private void Simulate(float dt, Vector3 gravity)
     {
         //Always ignore first node because its fixed to a wall
