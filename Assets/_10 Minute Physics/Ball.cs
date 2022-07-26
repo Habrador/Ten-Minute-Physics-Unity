@@ -27,7 +27,7 @@ public class Ball
     }
 
 
-    public void UpdateVisualPosition()
+    public virtual void UpdateVisualPosition()
     {
         ballTransform.position = pos;
     }

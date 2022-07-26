@@ -11,6 +11,7 @@ public class NPendulumController : MonoBehaviour
 {
     public GameObject ballPrefabGO;
     public Transform wall;
+    public GameObject armPrefabGO;
 
     private readonly List<Node> pendulumSections = new List<Node>();
 
@@ -43,7 +44,7 @@ public class NPendulumController : MonoBehaviour
 
 
         //Add the wall
-        Node wallSection = new Node(wall, true);
+        Node wallSection = new Node(wall,null, true);
 
         pendulumSections.Add(wallSection);
 
@@ -55,24 +56,40 @@ public class NPendulumController : MonoBehaviour
         {
             Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (n + 1);
         
+            //Use ball and string to show position of pendulum
             GameObject newBall = GameObject.Instantiate(ballPrefabGO, pos, Quaternion.identity);
 
             //Scale is later turned into mass
-            newBall.transform.localScale = Vector3.one * Random.Range(0.1f, 1f);
+
+            //Random mass
+            //newBall.transform.localScale = Vector3.one * Random.Range(0.1f, 1f);
 
             //Same mass
-            //newBall.transform.localScale = Vector3.one * 0.3f;
+            float radius = 0.3f;
 
-            Node newSection = new Node(newBall.transform);
+            newBall.transform.localScale = Vector3.one * radius;
 
-            pendulumSections.Add(newSection);
 
+            //Use arm to show position of pendulum
+            newBall.SetActive(false);
+
+            GameObject newArm = GameObject.Instantiate(armPrefabGO);
+
+            newArm.SetActive(true);
+
+            newArm.GetComponent<Arm>().Init(radius);
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
             float randomZ = Random.Range(0f, 25f);
 
             pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
+
+
+            //Add the node
+            Node newSection = new Node(newBall.transform, newArm.GetComponent<Arm>());
+            
+            pendulumSections.Add(newSection);
         }
     }
 
@@ -80,12 +97,21 @@ public class NPendulumController : MonoBehaviour
 
     private void Update()
     {
-        foreach (Node node in pendulumSections)
+        //foreach (Node node in pendulumSections)
+        //{
+        //    node.UpdateVisualPosition();
+        //}
+
+        for (int i = 1; i < pendulumSections.Count; i++)
         {
-            node.UpdateVisualPosition();
+            Node prevNode = pendulumSections[i - 1];
+            Node thisNode = pendulumSections[i];
+
+            bool isOffset = i % 2 == 0;
+
+            pendulumSections[i].UpdateArmPosition(prevNode.pos, thisNode.pos, isOffset);
         }
     }
-
 
 
     private void FixedUpdate()
