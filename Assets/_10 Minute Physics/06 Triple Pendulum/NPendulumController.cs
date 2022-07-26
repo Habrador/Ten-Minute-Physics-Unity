@@ -9,10 +9,15 @@ using UnityEngine;
 //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
 public class NPendulumController : MonoBehaviour
 {
+    //Public
     public GameObject ballPrefabGO;
     public Transform wall;
     public GameObject armPrefabGO;
 
+    public bool UsePendulumArms;
+
+
+    //Private
     private readonly List<Node> pendulumSections = new List<Node>();
 
     //The total length of the pendulum 
@@ -56,40 +61,46 @@ public class NPendulumController : MonoBehaviour
         {
             Vector3 pos = wall.transform.position + pendulumStartDir * SectionLength * (n + 1);
         
+
             //Use ball and string to show position of pendulum
             GameObject newBall = GameObject.Instantiate(ballPrefabGO, pos, Quaternion.identity);
 
             //Scale is later turned into mass
-
-            //Random mass
-            //newBall.transform.localScale = Vector3.one * Random.Range(0.1f, 1f);
-
-            //Same mass
-            float radius = 0.3f;
+            float radius = 0.5f;
+            //float radius = Random.Range(0.1f, 1f);
 
             newBall.transform.localScale = Vector3.one * radius;
 
 
             //Use arm to show position of pendulum
-            newBall.SetActive(false);
-
             GameObject newArm = GameObject.Instantiate(armPrefabGO);
 
-            newArm.SetActive(true);
-
             newArm.GetComponent<Arm>().Init(radius);
+
+
+            if (UsePendulumArms)
+            {
+                newBall.SetActive(false);
+                newArm.SetActive(true);
+            }
+            else
+            {
+                newBall.SetActive(true);
+                newArm.SetActive(false);
+            }
+            
+
+            //Add the node
+            Node newSection = new Node(newBall.transform, newArm.GetComponent<Arm>());
+
+            pendulumSections.Add(newSection);
+
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
             float randomZ = Random.Range(0f, 25f);
 
             pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
-
-
-            //Add the node
-            Node newSection = new Node(newBall.transform, newArm.GetComponent<Arm>());
-            
-            pendulumSections.Add(newSection);
         }
     }
 
@@ -97,19 +108,24 @@ public class NPendulumController : MonoBehaviour
 
     private void Update()
     {
-        //foreach (Node node in pendulumSections)
-        //{
-        //    node.UpdateVisualPosition();
-        //}
-
-        for (int i = 1; i < pendulumSections.Count; i++)
+        if (UsePendulumArms)
         {
-            Node prevNode = pendulumSections[i - 1];
-            Node thisNode = pendulumSections[i];
+            for (int i = 1; i < pendulumSections.Count; i++)
+            {
+                Node prevNode = pendulumSections[i - 1];
+                Node thisNode = pendulumSections[i];
 
-            bool isOffset = i % 2 == 0;
+                bool isOffset = i % 2 == 0;
 
-            pendulumSections[i].UpdateArmPosition(prevNode.pos, thisNode.pos, isOffset);
+                pendulumSections[i].UpdateArmPosition(prevNode.pos, thisNode.pos, isOffset);
+            }
+        }
+        else
+        {
+            foreach (Node node in pendulumSections)
+            {
+                node.UpdateVisualPosition();
+            }
         }
     }
 
@@ -206,15 +222,18 @@ public class NPendulumController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //Display the pendulum sections
-        List<Vector3> vertices = new List<Vector3>();
-
-        foreach (Node n in pendulumSections)
+        //Display the pendulum sections with a line
+        if (!UsePendulumArms)
         {
-            vertices.Add(n.pos);
-        }
+            List<Vector3> vertices = new List<Vector3>();
 
-        DisplayShapes.DrawLine(vertices, DisplayShapes.ColorOptions.White);
+            foreach (Node n in pendulumSections)
+            {
+                vertices.Add(n.pos);
+            }
+
+            DisplayShapes.DrawLine(vertices, DisplayShapes.ColorOptions.White);
+        }
 
 
         //Display the historical positions of the pendulum
