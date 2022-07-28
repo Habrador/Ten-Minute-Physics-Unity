@@ -27,6 +27,13 @@ public class Ball
     }
 
 
+    public Ball(Vector3 pos, float mass)
+    {
+        this.pos = pos;
+        this.mass = mass;
+    }
+
+
     public virtual void UpdateVisualPosition()
     {
         ballTransform.position = pos;

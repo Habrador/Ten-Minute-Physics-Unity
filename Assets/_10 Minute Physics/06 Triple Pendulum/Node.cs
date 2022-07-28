@@ -2,21 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Node : Ball
+//A node in a pendulum
+public class Node
 {
+    public Vector3 vel;
+    public Vector3 pos;
     public Vector3 prevPos;
+
+    public float mass;
 
     //Is this node attached to a wall? 
     public bool isFixed;
 
-    private Arm arm;
 
-
-    public Node(Transform ballTransform, Arm arm = null, bool isFixed = false) : base(ballTransform)
+    public Node(Vector3 pos, float mass, bool isFixed = false)
     {
+        this.pos = pos;
+        this.mass = mass;
+    
         this.isFixed = isFixed;
-
-        this.arm = arm;
     }
 
 
@@ -35,16 +39,5 @@ public class Node : Ball
     {
         //v = distance / t [m/s]
         vel = (pos - prevPos) / dt;
-    }
-
-
-    public void UpdateArmPosition(Vector3 p1, Vector3 p2, bool isOffset)
-    {
-        if (arm == null)
-        {
-            return;
-        }
-    
-        arm.UpdateSection(p1, p2, isOffset);
     }
 }
