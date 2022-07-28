@@ -110,6 +110,9 @@ public class NPendulumController : MonoBehaviour
         //Save the position of the last node so we can display it
         Vector3 lastPos = pendulumSections[pendulumSections.Count - 1].pos;
 
+        //So the historical position is always behind the pendulum arms but infront of the pendulum holder
+        lastPos += Vector3.forward * 0.3f;
+
         historicalPositions.Enqueue(lastPos);
 
         //Dont save too many
