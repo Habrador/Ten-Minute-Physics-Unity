@@ -14,6 +14,7 @@ public class NPendulumController : MonoBehaviour
     public Transform wall;
     public GameObject armPrefabGO;
 
+    //Use arms or lines and balls to display the pendulum?
     public bool UsePendulumArms;
 
 
@@ -108,7 +109,7 @@ public class NPendulumController : MonoBehaviour
 
 
         //Save the position of the last node so we can display it
-        Vector3 lastPos = pendulumSections[pendulumSections.Count - 1].pos;
+        Vector3 lastPos = pendulumSections[^1].pos;
 
         //So the historical position is always behind the pendulum arms but infront of the pendulum holder
         lastPos += Vector3.forward * 0.3f;
@@ -116,10 +117,11 @@ public class NPendulumController : MonoBehaviour
         historicalPositions.Enqueue(lastPos);
 
         //Dont save too many
-        if (historicalPositions.Count > 200)
-        {
-            historicalPositions.Dequeue();
-        }
+        //Better to save all so we can see there's no repetetive pattern
+        //if (historicalPositions.Count > 20000)
+        //{
+        //    historicalPositions.Dequeue();
+        //}
     }
 
 
