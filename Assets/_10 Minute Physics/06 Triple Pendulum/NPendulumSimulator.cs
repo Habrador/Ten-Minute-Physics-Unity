@@ -12,10 +12,10 @@ public class NPendulumSimulator
 
     //Private
     //The total length of the pendulum 
-    private readonly float pendulumLength = 5.5f;
+    private readonly float pendulumLength;
 
     //How many pendulum sections?
-    private readonly int numberOfPendulumSections = 3;
+    private readonly int numberOfPendulumSections;
 
     //How long is a single section?
     private float SectionLength => pendulumLength / (float)numberOfPendulumSections;
@@ -47,25 +47,25 @@ public class NPendulumSimulator
         pendulumSections.Add(wallSection);
 
         //Add the sections
-        Vector3 pendulumStartDir = new Vector3(1f, -0.6f, 0f).normalized;
+        Vector3 pendulumStartDir = new Vector3(1f, 0.6f, 0f).normalized;
 
         for (int n = 0; n < numberOfPendulumSections; n++)
         {
-            Vector3 pos = startPos + pendulumStartDir * SectionLength * (n + 1);
+            startPos += pendulumStartDir * SectionLength;
 
             //Random or fixed mass?
             float mass = 0.5f;
             //float mass = Random.Range(0.1f, 1f);
 
             //Add the node
-            Node newSection = new Node(pos, mass, false);
+            Node newSection = new Node(startPos, mass, false);
 
             pendulumSections.Add(newSection);
 
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
-            float randomZ = Random.Range(0f, 25f);
+            float randomZ = Random.Range(0f, 65f);
 
             pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
         }

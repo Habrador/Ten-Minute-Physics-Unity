@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//To visualize a pendulum arm
 public class Arm : MonoBehaviour
 {
     public Transform cylinder1;
