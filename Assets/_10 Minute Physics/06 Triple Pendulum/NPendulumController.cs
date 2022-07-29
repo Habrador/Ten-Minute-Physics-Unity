@@ -41,6 +41,9 @@ public class NPendulumController : MonoBehaviour
     //So we can delay the simulation to easier see the start position
     private bool canSimulate = false;
 
+    //Can be useful to speed up the simulation
+    int simulationSpeed = 1;
+
 
 
     private void Start()
@@ -139,10 +142,14 @@ public class NPendulumController : MonoBehaviour
         {
             return;
         }
-    
-        float dt = Time.fixedDeltaTime;
 
-        pendulum.MyFixedUpdate(dt);
+
+        for (int i = 0; i < simulationSpeed; i++)
+        {
+            float dt = Time.fixedDeltaTime;
+
+            pendulum.MyFixedUpdate(dt);
+        }
     }
 
 

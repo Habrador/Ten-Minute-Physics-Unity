@@ -54,7 +54,7 @@ public class NPendulumSimulator
             startPos += pendulumStartDir * SectionLength;
 
             //Random or fixed mass?
-            float mass = 0.6f;
+            float mass = 0.5f;
             //float mass = Random.Range(0.1f, 1f);
 
             //Add the node
