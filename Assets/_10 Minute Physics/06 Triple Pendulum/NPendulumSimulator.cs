@@ -22,10 +22,6 @@ public class NPendulumSimulator
 
     private readonly Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 
-    //Fewer susteps results in more damping and less chaos.
-    //The guy in the video is using up to 10k substeps to match the behavior of an actual 3-pendulum
-    private readonly int subSteps = 50;
-
     //To easier replicate a scenario
     private readonly int seed = 0;
 
@@ -65,7 +61,7 @@ public class NPendulumSimulator
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
-            float randomZ = Random.Range(0f, 65f);
+            float randomZ = Random.Range(0f, 165f);
 
             pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
         }
@@ -73,20 +69,8 @@ public class NPendulumSimulator
 
 
 
-    public void MyFixedUpdate(float dt)
-    {
-        float sdt = dt / (float)subSteps;
-
-        for (int step = 0; step < subSteps; step++)
-        {
-            Simulate(sdt, gravity);
-        }
-    }
-
-
-
     //Simulate the pendulum one step
-    private void Simulate(float dt, Vector3 gravity)
+    public void Simulate(float dt)
     {
         //Always ignore first node because its fixed to a wall
 

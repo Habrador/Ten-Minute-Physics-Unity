@@ -29,6 +29,10 @@ public class NPendulumController : MonoBehaviour
     //The total length of the pendulum 
     private readonly float pendulumLength = 5.5f;
 
+    //Fewer susteps results in more damping and less chaos.
+    //The guy in the video is using up to 10k substeps to match the behavior of an actual 3-pendulum
+    private readonly int subSteps = 50;
+
     //Visualize the pendulum with arms
     private List<Arm> pendulumArms = new List<Arm>();
 
@@ -42,7 +46,7 @@ public class NPendulumController : MonoBehaviour
     private bool canSimulate = false;
 
     //Can be useful to speed up the simulation
-    int simulationSpeed = 1;
+    private int simulationSpeed = 4;
 
 
 
@@ -144,11 +148,16 @@ public class NPendulumController : MonoBehaviour
         }
 
 
+        float dt = Time.fixedDeltaTime;
+
+        float sdt = dt / (float)subSteps;
+
         for (int i = 0; i < simulationSpeed; i++)
         {
-            float dt = Time.fixedDeltaTime;
-
-            pendulum.MyFixedUpdate(dt);
+            for (int step = 0; step < subSteps; step++)
+            {
+                pendulum.Simulate(sdt);
+            }
         }
     }
 
