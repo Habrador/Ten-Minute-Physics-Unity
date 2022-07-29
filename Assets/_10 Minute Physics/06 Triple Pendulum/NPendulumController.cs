@@ -38,6 +38,9 @@ public class NPendulumController : MonoBehaviour
     //To draw the historical positions of the pendulum
     private Queue<Vector3> historicalPositions = new Queue<Vector3>();
 
+    //So we can delay the simulation to easier see the start position
+    private bool canSimulate = false;
+
 
 
     private void Start()
@@ -77,6 +80,10 @@ public class NPendulumController : MonoBehaviour
                 pendulumBalls.Add(newBall.transform);
             }
         }
+
+
+        //Pause a little before the simulatio starts
+        StartCoroutine(WaitForSimulationToStart(5f));
     }
 
 
@@ -128,6 +135,11 @@ public class NPendulumController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!canSimulate)
+        {
+            return;
+        }
+    
         float dt = Time.fixedDeltaTime;
 
         pendulum.MyFixedUpdate(dt);
@@ -158,4 +170,15 @@ public class NPendulumController : MonoBehaviour
 
         DisplayShapes.DrawLine(historicalVertices, DisplayShapes.ColorOptions.Yellow);
     }
+
+
+
+    //To delay the start of the simulation
+    private IEnumerator WaitForSimulationToStart(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+
+        canSimulate = true;
+    }
+
 }
