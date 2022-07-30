@@ -61,7 +61,7 @@ public class NPendulumSimulator
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
-            float randomZ = Random.Range(0f, 165f);
+            float randomZ = Random.Range(0f, 85f);
 
             pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
         }

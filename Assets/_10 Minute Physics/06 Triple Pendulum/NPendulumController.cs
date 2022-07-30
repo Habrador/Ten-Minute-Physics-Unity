@@ -17,6 +17,9 @@ public class NPendulumController : MonoBehaviour
     //Use arms or lines and balls to display the pendulum?
     public bool UsePendulumArms;
 
+    //For YT visualization
+    public GameObject butterflyGO;
+
 
     //Private
 
@@ -29,9 +32,9 @@ public class NPendulumController : MonoBehaviour
     //The total length of the pendulum 
     private readonly float pendulumLength = 5.5f;
 
-    //Fewer susteps results in more damping and less chaos.
-    //The guy in the video is using up to 10k substeps to match the behavior of an actual 3-pendulum
-    private readonly int subSteps = 50;
+    //Fewer sub-steps results in more damping and less chaos
+    //The guy in the video is using up to 10k sub-steps to match the behavior of an actual 3-pendulum
+    private readonly int simulationSubSteps = 50;
 
     //Visualize the pendulum with arms
     private List<Arm> pendulumArms = new List<Arm>();
@@ -46,7 +49,7 @@ public class NPendulumController : MonoBehaviour
     private bool canSimulate = false;
 
     //Can be useful to speed up the simulation
-    private int simulationSpeed = 4;
+    private int simulationSpeed = 1;
 
 
 
@@ -89,8 +92,17 @@ public class NPendulumController : MonoBehaviour
         }
 
 
-        //Pause a little before the simulatio starts
-        StartCoroutine(WaitForSimulationToStart(5f));
+        //Pause a little before the simulation starts
+        float pauseTime = 5f;
+
+        StartCoroutine(WaitForSimulationToStart(pauseTime));
+
+        //Add a butterfly for visualization purposes
+        butterflyGO.transform.position = pendulum.pendulumSections[^1].pos;
+        butterflyGO.transform.position += Vector3.up * pendulum.pendulumSections[^1].mass;
+        butterflyGO.transform.position -= Vector3.forward * 0.5f;
+
+        butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTime);
     }
 
 
@@ -150,11 +162,11 @@ public class NPendulumController : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
 
-        float sdt = dt / (float)subSteps;
+        float sdt = dt / (float)simulationSubSteps;
 
         for (int i = 0; i < simulationSpeed; i++)
         {
-            for (int step = 0; step < subSteps; step++)
+            for (int step = 0; step < simulationSubSteps; step++)
             {
                 pendulum.Simulate(sdt);
             }
