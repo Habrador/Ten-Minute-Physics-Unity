@@ -31,14 +31,17 @@ public class NPendulumSimulator
     // - length - total length of the pedulum
     // - startPos - where the pendulum is attached
     // - startAngleOffset - adds a small offset to the startAngle of the pendulum arms
-    public NPendulumSimulator(int numberOfPendulumSections, float length, Vector3 startPos, float startAngleOffset = 0f)
+    public NPendulumSimulator(int numberOfPendulumSections, float length, Vector3 startPos, float startAngleOffset = 0f, bool setSeed = true)
     {
         this.numberOfPendulumSections = numberOfPendulumSections;
 
         this.pendulumLength = length;
 
 
-        Random.InitState(seed);
+        if (setSeed)
+        {
+            Random.InitState(seed);
+        }
 
 
         //Add the wall

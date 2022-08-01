@@ -79,7 +79,9 @@ public class NPendulumControllerYT : MonoBehaviour
 
             float randomOffset = Random.Range(-offset, offset);
 
-            NPendulumSimulator pendulum = new NPendulumSimulator(this.pendulumArms, pendulumLength, wall.position, randomOffset);
+            //Debug.Log(randomOffset);
+
+            NPendulumSimulator pendulum = new NPendulumSimulator(this.pendulumArms, pendulumLength, wall.position, randomOffset, false);
 
             List<Arm> pendulumArms = new List<Arm>();
 
@@ -156,6 +158,8 @@ public class NPendulumControllerYT : MonoBehaviour
 
             butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTime);
         }
+
+        Debug.Log(allPendulums.Count);
     }
 
 
@@ -246,6 +250,11 @@ public class NPendulumControllerYT : MonoBehaviour
             //Display the pendulum sections with a line
             if (!usePendulumArms)
             {
+                //if (i != 2)
+                //{
+                //    continue;
+                //}
+            
                 List<Vector3> vertices = new List<Vector3>();
 
                 List<Node> pendulumSections = pendulum.pendulumSections;
@@ -255,8 +264,8 @@ public class NPendulumControllerYT : MonoBehaviour
                     vertices.Add(n.pos);
                 }
 
-                //DisplayShapes.DrawLine(vertices, pendulumMaterials[i]);
-                DisplayShapes.DrawLine(vertices, yellowGlow);
+                DisplayShapes.DrawLine(vertices, pendulumMaterials[i]);
+                //DisplayShapes.DrawLine(vertices, DisplayShapes.ColorOptions.Yellow);
             }
 
 
