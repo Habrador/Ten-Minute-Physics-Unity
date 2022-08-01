@@ -75,7 +75,7 @@ public class NPendulumControllerYT : MonoBehaviour
             //Create a new pendulum
 
             //Offset in degrees so each pendulum get a slightly different start position to illustrate the butterfly effect
-            float offset = 10.0f;
+            float offset = 0.1f;
 
             float randomOffset = Random.Range(-offset, offset);
 
@@ -116,18 +116,17 @@ public class NPendulumControllerYT : MonoBehaviour
 
                 Color thisColor = firstColor;
 
-                //if (pendulums > 1)
-                //{
-                //    thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
-                //}
+                if (pendulums > 1)
+                {
+                    thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
+                }
+
+                //This will generate a blob
+                //thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
 
                 //Color thisColor = Color.Lerp(firstColor, lastColor, 1f);
 
-                //newMaterial.color = thisColor;
-
-                newMaterial.SetColor("_EmissionColor", thisColor * 5f);
-
-                //newMaterial.SetVector("_EmissionColor", thisColor);
+                newMaterial.SetColor("_EmissionColor", thisColor * 2f);
 
                 pendulumMaterials.Add(newMaterial);
             }
@@ -142,13 +141,13 @@ public class NPendulumControllerYT : MonoBehaviour
 
 
         //Pause a little before the simulation starts
-        float pauseTime = 5f;
+        float pauseTime = 0f;
 
         StartCoroutine(WaitForSimulationToStart(pauseTime));
 
 
         //Add a butterfly for visualization purposes
-        if (butterflyGO != null)
+        if (butterflyGO != null && butterflyGO.activeInHierarchy)
         {
             NPendulumSimulator pendulum = allPendulums[0];
         
@@ -159,7 +158,7 @@ public class NPendulumControllerYT : MonoBehaviour
             butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTime);
         }
 
-        Debug.Log(allPendulums.Count);
+        //Debug.Log(allPendulums.Count);
     }
 
 
