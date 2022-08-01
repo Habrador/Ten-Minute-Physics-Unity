@@ -691,14 +691,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ca024f8bea800c499de253eccd4e73f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballPrefabGO: {fileID: 5826613971626234203, guid: 78bac9c2d77e67d478be976231c208f7,
-    type: 3}
   wall: {fileID: 305255283}
   armPrefabGO: {fileID: 7744676709900127436, guid: b68dbb964654dc34287efb6085da3f5c,
     type: 3}
-  UsePendulumArms: 1
+  usePendulumArms: 0
+  displayHistory: 0
   butterflyGO: {fileID: 117186177}
   yellowGlow: {fileID: 2100000, guid: d577a616546ed4942985ed2956081be8, type: 2}
+  pendulumArms: 3
+  simulationSpeed: 1
+  pendulums: 5
 --- !u!1 &1692955182
 GameObject:
   m_ObjectHideFlags: 0

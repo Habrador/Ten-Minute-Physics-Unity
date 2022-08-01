@@ -27,7 +27,11 @@ public class NPendulumSimulator
 
 
 
-    public NPendulumSimulator(int numberOfPendulumSections, float length, Vector3 startPos)
+    // - numberOfPendulumSections - 3 of we want a 3-pendulum
+    // - length - total length of the pedulum
+    // - startPos - where the pendulum is attached
+    // - startAngleOffset - adds a small offset to the startAngle of the pendulum arms
+    public NPendulumSimulator(int numberOfPendulumSections, float length, Vector3 startPos, float startAngleOffset = 0f)
     {
         this.numberOfPendulumSections = numberOfPendulumSections;
 
@@ -61,9 +65,12 @@ public class NPendulumSimulator
 
             //Change direction to next section to get a more chaotic behavior
             //Otherwise we get what looks like a rope 
-            float randomZ = Random.Range(0f, 85f);
+            float randomAngleZ = Random.Range(0f, 85f);
 
-            pendulumStartDir = Quaternion.Euler(0f, 0f, randomZ) * pendulumStartDir;
+            //Add a small offset to show the butterfly effect 
+            randomAngleZ += startAngleOffset;
+
+            pendulumStartDir = Quaternion.Euler(0f, 0f, randomAngleZ) * pendulumStartDir;
         }
     }
 
