@@ -64,10 +64,15 @@ public class NPendulumControllerYT : MonoBehaviour
     //To get the same pendulums each time
     private int seed = 0;
 
+    //Cant use Unity's Random.Range because it's used in the pendulum script and setting Random.InitState(seed) at multiple locations screws things up
+    private System.Random rnd;
+
 
 
     private void Start()
     {
+        rnd = new System.Random(seed);
+    
         //Offset in degrees so each pendulum get a slightly different start position to illustrate the butterfly effect
         float offset = 0f;
 
@@ -117,10 +122,17 @@ public class NPendulumControllerYT : MonoBehaviour
                     thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
                 }
 
+                //Random color
+                //Color thisColor = new Color(
+                //    (float)rnd.NextDouble(),
+                //    (float)rnd.NextDouble(),
+                //    (float)rnd.NextDouble()
+                //);
+
                 //This will generate a blob
                 //thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
 
-                //Color thisColor = Color.Lerp(firstColor, lastColor, 1f);
+                newMaterial.color = thisColor;
 
                 newMaterial.SetColor("_EmissionColor", thisColor * 2f);
 

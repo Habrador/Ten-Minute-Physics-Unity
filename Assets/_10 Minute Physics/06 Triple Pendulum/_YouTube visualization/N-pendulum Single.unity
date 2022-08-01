@@ -179,7 +179,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &418534085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -498,7 +498,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &875247294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -700,7 +700,7 @@ MonoBehaviour:
   yellowGlow: {fileID: 2100000, guid: d577a616546ed4942985ed2956081be8, type: 2}
   pendulumArms: 3
   simulationSpeed: 1
-  pendulums: 5
+  pendulums: 50
 --- !u!1 &1692955182
 GameObject:
   m_ObjectHideFlags: 0
