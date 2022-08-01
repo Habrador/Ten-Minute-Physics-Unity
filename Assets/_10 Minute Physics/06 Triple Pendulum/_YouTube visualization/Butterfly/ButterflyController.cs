@@ -44,13 +44,14 @@ public class ButterflyController : MonoBehaviour
     {
         StartCoroutine(Flap());
 
-        float rotationSpeed = 5f;
+        float rotationSpeed = 2f;
 
         float flySpeed = 5f;
 
         Transform targetTrans = Camera.main.transform;
 
-        Vector3 targetPos = targetTrans.position - targetTrans.forward * 5f + targetTrans.right * 15f + Vector3.up * 10f;
+        //Vector3 targetPos = targetTrans.position - targetTrans.forward * 5f + targetTrans.right * 15f + Vector3.up * 10f;
+        Vector3 targetPos = targetTrans.position - targetTrans.forward * 5f + targetTrans.right * 0f - Vector3.up * 4f;
 
         while (true)
         {
@@ -84,7 +85,7 @@ public class ButterflyController : MonoBehaviour
 
             poses[activePose].SetActive(true);
 
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.025f);
         }
     }
 

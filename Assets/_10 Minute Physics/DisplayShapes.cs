@@ -105,6 +105,14 @@ public static class DisplayShapes
     //Draw a line which may consist of several segments, but it has to be connnected into one line
     public static void DrawLine(List<Vector3> vertices, ColorOptions color)
     {
+        //Display the mesh
+        Material material = GetMaterial(color);
+
+        DrawLine(vertices, material);
+    }
+
+    public static void DrawLine(List<Vector3> vertices, Material material)
+    {
         if (vertices.Count < 2)
         {
             return;
@@ -123,9 +131,6 @@ public static class DisplayShapes
 
         m.SetVertices(vertices);
         m.SetIndices(indices, MeshTopology.LineStrip, 0);
-
-        //Display the mesh
-        Material material = GetMaterial(color);
 
         Graphics.DrawMesh(m, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
     }

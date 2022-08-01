@@ -7,7 +7,7 @@ using UnityEngine;
 //Simulate hard distance constraints (the position between partices is constant) by using Position Based Dynamics
 //Is useful for ropes, cloth, fur, sand, robot arms, etc
 //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
-public class NPendulumController : MonoBehaviour
+public class NPendulumControllerYT : MonoBehaviour
 {
     //Public
     public GameObject ballPrefabGO;
@@ -17,6 +17,9 @@ public class NPendulumController : MonoBehaviour
     //Use arms or lines and balls to display the pendulum?
     public bool UsePendulumArms;
 
+    //For YT visualization
+    public GameObject butterflyGO;
+    public Material yellowGlow; 
 
 
     //Private
@@ -94,6 +97,13 @@ public class NPendulumController : MonoBehaviour
         float pauseTime = 5f;
 
         StartCoroutine(WaitForSimulationToStart(pauseTime));
+
+        //Add a butterfly for visualization purposes
+        butterflyGO.transform.position = pendulum.pendulumSections[^1].pos;
+        butterflyGO.transform.position += Vector3.up * pendulum.pendulumSections[^1].mass * 0.5f;
+        butterflyGO.transform.position -= Vector3.forward * 0.5f;
+
+        butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTime);
     }
 
 
@@ -187,7 +197,8 @@ public class NPendulumController : MonoBehaviour
         //Display the historical positions of the pendulum
         List<Vector3> historicalVertices = new List<Vector3>(historicalPositions);
 
-        DisplayShapes.DrawLine(historicalVertices, DisplayShapes.ColorOptions.Yellow);
+        //DisplayShapes.DrawLine(historicalVertices, DisplayShapes.ColorOptions.Yellow);
+        DisplayShapes.DrawLine(historicalVertices, yellowGlow);
     }
 
 
