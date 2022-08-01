@@ -68,20 +68,16 @@ public class NPendulumControllerYT : MonoBehaviour
 
     private void Start()
     {
-        Random.InitState(seed);
+        //Offset in degrees so each pendulum get a slightly different start position to illustrate the butterfly effect
+        float offset = 0f;
 
         for (int i = 0; i < pendulums; i++)
         {
             //Create a new pendulum
+            NPendulumSimulator pendulum = new NPendulumSimulator(this.pendulumArms, pendulumLength, wall.position, offset);
 
-            //Offset in degrees so each pendulum get a slightly different start position to illustrate the butterfly effect
-            float offset = 0.1f;
-
-            float randomOffset = Random.Range(-offset, offset);
-
-            //Debug.Log(randomOffset);
-
-            NPendulumSimulator pendulum = new NPendulumSimulator(this.pendulumArms, pendulumLength, wall.position, randomOffset, false);
+            //Add a little offset for next pendulum
+            offset += 0.01f;
 
             List<Arm> pendulumArms = new List<Arm>();
 
