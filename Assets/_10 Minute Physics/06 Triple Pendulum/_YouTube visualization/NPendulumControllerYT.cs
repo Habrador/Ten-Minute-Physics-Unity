@@ -132,9 +132,17 @@ public class NPendulumControllerYT : MonoBehaviour
                 //This will generate a blob
                 //thisColor = Color.Lerp(firstColor, lastColor, (float)(i) / (float)(pendulums - 1));
 
-                newMaterial.color = thisColor;
+                //thisColor = new Color(23.96863f, 23.71765f, 0f);
 
-                newMaterial.SetColor("_EmissionColor", thisColor * 2f);
+                //thisColor = Color.blue;
+
+                //newMaterial.color = thisColor;
+
+                float intensity = 5f;
+
+                intensity = Mathf.Pow(2f, intensity);
+
+                newMaterial.SetColor("_EmissionColor", thisColor * intensity);
 
                 pendulumMaterials.Add(newMaterial);
             }
