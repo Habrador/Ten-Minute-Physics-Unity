@@ -32,6 +32,9 @@ public class NPendulumControllerYT : MonoBehaviour
     //Number of pendulums
     public int pendulums;
 
+    //How long before the simulation starts
+    public float pauseTimer = 0f;
+
 
 
     //Private
@@ -157,9 +160,7 @@ public class NPendulumControllerYT : MonoBehaviour
 
 
         //Pause a little before the simulation starts
-        float pauseTime = 0f;
-
-        StartCoroutine(WaitForSimulationToStart(pauseTime));
+        StartCoroutine(WaitForSimulationToStart(pauseTimer));
 
 
         //Add a butterfly for visualization purposes
@@ -171,7 +172,7 @@ public class NPendulumControllerYT : MonoBehaviour
             butterflyGO.transform.position += Vector3.up * pendulum.pendulumSections[^1].mass * 0.5f;
             butterflyGO.transform.position -= Vector3.forward * 0.5f;
 
-            butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTime);
+            butterflyGO.GetComponent<ButterflyController>().StartResting(pauseTimer);
         }
 
         //Debug.Log(allPendulums.Count);

@@ -694,13 +694,14 @@ MonoBehaviour:
   wall: {fileID: 305255283}
   armPrefabGO: {fileID: 7744676709900127436, guid: b68dbb964654dc34287efb6085da3f5c,
     type: 3}
-  usePendulumArms: 0
-  displayHistory: 0
+  usePendulumArms: 1
+  displayHistory: 1
   butterflyGO: {fileID: 117186177}
   yellowGlow: {fileID: 2100000, guid: d577a616546ed4942985ed2956081be8, type: 2}
   pendulumArms: 3
   simulationSpeed: 1
-  pendulums: 50
+  pendulums: 1
+  pauseTimer: 5
 --- !u!1 &1692955182
 GameObject:
   m_ObjectHideFlags: 0
@@ -916,7 +917,7 @@ PrefabInstance:
     - target: {fileID: 6818680081346452141, guid: 6046cdc7832358e489ce460b439e2b72,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6046cdc7832358e489ce460b439e2b72, type: 3}
