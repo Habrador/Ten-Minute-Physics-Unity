@@ -47,7 +47,7 @@ public class NPendulumControllerYT : MonoBehaviour
 
     //Fewer sub-steps results in more damping and less chaos
     //The guy in the video is using up to 10k sub-steps to match the behavior of an actual 3-pendulum
-    private readonly int simulationSubSteps = 50;
+    private readonly int simulationSubSteps = 100;
 
     //Visualize the pendulum with arms
     private List<List<Arm>> allPendulumArms = new List<List<Arm>>();
@@ -85,7 +85,7 @@ public class NPendulumControllerYT : MonoBehaviour
             NPendulumSimulator pendulum = new NPendulumSimulator(this.pendulumArms, pendulumLength, wall.position, offset);
 
             //Add a little offset for next pendulum
-            offset += 0.01f;
+            offset += 0.001f;
 
             List<Arm> pendulumArms = new List<Arm>();
 
