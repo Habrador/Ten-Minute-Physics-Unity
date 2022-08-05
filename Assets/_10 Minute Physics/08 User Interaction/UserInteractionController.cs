@@ -36,6 +36,10 @@ public class UserInteractionController : MonoBehaviour
         Cursor.visible = true;
 
         Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.ForceSoftware);
+
+//#if UNITY_EDITOR
+        //Cursor.SetCursor(UnityEditor.PlayerSettings.defaultCursor, Vector2.zero, CursorMode.ForceSoftware);
+//#endif
     }
 
 
