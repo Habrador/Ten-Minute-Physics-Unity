@@ -30,9 +30,9 @@ Simulate beads attached to a circular wire
 <img src="/_media/05-beads-on-wire.png" width="400">
 
 
-## 6. Pendulum
+## 6. Pendulums
 
-Simulate the chaotic behavior of a pendulums with as many arms as you want and with different mass. Watch these YouTube videos for examples: 
+Simulate the chaotic behavior of pendulums with as many arms as you want and where each arm can have different mass. With many arms you get a rope or hair! Watch these YouTube videos for examples: 
 
 [![Link to youtube video butterfly effect](https://img.youtube.com/vi/GqGHz6gtakY/0.jpg)](https://www.youtube.com/watch?v=GqGHz6gtakY)
 
