@@ -32,9 +32,11 @@ Simulate beads attached to a circular wire
 
 ## 6. Pendulum
 
-Simulate the chaotic behavior of a triple pendulum with different mass 
+Simulate the chaotic behavior of a pendulums with as many arms as you want and with different mass 
 
-<img src="/_media/06-triple-pendulum.png" width="400">
+[![Link to youtube video butterfly effect](https://img.youtube.com/vi/GqGHz6gtakY/0.jpg)](https://www.youtube.com/watch?v=GqGHz6gtakY)
+
+[![Link to youtube video double pendulum](https://img.youtube.com/vi/MBk6n5m57sU/0.jpg)](https://www.youtube.com/watch?v=MBk6n5m57sU)
 
 
 ## 8. Interaction
