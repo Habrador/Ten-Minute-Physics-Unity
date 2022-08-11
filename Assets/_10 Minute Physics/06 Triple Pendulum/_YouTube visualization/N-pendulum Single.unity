@@ -698,10 +698,10 @@ MonoBehaviour:
   displayHistory: 1
   butterflyGO: {fileID: 117186177}
   yellowGlow: {fileID: 2100000, guid: d577a616546ed4942985ed2956081be8, type: 2}
-  pendulumArms: 2
+  pendulumArms: 3
   simulationSpeed: 1
   pendulums: 1
-  pauseTimer: 3
+  pauseTimer: 1
 --- !u!1 &1692955182
 GameObject:
   m_ObjectHideFlags: 0

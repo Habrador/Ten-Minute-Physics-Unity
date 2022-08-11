@@ -22,7 +22,7 @@ public class NPendulumController : MonoBehaviour
     //Private
 
     //The pendulum itself
-    private NPendulumSimulator pendulum;
+    private NPendulumSimulatorDouble pendulum;
 
     //How many pendulum sections?
     private readonly int numberOfPendulumSections = 3;
@@ -32,7 +32,8 @@ public class NPendulumController : MonoBehaviour
 
     //Fewer sub-steps results in more damping and less chaos
     //The guy in the video is using up to 10k sub-steps to match the behavior of an actual 3-pendulum
-    private readonly int simulationSubSteps = 50;
+    //This requires double precision
+    private readonly int simulationSubSteps = 1000;
 
     //Visualize the pendulum with arms
     private List<Arm> pendulumArms = new List<Arm>();
@@ -54,14 +55,14 @@ public class NPendulumController : MonoBehaviour
     private void Start()
     {
         //Create a new pendulum
-        pendulum = new NPendulumSimulator(numberOfPendulumSections, pendulumLength, wall.position);
+        pendulum = new NPendulumSimulatorDouble(numberOfPendulumSections, pendulumLength, wall.position);
     
 
         //Generate what we need to visualize the pendulum
         for (int n = 0; n < numberOfPendulumSections; n++)
         {
             //Scale depends on mass
-            float radius = pendulum.pendulumSections[n + 1].mass;
+            float radius = (float)pendulum.pendulumSections[n + 1].mass;
 
             //Use arm to show position of pendulum
             if (UsePendulumArms)
@@ -101,32 +102,32 @@ public class NPendulumController : MonoBehaviour
     private void Update()
     {
         //Update the transforms so we can see the pendulum
-        List<Node> pendulumSections = pendulum.pendulumSections;
+        List<NodeDouble> pendulumSections = pendulum.pendulumSections;
 
         if (UsePendulumArms)
         {
             for (int i = 1; i < pendulumSections.Count; i++)
             {
-                Node prevNode = pendulumSections[i - 1];
-                Node thisNode = pendulumSections[i];
+                NodeDouble prevNode = pendulumSections[i - 1];
+                NodeDouble thisNode = pendulumSections[i];
 
                 bool isOffset = i % 2 == 0;
 
-                pendulumArms[i - 1].UpdateSection(prevNode.pos, thisNode.pos, isOffset);
+                pendulumArms[i - 1].UpdateSection(prevNode.pos.ToVector3, thisNode.pos.ToVector3, isOffset);
             }
         }
         else
         {
             for (int i = 1; i < pendulumSections.Count; i++)
             {
-                pendulumBalls[i - 1].position = pendulumSections[i].pos;
+                pendulumBalls[i - 1].position = pendulumSections[i].pos.ToVector3;
             }
         }
 
 
 
         //Save the position of the last node so we can display it
-        Vector3 lastPos = pendulumSections[^1].pos;
+        Vector3 lastPos = pendulumSections[^1].pos.ToVector3;
 
         //So the historical position is always behind the pendulum arms but infront of the pendulum holder
         lastPos += Vector3.forward * 0.3f;
@@ -153,7 +154,7 @@ public class NPendulumController : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
 
-        float sdt = dt / (float)simulationSubSteps;
+        double sdt = (double)dt / (double)simulationSubSteps;
 
         for (int i = 0; i < simulationSpeed; i++)
         {
@@ -173,11 +174,11 @@ public class NPendulumController : MonoBehaviour
         {
             List<Vector3> vertices = new List<Vector3>();
 
-            List<Node> pendulumSections = pendulum.pendulumSections;
+            List<NodeDouble> pendulumSections = pendulum.pendulumSections;
 
-            foreach (Node n in pendulumSections)
+            foreach (NodeDouble n in pendulumSections)
             {
-                vertices.Add(n.pos);
+                vertices.Add(n.pos.ToVector3);
             }
 
             DisplayShapes.DrawLine(vertices, DisplayShapes.ColorOptions.White);
