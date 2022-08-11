@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-//Simulates an n-pendulum with double precisions
+//Simulates an n-pendulum with double precisions to be able to use smaller time steps and thus make it more accurate
 public class NPendulumSimulatorDouble
 {
     //Public

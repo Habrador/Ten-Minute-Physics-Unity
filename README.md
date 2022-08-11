@@ -36,7 +36,7 @@ Simulate the chaotic behavior of pendulums with as many arms as you want and whe
 
 [![Link to youtube video butterfly effect](https://img.youtube.com/vi/GqGHz6gtakY/0.jpg)](https://www.youtube.com/watch?v=GqGHz6gtakY)
 
-[![Link to youtube video double pendulum](https://img.youtube.com/vi/MBk6n5m57sU/0.jpg)](https://www.youtube.com/watch?v=MBk6n5m57sU)
+[![Link to youtube video double pendulum](https://img.youtube.com/vi/jMDiP7mhEx0/0.jpg)](https://www.youtube.com/watch?v=jMDiP7mhEx0)
 
 
 ## 8. Interaction

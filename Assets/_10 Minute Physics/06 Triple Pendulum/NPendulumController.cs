@@ -25,15 +25,15 @@ public class NPendulumController : MonoBehaviour
     private NPendulumSimulatorDouble pendulum;
 
     //How many pendulum sections?
-    private readonly int numberOfPendulumSections = 3;
+    private readonly int numberOfPendulumSections = 6;
 
     //The total length of the pendulum 
     private readonly float pendulumLength = 5.5f;
 
     //Fewer sub-steps results in more damping and less chaos
     //The guy in the video is using up to 10k sub-steps to match the behavior of an actual 3-pendulum
-    //This requires double precision
-    private readonly int simulationSubSteps = 1000;
+    //This requires double point precision
+    private readonly int simulationSubSteps = 5000;
 
     //Visualize the pendulum with arms
     private List<Arm> pendulumArms = new List<Arm>();
@@ -92,7 +92,7 @@ public class NPendulumController : MonoBehaviour
 
 
         //Pause a little before the simulation starts
-        float pauseTime = 5f;
+        float pauseTime = 2f;
 
         StartCoroutine(WaitForSimulationToStart(pauseTime));
     }
