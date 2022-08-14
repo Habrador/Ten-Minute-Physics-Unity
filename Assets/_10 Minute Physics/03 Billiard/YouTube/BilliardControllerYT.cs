@@ -11,6 +11,8 @@ namespace Billiard
     {
         public GameObject ballPrefabGO;
 
+        public GameObject floorGO;
+
         //Simulation properties
         private readonly int subSteps = 5;
 
@@ -25,10 +27,14 @@ namespace Billiard
         //The simulation area is a square with side length
         private readonly float wallLength = 5f;
 
+        private readonly float floorRadius = 5f;
+
 
         private void Start()
         {
             ResetSimulation();
+
+            GenerateCircleMesh(floorGO, Vector3.zero, floorRadius, 10);
         }
 
 
@@ -116,7 +122,7 @@ namespace Billiard
 
                 //thisBall.HandleSquareCollision(wallLength);
 
-                HandleBallCircleCollision(thisBall, Vector3.zero, 5f);
+                HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius);
             }
         }
 
@@ -125,20 +131,20 @@ namespace Billiard
         private void LateUpdate()
         {
             //Draw the circle the beads are attached to
-            DisplayShapes.DrawCircle(Vector3.zero, 5f, DisplayShapes.ColorOptions.White, DisplayShapes.Space2D.XZ);
+            //DisplayShapes.DrawCircle(Vector3.zero, floorRadius, DisplayShapes.ColorOptions.White, DisplayShapes.Space2D.XZ);
         }
 
 
 
-        private void HandleBallCircleCollision(Ball ball, Vector3 circleCenter, float circleRadius)
-        {
-            float restitution = 1f;
-        
-            float ballCenterDistSqr = (ball.pos - circleCenter).sqrMagnitude;
+        private void HandleBallCircleCollision(Ball ball, Vector3 circleCenter, float circleRadius, float restitution = 1f)
+        {        
+            //The distance between the center and the ball's center
+            float distCenterToBallSqr = (ball.pos - circleCenter).sqrMagnitude;
 
-            float maxDist = circleRadius - ball.radius;
+            //If that distance is greater than this, the ball is outside
+            float maxAllowedDist = circleRadius - ball.radius;
 
-            if (ballCenterDistSqr > maxDist * maxDist)
+            if (distCenterToBallSqr > maxAllowedDist * maxAllowedDist)
             {
                 Vector3 wallNormal = (circleCenter - ball.pos).normalized;
 
@@ -157,6 +163,54 @@ namespace Billiard
                 //Remove the old velocity and add the new velocity
                 ball.vel += wallNormal * (vNew - v);
             }
+        }
+
+
+
+        private void GenerateCircleMesh(GameObject floorGO, Vector3 circleCenter, float radius, int segments)
+        {
+            //Generate the vertices and the indices
+            int circleResolution = 100;
+
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+
+            vertices.Add(circleCenter);
+
+            float angleStep = 360f / circleResolution;
+
+            float angle = 0f;
+
+            for (int i = 0; i < circleResolution + 1; i++)
+            {
+                float x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+                float y = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+
+                Vector3 vertex = new Vector3(x, 0f, y) + circleCenter;
+
+                vertices.Add(vertex);
+
+                angle += angleStep;
+            }
+
+
+            //Generate the indices
+            for (int i = 2; i < vertices.Count; i++)
+            {
+                triangles.Add(0);
+                triangles.Add(i);
+                triangles.Add(i - 1);
+            }
+
+            //Generate the mesh
+            Mesh m = new Mesh();
+
+            m.SetVertices(vertices);
+            m.SetTriangles(triangles, 0);
+
+            m.RecalculateNormals();
+
+            floorGO.GetComponent<MeshFilter>().sharedMesh = m;
         }
     }
 }
