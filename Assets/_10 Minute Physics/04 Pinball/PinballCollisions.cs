@@ -62,7 +62,7 @@ namespace PinballMachine
 
 
         //Similar to ball-ball collision but obstacles don't move, and the obstacle gives the ball an extra bounce velocity
-        public static void HandleBallJetBumperCollision(Ball ball, Obstacle obs)
+        public static void HandleBallJetBumperCollision(Ball ball, JetBumper obs)
         {
             //Check if the balls are colliding (obs is assumed to be a ball as well)
             bool areColliding = BallCollisionHandling.AreBallsColliding(ball.pos, obs.pos, ball.radius, obs.radius);

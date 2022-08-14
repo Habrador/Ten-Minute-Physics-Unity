@@ -30,7 +30,7 @@ public class PinballController : MonoBehaviour
     //Flipper parts
     private List<PinballBall> balls = new List<PinballBall>();
 
-    private List<Obstacle> obstacles = new List<Obstacle>();
+    private List<JetBumper> obstacles = new List<JetBumper>();
 
     private Flipper flipper_L;
     private Flipper flipper_R;
@@ -91,7 +91,7 @@ public class PinballController : MonoBehaviour
 
             Vector3 pos = t.position;
 
-            Obstacle obstacle = new Obstacle(bumperRadius, pos, pushVel);
+            JetBumper obstacle = new JetBumper(bumperRadius, pos, pushVel);
         
             obstacles.Add(obstacle);
         }
@@ -160,7 +160,7 @@ public class PinballController : MonoBehaviour
             }
 
             //Collision with obstacles
-            foreach (Obstacle obs in obstacles)
+            foreach (JetBumper obs in obstacles)
             {
                 PinballCollisions.HandleBallJetBumperCollision(thisBall, obs);
             }

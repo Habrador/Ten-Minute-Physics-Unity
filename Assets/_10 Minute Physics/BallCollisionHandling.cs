@@ -167,11 +167,11 @@ public static class BallCollisionHandling
         //Update vel
 
         //Collisions can only change velocity components along the penetration direction
-        float v = Vector3.Dot(ball.vel, d);
+        float v = Vector3.Dot(ball.vel, dir);
 
         float vNew = Mathf.Abs(v) * restitution;
 
         //Remove the old velocity and add the new velocity
-        ball.vel += d * (vNew - v);
+        ball.vel += dir * (vNew - v);
     }
 }
