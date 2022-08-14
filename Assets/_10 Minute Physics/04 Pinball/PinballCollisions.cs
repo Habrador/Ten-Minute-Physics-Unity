@@ -6,52 +6,6 @@ namespace PinballMachine
 {
     public static class PinballCollisions
     {
-        //Similar to ball-ball collision but obstacles don't move
-        public static void HandleBallObstacleCollision(Ball ball, Obstacle obs)
-        {
-            //Check if the balls are colliding (obs is assumed to be a ball as well)
-            bool areColliding = CustomPhysics.AreBallsColliding(ball.pos, obs.pos, ball.radius, obs.radius);
-
-            if (!areColliding)
-            {
-                return;
-            }
-
-
-            //Update position
-
-            //Direction from obstacle to ball
-            Vector3 dir = ball.pos - obs.pos;
-
-            //The actual distancae
-            float d = dir.magnitude;
-
-            //Normalized direction
-            dir = dir.normalized;
-
-            //Obstacle if fixed so this is the distace the ball should move to no longer intersect
-            //Which is why theres no 0.5 like inn ball-ball collision
-            float corr = ball.radius + obs.radius - d;
-
-            //Move the ball along the dir vector
-            ball.pos += dir * corr;
-
-
-            //Update velocity
-
-            //The part of the balls velocity along dir which is the velocity being affected
-            float v = Vector3.Dot(ball.vel, dir);
-
-            //Change velocity components along dir by first removing the old velocity
-            //...then add the new velocity from the jet bumpers which gives the ball a push 
-            ball.vel += dir * (obs.pushVel - v);
-
-
-            //Increase score if needed
-        }
-
-
-
         //Assume the all doesnt affect the flipper and that the restitution is zero 
         public static void HandleBallFlipperCollision(Ball ball, Flipper flipper)
         {
@@ -107,93 +61,45 @@ namespace PinballMachine
 
 
 
-        //Assumer the border is counter-clockwise
-        //The first point on the border also has to be included at the end of the list
-        public static void HandleBallBorderCollision(Ball ball, List<Vector3> border, float restitution)
+        //Similar to ball-ball collision but obstacles don't move, and the obstacle gives the ball an extra bounce velocity
+        public static void HandleBallJetBumperCollision(Ball ball, Obstacle obs)
         {
-            //We need at least a triangle (the start and end are the same point, thus the 4)
-            if (border.Count < 4)
+            //Check if the balls are colliding (obs is assumed to be a ball as well)
+            bool areColliding = BallCollisionHandling.AreBallsColliding(ball.pos, obs.pos, ball.radius, obs.radius);
+
+            if (!areColliding)
             {
                 return;
             }
 
 
-            //Find closest point on the border and related data to the line segment the point is on
-            Vector3 closest = Vector3.zero;
-            Vector3 ab = Vector3.zero;
-            Vector3 wallNormal = Vector3.zero;
+            //Update position
 
-            float minDistSqr = 0f;
+            //Direction from obstacle to ball
+            Vector3 dir = ball.pos - obs.pos;
 
-            //The border should include both the start and end points which are at the same location
-            for (int i = 0; i < border.Count - 1; i++)
-            {
-                Vector3 a = border[i];
-                Vector3 b = border[i + 1];
-                Vector3 c = UsefulMethods.GetClosestPointOnLineSegment(ball.pos, a, b);
+            //The actual distancae
+            float d = dir.magnitude;
 
-                //Using the square is faster
-                float testDistSqr = (ball.pos - c).sqrMagnitude;
+            //Normalized direction
+            dir = dir.normalized;
 
-                //If the distance is smaller or its the first run of the algorithm
-                if (i == 0 || testDistSqr < minDistSqr)
-                {
-                    minDistSqr = testDistSqr;
+            //Obstacle if fixed so this is the distace the ball should move to no longer intersect
+            //Which is why theres no 0.5 like inn ball-ball collision
+            float corr = ball.radius + obs.radius - d;
 
-                    closest = c;
-
-                    ab = b - a;
-
-                    wallNormal = ab.Perp();
-                }
-            }
+            //Move the ball along the dir vector
+            ball.pos += dir * corr;
 
 
-            //Update pos
-            Vector3 d = ball.pos - closest;
+            //Update velocity
 
-            float dist = d.magnitude;
+            //The part of the balls velocity along dir which is the velocity being affected
+            float v = Vector3.Dot(ball.vel, dir);
 
-            //Special case if we end up exactly on the border 
-            //If so we use the normal of the line segment to push out the ball
-            if (dist == 0f)
-            {
-                d = wallNormal;
-                dist = wallNormal.magnitude;
-            }
-
-            //The direction from the closest point on the wall to the ball
-            Vector3 dir = d.normalized;
-
-            //If they point in the same direction, meaning the ball is to the left of the wall
-            if (Vector3.Dot(dir, wallNormal) >= 0f)
-            {
-                //The ball is not colliding with the wall
-                if (dist > ball.radius)
-                {
-                    return;
-                }
-
-                //The ball is colliding with the wall, so push it in again
-                ball.pos += dir * (ball.radius - dist);
-            }
-            //Push in the opposite direction because the ball is outside of the wall (to the right)
-            else
-            {
-                //We have to push it dist so it ends up on the wall, and then radius so it ends up outside of the wall
-                ball.pos += dir * -(ball.radius + dist);
-            }
-
-
-            //Update vel
-
-            //Collisions can only change velocity components along the penetration direction
-            float v = Vector3.Dot(ball.vel, d);
-
-            float vNew = Mathf.Abs(v) * restitution;
-
-            //Remove the old velocity and add the new velocity
-            ball.vel += d * (vNew - v);
+            //Change velocity components along dir by first removing the old velocity
+            //...then add the new velocity from the jet bumpers which gives the ball a push 
+            ball.vel += dir * (obs.pushVel - v);
         }
     }
 }

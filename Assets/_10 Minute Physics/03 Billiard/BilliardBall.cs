@@ -29,11 +29,15 @@ namespace Billiard
 
 
 
-        public void HandleWallCollision()
+        //
+        // Collision with environment detection
+        //
+
+        public void HandleSquareCollision(float wallLength)
         {
             //Make sure the ball is within the area, which is 5 m in all directions (except y)
             //If outside, reset ball and mirror velocity
-            float halfSimSize = 5f - radius;
+            float halfSimSize = wallLength - radius;
 
             if (pos.x < -halfSimSize)
             {

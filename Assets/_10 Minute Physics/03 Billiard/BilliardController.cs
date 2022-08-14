@@ -20,6 +20,8 @@ public class BilliardController : MonoBehaviour
 
     private List<BilliardBall> allBalls;
 
+    //The simulation area is a square with side length
+    private readonly float wallLength = 5f;
 
 
     private void Start()
@@ -93,10 +95,10 @@ public class BilliardController : MonoBehaviour
                 BilliardBall ballOther = allBalls[j];
 
                 //HandleBallCollision(ball, ballOther, restitution);
-                CustomPhysics.HandleBallBallCollision(thisBall, ballOther, restitution);
+                BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
             }
 
-            thisBall.HandleWallCollision();
+            thisBall.HandleSquareCollision(wallLength);
         }
     }
 }

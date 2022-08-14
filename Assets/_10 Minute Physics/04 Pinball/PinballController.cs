@@ -156,13 +156,13 @@ public class PinballController : MonoBehaviour
             {
                 PinballBall otherBall = balls[j];
 
-                CustomPhysics.HandleBallBallCollision(thisBall, otherBall, restitution);
+                BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
             }
 
             //Collision with obstacles
             foreach (Obstacle obs in obstacles)
             {
-                PinballCollisions.HandleBallObstacleCollision(thisBall, obs);
+                PinballCollisions.HandleBallJetBumperCollision(thisBall, obs);
             }
 
             //Collision with flippers
@@ -170,8 +170,7 @@ public class PinballController : MonoBehaviour
             PinballCollisions.HandleBallFlipperCollision(thisBall, flipper_R);
 
             //Collision with walls
-            PinballCollisions.HandleBallBorderCollision(thisBall, border, restitution);
-
+            BallCollisionHandling.HandleBallWallEdgesCollision(thisBall, border, restitution);
         }
     }
 

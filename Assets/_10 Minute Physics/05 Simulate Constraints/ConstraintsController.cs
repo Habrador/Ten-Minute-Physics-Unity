@@ -115,7 +115,7 @@ public class ConstraintsController : MonoBehaviour
             {
                 for (int j = i + 1; j < allBeads.Count; j++)
                 {
-                    CustomPhysics.HandleBallBallCollision(allBeads[i], allBeads[j], restitution);
+                    BallCollisionHandling.HandleBallBallCollision(allBeads[i], allBeads[j], restitution);
                 }
             }
         }
