@@ -164,7 +164,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 290145304}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae36cc3febb62fa479fa51fc88906ab3, type: 3}
+  m_Script: {fileID: 11500000, guid: 3f85c0b861affae459b47166c05b7165, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ballPrefabGO: {fileID: 5039769975780560612, guid: 660910d05c2e22d44a2cc005b6a4adfd,

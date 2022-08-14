@@ -57,7 +57,9 @@ public static class DisplayShapes
 
 
     //Draw a circle in 2d space
-    public static void DrawCircle(Vector3 circleCenter, float radius, ColorOptions color, bool isXSpace = true)
+    public enum Space2D { XY, XZ, YX };
+
+    public static void DrawCircle(Vector3 circleCenter, float radius, ColorOptions color, Space2D space)
     {        
         //Generate the vertices and the indices
         int circleResolution = 100;
@@ -76,11 +78,15 @@ public static class DisplayShapes
 
             Vector3 vertex = new Vector3(x, y, 0f) + circleCenter;
 
-            if (!isXSpace)
+            if (space == Space2D.YX)
             {
                 vertex = new Vector3(0f, y, x) + circleCenter;
             }
-            
+            else if (space == Space2D.XZ)
+            {
+                vertex = new Vector3(x, 0f, y) + circleCenter;
+            }
+
 
             vertices.Add(vertex);
             indices.Add(i);
@@ -171,8 +177,8 @@ public static class DisplayShapes
     public static void DrawCapsule(Vector3 a, Vector3 b, float radius, ColorOptions color)
     {
         //Draw the end points
-        DrawCircle(a, radius, color);
-        DrawCircle(b, radius, color);
+        DrawCircle(a, radius, color, Space2D.XY);
+        DrawCircle(b, radius, color, Space2D.XY);
 
         //Draw the two lines connecting the end points
         Vector3 vecAB = (a - b).normalized;

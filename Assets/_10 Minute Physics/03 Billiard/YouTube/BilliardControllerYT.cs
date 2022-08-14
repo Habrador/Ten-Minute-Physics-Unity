@@ -7,7 +7,7 @@ namespace Billiard
 {
     //Simulate billiard balls with different size
     //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
-    public class BilliardController : MonoBehaviour
+    public class BilliardControllerYT : MonoBehaviour
     {
         public GameObject ballPrefabGO;
 
@@ -114,7 +114,48 @@ namespace Billiard
                     BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
                 }
 
-                thisBall.HandleSquareCollision(wallLength);
+                //thisBall.HandleSquareCollision(wallLength);
+
+                HandleBallCircleCollision(thisBall, Vector3.zero, 5f);
+            }
+        }
+
+
+
+        private void LateUpdate()
+        {
+            //Draw the circle the beads are attached to
+            DisplayShapes.DrawCircle(Vector3.zero, 5f, DisplayShapes.ColorOptions.White, DisplayShapes.Space2D.XZ);
+        }
+
+
+
+        private void HandleBallCircleCollision(Ball ball, Vector3 circleCenter, float circleRadius)
+        {
+            float restitution = 1f;
+        
+            float ballCenterDistSqr = (ball.pos - circleCenter).sqrMagnitude;
+
+            float maxDist = circleRadius - ball.radius;
+
+            if (ballCenterDistSqr > maxDist * maxDist)
+            {
+                Vector3 wallNormal = (circleCenter - ball.pos).normalized;
+
+
+                //Move the ball so it's no longer colliding
+                ball.pos = (circleRadius - ball.radius) * -1f * wallNormal;
+
+
+                //Update velocity 
+
+                //Collisions can only change velocity components along the penetration direction
+                float v = Vector3.Dot(ball.vel, wallNormal);
+
+                float vNew = Mathf.Abs(v) * restitution;
+
+                //Remove the old velocity and add the new velocity
+                ball.vel += wallNormal * (vNew - v);
             }
         }
     }
