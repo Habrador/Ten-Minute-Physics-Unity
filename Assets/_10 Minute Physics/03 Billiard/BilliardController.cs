@@ -35,22 +35,33 @@ public class BilliardController : MonoBehaviour
     {
         allBalls = new List<BilliardBall>();
 
+        Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+
         //Create random balls
         for (int i = 0; i < 20; i++)
         {
             GameObject newBallGO = Instantiate(ballPrefabGO);
 
+
+            //Random color
+            Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+
+            newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+
+
             //Random pos
             float randomPosX = Random.Range(-5f, 5f);
             float randomPosZ = Random.Range(-5f, 5f);
 
-            Vector3 randomPos = new Vector3(randomPosX, 0f, randomPosZ);
+            Vector3 randomPos = new (randomPosX, 0f, randomPosZ);
+
 
             //Random size
             float randomSize = Random.Range(0.1f, 1f);
 
             newBallGO.transform.position = randomPos;
             newBallGO.transform.localScale = Vector3.one * randomSize;
+
 
             //Random vel
             float maxVel = 4f;
@@ -60,7 +71,8 @@ public class BilliardController : MonoBehaviour
 
             Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
 
-            BilliardBall newBall = new BilliardBall(randomVel, newBallGO.transform);
+
+            BilliardBall newBall = new (randomVel, newBallGO.transform);
 
             allBalls.Add(newBall);
         }
@@ -83,11 +95,13 @@ public class BilliardController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float sdt = Time.fixedDeltaTime / (float)subSteps;
+
         for (int i = 0; i < allBalls.Count; i++)
         {
             BilliardBall thisBall = allBalls[i];
 
-            thisBall.SimulateBall(subSteps);
+            thisBall.SimulateBall(subSteps, sdt);
 
             //Check collision with the other balls after this ball in the list of all balls
             for (int j = i + 1; j < allBalls.Count; j++)

@@ -14,10 +14,8 @@ namespace Billiard
 
 
 
-        public void SimulateBall(int subSteps)
+        public void SimulateBall(int subSteps, float sdt)
         {
-            float sdt = Time.fixedDeltaTime / (float)subSteps;
-
             Vector3 gravity = Vector3.zero;
 
             for (int step = 0; step < subSteps; step++)
@@ -44,19 +42,19 @@ namespace Billiard
                 pos.x = -halfSimSize;
                 vel.x *= -1f;
             }
-            if (pos.x > halfSimSize)
+            else if (pos.x > halfSimSize)
             {
                 pos.x = halfSimSize;
                 vel.x *= -1f;
             }
 
             //2d simulation, so no y
-            if (pos.z < -halfSimSize)
+            else if (pos.z < -halfSimSize)
             {
                 pos.z = -halfSimSize;
                 vel.z *= -1f;
             }
-            if (pos.z > halfSimSize)
+            else if (pos.z > halfSimSize)
             {
                 pos.z = halfSimSize;
                 vel.z *= -1f;

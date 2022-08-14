@@ -48,6 +48,7 @@ public class NPendulumControllerYT : MonoBehaviour
     //Fewer sub-steps results in more damping and less chaos
     //The guy in the video is using up to 10k sub-steps to match the behavior of an actual 3-pendulum
     //10k substeps doesnt work here most likely because of floating point precision issues
+    //If you need more substeps use double pendulum data structures
     private readonly int simulationSubSteps = 100;
 
     //Visualize the pendulum with arms
