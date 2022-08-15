@@ -44,5 +44,23 @@ namespace Billiard
             
             return randomMaterial;
         }
+
+
+
+        public static Material GetLerpedMaterial(Material baseMaterial, int number, int total)
+        {
+            Material newMaterial = new(baseMaterial);
+
+            Color color = Color.blue;
+
+            if (total != 0)
+            {
+                color = Color.Lerp(Color.blue, Color.red, (float)number / (float)total);
+            }
+
+            newMaterial.color = color;
+
+            return newMaterial;
+        }
     }
 }

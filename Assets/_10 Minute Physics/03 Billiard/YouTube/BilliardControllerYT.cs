@@ -18,9 +18,9 @@ namespace Billiard
         //Private
 
         //Simulation properties
-        private readonly int subSteps = 50;
+        private readonly int subSteps = 2;
 
-        private readonly int numberOfBalls = 10;
+        private readonly int numberOfBalls = 1000;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
@@ -39,9 +39,13 @@ namespace Billiard
         private readonly float floorRadius = 5f;
 
         //How long before the simulation starts to make it easier for people to see the initial conditions
-        private readonly float pauseTimer = 3f;
+        private readonly float pauseTimer = 2f;
 
         private bool canSimulate = false;
+
+        private List<Queue<Vector3>> historialPositions = new();
+
+        private bool displayHistory = false;
 
 
 
@@ -50,6 +54,11 @@ namespace Billiard
             Random.InitState(seed);
         
             ResetSimulation();
+
+            for (int i = 0; i < numberOfBalls; i++)
+            {
+                historialPositions.Add(new Queue<Vector3>());
+            }
 
             GenerateCircleMesh(floorGO, Vector3.zero, floorRadius, 100);
 
@@ -71,9 +80,69 @@ namespace Billiard
         {
             allBalls = new List<BilliardBall>();
 
-            //AddRandomBalls();
+            //AddRandomBallsWithinMap();
 
-            AddBallsOnCircle();   
+            //AddBallsOnCircle();   
+
+            AddBallsWithinArea();
+        }
+
+
+
+        private void AddBallsWithinArea()
+        {
+            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+
+            //Create random balls
+            for (int i = 0; i < numberOfBalls; i++)
+            {
+                GameObject newBallGO = Instantiate(ballPrefabGO);
+
+
+                //Random color
+                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+
+                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+
+                //Scale
+                newBallGO.transform.localScale = Vector3.one * 0.2f;
+
+
+                //Random pos within rectangle
+                float rectSize = 0.2f;
+
+                float randomPosX = Random.Range(-rectSize, rectSize);
+                float randomPosZ = Random.Range(-rectSize, rectSize);
+
+                Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
+
+
+                //Random pos within circle
+                //Vector2 randomPos2D = Random.insideUnitCircle * rectSize * 0.5f;
+
+                //Vector3 randomPos = new(randomPos2D.x, 0f, randomPos2D.y);
+
+
+                //Move it down
+                randomPos += Vector3.right * 2f;
+
+                newBallGO.transform.position = randomPos;
+
+
+                //Random vel
+                //float maxVel = 20f;
+
+                //float randomVelX = Random.Range(-maxVel, maxVel);
+                //float randomVelZ = Random.Range(-maxVel, maxVel);
+
+                //Vector3 startVel = new Vector3(randomVelX, 0f, randomVelZ);
+
+                Vector3 startVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * 3f;
+
+                BilliardBall newBall = new(startVel, newBallGO.transform);
+
+                allBalls.Add(newBall);
+            }
         }
 
 
@@ -83,7 +152,7 @@ namespace Billiard
 
             Vector3 ballsCenter = Vector3.zero;
 
-            float ballsRadius = 0.5f;
+            float ballsRadius = 0.6f;
 
             List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, ballsRadius, numberOfBalls);
 
@@ -94,17 +163,21 @@ namespace Billiard
                 GameObject newBallGO = Instantiate(ballPrefabGO);
 
                 //Mat
-                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+                //Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
 
-                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+                //newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+
+                Material lerpedMaterial = BilliardMaterials.GetLerpedMaterial(ballBaseMaterial, i, ballPositons.Count - 2);
+
+                newBallGO.GetComponent<MeshRenderer>().material = lerpedMaterial;
 
                 //Pos and scale
                 newBallGO.transform.position = ballPositons[i];
 
-                newBallGO.transform.localScale = Vector3.one * 0.3f;
+                newBallGO.transform.localScale = Vector3.one * 0.25f;
 
                 //Vel
-                Vector3 startVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * 5f;
+                Vector3 startVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * 3f;
 
                 //Add the actual ball
                 BilliardBall newBall = new(startVel, newBallGO.transform);
@@ -115,7 +188,7 @@ namespace Billiard
 
 
 
-        private void AddRandomBalls()
+        private void AddRandomBallsWithinMap()
         {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
@@ -235,6 +308,14 @@ namespace Billiard
             {
                 ball.UpdateVisualPosition();
             }
+
+            if (displayHistory)
+            {
+                for (int i = 0; i < allBalls.Count; i++)
+                {
+                    historialPositions[i].Enqueue(allBalls[i].pos);
+                }
+            }
         }
 
 
@@ -287,6 +368,16 @@ namespace Billiard
         {
             //Draw the circle the beads are attached to
             //DisplayShapes.DrawCircle(Vector3.zero, floorRadius, DisplayShapes.ColorOptions.White, DisplayShapes.Space2D.XZ);
+
+            if (displayHistory)
+            {
+                foreach (Queue<Vector3> historicalPosition in historialPositions)
+                {
+                    List<Vector3> verts = new List<Vector3>(historicalPosition);
+
+                    DisplayShapes.DrawLine(verts, DisplayShapes.ColorOptions.White);
+                }
+            }
         }
 
 
@@ -312,6 +403,9 @@ namespace Billiard
 
                 //Remove the old velocity and add the new velocity
                 ball.vel += wallNormal * (vNew - v);
+
+                //Same result
+                //ball.vel = Vector3.Reflect(ball.vel, -wallNormal);
             }
         }
 
@@ -327,6 +421,7 @@ namespace Billiard
 
             //If that distance is greater than this, the ball is outside
             float maxAllowedDist = circleRadius - ballRadius;
+            //float maxAllowedDist = circleRadius;
 
             if (distCenterToBallSqr > maxAllowedDist * maxAllowedDist)
             {
