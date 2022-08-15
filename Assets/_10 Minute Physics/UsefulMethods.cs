@@ -31,6 +31,36 @@ public static class UsefulMethods
 
 
     //
+    // Generate coordinates on the edge of a circle
+    //
+
+    //The circle is 2d but coordinates are in 3d x,z so y is 0
+    public static List<Vector3> GetCircleSegments_XZ(Vector3 circleCenter, float radius, int segments)
+    {
+        List<Vector3> vertices = new();
+
+        float angleStep = 360f / (float)segments;
+
+        float angle = 0f;
+
+        for (int i = 0; i < segments + 1; i++)
+        {
+            float x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+            float y = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+
+            Vector3 vertex = new Vector3(x, 0f, y) + circleCenter;
+
+            vertices.Add(vertex);
+
+            angle += angleStep;
+        }
+
+        return vertices;
+    }
+
+
+
+    //
     // The closest point on a ray from a vertex
     //
 
