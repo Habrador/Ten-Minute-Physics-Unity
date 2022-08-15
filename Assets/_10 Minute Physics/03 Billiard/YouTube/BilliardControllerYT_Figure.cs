@@ -5,17 +5,15 @@ using Billiard;
 
 namespace Billiard
 {
-    //Simulate billiard balls with different size
-    //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
-    //Issues:
-    //- Sometimes when we bounce many balls against a circle, the balls cluster after running the simulation for some time, which maybe be because of floating point precision issues???
-    public class BilliardControllerYT : MonoBehaviour
+    //Simulate billiard balls within a figure defines be a border consisting of edges
+    public class BilliardControllerYT_Figure : MonoBehaviour
     {
         //Public
         public GameObject ballPrefabGO;
 
         public GameObject floorGO;
 
+        public Transform coordinatesParent;
 
         //Private
 
@@ -459,6 +457,27 @@ namespace Billiard
             m.RecalculateNormals();
 
             floorGO.GetComponent<MeshFilter>().sharedMesh = m;
+        }
+
+
+
+        private void OnDrawGizmos()
+        {
+            List<Vector3> children = new();
+
+            foreach (Transform child in coordinatesParent)
+            {
+                children.Add(child.position);
+            }
+
+            Gizmos.color = Color.white;
+            
+            for (int i = 1; i < children.Count; i++)
+            {
+                Gizmos.DrawLine(children[i - 1], children[i]);
+            }
+
+            Gizmos.DrawLine(children[^1], children[0]);
         }
     }
 }
