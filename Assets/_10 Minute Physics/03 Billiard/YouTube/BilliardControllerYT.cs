@@ -20,16 +20,16 @@ namespace Billiard
         //Simulation properties
         private readonly int subSteps = 5;
 
-        private readonly int numberOfBalls = 30;
+        private readonly int numberOfBalls = 50;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
         //Elastic: e = 1 means same velocity after collision (if the objects have the same size and same speed)
         //Inelastic: e = 0 means no velocity after collions (if the objects have the same size and same speed) and energy is lost
-        private readonly float restitution = 0.8f;
+        private readonly float restitution = 0.9f;
 
         //To get the same simulation every time
-        private readonly int seed = 0;
+        private readonly int seed = 1;
 
         private List<BilliardBall> allBalls;
 
@@ -107,7 +107,7 @@ namespace Billiard
 
 
                 //Random vel
-                float maxVel = 6f;
+                float maxVel = 20f;
 
                 float randomVelX = Random.Range(-maxVel, maxVel);
                 float randomVelZ = Random.Range(-maxVel, maxVel);
@@ -221,7 +221,16 @@ namespace Billiard
 
                 //thisBall.HandleSquareCollision(wallLength);
 
-                HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius);
+                HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius, restitution);
+            }
+
+
+            //Add some friction
+            for (int i = 0; i < allBalls.Count; i++)
+            {
+                BilliardBall thisBall = allBalls[i];
+
+                thisBall.vel *= 0.99f;
             }
         }
 
