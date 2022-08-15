@@ -18,15 +18,15 @@ namespace Billiard
         //Private
 
         //Simulation properties
-        private readonly int subSteps = 5;
+        private readonly int subSteps = 50;
 
-        private readonly int numberOfBalls = 50;
+        private readonly int numberOfBalls = 10;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
         //Elastic: e = 1 means same velocity after collision (if the objects have the same size and same speed)
         //Inelastic: e = 0 means no velocity after collions (if the objects have the same size and same speed) and energy is lost
-        private readonly float restitution = 0.9f;
+        private readonly float restitution = 1.00f;
 
         //To get the same simulation every time
         private readonly int seed = 1;
@@ -71,6 +71,52 @@ namespace Billiard
         {
             allBalls = new List<BilliardBall>();
 
+            //AddRandomBalls();
+
+            AddBallsOnCircle();   
+        }
+
+
+        private void AddBallsOnCircle()
+        {
+            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+
+            Vector3 ballsCenter = Vector3.zero;
+
+            float ballsRadius = 0.5f;
+
+            List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, ballsRadius, numberOfBalls);
+
+            //Debug.Log(ballPositons.Count);
+
+            for (int i = 0; i < ballPositons.Count - 1; i++)
+            {
+                GameObject newBallGO = Instantiate(ballPrefabGO);
+
+                //Mat
+                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+
+                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+
+                //Pos and scale
+                newBallGO.transform.position = ballPositons[i];
+
+                newBallGO.transform.localScale = Vector3.one * 0.3f;
+
+                //Vel
+                Vector3 startVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * 5f;
+
+                //Add the actual ball
+                BilliardBall newBall = new(startVel, newBallGO.transform);
+
+                allBalls.Add(newBall);
+            }
+        }
+
+
+
+        private void AddRandomBalls()
+        {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
             //Create random balls
@@ -210,6 +256,7 @@ namespace Billiard
 
                 thisBall.SimulateBall(subSteps, sdt);
 
+                /*
                 //Check collision with the other balls after this ball in the list of all balls
                 for (int j = i + 1; j < allBalls.Count; j++)
                 {
@@ -218,7 +265,7 @@ namespace Billiard
                     //HandleBallCollision(ball, ballOther, restitution);
                     BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                 }
-
+                */
                 //thisBall.HandleSquareCollision(wallLength);
 
                 HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius, restitution);
@@ -226,12 +273,12 @@ namespace Billiard
 
 
             //Add some friction
-            for (int i = 0; i < allBalls.Count; i++)
-            {
-                BilliardBall thisBall = allBalls[i];
+            //for (int i = 0; i < allBalls.Count; i++)
+            //{
+            //    BilliardBall thisBall = allBalls[i];
 
-                thisBall.vel *= 0.99f;
-            }
+            //    thisBall.vel *= 0.99f;
+            //}
         }
 
 

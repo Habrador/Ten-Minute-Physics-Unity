@@ -35,6 +35,7 @@ public static class UsefulMethods
     //
 
     //The circle is 2d but coordinates are in 3d x,z so y is 0
+    //Is adding the start position twice, so if segments is 10 you get 11 vertices
     public static List<Vector3> GetCircleSegments_XZ(Vector3 circleCenter, float radius, int segments)
     {
         List<Vector3> vertices = new();
