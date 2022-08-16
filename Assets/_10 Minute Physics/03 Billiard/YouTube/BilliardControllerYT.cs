@@ -8,7 +8,7 @@ namespace Billiard
     //Simulate billiard balls with different size
     //Based on: https://matthias-research.github.io/pages/tenMinutePhysics/
     //Issues:
-    //- Sometimes when we bounce many balls against a circle, the balls cluster after running the simulation for some time, which maybe be because of floating point precision issues???
+    //- Sometimes when we bounce many balls against a circle, the balls cluster after running the simulation for some time, which maybe be because of floating point precision issues??? After some research I think they cluster because of collision detection with the outer circle. If you lower speed and add fast-forward, they no longer cluster
     public class BilliardControllerYT : MonoBehaviour
     {
         //Public
@@ -20,9 +20,13 @@ namespace Billiard
         //Private
 
         //Simulation properties
-        private readonly int subSteps = 2;
+        private readonly int subSteps = 1;
 
-        private readonly int numberOfBalls = 500;
+        private int fastForwardSpeed = 20;
+
+        private readonly int numberOfBalls = 1000;
+
+        private readonly float startVel = 0.2f;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
@@ -31,7 +35,7 @@ namespace Billiard
         private readonly float restitution = 1.00f;
 
         //To get the same simulation every time
-        private readonly int seed = 1;
+        private readonly int seed = 0;
 
         private List<BilliardBall> allBalls;
 
@@ -113,17 +117,18 @@ namespace Billiard
                 //Random pos within rectangle
                 float rectSize = 0.3f;
 
-                //float randomPosX = Random.Range(-rectSize, rectSize);
-                //float randomPosZ = Random.Range(-rectSize, rectSize);
+                float randomPosX = Random.Range(-rectSize, rectSize);
+                float randomPosZ = Random.Range(-rectSize, rectSize);
 
-                //Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
+                Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
 
 
                 //Random pos within circle
-                Vector2 randomPos2D = Random.insideUnitCircle * rectSize * 0.5f;
+                //Vector2 randomPos2D = Random.insideUnitCircle * rectSize * 2f;
 
-                Vector3 randomPos = new(randomPos2D.x, 0f, randomPos2D.y);
+                //Vector3 randomPosCircle = new(randomPos2D.x, 0f, randomPos2D.y);
 
+                //randomPos += randomPosCircle;
 
                 //Move it down
                 randomPos += Vector3.right * 2f;
@@ -131,13 +136,58 @@ namespace Billiard
                 newBallGO.transform.position = randomPos;
 
 
-                //Random vel
-                Vector3 startVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * 3f;
+                //Vel
+                float velAngle = 0f;
 
-                BilliardBall newBall = new(startVel, newBallGO.transform);
+                float randomVelY = Random.Range(-velAngle, velAngle);
+
+                Vector3 ballVel = Quaternion.Euler(0f, randomVelY, 0f) * Vector3.forward * startVel;
+
+                BilliardBall newBall = new(ballVel, newBallGO.transform);
 
                 allBalls.Add(newBall);
             }
+
+            //Create balls with fixed with between them
+            //float side = 0.6f;
+
+            //int balls = 10;
+
+            //Vector3 pos = new Vector3(-0.3f, 0f, 0.3f);
+
+            //for (int x = 0; x < balls; x++)
+            //{
+            //    pos.z = side * 0.5f;
+
+            //    for (int z = 0; z < balls; z++)
+            //    {
+            //        GameObject newBallGO = Instantiate(ballPrefabGO);
+
+
+            //        //Random color
+            //        Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+
+            //        newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+
+            //        //Scale
+            //        newBallGO.transform.localScale = Vector3.one * 0.2f;
+
+            //        //Pos 
+            //        newBallGO.transform.position = pos;
+
+            //        //Vell
+            //        Vector3 startVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * 5f;
+
+            //        //Add the ball
+            //        BilliardBall newBall = new(startVel, newBallGO.transform);
+
+            //        allBalls.Add(newBall);
+
+            //        pos.z -= side / balls;
+            //    }
+
+            //    pos.x += side / balls;
+            //}
         }
 
 
@@ -174,10 +224,10 @@ namespace Billiard
                 newBallGO.transform.localScale = Vector3.one * 0.25f;
 
                 //Vel
-                Vector3 startVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * 3f;
+                Vector3 ballVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * startVel;
 
                 //Add the actual ball
-                BilliardBall newBall = new(startVel, newBallGO.transform);
+                BilliardBall newBall = new(ballVel, newBallGO.transform);
 
                 allBalls.Add(newBall);
             }
@@ -223,7 +273,7 @@ namespace Billiard
 
 
                 //Random vel
-                float maxVel = 20f;
+                float maxVel = startVel;
 
                 float randomVelX = Random.Range(-maxVel, maxVel);
                 float randomVelZ = Random.Range(-maxVel, maxVel);
@@ -239,6 +289,13 @@ namespace Billiard
 
             //The problem now is that some balls may intersect with other balls
             //So we need to run an algorithm that moves them apart while still making sure they are within the play area
+            MoveAllBallsApart();
+        }
+
+
+
+        private void MoveAllBallsApart()
+        {
             int iterations = 10;
 
             for (int k = 0; k < iterations; k++)
@@ -252,16 +309,15 @@ namespace Billiard
                     {
                         BilliardBall otherBall = allBalls[j];
 
-                        TryMoveBallsApart(thisBall, otherBall);
+                        TryMoveTwoBallsApart(thisBall, otherBall);
                     }
                 }
             }
         }
 
 
-
         //Given two balls, test if they intersect, if so move them apart if they dont end up outside of the circle
-        private void TryMoveBallsApart(Ball b1, Ball b2)
+        private void TryMoveTwoBallsApart(Ball b1, Ball b2)
         {
             float distBetweenBallsSqr = (b1.pos - b2.pos).sqrMagnitude;
 
@@ -304,6 +360,8 @@ namespace Billiard
             foreach (BilliardBall ball in allBalls)
             {
                 ball.UpdateVisualPosition();
+
+                //Debug.Log(ball.vel.magnitude);
             }
 
             if (displayHistory)
@@ -324,39 +382,42 @@ namespace Billiard
             {
                 return;
             }
-        
 
-            float sdt = Time.fixedDeltaTime / (float)subSteps;
 
-            for (int i = 0; i < allBalls.Count; i++)
+            for (int scale = 0; scale < fastForwardSpeed; scale++)
             {
-                BilliardBall thisBall = allBalls[i];
+                float sdt = Time.fixedDeltaTime / (float)subSteps;
 
-                thisBall.SimulateBall(subSteps, sdt);
-
-                /*
-                //Check collision with the other balls after this ball in the list of all balls
-                for (int j = i + 1; j < allBalls.Count; j++)
+                for (int i = 0; i < allBalls.Count; i++)
                 {
-                    BilliardBall otherBall = allBalls[j];
+                    BilliardBall thisBall = allBalls[i];
 
-                    //HandleBallCollision(ball, ballOther, restitution);
-                    BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
+                    thisBall.SimulateBall(subSteps, sdt);
+
+                    /*
+                    //Check collision with the other balls after this ball in the list of all balls
+                    for (int j = i + 1; j < allBalls.Count; j++)
+                    {
+                        BilliardBall otherBall = allBalls[j];
+
+                        //HandleBallCollision(ball, ballOther, restitution);
+                        BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
+                    }
+                    */
+                    //thisBall.HandleSquareCollision(wallLength);
+
+                    HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius, restitution);
                 }
-                */
-                //thisBall.HandleSquareCollision(wallLength);
 
-                HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius, restitution);
+
+                //Add some friction
+                //for (int i = 0; i < allBalls.Count; i++)
+                //{
+                //    BilliardBall thisBall = allBalls[i];
+
+                //    thisBall.vel *= 0.99f;
+                //}
             }
-
-
-            //Add some friction
-            //for (int i = 0; i < allBalls.Count; i++)
-            //{
-            //    BilliardBall thisBall = allBalls[i];
-
-            //    thisBall.vel *= 0.99f;
-            //}
         }
 
 
@@ -389,6 +450,7 @@ namespace Billiard
 
                 //Move the ball so it's no longer colliding
                 ball.pos = (circleRadius - ball.radius) * -wallNormal;
+                //ball.pos = circleRadius * -wallNormal;
 
 
                 //Update velocity 
