@@ -39,9 +39,7 @@ namespace Billiard
 
         private List<BilliardBall> allBalls;
 
-        //The simulation area is a square with side length
-        private readonly float halfWallLength = 5f;
-
+        //The simulation area size
         private readonly float floorRadius = 5f;
 
         //How long before the simulation starts to make it easier for people to see the initial conditions
@@ -110,18 +108,20 @@ namespace Billiard
 
                 newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
 
+
                 //Scale
                 newBallGO.transform.localScale = Vector3.one * 0.2f;
 
 
-                //Random pos within rectangle
-                float rectSize = 0.3f;
+                //Pos
 
-                float randomPosX = Random.Range(-rectSize, rectSize);
-                float randomPosZ = Random.Range(-rectSize, rectSize);
+                //Random pos within rectangle
+                float rectHalfSize = 0.3f;
+
+                float randomPosX = Random.Range(-rectHalfSize, rectHalfSize);
+                float randomPosZ = Random.Range(-rectHalfSize, rectHalfSize);
 
                 Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
-
 
                 //Random pos within circle
                 //Vector2 randomPos2D = Random.insideUnitCircle * rectSize * 2f;
@@ -131,7 +131,7 @@ namespace Billiard
                 //randomPos += randomPosCircle;
 
                 //Move it down
-                randomPos += Vector3.right * 2f;
+                randomPos += Vector3.right * 3f;
 
                 newBallGO.transform.position = randomPos;
 
@@ -235,6 +235,7 @@ namespace Billiard
 
 
 
+        //Add balls within the entire map and move them apart from each other so they dont collide
         private void AddRandomBallsWithinMap()
         {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
@@ -294,6 +295,7 @@ namespace Billiard
 
 
 
+        //Iterate through all balls and make sure they dont collide
         private void MoveAllBallsApart()
         {
             int iterations = 10;
@@ -350,7 +352,6 @@ namespace Billiard
                 }
             }
         }
-
 
 
 
@@ -450,7 +451,6 @@ namespace Billiard
 
                 //Move the ball so it's no longer colliding
                 ball.pos = (circleRadius - ball.radius) * -wallNormal;
-                //ball.pos = circleRadius * -wallNormal;
 
 
                 //Update velocity 
@@ -480,7 +480,6 @@ namespace Billiard
 
             //If that distance is greater than this, the ball is outside
             float maxAllowedDist = circleRadius - ballRadius;
-            //float maxAllowedDist = circleRadius;
 
             if (distCenterToBallSqr > maxAllowedDist * maxAllowedDist)
             {
