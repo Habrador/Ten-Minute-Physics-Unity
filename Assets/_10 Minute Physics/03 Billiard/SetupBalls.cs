@@ -7,33 +7,6 @@ namespace Billiard
     //Add billiard balls with different configurations
     public static class SetupBalls
     {
-        public static void GiveBallsRandomColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
-        {
-            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
-
-            for (int i = 0; i < allBalls.Count; i++)
-            {
-                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
-
-                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = randomBallMaterial;
-            }
-        }
-
-
-        public static void GiveBallsGradientColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
-        {
-            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
-
-            for (int i = 0; i < allBalls.Count; i++)
-            {
-                Material lerpedMaterial = BilliardMaterials.GetLerpedMaterial(ballBaseMaterial, i, allBalls.Count - 1);
-
-                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = lerpedMaterial;
-            }
-        }
-
-
-
         //Add balls on the circumference of a circle
         public static void AddBallsOnCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius, float circleRadius)
         {

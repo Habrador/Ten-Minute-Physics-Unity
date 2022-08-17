@@ -62,5 +62,32 @@ namespace Billiard
 
             return newMaterial;
         }
+
+
+        public static void GiveBallsRandomColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
+        {
+            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+
+            for (int i = 0; i < allBalls.Count; i++)
+            {
+                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+
+                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = randomBallMaterial;
+            }
+        }
+
+
+
+        public static void GiveBallsGradientColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
+        {
+            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+
+            for (int i = 0; i < allBalls.Count; i++)
+            {
+                Material lerpedMaterial = BilliardMaterials.GetLerpedMaterial(ballBaseMaterial, i, allBalls.Count - 1);
+
+                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = lerpedMaterial;
+            }
+        }
     }
 }

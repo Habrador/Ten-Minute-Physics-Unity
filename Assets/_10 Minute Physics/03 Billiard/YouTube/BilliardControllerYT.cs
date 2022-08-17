@@ -70,8 +70,8 @@ namespace Billiard
             //AddBallsWithinArea();
 
             //Give each ball a color
-            SetupBalls.GiveBallsRandomColor(ballPrefabGO, allBalls);
-            //SetupBalls.GiveBallsGradientColor(ballPrefabGO, allBalls);
+            BilliardMaterials.GiveBallsRandomColor(ballPrefabGO, allBalls);
+            //BilliardMaterials.GiveBallsGradientColor(ballPrefabGO, allBalls);
 
             //Give each ball a velocity
             foreach (BilliardBall ball in allBalls)
