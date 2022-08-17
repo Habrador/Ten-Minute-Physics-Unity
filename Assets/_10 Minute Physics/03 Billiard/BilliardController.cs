@@ -26,8 +26,6 @@ namespace Billiard
 
         private List<BilliardBall> allBalls;
 
-        //The simulation area is a square with side length
-        private readonly float wallLength = 5f;
 
 
         private void Start()

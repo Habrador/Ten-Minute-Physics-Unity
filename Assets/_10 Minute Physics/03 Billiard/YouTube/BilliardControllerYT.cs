@@ -59,7 +59,7 @@ namespace Billiard
 
             //AddRandomBallsWithinMap();
 
-            SetupBalls.AddBallsOnMiniCircle(ballPrefabGO, numberOfBalls, allBalls, 0.2f);
+            SetupBalls.AddBallsOnMiniCircle(ballPrefabGO, numberOfBalls, allBalls, 0.2f, 0.4f);
 
             //AddBallsWithinArea();
 
@@ -79,11 +79,12 @@ namespace Billiard
             //The problem now is that some balls may intersect with other balls
             //So we need to run an algorithm that moves them apart while still making sure they are within the play area
             //SetupBalls.MoveAllBallsApart(allBalls, table);
-
-            for (int i = 0; i < numberOfBalls; i++)
-            {
-                historialPositions.Add(new Queue<Vector3>());
-            }
+            
+            
+            //for (int i = 0; i < numberOfBalls; i++)
+            //{
+            //    historialPositions.Add(new Queue<Vector3>());
+            //}
 
             table.Init();
 
@@ -100,15 +101,7 @@ namespace Billiard
         }
 
 
-
         
-
-
-
-        
-
-
-
         private void Update()
         {
             //Update the transform with the position we simulate in FixedUpdate
@@ -159,7 +152,6 @@ namespace Billiard
                         BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                     }
                     */
-                    //thisBall.HandleSquareCollision(wallLength);
 
                     table.HandleBallCollision(thisBall, restitution);
                 }

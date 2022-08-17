@@ -100,13 +100,11 @@ namespace Billiard
 
 
         //Add balls on the circumference of a circle
-        public static void AddBallsOnMiniCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius)
+        public static void AddBallsOnMiniCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius, float miniCircleRadius)
         {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
             Vector3 ballsCenter = Vector3.zero;
-
-            float miniCircleRadius = 0.2f;
 
             List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, miniCircleRadius, numberOfBalls);
 
