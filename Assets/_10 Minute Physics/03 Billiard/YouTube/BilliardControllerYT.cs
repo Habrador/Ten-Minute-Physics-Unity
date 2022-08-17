@@ -22,11 +22,11 @@ namespace Billiard
         //Simulation properties
         private readonly int subSteps = 1;
 
-        private int fastForwardSpeed = 20;
+        private int fastForwardSpeed = 10;
 
         private readonly int numberOfBalls = 1000;
 
-        private readonly float startVel = 0.2f;
+        private readonly float startVel = 0.25f;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
@@ -116,7 +116,7 @@ namespace Billiard
                 //Pos
 
                 //Random pos within rectangle
-                float rectHalfSize = 0.3f;
+                float rectHalfSize = 0.2f;
 
                 float randomPosX = Random.Range(-rectHalfSize, rectHalfSize);
                 float randomPosZ = Random.Range(-rectHalfSize, rectHalfSize);

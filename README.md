@@ -11,9 +11,9 @@ Simulate a bouncy cannon ball
 
 ## 3. Billiard
 
-Simulate billiard balls with different size and mass
+Simulate billiard balls with different size and mass. Watch these YouTube videos for examples: 
 
-<img src="/_media/03-billiard.png" width="400">
+[![Link to youtube video 1000 billiard balls](https://img.youtube.com/vi/ErsK2osLkQU/0.jpg)](https://www.youtube.com/watch?v=ErsK2osLkQU)
 
 
 ## 4. Pinball
