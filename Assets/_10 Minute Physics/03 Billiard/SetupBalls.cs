@@ -41,14 +41,18 @@ namespace Billiard
                 GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
 
                 //Random size
-                //Size has to be before pos so we can take the radius into account
                 float randomSize = Random.Range(minBallRadius, maxBallRadius);
 
                 newBallGO.transform.localScale = Vector3.one * randomSize;
 
                 //Random pos within rectangle
-                float randomPosX = Random.Range(-rectangleSize.x * 0.5f, rectangleSize.x * 0.5f);
-                float randomPosZ = Random.Range(-rectangleSize.y * 0.5f, rectangleSize.y * 0.5f);
+                float halfBallSize = randomSize * 0.5f;
+
+                float halfWidthX = rectangleSize.x * 0.5f;
+                float halfWidthY = rectangleSize.y * 0.5f;
+
+                float randomPosX = Random.Range(-halfWidthX + halfBallSize, halfWidthX - halfBallSize);
+                float randomPosZ = Random.Range(-halfWidthY + halfBallSize, halfWidthY - halfBallSize);
 
                 Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
 
@@ -71,7 +75,6 @@ namespace Billiard
                 GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
 
                 //Random size
-                //Size has to be before pos so we can take the radius into account
                 float randomSize = Random.Range(minBallRadius, maxBallRadius);
 
                 newBallGO.transform.localScale = Vector3.one * randomSize;

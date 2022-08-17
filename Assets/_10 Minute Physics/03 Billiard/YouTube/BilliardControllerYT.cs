@@ -25,7 +25,7 @@ namespace Billiard
 
         private int fastForwardSpeed = 10;
 
-        private readonly int numberOfBalls = 100;
+        private readonly int numberOfBalls = 500;
 
         private readonly float startVel = 0.25f;
 
@@ -59,11 +59,11 @@ namespace Billiard
 
             float ballRadius = 0.2f;
 
-            //SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius, 0.5f);
+            SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, 5f);
 
-            Vector2 rectangleSize = new Vector2(0.5f, 0.5f);
+            Vector2 rectangleSize = new Vector2(10f, 14f);
 
-            SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius, rectangleSize);
+            //SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, rectangleSize);
 
             //SetupBalls.AddBallsOnCircle(ballPrefabGO, numberOfBalls, allBalls, 0.2f, 0.4f);
 
