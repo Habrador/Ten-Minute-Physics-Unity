@@ -25,7 +25,7 @@ namespace Billiard
 
         private int fastForwardSpeed = 10;
 
-        private readonly int numberOfBalls = 1000;
+        private readonly int numberOfBalls = 10;
 
         private readonly float startVel = 0.25f;
 
@@ -230,7 +230,7 @@ namespace Billiard
 
 
                 //Vel
-                Vector3 ballVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * startVel;
+                Vector3 ballVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * startVel;
 
 
                 //Add the actual ball
