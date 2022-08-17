@@ -7,106 +7,37 @@ namespace Billiard
     //Add billiard balls with different configurations
     public static class SetupBalls
     {
-        //Add balls within an area, such as circle, rectangle
-        public static void AddBallsWithinArea(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius)
+        public static void GiveBallsRandomColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
         {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
-            //Create random balls
-            for (int i = 0; i < numberOfBalls; i++)
+            for (int i = 0; i < allBalls.Count; i++)
             {
-                GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
-
-
-                //Random color
                 Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
 
-                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
-
-
-                //Scale
-                newBallGO.transform.localScale = Vector3.one * ballRadius;
-
-
-                //Pos
-
-                //Random pos within rectangle
-                float rectHalfSize = 0.2f;
-
-                float randomPosX = Random.Range(-rectHalfSize, rectHalfSize);
-                float randomPosZ = Random.Range(-rectHalfSize, rectHalfSize);
-
-                Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
-
-                //Random pos within circle
-                //Vector2 randomPos2D = Random.insideUnitCircle * rectSize * 2f;
-
-                //Vector3 randomPosCircle = new(randomPos2D.x, 0f, randomPos2D.y);
-
-                //randomPos += randomPosCircle;
-
-                //Move it down
-                randomPos += Vector3.right * 3f;
-
-                newBallGO.transform.position = randomPos;
-
-                BilliardBall newBall = new(newBallGO.transform);
-
-                allBalls.Add(newBall);
+                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = randomBallMaterial;
             }
-
-            //Create balls with fixed with between them
-            //float side = 0.6f;
-
-            //int balls = 10;
-
-            //Vector3 pos = new Vector3(-0.3f, 0f, 0.3f);
-
-            //for (int x = 0; x < balls; x++)
-            //{
-            //    pos.z = side * 0.5f;
-
-            //    for (int z = 0; z < balls; z++)
-            //    {
-            //        GameObject newBallGO = Instantiate(ballPrefabGO);
+        }
 
 
-            //        //Random color
-            //        Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
+        public static void GiveBallsGradientColor(GameObject ballPrefabGO, List<BilliardBall> allBalls)
+        {
+            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
-            //        newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
+            for (int i = 0; i < allBalls.Count; i++)
+            {
+                Material lerpedMaterial = BilliardMaterials.GetLerpedMaterial(ballBaseMaterial, i, allBalls.Count - 1);
 
-            //        //Scale
-            //        newBallGO.transform.localScale = Vector3.one * 0.2f;
-
-            //        //Pos 
-            //        newBallGO.transform.position = pos;
-
-            //        //Vell
-            //        Vector3 startVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * 5f;
-
-            //        //Add the ball
-            //        BilliardBall newBall = new(startVel, newBallGO.transform);
-
-            //        allBalls.Add(newBall);
-
-            //        pos.z -= side / balls;
-            //    }
-
-            //    pos.x += side / balls;
-            //}
+                allBalls[i].ballTransform.GetComponent<MeshRenderer>().material = lerpedMaterial;
+            }
         }
 
 
 
         //Add balls on the circumference of a circle
-        public static void AddBallsOnMiniCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius, float miniCircleRadius)
+        public static void AddBallsOnCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius, float circleRadius)
         {
-            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
-
-            Vector3 ballsCenter = Vector3.zero;
-
-            List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, miniCircleRadius, numberOfBalls);
+            List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(Vector3.zero, circleRadius, numberOfBalls);
 
             //Debug.Log(ballPositons.Count);
 
@@ -114,27 +45,11 @@ namespace Billiard
             {
                 GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
 
-
-                //Mat
-                //Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
-
-                //newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
-
-                Material lerpedMaterial = BilliardMaterials.GetLerpedMaterial(ballBaseMaterial, i, ballPositons.Count - 2);
-
-                newBallGO.GetComponent<MeshRenderer>().material = lerpedMaterial;
-
-
                 //Pos
                 newBallGO.transform.position = ballPositons[i];
 
-                //Move it down
-                newBallGO.transform.position += Vector3.right * 0f;
-
-
                 //Scale
                 newBallGO.transform.localScale = Vector3.one * ballRadius;
-
 
                 //Add the actual ball
                 BilliardBall newBall = new(newBallGO.transform);
@@ -145,22 +60,12 @@ namespace Billiard
 
 
 
-        //Add balls within the entire map and move them apart from each other so they dont collide
-        public static void AddRandomBallsWithinRectangle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float minBallRadius, float maxBallRadius, Vector2 mapSize)
-        {
-            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
-
-            //Create random balls
+        //Add balls randomly within a rectangle
+        public static void AddRandomBallsWithinRectangle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float minBallRadius, float maxBallRadius, Vector2 rectangleSize)
+        {            
             for (int i = 0; i < numberOfBalls; i++)
             {
                 GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
-
-
-                //Random color
-                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
-
-                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
-
 
                 //Random size
                 //Size has to be before pos so we can take the radius into account
@@ -168,21 +73,15 @@ namespace Billiard
 
                 newBallGO.transform.localScale = Vector3.one * randomSize;
 
-
                 //Random pos within rectangle
-                float randomPosX = Random.Range(-mapSize.x * 0.5f, mapSize.x * 0.5f);
-                float randomPosZ = Random.Range(-mapSize.y * 0.5f, mapSize.y * 0.5f);
+                float randomPosX = Random.Range(-rectangleSize.x * 0.5f, rectangleSize.x * 0.5f);
+                float randomPosZ = Random.Range(-rectangleSize.y * 0.5f, rectangleSize.y * 0.5f);
 
                 Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
 
-                //Random pos within circle
-                //Vector2 randomPos2D = Random.insideUnitCircle * (5f - (randomSize * 0.5f));
-
-                //Vector3 randomPos = new(randomPos2D.x, 0f, randomPos2D.y);
-
                 newBallGO.transform.position = randomPos;
 
-
+                //Add the actual ball
                 BilliardBall newBall = new(newBallGO.transform);
 
                 allBalls.Add(newBall);
@@ -191,7 +90,37 @@ namespace Billiard
 
 
 
-        //Iterate through all balls and make sure they dont collide
+        //Add balls randomly within a circle
+        public static void AddRandomBallsWithinCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float minBallRadius, float maxBallRadius, float circleRadius)
+        { 
+            for (int i = 0; i < numberOfBalls; i++)
+            {
+                GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
+
+                //Random size
+                //Size has to be before pos so we can take the radius into account
+                float randomSize = Random.Range(minBallRadius, maxBallRadius);
+
+                newBallGO.transform.localScale = Vector3.one * randomSize;
+
+                //Random pos within circle
+                Vector2 randomPos2D = Random.insideUnitCircle * (circleRadius - (randomSize * 0.5f));
+
+                Vector3 randomPos = new(randomPos2D.x, 0f, randomPos2D.y);
+
+                newBallGO.transform.position = randomPos;
+
+                //Add the actual ball
+                BilliardBall newBall = new(newBallGO.transform);
+
+                allBalls.Add(newBall);
+            }
+        }
+
+
+
+        //When we add random balls they might intersect with each other
+        //Iterate through all balls and try to make sure they dont collide
         public static void MoveAllBallsApart(List<BilliardBall> allBalls, BilliardTable billiardTable)
         {
             int iterations = 10;

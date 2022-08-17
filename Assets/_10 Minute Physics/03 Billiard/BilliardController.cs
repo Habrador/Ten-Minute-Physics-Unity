@@ -45,6 +45,7 @@ namespace Billiard
 
             SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, 0.1f, 1f, mapSize);
 
+            SetupBalls.GiveBallsRandomColor(ballPrefabGO, allBalls);
 
             //Give each ball a velocity
             foreach (BilliardBall b in allBalls)
