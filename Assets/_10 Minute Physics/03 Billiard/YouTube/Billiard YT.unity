@@ -170,6 +170,7 @@ MonoBehaviour:
   ballPrefabGO: {fileID: 5039769975780560612, guid: 660910d05c2e22d44a2cc005b6a4adfd,
     type: 3}
   floorGO: {fileID: 1979162535}
+  table: {fileID: 1979162540}
 --- !u!1 &512750680
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,8 +415,9 @@ GameObject:
   - component: {fileID: 1979162539}
   - component: {fileID: 1979162538}
   - component: {fileID: 1979162537}
+  - component: {fileID: 1979162540}
   m_Layer: 0
-  m_Name: Ground
+  m_Name: Circle Table
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -486,3 +488,15 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1979162540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979162535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c547d40bc31ad6448a8387db672f5a54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

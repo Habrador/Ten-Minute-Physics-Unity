@@ -14,7 +14,8 @@ namespace Billiard
         //Public
         public GameObject ballPrefabGO;
 
-        public GameObject floorGO;
+        public Table table;
+
 
 
         //Private
@@ -39,9 +40,6 @@ namespace Billiard
 
         private List<BilliardBall> allBalls;
 
-        //The simulation area size
-        private readonly float floorRadius = 5f;
-
         //How long before the simulation starts to make it easier for people to see the initial conditions
         private readonly float pauseTimer = 2f;
 
@@ -64,7 +62,7 @@ namespace Billiard
                 historialPositions.Add(new Queue<Vector3>());
             }
 
-            GenerateCircleMesh(floorGO, Vector3.zero, floorRadius, 100);
+            table.Init();
 
             StartCoroutine(WaitForSimulationToStart(pauseTimer));    
         }
@@ -86,9 +84,9 @@ namespace Billiard
 
             //AddRandomBallsWithinMap();
 
-            //AddBallsOnCircle();   
+            AddBallsOnMiniCircle();   
 
-            AddBallsWithinArea();
+            //AddBallsWithinArea();
         }
 
 
@@ -193,21 +191,22 @@ namespace Billiard
 
 
         //Add balls on the circumference of a circle
-        private void AddBallsOnCircle()
+        private void AddBallsOnMiniCircle()
         {
             Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
             Vector3 ballsCenter = Vector3.zero;
 
-            float ballsRadius = 0.6f;
+            float miniCircleRadius = 0.2f;
 
-            List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, ballsRadius, numberOfBalls);
+            List<Vector3> ballPositons = UsefulMethods.GetCircleSegments_XZ(ballsCenter, miniCircleRadius, numberOfBalls);
 
             //Debug.Log(ballPositons.Count);
 
             for (int i = 0; i < ballPositons.Count - 1; i++)
             {
                 GameObject newBallGO = Instantiate(ballPrefabGO);
+
 
                 //Mat
                 //Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
@@ -218,13 +217,21 @@ namespace Billiard
 
                 newBallGO.GetComponent<MeshRenderer>().material = lerpedMaterial;
 
-                //Pos and scale
+
+                //Pos
                 newBallGO.transform.position = ballPositons[i];
 
-                newBallGO.transform.localScale = Vector3.one * 0.25f;
+                //Move it down
+                newBallGO.transform.position += Vector3.right * 0f;
+
+
+                //Scale
+                newBallGO.transform.localScale = Vector3.one * 0.2f;
+
 
                 //Vel
-                Vector3 ballVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward * startVel;
+                Vector3 ballVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.forward * startVel;
+
 
                 //Add the actual ball
                 BilliardBall newBall = new(ballVel, newBallGO.transform);
@@ -266,7 +273,7 @@ namespace Billiard
                 //Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
 
                 //Random pos within circle
-                Vector2 randomPos2D = Random.insideUnitCircle * (floorRadius - (randomSize * 0.5f));
+                Vector2 randomPos2D = Random.insideUnitCircle * (5f - (randomSize * 0.5f));
 
                 Vector3 randomPos = new(randomPos2D.x, 0f, randomPos2D.y);
 
@@ -342,11 +349,11 @@ namespace Billiard
                 Vector3 b1_NewPos = b1.pos + dir * -corr;
                 Vector3 b2_NewPos = b2.pos + dir * corr;
 
-                if (!IsBallOutsideOfCirle(b1_NewPos, b1.radius, Vector3.zero, floorRadius))
+                if (!table.IsBallOutsideOfTable(b1_NewPos, b1.radius))
                 {
                     b1.pos = b1_NewPos;
                 }
-                if (!IsBallOutsideOfCirle(b2_NewPos, b2.radius, Vector3.zero, floorRadius))
+                if (!table.IsBallOutsideOfTable(b2_NewPos, b2.radius))
                 {
                     b2.pos = b2_NewPos;
                 }
@@ -407,7 +414,7 @@ namespace Billiard
                     */
                     //thisBall.HandleSquareCollision(wallLength);
 
-                    HandleBallCircleCollision(thisBall, Vector3.zero, floorRadius, restitution);
+                    table.HandleBallCollision(thisBall, restitution);
                 }
 
 
@@ -425,9 +432,6 @@ namespace Billiard
 
         private void LateUpdate()
         {
-            //Draw the circle the beads are attached to
-            //DisplayShapes.DrawCircle(Vector3.zero, floorRadius, DisplayShapes.ColorOptions.White, DisplayShapes.Space2D.XZ);
-
             if (displayHistory)
             {
                 foreach (Queue<Vector3> historicalPosition in historialPositions)
@@ -437,89 +441,6 @@ namespace Billiard
                     DisplayShapes.DrawLine(verts, DisplayShapes.ColorOptions.White);
                 }
             }
-        }
-
-
-
-        //Collision detection and handling with the circle border
-        private void HandleBallCircleCollision(Ball ball, Vector3 circleCenter, float circleRadius, float restitution = 1f)
-        {        
-            if (IsBallOutsideOfCirle(ball.pos, ball.radius, circleCenter, circleRadius))
-            {
-                Vector3 wallNormal = (circleCenter - ball.pos).normalized;
-
-
-                //Move the ball so it's no longer colliding
-                ball.pos = (circleRadius - ball.radius) * -wallNormal;
-
-
-                //Update velocity 
-
-                //Collisions can only change velocity components along the penetration direction
-                float v = Vector3.Dot(ball.vel, wallNormal);
-
-                float vNew = Mathf.Abs(v) * restitution;
-
-                //Remove the old velocity and add the new velocity
-                ball.vel += wallNormal * (vNew - v);
-
-                //Same result
-                //ball.vel = Vector3.Reflect(ball.vel, -wallNormal);
-            }
-        }
-
-
-
-        //Is a ball outside of the circle border?
-        private bool IsBallOutsideOfCirle(Vector3 ballPos, float ballRadius, Vector3 circleCenter, float circleRadius)
-        {
-            bool isOutside = false;
-        
-            //The distance between the center and the ball's center
-            float distCenterToBallSqr = (ballPos - circleCenter).sqrMagnitude;
-
-            //If that distance is greater than this, the ball is outside
-            float maxAllowedDist = circleRadius - ballRadius;
-
-            if (distCenterToBallSqr > maxAllowedDist * maxAllowedDist)
-            {
-                isOutside = true;
-            }
-
-            return isOutside;
-        }
-
-
-
-        //Generate a circular mesh 
-        private void GenerateCircleMesh(GameObject floorGO, Vector3 circleCenter, float radius, int segments)
-        {
-            //Generate the vertices
-            List<Vector3> vertices = UsefulMethods.GetCircleSegments_XZ(circleCenter, radius, segments);
-
-            //Add the center to make it easier to trianglulate
-            vertices.Insert(0, circleCenter);
-
-
-            //Generate the triangles
-            List<int> triangles = new();
-
-            for (int i = 2; i < vertices.Count; i++)
-            {
-                triangles.Add(0);
-                triangles.Add(i);
-                triangles.Add(i - 1);
-            }
-
-            //Generate the mesh
-            Mesh m = new();
-
-            m.SetVertices(vertices);
-            m.SetTriangles(triangles, 0);
-
-            m.RecalculateNormals();
-
-            floorGO.GetComponent<MeshFilter>().sharedMesh = m;
         }
     }
 }
