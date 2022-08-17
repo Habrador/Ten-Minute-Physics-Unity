@@ -13,6 +13,12 @@ namespace Billiard
         }
 
 
+        public BilliardBall(Transform ballTrans) : base(ballTrans)
+        {
+            
+        }
+
+
 
         public void SimulateBall(int subSteps, float sdt)
         {
@@ -22,42 +28,6 @@ namespace Billiard
             {
                 vel += gravity * sdt;
                 pos += vel * sdt;
-            }
-        }
-
-
-
-        //
-        // Collision with environment detection
-        //
-
-        public void HandleSquareCollision(float wallLength)
-        {
-            //Make sure the ball is within the area, which is 5 m in all directions (except y)
-            //If outside, reset ball and mirror velocity
-            float halfSimSize = wallLength - radius;
-
-            if (pos.x < -halfSimSize)
-            {
-                pos.x = -halfSimSize;
-                vel.x *= -1f;
-            }
-            else if (pos.x > halfSimSize)
-            {
-                pos.x = halfSimSize;
-                vel.x *= -1f;
-            }
-
-            //2d simulation, so no y
-            else if (pos.z < -halfSimSize)
-            {
-                pos.z = -halfSimSize;
-                vel.z *= -1f;
-            }
-            else if (pos.z > halfSimSize)
-            {
-                pos.z = halfSimSize;
-                vel.z *= -1f;
             }
         }
     }

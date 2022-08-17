@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Rectangle : Table
+public class Rectangle : BilliardTable
 {
     private readonly float xWidth = 10f;
     private readonly float zWidth = 14f;

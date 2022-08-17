@@ -11,8 +11,12 @@ namespace Billiard
     {
         public GameObject ballPrefabGO;
 
+        public BilliardTable billiardTable;
+
         //Simulation properties
         private readonly int subSteps = 5;
+
+        private readonly int numberOfBalls = 20;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
@@ -29,6 +33,8 @@ namespace Billiard
         private void Start()
         {
             ResetSimulation();
+
+            billiardTable.Init();
         }
 
 
@@ -37,35 +43,14 @@ namespace Billiard
         {
             allBalls = new List<BilliardBall>();
 
-            Material ballBaseMaterial = ballPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
+            Vector2 mapSize = new (10f, 14f);
 
-            //Create random balls
-            for (int i = 0; i < 20; i++)
+            SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, 0.1f, 1f, mapSize);
+
+
+            //Give each ball a velocity
+            foreach (BilliardBall b in allBalls)
             {
-                GameObject newBallGO = Instantiate(ballPrefabGO);
-
-
-                //Random color
-                Material randomBallMaterial = BilliardMaterials.GetRandomBilliardBallMaterial(ballBaseMaterial);
-
-                newBallGO.GetComponent<MeshRenderer>().material = randomBallMaterial;
-
-
-                //Random pos
-                float randomPosX = Random.Range(-5f, 5f);
-                float randomPosZ = Random.Range(-5f, 5f);
-
-                Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
-
-
-                //Random size
-                float randomSize = Random.Range(0.1f, 1f);
-
-                newBallGO.transform.position = randomPos;
-                newBallGO.transform.localScale = Vector3.one * randomSize;
-
-
-                //Random vel
                 float maxVel = 4f;
 
                 float randomVelX = Random.Range(-maxVel, maxVel);
@@ -73,13 +58,9 @@ namespace Billiard
 
                 Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
 
-
-                BilliardBall newBall = new(randomVel, newBallGO.transform);
-
-                allBalls.Add(newBall);
+                b.vel = randomVel;
             }
         }
-
 
 
 
@@ -91,7 +72,6 @@ namespace Billiard
                 ball.UpdateVisualPosition();
             }
         }
-
 
 
 
@@ -114,7 +94,8 @@ namespace Billiard
                     BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
                 }
 
-                thisBall.HandleSquareCollision(wallLength);
+                //thisBall.HandleSquareCollision(wallLength);
+                billiardTable.HandleBallCollision(thisBall);
             }
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //Circular billiard table
-public class Circle : Table
+public class Circle : BilliardTable
 {
     private readonly int segments = 100;
 
