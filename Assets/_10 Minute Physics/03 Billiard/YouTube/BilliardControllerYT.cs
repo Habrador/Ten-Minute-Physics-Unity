@@ -27,7 +27,7 @@ namespace Billiard
 
         private int fastForwardSpeed = 10;
 
-        private readonly int numberOfBalls = 1;
+        private readonly int numberOfBalls = 10;
 
         private readonly float startVel = 0.25f;
 
@@ -49,7 +49,7 @@ namespace Billiard
 
         private List<Queue<Vector3>> historialPositions = new();
 
-        private bool displayHistory = true;
+        private bool displayHistory = false;
 
 
 
@@ -59,14 +59,14 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.35f;
+            float ballRadius = 0.3f;
 
 
             Vector3 startPos = Vector3.zero;
 
-            SetupBalls.AddBall(ballPrefabGO, allBalls, startPos, ballRadius);
+            //SetupBalls.AddBall(ballPrefabGO, allBalls, startPos, ballRadius);
 
-            //SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, 5f);
+            SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius, 0.4f);
 
             //Vector2 rectangleSize = new Vector2(10f, 14f);
 
@@ -75,6 +75,12 @@ namespace Billiard
             //SetupBalls.AddBallsOnCircle(ballPrefabGO, numberOfBalls, allBalls, 0.2f, 0.4f);
 
             //AddBallsWithinArea();
+
+            //Inactivate the transforms if we want to display the balls with vertices in LateUpdate
+            //foreach (BilliardBall ball in allBalls)
+            //{
+            //    ball.ballTransform.gameObject.SetActive(false);
+            //}
 
 
             //Offset the balls to the startPos
@@ -173,7 +179,7 @@ namespace Billiard
 
                     thisBall.SimulateBall(subSteps, sdt);
 
-                    /*
+                    
                     //Check collision with the other balls after this ball in the list of all balls
                     for (int j = i + 1; j < allBalls.Count; j++)
                     {
@@ -182,7 +188,7 @@ namespace Billiard
                         //HandleBallCollision(ball, ballOther, restitution);
                         BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                     }
-                    */
+                    
 
                     bool isColliding = table.HandleBallCollision(thisBall, restitution);
 
@@ -217,6 +223,17 @@ namespace Billiard
                     DisplayShapes.DrawLine(verts, DisplayShapes.ColorOptions.Gray);
                 }
             }
+
+            //List<Vector3> vertices = new();
+
+            //foreach (Ball b in allBalls)
+            //{
+            //    vertices.Add(b.pos);
+            //}
+
+            //Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.White);
+
+            //DisplayShapes.DrawVertices(vertices, mat);
         }
     }
 }

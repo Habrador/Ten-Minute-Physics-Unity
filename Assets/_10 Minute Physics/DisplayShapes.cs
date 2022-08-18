@@ -48,7 +48,7 @@ public static class DisplayShapes
 
 
 
-    private static Material GetMaterial(ColorOptions color)
+    public static Material GetMaterial(ColorOptions color)
     {
         return color switch
         {
@@ -143,6 +143,28 @@ public static class DisplayShapes
 
         m.SetVertices(vertices);
         m.SetIndices(indices, MeshTopology.LineStrip, 0);
+
+        Graphics.DrawMesh(m, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
+    }
+
+
+
+    //Draw vertices
+    public static void DrawVertices(List<Vector3> vertices, Material material)
+    {
+        //Generate the indices
+        List<int> indices = new ();
+
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            indices.Add(i);
+        }
+
+        //Generate the mesh
+        Mesh m = new ();
+
+        m.SetVertices(vertices);
+        m.SetIndices(indices, MeshTopology.Points, 0);
 
         Graphics.DrawMesh(m, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
     }
