@@ -23,9 +23,9 @@ namespace Billiard
         //Simulation properties
         private readonly int subSteps = 1;
 
-        private int fastForwardSpeed = 10;
+        private int fastForwardSpeed = 15;
 
-        private readonly int numberOfBalls = 500;
+        private readonly int numberOfBalls = 1;
 
         private readonly float startVel = 0.25f;
 
@@ -57,11 +57,15 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.2f;
+            float ballRadius = 0.5f;
 
-            SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, 5f);
+            Vector3 startPos = Vector3.zero;
 
-            Vector2 rectangleSize = new Vector2(10f, 14f);
+            SetupBalls.AddBall(ballPrefabGO, allBalls, startPos, ballRadius);
+
+            //SetupBalls.AddRandomBallsWithinCircle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, 5f);
+
+            //Vector2 rectangleSize = new Vector2(10f, 14f);
 
             //SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius + 1.8f, rectangleSize);
 
@@ -80,7 +84,7 @@ namespace Billiard
 
                 float randomVelY = Random.Range(-velAngle, velAngle);
 
-                Vector3 ballVel = Quaternion.Euler(0f, randomVelY, 0f) * Vector3.forward * startVel;
+                Vector3 ballVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.right * startVel;
 
                 ball.vel = ballVel;
             }

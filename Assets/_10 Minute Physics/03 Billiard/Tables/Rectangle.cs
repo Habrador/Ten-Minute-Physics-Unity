@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Rectangle : BilliardTable
 {
-    private readonly float xWidth = 10f;
-    private readonly float zWidth = 14f;
+    private readonly float xWidth = 14f;
+    private readonly float zWidth = 10f;
 
 
 
@@ -105,5 +105,12 @@ public class Rectangle : BilliardTable
         m.RecalculateNormals();
 
         mf.sharedMesh = m;
+    }
+
+
+
+    public override bool IsBallInHole(Ball ball)
+    {
+        return false;
     }
 }

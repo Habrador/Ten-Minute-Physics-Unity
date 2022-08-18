@@ -7,6 +7,25 @@ namespace Billiard
     //Add billiard balls with different configurations
     public static class SetupBalls
     {
+        //Add a single ball
+        public static void AddBall(GameObject ballPrefabGO, List<BilliardBall> allBalls, Vector3 pos, float ballRadius)
+        {
+            GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
+
+            //Pos
+            newBallGO.transform.position = pos;
+
+            //Scale
+            newBallGO.transform.localScale = Vector3.one * ballRadius;
+
+            //Add the actual ball
+            BilliardBall newBall = new(newBallGO.transform);
+
+            allBalls.Add(newBall);
+        }
+    
+    
+
         //Add balls on the circumference of a circle
         public static void AddBallsOnCircle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float ballRadius, float circleRadius)
         {
@@ -16,18 +35,7 @@ namespace Billiard
 
             for (int i = 0; i < ballPositons.Count - 1; i++)
             {
-                GameObject newBallGO = GameObject.Instantiate(ballPrefabGO);
-
-                //Pos
-                newBallGO.transform.position = ballPositons[i];
-
-                //Scale
-                newBallGO.transform.localScale = Vector3.one * ballRadius;
-
-                //Add the actual ball
-                BilliardBall newBall = new(newBallGO.transform);
-
-                allBalls.Add(newBall);
+                AddBall(ballPrefabGO, allBalls, ballPositons[i], ballRadius);
             }
         }
 

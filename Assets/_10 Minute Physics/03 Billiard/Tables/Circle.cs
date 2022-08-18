@@ -108,4 +108,10 @@ public class Circle : BilliardTable
 
         mf.sharedMesh = m;
     }
+
+
+    public override bool IsBallInHole(Ball ball)
+    {
+        return false;
+    }
 }
