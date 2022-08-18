@@ -17,9 +17,11 @@ public class Shape : BilliardTable
 
 
 
-    public override void HandleBallCollision(Ball ball, float restitution = 1)
+    public override bool HandleBallCollision(Ball ball, float restitution = 1)
     {
-        //throw new System.NotImplementedException();
+        bool isColliding = BallCollisionHandling.HandleBallWallEdgesCollision(ball, edges, restitution);
+
+        return isColliding;
     }
 
 
@@ -99,7 +101,7 @@ public class Shape : BilliardTable
             return;
         }
         
-        DisplayShapes.DrawLine(edges, DisplayShapes.ColorOptions.White);
+        //DisplayShapes.DrawLine(edges, DisplayShapes.ColorOptions.White);
     }
 
 

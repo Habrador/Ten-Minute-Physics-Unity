@@ -20,12 +20,16 @@ public class Circle : BilliardTable
 
 
 
-    public override void HandleBallCollision(Ball ball, float restitution)
+    public override bool HandleBallCollision(Ball ball, float restitution)
     {
+        bool isColliding = false;
+    
         Vector3 circleCenter = transform.position;
 
         if (IsBallOutsideOfCircle(ball.pos, ball.radius, circleCenter, radius))
         {
+            isColliding = true;
+        
             Vector3 wallNormal = (circleCenter - ball.pos).normalized;
 
 
@@ -46,6 +50,8 @@ public class Circle : BilliardTable
             //Same result
             //ball.vel = Vector3.Reflect(ball.vel, -wallNormal);
         }
+
+        return isColliding;
     }
 
 

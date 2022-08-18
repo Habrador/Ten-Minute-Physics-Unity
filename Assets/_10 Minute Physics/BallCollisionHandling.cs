@@ -88,12 +88,12 @@ public static class BallCollisionHandling
 
     //The walls are a list if edges ordered counter-clockwise
     //The first point on the border also has to be included at the end of the list
-    public static void HandleBallWallEdgesCollision(Ball ball, List<Vector3> border, float restitution)
+    public static bool HandleBallWallEdgesCollision(Ball ball, List<Vector3> border, float restitution)
     {
         //We need at least a triangle (the start and end are the same point, thus the 4)
         if (border.Count < 4)
         {
-            return;
+            return false;
         }
 
 
@@ -150,7 +150,7 @@ public static class BallCollisionHandling
             //The ball is not colliding with the wall
             if (dist > ball.radius)
             {
-                return;
+                return false;
             }
 
             //The ball is colliding with the wall, so push it in again
@@ -173,5 +173,7 @@ public static class BallCollisionHandling
 
         //Remove the old velocity and add the new velocity
         ball.vel += dir * (vNew - v);
+
+        return true;
     }
 }

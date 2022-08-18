@@ -18,8 +18,10 @@ public class Rectangle : BilliardTable
 
 
 
-    public override void HandleBallCollision(Ball ball, float restitution)
+    public override bool HandleBallCollision(Ball ball, float restitution)
     {
+        bool isColliding = false;
+
         Vector3 tablePos = transform.position;
 
         float halfX = xWidth * 0.5f;
@@ -29,23 +31,33 @@ public class Rectangle : BilliardTable
         {
             ball.pos.x = tablePos.x + halfX - ball.radius;
             ball.vel.x *= -1f;
+
+            isColliding = true;
         }
         else if (ball.pos.x < tablePos.x - halfX + ball.radius)
         {
             ball.pos.x = tablePos.x - halfX + ball.radius;
             ball.vel.x *= -1f;
+
+            isColliding = true;
         }
 
         if (ball.pos.z > tablePos.z + halfZ - ball.radius)
         {
             ball.pos.z = tablePos.z + halfZ - ball.radius;
             ball.vel.z *= -1f;
+
+            isColliding = true;
         }
         else if (ball.pos.z < tablePos.z - halfZ + ball.radius)
         {
             ball.pos.z = tablePos.z - halfZ + ball.radius;
             ball.vel.z *= -1f;
+
+            isColliding = true;
         }
+
+        return isColliding;
     }
 
     

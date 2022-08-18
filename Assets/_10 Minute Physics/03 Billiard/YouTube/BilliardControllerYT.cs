@@ -16,6 +16,8 @@ namespace Billiard
 
         public BilliardTable table;
 
+        //Where the balls will start
+        public Transform startPosTrans;
 
 
         //Private
@@ -23,7 +25,7 @@ namespace Billiard
         //Simulation properties
         private readonly int subSteps = 1;
 
-        private int fastForwardSpeed = 15;
+        private int fastForwardSpeed = 10;
 
         private readonly int numberOfBalls = 1;
 
@@ -47,7 +49,7 @@ namespace Billiard
 
         private List<Queue<Vector3>> historialPositions = new();
 
-        private bool displayHistory = false;
+        private bool displayHistory = true;
 
 
 
@@ -57,7 +59,8 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.5f;
+            float ballRadius = 0.35f;
+
 
             Vector3 startPos = Vector3.zero;
 
@@ -73,9 +76,21 @@ namespace Billiard
 
             //AddBallsWithinArea();
 
+
+            //Offset the balls to the startPos
+            if (startPosTrans != null)
+            {
+                foreach (BilliardBall ball in allBalls)
+                {
+                    ball.pos += startPosTrans.position;
+                }
+            }
+
+
             //Give each ball a color
             BilliardMaterials.GiveBallsRandomColor(ballPrefabGO, allBalls);
             //BilliardMaterials.GiveBallsGradientColor(ballPrefabGO, allBalls);
+
 
             //Give each ball a velocity
             foreach (BilliardBall ball in allBalls)
@@ -84,7 +99,7 @@ namespace Billiard
 
                 float randomVelY = Random.Range(-velAngle, velAngle);
 
-                Vector3 ballVel = Quaternion.Euler(0f, 20f, 0f) * Vector3.right * startVel;
+                Vector3 ballVel = Quaternion.Euler(0f, 0f, 0f) * Vector3.right * startVel;
 
                 ball.vel = ballVel;
             }
@@ -93,12 +108,14 @@ namespace Billiard
             //The problem now is that some balls may intersect with other balls
             //So we need to run an algorithm that moves them apart while still making sure they are within the play area
             //SetupBalls.MoveAllBallsApart(allBalls, table);
-            
-            
-            //for (int i = 0; i < numberOfBalls; i++)
-            //{
-            //    historialPositions.Add(new Queue<Vector3>());
-            //}
+
+            if (displayHistory)
+            {
+                for (int i = 0; i < numberOfBalls; i++)
+                {
+                    historialPositions.Add(new Queue<Vector3>());
+                }
+            }
 
             table.Init();
 
@@ -167,7 +184,13 @@ namespace Billiard
                     }
                     */
 
-                    table.HandleBallCollision(thisBall, restitution);
+                    bool isColliding = table.HandleBallCollision(thisBall, restitution);
+
+                    //We only need to save history if the ball is colliding, otherwise its just moving in the same direction
+                    //if (displayHistory && isColliding)
+                    //{
+                    //    historialPositions[i].Enqueue(allBalls[i].pos);
+                    //}
                 }
 
 
@@ -191,7 +214,7 @@ namespace Billiard
                 {
                     List<Vector3> verts = new List<Vector3>(historicalPosition);
 
-                    DisplayShapes.DrawLine(verts, DisplayShapes.ColorOptions.White);
+                    DisplayShapes.DrawLine(verts, DisplayShapes.ColorOptions.Gray);
                 }
             }
         }
