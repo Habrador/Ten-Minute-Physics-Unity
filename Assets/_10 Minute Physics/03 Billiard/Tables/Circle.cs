@@ -15,7 +15,7 @@ public class Circle : BilliardTable
     {
         MeshFilter mf = this.gameObject.GetComponent<MeshFilter>();
 
-        GenerateCircleMesh(mf, transform.position, radius, segments);
+        mf.sharedMesh = DisplayShapes.GenerateCircleMesh(transform.position, radius, segments);
     }
 
 
@@ -84,40 +84,13 @@ public class Circle : BilliardTable
 
 
 
-    //Generate a circular mesh 
-    private void GenerateCircleMesh(MeshFilter mf, Vector3 circleCenter, float radius, int segments)
-    {
-        //Generate the vertices
-        List<Vector3> vertices = UsefulMethods.GetCircleSegments_XZ(circleCenter, radius, segments);
-
-        //Add the center to make it easier to trianglulate
-        vertices.Insert(0, circleCenter);
-
-
-        //Generate the triangles
-        List<int> triangles = new();
-
-        for (int i = 2; i < vertices.Count; i++)
-        {
-            triangles.Add(0);
-            triangles.Add(i);
-            triangles.Add(i - 1);
-        }
-
-        //Generate the mesh
-        Mesh m = new();
-
-        m.SetVertices(vertices);
-        m.SetTriangles(triangles, 0);
-
-        m.RecalculateNormals();
-
-        mf.sharedMesh = m;
-    }
-
-
     public override bool IsBallInHole(Ball ball)
     {
         return false;
+    }
+
+    public override void MyUpdate()
+    {
+        //throw new System.NotImplementedException();
     }
 }

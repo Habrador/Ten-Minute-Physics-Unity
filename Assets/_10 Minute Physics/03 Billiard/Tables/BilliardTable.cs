@@ -12,4 +12,6 @@ public abstract class BilliardTable : MonoBehaviour
     public abstract bool IsBallOutsideOfTable(Vector3 ballPos, float ballRadius);
 
     public abstract bool IsBallInHole(Ball ball);
+
+    public abstract void MyUpdate();
 }

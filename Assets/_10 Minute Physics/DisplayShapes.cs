@@ -273,4 +273,37 @@ public static class DisplayShapes
         DrawLineSegments(intersectedTriangleLineSegments, ColorOptions.Red);
         DrawLineSegments(normalsLineSegments, ColorOptions.Blue);
     }
+
+
+
+    //Generate a circular mesh 
+    public static Mesh GenerateCircleMesh(Vector3 circleCenter, float radius, int segments)
+    {
+        //Generate the vertices
+        List<Vector3> vertices = UsefulMethods.GetCircleSegments_XZ(circleCenter, radius, segments);
+
+        //Add the center to make it easier to trianglulate
+        vertices.Insert(0, circleCenter);
+
+
+        //Generate the triangles
+        List<int> triangles = new();
+
+        for (int i = 2; i < vertices.Count; i++)
+        {
+            triangles.Add(0);
+            triangles.Add(i);
+            triangles.Add(i - 1);
+        }
+
+        //Generate the mesh
+        Mesh m = new();
+
+        m.SetVertices(vertices);
+        m.SetTriangles(triangles, 0);
+
+        m.RecalculateNormals();
+
+        return m;
+    }
 }

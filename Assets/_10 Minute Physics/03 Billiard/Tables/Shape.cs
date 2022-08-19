@@ -128,4 +128,9 @@ public class Shape : BilliardTable
     {
         return false;
     }
+
+    public override void MyUpdate()
+    {
+        //throw new System.NotImplementedException();
+    }
 }

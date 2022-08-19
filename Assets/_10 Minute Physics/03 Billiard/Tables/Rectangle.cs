@@ -125,4 +125,9 @@ public class Rectangle : BilliardTable
     {
         return false;
     }
+
+    public override void MyUpdate()
+    {
+        //throw new System.NotImplementedException();
+    }
 }
