@@ -27,7 +27,7 @@ namespace Billiard
 
         private int fastForwardSpeed = 10;
 
-        private readonly int numberOfBalls = 10;
+        private readonly int numberOfBalls = 20;
 
         private readonly float startVel = 0.05f;
 
@@ -59,7 +59,7 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.08f;
+            float ballRadius = 0.06f;
 
 
             Vector3 startPos = Vector3.zero;
@@ -190,10 +190,20 @@ namespace Billiard
                         //HandleBallCollision(ball, ballOther, restitution);
                         BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                     }
-                    
+
 
                     //Check collision with the environment
                     bool isColliding = table.HandleBallEnvironmentCollision(thisBall, restitution);
+
+
+                    //Check ball-hole collisions
+                    bool isInHole = table.IsBallInHole(thisBall);
+
+                    if (isInHole)
+                    {
+                        thisBall.DeActivateBall();
+                    }
+
 
                     //We only need to save history if the ball is colliding, otherwise its just moving in the same direction
                     //if (displayHistory && isColliding)

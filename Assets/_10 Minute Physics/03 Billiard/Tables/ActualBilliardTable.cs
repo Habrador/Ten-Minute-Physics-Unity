@@ -104,7 +104,45 @@ public class ActualBilliardTable : BilliardTable
 
     public override bool IsBallInHole(Ball ball)
     {
-        throw new System.NotImplementedException();
+        bool isInHole = false;
+
+        foreach (Transform child in bigHolesParent)
+        {
+            isInHole = IsBallInHole(ball.pos, ball.radius, child.position, bigHoleRadius);
+
+            if (isInHole)
+            {
+                return true;
+            }
+        }
+
+        foreach (Transform child in smallHolesParent)
+        {
+            isInHole = IsBallInHole(ball.pos, ball.radius, child.position, smallHoleRadius);
+
+            if (isInHole)
+            {
+                return true;
+            }
+        }
+
+        return isInHole;
+    }
+
+
+
+    private bool IsBallInHole(Vector3 ballPos, float ballRadius, Vector3 holePos, float holeRadius)
+    {
+        float distHoleBall = (ballPos - holePos).magnitude;
+
+        float boleInHoleDist = holeRadius - ballRadius;
+
+        if (distHoleBall < boleInHoleDist)
+        {
+            return true;
+        }
+
+        return false;
     }
 
 
