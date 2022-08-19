@@ -17,7 +17,7 @@ public class Shape : BilliardTable
 
 
 
-    public override bool HandleBallCollision(Ball ball, float restitution = 1)
+    public override bool HandleBallEnvironmentCollision(Ball ball, float restitution = 1)
     {
         bool isColliding = BallCollisionHandling.HandleBallWallEdgesCollision(ball, edges, restitution);
 

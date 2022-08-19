@@ -29,7 +29,7 @@ namespace Billiard
 
         private readonly int numberOfBalls = 10;
 
-        private readonly float startVel = 0.25f;
+        private readonly float startVel = 0.05f;
 
         //How much velocity is lost after collision between balls [0, 1]
         //Is usually called e
@@ -59,7 +59,7 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.0285f;
+            float ballRadius = 0.08f;
 
 
             Vector3 startPos = Vector3.zero;
@@ -192,7 +192,8 @@ namespace Billiard
                     }
                     
 
-                    bool isColliding = table.HandleBallCollision(thisBall, restitution);
+                    //Check collision with the environment
+                    bool isColliding = table.HandleBallEnvironmentCollision(thisBall, restitution);
 
                     //We only need to save history if the ball is colliding, otherwise its just moving in the same direction
                     //if (displayHistory && isColliding)

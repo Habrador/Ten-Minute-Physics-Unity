@@ -18,7 +18,7 @@ public class Rectangle : BilliardTable
 
 
 
-    public override bool HandleBallCollision(Ball ball, float restitution)
+    public override bool HandleBallEnvironmentCollision(Ball ball, float restitution)
     {
         bool isColliding = false;
 

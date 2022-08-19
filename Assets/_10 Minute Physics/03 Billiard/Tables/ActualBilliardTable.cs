@@ -15,6 +15,7 @@ public class ActualBilliardTable : BilliardTable
     public Material tableClothMaterial;
     public Material holeMaterial;
     public Material tableBorderMaterial;
+    public Material tableClothSideMaterial;
 
 
     //Private
@@ -30,10 +31,12 @@ public class ActualBilliardTable : BilliardTable
     private List<Mesh> sideMeshes = new List<Mesh>();
     private List<Mesh> holesMeshes = new List<Mesh>();
     private Mesh tableClothMesh;
+    private Mesh surroundingMesh;
 
     //The border edges for collision detection
-    private List<Vector3> borderVertices;
-
+    //private List<Vector3> borderVertices;
+    //This one has an extra vertex at the end which is the same as first
+    private List<Vector3> borderEdges;
 
 
     public override void Init()
@@ -45,17 +48,23 @@ public class ActualBilliardTable : BilliardTable
 
     private void GenerateMeshes()
     {
-        borderVertices = new();
+        List<Vector3> borderVertices = new();
 
         foreach (Transform child in borderEdgesParent)
         {
             borderVertices.Add(child.position);
         }
 
+        borderEdges = new List<Vector3>(borderVertices);
+
+        borderEdges.Add(borderEdges[0]);
+
+
         float tableSideDepth = 0.1f;
 
         //Cloth
         tableClothMesh = GenerateClothMesh(borderVertices, tableSideDepth * 0.9f);
+
 
         //Side
         sideMeshes.Add(GenerateBetweenHolesMesh(4,  borderVertices));
@@ -65,7 +74,10 @@ public class ActualBilliardTable : BilliardTable
         sideMeshes.Add(GenerateBetweenHolesMesh(30, borderVertices));
         sideMeshes.Add(GenerateBetweenHolesMesh(37, borderVertices));
 
-        sideMeshes.Add(GenerateOutsideMesh(borderVertices, tableSideDepth));
+
+        //Border
+        surroundingMesh = GenerateOutsideMesh(borderVertices, tableSideDepth);
+
 
         //Holes
         foreach (Transform child in bigHolesParent)
@@ -81,9 +93,11 @@ public class ActualBilliardTable : BilliardTable
 
 
 
-    public override bool HandleBallCollision(Ball ball, float restitution = 1)
+    public override bool HandleBallEnvironmentCollision(Ball ball, float restitution = 1)
     {
-        return false;
+        bool isColliding = BallCollisionHandling.HandleBallWallEdgesCollision(ball, borderEdges, restitution);
+
+        return isColliding;
     }
 
 
@@ -286,9 +300,11 @@ public class ActualBilliardTable : BilliardTable
 
         foreach (Mesh m in sideMeshes)
         {
-            Graphics.DrawMesh(m, sideMeshPos, Quaternion.identity, tableBorderMaterial, 0);
+            Graphics.DrawMesh(m, sideMeshPos, Quaternion.identity, tableClothSideMaterial, 0);
         }
 
         Graphics.DrawMesh(tableClothMesh, clothPos, Quaternion.identity, tableClothMaterial, 0);
+
+        Graphics.DrawMesh(surroundingMesh, sideMeshPos, Quaternion.identity, tableBorderMaterial, 0);
     }
 }

@@ -159,6 +159,8 @@ MonoBehaviour:
   tableClothMaterial: {fileID: 2100000, guid: 4eb38c4247a70534a9bb90c91fa75380, type: 2}
   holeMaterial: {fileID: 2100000, guid: e5c8681c35bcc5c47a88cff3504a0993, type: 2}
   tableBorderMaterial: {fileID: 2100000, guid: b72e3a8090631e24d81545ba205b513a, type: 2}
+  tableClothSideMaterial: {fileID: 2100000, guid: 8f035d297508f1441898fc95c9a6a183,
+    type: 2}
 --- !u!4 &53779390
 Transform:
   m_ObjectHideFlags: 0

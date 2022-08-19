@@ -94,7 +94,7 @@ namespace Billiard
                 }
 
                 //thisBall.HandleSquareCollision(wallLength);
-                billiardTable.HandleBallCollision(thisBall);
+                billiardTable.HandleBallEnvironmentCollision(thisBall);
             }
         }
     }

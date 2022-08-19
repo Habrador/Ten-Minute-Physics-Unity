@@ -7,7 +7,7 @@ public abstract class BilliardTable : MonoBehaviour
 {
     public abstract void Init();
 
-    public abstract bool HandleBallCollision(Ball ball, float restitution = 1f);
+    public abstract bool HandleBallEnvironmentCollision(Ball ball, float restitution = 1f);
 
     public abstract bool IsBallOutsideOfTable(Vector3 ballPos, float ballRadius);
 
