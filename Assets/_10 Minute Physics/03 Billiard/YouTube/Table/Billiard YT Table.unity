@@ -375,7 +375,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPrefabGO: {fileID: 5039769975780560612, guid: 660910d05c2e22d44a2cc005b6a4adfd,
     type: 3}
-  table: {fileID: 0}
+  table: {fileID: 53779389}
   startPosTrans: {fileID: 0}
 --- !u!1 &316591671
 GameObject:
@@ -887,7 +887,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5.5
+  orthographic size: 1.5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2

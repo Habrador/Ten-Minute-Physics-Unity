@@ -59,7 +59,7 @@ namespace Billiard
 
             allBalls = new List<BilliardBall>();
 
-            float ballRadius = 0.3f;
+            float ballRadius = 0.0285f;
 
 
             Vector3 startPos = Vector3.zero;
@@ -156,6 +156,8 @@ namespace Billiard
                     historialPositions[i].Enqueue(allBalls[i].pos);
                 }
             }
+
+            table.MyUpdate();
         }
 
 

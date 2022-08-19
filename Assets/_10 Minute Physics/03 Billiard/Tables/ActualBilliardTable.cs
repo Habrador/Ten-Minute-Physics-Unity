@@ -83,7 +83,7 @@ public class ActualBilliardTable : BilliardTable
 
     public override bool HandleBallCollision(Ball ball, float restitution = 1)
     {
-        throw new System.NotImplementedException();
+        return false;
     }
 
 
@@ -209,8 +209,8 @@ public class ActualBilliardTable : BilliardTable
         Vector3[] verts = { c1_outer, c2_outer, c3_outer, c4_outer };
 
         int[] tris = {
-            0, 1, 2,
-            0, 2, 3
+            0, 2, 1,
+            0, 3, 2
         };
 
         Mesh m = new Mesh();
@@ -266,10 +266,29 @@ public class ActualBilliardTable : BilliardTable
         }
 
         Gizmos.DrawMesh(GenerateOutsideMesh(verts, 0.1f));
+
+        //Cloth
+        //Gizmos.DrawMesh(GenerateClothMesh(verts, 0.1f * 0.9f));
     }
 
     public override void MyUpdate()
     {
-        throw new System.NotImplementedException();
+        Vector3 sideMeshPos = Vector3.zero;
+    
+        Vector3 holePos = -Vector3.up * 0.01f;
+    
+        Vector3 clothPos = -Vector3.up * 0.02f;
+
+        foreach (Mesh m in holesMeshes)
+        {
+            Graphics.DrawMesh(m, holePos, Quaternion.identity, holeMaterial, 0);
+        }
+
+        foreach (Mesh m in sideMeshes)
+        {
+            Graphics.DrawMesh(m, sideMeshPos, Quaternion.identity, tableBorderMaterial, 0);
+        }
+
+        Graphics.DrawMesh(tableClothMesh, clothPos, Quaternion.identity, tableClothMaterial, 0);
     }
 }
