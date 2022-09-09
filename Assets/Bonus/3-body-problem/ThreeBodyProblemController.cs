@@ -31,8 +31,10 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Simulation settings
     private readonly int subSteps = 1;
 
-    //Gravitational constant 6.674×10−11
-    private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
+    //Gravitational constant G
+    //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
+    //Our planets masses are small, so we need a much larger G, or no movement will happen
+    private readonly float G = 1f;
 
 
 
@@ -77,6 +79,11 @@ public class ThreeBodyProblemController : MonoBehaviour
     {
         float sdt = Time.fixedDeltaTime / (float)subSteps;
 
+        //We first have to calculate all accelerations
+        //We cant add the acceleration at once because it will change position of the planet, which is needed for the other planets
+        List<Vector3> accelerations = new ();
+
+        //TODO: Optimize this so we don't need to make the same calculation twice because F acts in the opposite direction as well
         for (int i = 0; i < allPlanets.Count; i++)
         {
             Planet thisPlanet = allPlanets[i];
@@ -86,6 +93,7 @@ public class ThreeBodyProblemController : MonoBehaviour
             //Check all other planets
             for (int j = 0; j < allPlanets.Count; j++)
             {
+                //Dont check the planet itself
                 if (i == j)
                 {
                     continue;
@@ -103,6 +111,10 @@ public class ThreeBodyProblemController : MonoBehaviour
 
                 float rSqr = thisOtherVec.sqrMagnitude;
 
+                //Planets can intersect so rSqr will go to infinity, making F really big, so we need to clamp
+                //We also need to clamp if they are too far apart or F will be really small and the planet will never return
+                rSqr = Mathf.Clamp(rSqr, 0.1f, 100f);
+
                 float F = G * ((m1 * m2) / rSqr);
 
                 //F = m * a
@@ -111,11 +123,22 @@ public class ThreeBodyProblemController : MonoBehaviour
                 accelerationVector += a * thisOtherVec.normalized;
             }
 
-            accelerationVector *= 3000000000f;
-
             //Debug.Log(accelerationVector.magnitude);
 
-            thisPlanet.SimulatePlanet(subSteps, sdt, accelerationVector);
+            accelerations.Add(accelerationVector);
+        }
+
+
+        //Simulate each planet
+        for (int i = 0; i < allPlanets.Count; i++)
+        {
+            Planet thisPlanet = allPlanets[i];
+
+            thisPlanet.SimulatePlanet(subSteps, sdt, accelerations[i]);
+
+            //Debug.Log(accelerations[i].magnitude);
+
+            Debug.DrawRay(thisPlanet.pos, accelerations[i].normalized);
         }
     }
 
