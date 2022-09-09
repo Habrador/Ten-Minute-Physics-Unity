@@ -49,3 +49,14 @@ Catch and throw a ball with your mouse
 ## 13. Tetrahedralizer (TODO)
 
 Implemetation of an algorithm in Unity that splits a mesh into tetrahedrons
+
+
+
+# Bonus
+
+Bonus implementations related to the code above
+
+
+## 3-Body Problem
+
+Simulation of planetary orbits
