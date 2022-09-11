@@ -26,7 +26,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private const int NUMBER_OF_PLANETS = 3;
 
-    private readonly Vector2 minMaxplanetRadius = new (0.1f, 2f);
+    private readonly Vector2 minMaxplanetRadius = new (0.5f, 0.5f);
 
     //Simulation settings
     private readonly int subSteps = 1;
@@ -34,7 +34,7 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
-    private readonly float G = 2f;
+    private readonly float G = 10f;
 
     //The square distance at which the equation is valid
     private readonly float rSqrMin = 0.1f;
@@ -51,20 +51,17 @@ public class ThreeBodyProblemController : MonoBehaviour
         AddPlanets();
 
         //Give each ball a velocity
-        foreach (Planet p in allPlanets)
-        {
-            float maxVel = 0.5f;
+        //foreach (Planet p in allPlanets)
+        //{
+        //    float maxVel = 0.5f;
 
-            float randomVelX = Random.Range(-maxVel, maxVel);
-            float randomVelZ = Random.Range(-maxVel, maxVel);
+        //    float randomVelX = Random.Range(-maxVel, maxVel);
+        //    float randomVelZ = Random.Range(-maxVel, maxVel);
 
-            Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
+        //    Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
 
-            p.vel = randomVel;
-        }
-
-
-        //Debug.Log(G);
+        //    p.vel = randomVel;
+        //}
     }
 
 
@@ -74,6 +71,21 @@ public class ThreeBodyProblemController : MonoBehaviour
         foreach (Planet p in allPlanets)
         {
             p.UpdateVisualPosition();
+        }
+
+        //Calculate the center of all planets, which should be the same if they have the same mass
+        Vector3 center = Vector3.zero;
+
+        foreach (Planet p in allPlanets)
+        {
+            center += p.pos;
+        }
+
+        center /= allPlanets.Count;
+
+        foreach (Planet p in allPlanets)
+        {
+            Debug.DrawLine(center, p.pos);
         }
     }
 
@@ -122,6 +134,7 @@ public class ThreeBodyProblemController : MonoBehaviour
                 float aThisPlanet = F / m1;
                 float aOtherPlanet = F / m2;
 
+                //F with direction
                 accelerations[i] += aThisPlanet * thisOtherVec.normalized;
                 accelerations[j] += aOtherPlanet * -thisOtherVec.normalized;
             }
@@ -137,7 +150,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
             //Debug.Log(accelerations[i].magnitude);
 
-            Debug.DrawRay(thisPlanet.pos, accelerations[i].normalized);
+            //Debug.DrawRay(thisPlanet.pos, accelerations[i].normalized);
         }
     }
 
