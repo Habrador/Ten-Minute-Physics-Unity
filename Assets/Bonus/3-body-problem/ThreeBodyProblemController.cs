@@ -26,7 +26,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private const int NUMBER_OF_PLANETS = 3;
 
-    private readonly Vector2 minMaxplanetRadius = new (0.5f, 0.5f);
+    private readonly Vector2 minMaxplanetRadius = new (0.4f, 0.4f);
 
     //Simulation settings
     private readonly int subSteps = 1;
@@ -34,11 +34,11 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
-    private readonly float G = 10f;
+    private readonly float G = 20f;
 
     //The square distance at which the equation is valid
-    private readonly float rSqrMin = 0.1f;
-    private readonly float rSqrMax = 100f;
+    private readonly float rSqrMin = 0.2f;
+    private readonly float rSqrMax = 15f;
 
 
 
@@ -62,6 +62,17 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         //    p.vel = randomVel;
         //}
+
+
+        Vector3 center = GetCenter();
+
+        //Center the camera
+        Transform cameraTrans = Camera.main.transform;
+
+        Vector3 cameraPos = center;
+        cameraPos.y = cameraTrans.position.y;
+
+        cameraTrans.position = cameraPos;
     }
 
 
@@ -73,7 +84,21 @@ public class ThreeBodyProblemController : MonoBehaviour
             p.UpdateVisualPosition();
         }
 
-        //Calculate the center of all planets, which should be the same if they have the same mass
+
+        Vector3 center = GetCenter();
+
+        foreach (Planet p in allPlanets)
+        {
+            Debug.DrawLine(center, p.pos);
+        }
+    }
+
+
+
+    //Calculate the center of mass of all planets, which should be constant throughout the simulation
+    //Assume mass are all the same
+    private Vector3 GetCenter()
+    {
         Vector3 center = Vector3.zero;
 
         foreach (Planet p in allPlanets)
@@ -83,10 +108,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         center /= allPlanets.Count;
 
-        foreach (Planet p in allPlanets)
-        {
-            Debug.DrawLine(center, p.pos);
-        }
+        return center;
     }
 
 
