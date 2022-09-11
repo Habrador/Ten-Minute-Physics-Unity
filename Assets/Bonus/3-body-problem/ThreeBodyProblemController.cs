@@ -34,7 +34,11 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
-    private readonly float G = 1f;
+    private readonly float G = 2f;
+
+    //The square distance at which the equation is valid
+    private readonly float rSqrMin = 0.1f;
+    private readonly float rSqrMax = 100f;
 
 
 
@@ -47,17 +51,17 @@ public class ThreeBodyProblemController : MonoBehaviour
         AddPlanets();
 
         //Give each ball a velocity
-        //foreach (Planet p in allPlanets)
-        //{
-        //    float maxVel = 4f;
+        foreach (Planet p in allPlanets)
+        {
+            float maxVel = 0.5f;
 
-        //    float randomVelX = Random.Range(-maxVel, maxVel);
-        //    float randomVelZ = Random.Range(-maxVel, maxVel);
+            float randomVelX = Random.Range(-maxVel, maxVel);
+            float randomVelZ = Random.Range(-maxVel, maxVel);
 
-        //    Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
+            Vector3 randomVel = new Vector3(randomVelX, 0f, randomVelZ);
 
-        //    p.vel = randomVel;
-        //}
+            p.vel = randomVel;
+        }
 
 
         //Debug.Log(G);
@@ -83,22 +87,19 @@ public class ThreeBodyProblemController : MonoBehaviour
         //We cant add the acceleration at once because it will change position of the planet, which is needed for the other planets
         List<Vector3> accelerations = new ();
 
-        //TODO: Optimize this so we don't need to make the same calculation twice because F acts in the opposite direction as well
+        foreach (Planet p in allPlanets)
+        {
+            accelerations.Add(Vector3.zero);
+        }
+
+        
         for (int i = 0; i < allPlanets.Count; i++)
         {
             Planet thisPlanet = allPlanets[i];
 
-            Vector3 accelerationVector = Vector3.zero;
-
-            //Check all other planets
-            for (int j = 0; j < allPlanets.Count; j++)
-            {
-                //Dont check the planet itself
-                if (i == j)
-                {
-                    continue;
-                }
-            
+            //Check all other planets coming after this planet
+            for (int j = i + 1; j < allPlanets.Count; j++)
+            {            
                 Planet otherPlanet = allPlanets[j];
 
                 //Use Newton's law of universal gravitation to simulate the planets
@@ -113,19 +114,17 @@ public class ThreeBodyProblemController : MonoBehaviour
 
                 //Planets can intersect so rSqr will go to infinity, making F really big, so we need to clamp
                 //We also need to clamp if they are too far apart or F will be really small and the planet will never return
-                rSqr = Mathf.Clamp(rSqr, 0.1f, 100f);
+                rSqr = Mathf.Clamp(rSqr, rSqrMin, rSqrMax);
 
                 float F = G * ((m1 * m2) / rSqr);
 
                 //F = m * a
-                float a = F / m1;
+                float aThisPlanet = F / m1;
+                float aOtherPlanet = F / m2;
 
-                accelerationVector += a * thisOtherVec.normalized;
+                accelerations[i] += aThisPlanet * thisOtherVec.normalized;
+                accelerations[j] += aOtherPlanet * -thisOtherVec.normalized;
             }
-
-            //Debug.Log(accelerationVector.magnitude);
-
-            accelerations.Add(accelerationVector);
         }
 
 
