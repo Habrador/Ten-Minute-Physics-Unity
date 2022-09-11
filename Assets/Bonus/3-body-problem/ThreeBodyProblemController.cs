@@ -21,10 +21,12 @@ public class ThreeBodyProblemController : MonoBehaviour
     
     private const int SEED = 0;
 
+    private Camera thisCamera;
+
     //Planets settings
     private readonly List<Planet> allPlanets = new();
 
-    private const int NUMBER_OF_PLANETS = 3;
+    private const int NUMBER_OF_PLANETS = 5;
 
     private readonly Vector2 minMaxplanetRadius = new (0.4f, 0.4f);
 
@@ -34,11 +36,11 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
-    private readonly float G = 20f;
+    private readonly float G = 100f;
 
     //The square distance at which the equation is valid
     private readonly float rSqrMin = 0.2f;
-    private readonly float rSqrMax = 15f;
+    private readonly float rSqrMax = 50f;
 
 
 
@@ -67,12 +69,9 @@ public class ThreeBodyProblemController : MonoBehaviour
         Vector3 center = GetCenter();
 
         //Center the camera
-        Transform cameraTrans = Camera.main.transform;
+        thisCamera = Camera.main;
 
-        Vector3 cameraPos = center;
-        cameraPos.y = cameraTrans.position.y;
-
-        cameraTrans.position = cameraPos;
+        CenterCamera();
     }
 
 
@@ -84,13 +83,19 @@ public class ThreeBodyProblemController : MonoBehaviour
             p.UpdateVisualPosition();
         }
 
-
         Vector3 center = GetCenter();
 
         foreach (Planet p in allPlanets)
         {
             Debug.DrawLine(center, p.pos);
         }
+
+
+        //Make sure all objects are visible on screen
+        ZoomCamera();
+
+        //Make sure the camera is looking at the center of mass of all planets
+        CenterCamera();
     }
 
 
@@ -109,6 +114,59 @@ public class ThreeBodyProblemController : MonoBehaviour
         center /= allPlanets.Count;
 
         return center;
+    }
+
+
+
+    //Make sure the camera is focusing on the center of mass of all planets 
+    private void CenterCamera()
+    {
+        Vector3 center = GetCenter();
+
+        Vector3 cameraPos = center;
+
+        cameraPos.y = thisCamera.transform.position.y;
+
+        thisCamera.transform.position = cameraPos;
+    }
+
+
+
+    //Change camera size so all planets are visible on the screen
+    private void ZoomCamera()
+    {
+        //Check if at least one planet is not visible on screen
+        bool isVisible = true;
+
+        foreach (Planet p in allPlanets)
+        {
+            if (!p.ballTransform.GetComponent<Renderer>().isVisible)
+            {
+                isVisible = false;
+
+                break;
+            }
+        }
+
+        //Zoom camera
+        float size = thisCamera.orthographicSize;
+
+        float zoomSpeed = 0.5f;
+
+        if (!isVisible)
+        {
+            size += zoomSpeed * Time.deltaTime;
+
+            //Debug.Log("Zoom out");
+        }
+        else
+        {
+            size -= zoomSpeed * Time.deltaTime;
+        }
+
+        size = Mathf.Clamp(size, 5f, 100f);
+
+        Camera.main.orthographicSize = size;
     }
 
 
