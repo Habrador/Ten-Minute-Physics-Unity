@@ -59,4 +59,4 @@ Bonus implementations related to the code above
 
 ## 3-Body Problem
 
-Simulation of planetary orbits
+Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem)

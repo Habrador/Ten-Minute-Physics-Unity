@@ -25,7 +25,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private readonly List<Planet> allPlanets = new();
 
-    private readonly bool displayHistory = true;
+    private readonly bool displayHistory = false;
 
     private readonly List<List<Vector3>> historicalPositions = new ();
 
@@ -33,23 +33,23 @@ public class ThreeBodyProblemController : MonoBehaviour
 
 
     //Planet settings
-    private const int NUMBER_OF_PLANETS = 3;
+    private const int NUMBER_OF_PLANETS = 200;
 
-    private readonly MinMax minMaxPlanetRadius = new (0.5f, 1.0f);
+    private readonly MinMax minMaxPlanetRadius = new (0.1f, 0.4f);
 
 
     //Simulation settings
     private const int SUB_STEPS = 1;
 
     //Add planets within this area
-    private readonly Vector2 mapSize = new(10f, 14f);
+    private readonly Vector2 mapSize = new(14f, 10f);
 
     //Newton's law of universal gravitation
 
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
-    private readonly float G = 50f;
+    private readonly float G = 1f;
 
     //The square distance at which the equation is valid
     //The planets can intersect so Force will go to infinity if we don't clamp it
@@ -67,7 +67,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         GivePlanetsRandomColor();
 
-
+        /*
         if (displayHistory && NUMBER_OF_PLANETS == 3)
         {
             //Assume we have 3 planets which is the 3-body-problem
@@ -83,7 +83,7 @@ public class ThreeBodyProblemController : MonoBehaviour
             allPlanets[1].ballTransform.GetComponent<MeshRenderer>().material.color = Color.blue;
             allPlanets[2].ballTransform.GetComponent<MeshRenderer>().material.color = Color.yellow;
         }
-
+        */
 
         //Give each planet a velocity
         //foreach (Planet p in allPlanets)
@@ -131,6 +131,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private void LateUpdate()
     {
+        /*
         //Draw the lines connected to the center of mass from each planet
         Vector3 center = GetCenterOfMass();
 
@@ -142,8 +143,8 @@ public class ThreeBodyProblemController : MonoBehaviour
             lineSegments.Add(center);
         }
 
-        DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.Black);
-
+        DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.White);
+        */
 
         //Display the historical positions
         if (displayHistory && NUMBER_OF_PLANETS == 3)
@@ -210,9 +211,14 @@ public class ThreeBodyProblemController : MonoBehaviour
             }
         }
 
-        if (!isVisible)
+        //if (!isVisible)
+        //{
+        //    Debug.Log("Zoom out");
+        //}
+
+        if (isVisible)
         {
-            Debug.Log("Zoom out");
+            return;
         }
 
         //Zoom camera
