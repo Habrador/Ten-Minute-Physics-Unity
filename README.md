@@ -60,3 +60,5 @@ Bonus implementations related to the code above
 ## 3-Body Problem
 
 Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem)
+
+[![Link to youtube video 3-body problem](https://img.youtube.com/vi/o5HWPeP-JS4/0.jpg)](https://www.youtube.com/watch?v=o5HWPeP-JS4)
