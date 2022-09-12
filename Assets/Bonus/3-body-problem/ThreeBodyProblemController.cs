@@ -35,7 +35,7 @@ public class ThreeBodyProblemController : MonoBehaviour
     //Planet settings
     private const int NUMBER_OF_PLANETS = 3;
 
-    private readonly MinMax minMaxPlanetRadius = new (0.4f, 1.0f);
+    private readonly MinMax minMaxPlanetRadius = new (0.5f, 1.0f);
 
 
     //Simulation settings
@@ -132,17 +132,17 @@ public class ThreeBodyProblemController : MonoBehaviour
     private void LateUpdate()
     {
         //Draw the lines connected to the center of mass from each planet
-        //Vector3 center = GetCenterOfMass();
+        Vector3 center = GetCenterOfMass();
 
-        //List<Vector3> lineSegments = new ();
+        List<Vector3> lineSegments = new();
 
-        //foreach (Planet p in allPlanets)
-        //{
-        //    lineSegments.Add(p.pos);
-        //    lineSegments.Add(center);
-        //}
+        foreach (Planet p in allPlanets)
+        {
+            lineSegments.Add(p.pos);
+            lineSegments.Add(center);
+        }
 
-        //DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.White);
+        DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.Black);
 
 
         //Display the historical positions

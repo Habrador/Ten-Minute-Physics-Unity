@@ -10,10 +10,11 @@ public static class DisplayShapes
     private static readonly Material matBlue;
     private static readonly Material matYellow;
     private static readonly Material matGray;
+    private static readonly Material matBlack;
 
     public enum ColorOptions
     {
-        White, Red, Blue, Yellow, Gray
+        White, Red, Blue, Yellow, Gray, Black
     }
 
 
@@ -44,6 +45,11 @@ public static class DisplayShapes
         {
             color = Color.gray
         };
+
+        matBlack = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        {
+            color = Color.black
+        };
     }
 
 
@@ -56,6 +62,8 @@ public static class DisplayShapes
             (ColorOptions.Blue) => matBlue,
             (ColorOptions.Yellow) => matYellow,
             (ColorOptions.White) => matWhite,
+            (ColorOptions.Gray) => matGray,
+            (ColorOptions.Black) => matBlack,
             _ => matWhite,
         };
     }
