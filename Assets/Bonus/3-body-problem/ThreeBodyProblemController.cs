@@ -23,18 +23,29 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private Camera thisCamera;
 
-    //Planets settings
     private readonly List<Planet> allPlanets = new();
 
-    private const int NUMBER_OF_PLANETS = 5;
+    private readonly bool displayHistory = true;
 
-    private readonly MinMax minMaxPlanetRadius = new (0.5f, 1.0f);
+    private readonly List<List<Vector3>> historicalPositions = new ();
+
+    private readonly List<DisplayShapes.ColorOptions> historicalPositionsColor = new ();
+
+
+    //Planet settings
+    private const int NUMBER_OF_PLANETS = 3;
+
+    private readonly MinMax minMaxPlanetRadius = new (0.4f, 1.0f);
+
 
     //Simulation settings
-    private readonly int subSteps = 1;
+    private const int SUB_STEPS = 1;
+
+    //Add planets within this area
+    private readonly Vector2 mapSize = new(10f, 14f);
 
     //Newton's law of universal gravitation
-    
+
     //Gravitational constant G
     //private readonly float G = 6.674f * Mathf.Pow(10f, -11f); 
     //Our planets masses are small, so we need a much larger G, or no movement will happen
@@ -54,6 +65,26 @@ public class ThreeBodyProblemController : MonoBehaviour
         //Generate the planets
         AddPlanets();
 
+        GivePlanetsRandomColor();
+
+
+        if (displayHistory && NUMBER_OF_PLANETS == 3)
+        {
+            //Assume we have 3 planets which is the 3-body-problem
+            historicalPositions.Add(new List<Vector3>());
+            historicalPositions.Add(new List<Vector3>());
+            historicalPositions.Add(new List<Vector3>());
+
+            historicalPositionsColor.Add(DisplayShapes.ColorOptions.Red);
+            historicalPositionsColor.Add(DisplayShapes.ColorOptions.Blue);
+            historicalPositionsColor.Add(DisplayShapes.ColorOptions.Yellow);
+
+            allPlanets[0].ballTransform.GetComponent<MeshRenderer>().material.color = Color.red;
+            allPlanets[1].ballTransform.GetComponent<MeshRenderer>().material.color = Color.blue;
+            allPlanets[2].ballTransform.GetComponent<MeshRenderer>().material.color = Color.yellow;
+        }
+
+
         //Give each planet a velocity
         //foreach (Planet p in allPlanets)
         //{
@@ -66,6 +97,7 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         //    p.vel = randomVel;
         //}
+
 
         //Center the camera
         thisCamera = Camera.main;
@@ -84,6 +116,15 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         //Make sure all objects are visible on screen
         ZoomCamera();
+
+        //Save history
+        if (displayHistory && NUMBER_OF_PLANETS == 3)
+        {
+            for (int i = 0; i < allPlanets.Count; i++)
+            {
+                historicalPositions[i].Add(allPlanets[i].pos);
+            }
+        }
     }
 
 
@@ -91,17 +132,27 @@ public class ThreeBodyProblemController : MonoBehaviour
     private void LateUpdate()
     {
         //Draw the lines connected to the center of mass from each planet
-        Vector3 center = GetCenterOfMass();
+        //Vector3 center = GetCenterOfMass();
 
-        List<Vector3> lineSegments = new ();
+        //List<Vector3> lineSegments = new ();
 
-        foreach (Planet p in allPlanets)
+        //foreach (Planet p in allPlanets)
+        //{
+        //    lineSegments.Add(p.pos);
+        //    lineSegments.Add(center);
+        //}
+
+        //DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.White);
+
+
+        //Display the historical positions
+        if (displayHistory && NUMBER_OF_PLANETS == 3)
         {
-            lineSegments.Add(p.pos);
-            lineSegments.Add(center);
+            for (int i = 0; i < historicalPositions.Count; i++)
+            {
+                DisplayShapes.DrawLine(historicalPositions[i], historicalPositionsColor[i]);
+            }
         }
-
-        DisplayShapes.DrawLineSegments(lineSegments, DisplayShapes.ColorOptions.White);
     }
 
 
@@ -149,12 +200,19 @@ public class ThreeBodyProblemController : MonoBehaviour
 
         foreach (Planet p in allPlanets)
         {
+            //IMPORTANT: Turn off shadows on the object to make this work
+            //Otherwise the object is still considered to be in the screen even though its outside to Unity can calculate its shadows
             if (!p.ballTransform.GetComponent<Renderer>().isVisible)
             {
                 isVisible = false;
 
                 break;
             }
+        }
+
+        if (!isVisible)
+        {
+            Debug.Log("Zoom out");
         }
 
         //Zoom camera
@@ -178,25 +236,40 @@ public class ThreeBodyProblemController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float sdt = Time.fixedDeltaTime / (float)subSteps;
-
         //We first have to calculate all accelerations
-        //We cant add the acceleration at once because it will change position of the planet, which is needed for the other planets
-        List<Vector3> accelerations = new ();
+        //We cant add the acceleration at once to each planet because it will change position of the planet, which is needed for the other planets
+        Vector3[] accelerations = CalculateAccelerations();
 
-        foreach (Planet p in allPlanets)
+
+        //Simulate each planet
+        float sdt = Time.fixedDeltaTime / (float)SUB_STEPS;
+
+        for (int i = 0; i < allPlanets.Count; i++)
         {
-            accelerations.Add(Vector3.zero);
-        }
+            Planet thisPlanet = allPlanets[i];
 
-        
+            thisPlanet.SimulatePlanet(SUB_STEPS, sdt, accelerations[i]);
+
+            //Debug.Log(accelerations[i].magnitude);
+
+            //Debug.DrawRay(thisPlanet.pos, accelerations[i].normalized);
+        }
+    }
+
+
+
+    //Calculate the acceleration each planet should have this time step
+    private Vector3[] CalculateAccelerations()
+    {
+        Vector3[] accelerations = new Vector3[allPlanets.Count];
+
         for (int i = 0; i < allPlanets.Count; i++)
         {
             Planet thisPlanet = allPlanets[i];
 
             //Check all other planets coming after this planet
             for (int j = i + 1; j < allPlanets.Count; j++)
-            {            
+            {
                 Planet otherPlanet = allPlanets[j];
 
                 //Use Newton's law of universal gravitation to simulate the planets
@@ -225,26 +298,13 @@ public class ThreeBodyProblemController : MonoBehaviour
             }
         }
 
-
-        //Simulate each planet
-        for (int i = 0; i < allPlanets.Count; i++)
-        {
-            Planet thisPlanet = allPlanets[i];
-
-            thisPlanet.SimulatePlanet(subSteps, sdt, accelerations[i]);
-
-            //Debug.Log(accelerations[i].magnitude);
-
-            //Debug.DrawRay(thisPlanet.pos, accelerations[i].normalized);
-        }
+        return accelerations;
     }
 
 
 
     private void AddPlanets()
     {
-        Vector2 mapSize = new(10f, 14f);
-
         for (int i = 0; i < NUMBER_OF_PLANETS; i++)
         {
             GameObject newBallGO = GameObject.Instantiate(planetPrefabGO);
@@ -272,8 +332,13 @@ public class ThreeBodyProblemController : MonoBehaviour
 
             allPlanets.Add(newPlanet);
         }
+    }
 
 
+
+    //Re-use the colors from billiards
+    private void GivePlanetsRandomColor()
+    {
         //Color them
         Material ballBaseMaterial = planetPrefabGO.GetComponent<MeshRenderer>().sharedMaterial;
 
