@@ -42,7 +42,7 @@ namespace Billiard
 
 
         //Add balls randomly within a rectangle
-        public static void AddRandomBallsWithinRectangle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float minBallRadius, float maxBallRadius, Vector2 rectangleSize)
+        public static void AddRandomBallsWithinRectangle(GameObject ballPrefabGO, int numberOfBalls, List<BilliardBall> allBalls, float minBallRadius, float maxBallRadius, Vector2 rectangleSize, Vector3 rectangleCenter)
         {            
             for (int i = 0; i < numberOfBalls; i++)
             {
@@ -59,8 +59,8 @@ namespace Billiard
                 float halfWidthX = rectangleSize.x * 0.5f;
                 float halfWidthY = rectangleSize.y * 0.5f;
 
-                float randomPosX = Random.Range(-halfWidthX + halfBallSize, halfWidthX - halfBallSize);
-                float randomPosZ = Random.Range(-halfWidthY + halfBallSize, halfWidthY - halfBallSize);
+                float randomPosX = Random.Range(-halfWidthX + halfBallSize, halfWidthX - halfBallSize) + rectangleCenter.x;
+                float randomPosZ = Random.Range(-halfWidthY + halfBallSize, halfWidthY - halfBallSize) + rectangleCenter.z;
 
                 Vector3 randomPos = new(randomPosX, 0f, randomPosZ);
 

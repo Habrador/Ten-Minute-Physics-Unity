@@ -43,7 +43,7 @@ namespace Billiard
 
             Vector2 mapSize = new (10f, 14f);
 
-            SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, 0.1f, 1f, mapSize);
+            SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, 0.1f, 1f, mapSize, Vector3.zero);
 
             BilliardMaterials.GiveBallsRandomColor(ballPrefabGO, allBalls);
 

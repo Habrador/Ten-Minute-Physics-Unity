@@ -15,6 +15,7 @@ public static class BallCollisionHandling
 
         //The balls are not colliding (or they are exactly at the same position)
         //Square minAllowedDistance because we are using distance Square, which is faster 
+        //They might be at the same position if we check if the ball is colliding with itself, which might be faster than checking if the other ball is not the same as the ball 
         if (dSqr == 0f || dSqr > minAllowedDistance * minAllowedDistance)
         {
             areColliding = false;
