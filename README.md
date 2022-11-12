@@ -46,6 +46,13 @@ Catch and throw a ball with your mouse
 <img src="/_media/08-user-interaction.png" width="400">
 
 
+## 11. Find overlaps among thousands of objects blazing fast
+
+Implements a version of the Spatial Partitioning design pattern called "Spatial Hashing" which is really useful if you have an unbounded grid. 
+
+<img src="/_media/11-spatial-hashing.png" width="400">
+
+
 ## 13. Tetrahedralizer (TODO)
 
 Implemetation of an algorithm in Unity that splits a mesh into tetrahedrons
