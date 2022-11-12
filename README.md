@@ -48,7 +48,7 @@ Catch and throw a ball with your mouse
 
 ## 11. Find overlaps among thousands of objects blazing fast
 
-Implements a version of the Spatial Partitioning design pattern called "Spatial Hashing" which is really useful if you have an unbounded grid. 
+Implements a version of the [Spatial Partitioning design pattern](https://github.com/Habrador/Unity-Programming-Patterns) called "Spatial Hashing" which is really useful if you have an unbounded grid. 
 
 <img src="/_media/11-spatial-hashing.png" width="400">
 
