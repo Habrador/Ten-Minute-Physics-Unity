@@ -90,10 +90,10 @@ public class DebugDataStructure : MonoBehaviour
 
                 ///Debug.Log(ballArrayPos + " " + arrayIndex);
 
-                int particlePos = spatialHashing.particlesInCells[arrayIndex];
+                int particlePos = spatialHashing.tableArray[arrayIndex];
 
                 //How many balls in this cell?
-                int numberOfParticles = spatialHashing.particlesInCells[arrayIndex + 1] - particlePos;
+                int numberOfParticles = spatialHashing.tableArray[arrayIndex + 1] - particlePos;
 
                 //if (arrayIndex == 7)
                 //{
@@ -103,7 +103,7 @@ public class DebugDataStructure : MonoBehaviour
 
                 for (int j = particlePos; j < particlePos + numberOfParticles; j++)
                 {
-                    Ball otherBall = allBalls[spatialHashing.particles[j]];
+                    Ball otherBall = allBalls[spatialHashing.allParticles[j]];
 
                     float dist = (thisBall.pos - otherBall.pos).magnitude;
 

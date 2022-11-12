@@ -35,10 +35,7 @@ public class FindOverlapsController : MonoBehaviour
     private readonly float restitution = 1f;
 
     //Balls
-    private readonly int numberOfBalls = 20;
-
-    //Has to be the same as cellSize
-    //private readonly float ballRadius = 0.2f;
+    private readonly int numberOfBalls = 100;
 
     private List<BilliardBall> allBalls;
 
@@ -54,7 +51,7 @@ public class FindOverlapsController : MonoBehaviour
         //Center camera on grid
         Camera thisCamera = Camera.main;
 
-        Vector3 cameraPos = grid.GetGridCenter();
+        Vector3 cameraPos = grid.GridCenter;
 
         cameraPos.y = thisCamera.transform.position.y;
 
@@ -62,10 +59,6 @@ public class FindOverlapsController : MonoBehaviour
 
 
         ResetSimulation();
-
-
-        //Test hashing function
-        //Debug.Log(grid.SpatialHashing(new Vector2Int(5, 7)));
     }
 
 
@@ -77,7 +70,7 @@ public class FindOverlapsController : MonoBehaviour
         Vector2 mapSize = new(grid.GridWidth, grid.GridWidth);
 
         //Add balls within an area
-        SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, cellSize, cellSize, mapSize, grid.GetGridCenter());
+        SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, cellSize, cellSize, mapSize, grid.GridCenter);
 
         BilliardMaterials.GiveBallsRandomColor(ballPrefabGO, allBalls);
 
@@ -118,7 +111,7 @@ public class FindOverlapsController : MonoBehaviour
 
 
 
-    //The old way of moving balls and doing ball-ball collision
+    //The old slow way of moving balls and doing ball-ball collision
     private void UpdateBallsOld(float sdt)
     {
         for (int i = 0; i < allBalls.Count; i++)
@@ -154,7 +147,7 @@ public class FindOverlapsController : MonoBehaviour
 
 
         //Step 2. Add all balls to the grid data structure
-        List<Vector3> ballPositions = new List<Vector3>();
+        List<Vector3> ballPositions = new ();
 
         for (int i = 0; i < allBalls.Count; i++)
         {
@@ -175,31 +168,24 @@ public class FindOverlapsController : MonoBehaviour
             Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos);
 
             //Check this cell and 8 surrounding cells for other balls
-            //We are using spatial hashing so we dont need to check if a surroundig cell is within the grid because the grid is infinite 
+            //We are in an unbounded grid so we dont need to check if a surroundig cell is within the grid 
             foreach (Vector2Int cell in SpatialHashing.cellCoordinates)
             {
                 Vector2Int cellPos = ballCellPos + cell;
 
                 int arrayIndex = spatialHashing.Get1DArrayIndex(cellPos);
 
-                /*
-                List<Ball> ballsInCell = grid.ballsInCellsSlow[arrayIndex];
-
-                //Ignore testing if thisBall = otherBall because the collision handler is taking care of it
-                foreach (Ball ballOther in ballsInCell)
-                {
-                    BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
-                }
-                */
-
-                int particlePos = spatialHashing.particlesInCells[arrayIndex];
+                //The index of the first ball in the allParticlesArray
+                //AllParticlesArray references the allBalls array, so we have 3 arrays coordinating with each other
+                int firstBallIndex = spatialHashing.tableArray[arrayIndex];
 
                 //How many balls in this cell?
-                int numberOfParticles = spatialHashing.particlesInCells[arrayIndex + 1] - particlePos;
+                int numberOfBalls = spatialHashing.tableArray[arrayIndex + 1] - firstBallIndex;
                 
-                for (int j = particlePos; j < particlePos + numberOfParticles; j++)
+                //Loop through all balls in this cell and check for collision
+                for (int j = firstBallIndex; j < firstBallIndex + numberOfBalls; j++)
                 {
-                    Ball otherBall = allBalls[spatialHashing.particles[j]];
+                    Ball otherBall = allBalls[spatialHashing.allParticles[j]];
 
                     BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                 }

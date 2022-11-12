@@ -16,6 +16,16 @@ public class PlayArea
     //Getters
     public float GridWidth => numberOfCells * cellSize;
 
+    public Vector3 GridCenter
+    {
+        get 
+        {
+            float center = GridWidth * 0.5f;
+
+            return new(center, 0f, center);
+        }
+    }
+
 
 
     public PlayArea(int numberOfCells, float cellSize)
@@ -143,21 +153,5 @@ public class PlayArea
         }
 
         return isColliding;
-    }
-
-
-
-    //
-    // Help methods
-    //
-
-    //The center of the entire grid
-    public Vector3 GetGridCenter()
-    {
-        float center = GridWidth / 2f;
-
-        Vector3 centerCoordinate = new(center, 0f, center);
-
-        return centerCoordinate;
     }
 }

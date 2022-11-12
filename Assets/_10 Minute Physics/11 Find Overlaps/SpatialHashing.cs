@@ -2,20 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Find neighboring particles faster with Spatial Hashing which is a Spatial Partitioning Design Pattern
+//We are no longer constrained to a grid of a specific size, we can use an unbouded grid which has infinite size
 //Based on https://www.youtube.com/watch?v=D2M8jTtKi44
 public class SpatialHashing
 {
-    //Store particles in this data structure
-
+    //The size of a cell in an infinite grid
     private readonly float cellSize;
 
-    //We can use any size of the array (except 0) if we are using "Spatial Hashing"
-    //Is called tableSize in the YT video
-    //tableSize = #particles often works well according to the video
+    //We can use any size of the array, but tableSize = #particles often works well according to the video
     private readonly int tableSize = 10;
-    public readonly int[] particlesInCells;
-    //Same length as all particles in the simulation
-    public readonly int[] particles;
+    //From this array we can figure out how many particles are in a cell and it references the particles array
+    public readonly int[] tableArray;
+    //Same length as #particles in the simulation
+    //Particles in the same cell are next to each other in this array
+    public readonly int[] allParticles;
     //For debugging
     private readonly int[] isParticleInCell;
 
@@ -40,8 +41,8 @@ public class SpatialHashing
         this.cellSize = cellSize;
 
         //+1 because we need a guard
-        this.particlesInCells = new int[tableSize + 1];
-        this.particles = new int[numberOfParticles];
+        this.tableArray = new int[tableSize + 1];
+        this.allParticles = new int[numberOfParticles];
         this.isParticleInCell = new int[tableSize + 1];
     }
 
@@ -87,15 +88,15 @@ public class SpatialHashing
         //^ is Bitwise XOR 
         
         //2d
-        int h = (cellPos.x * 92837111) ^ (cellPos.y * 689287499);
+        int hash = (cellPos.x * 92837111) ^ (cellPos.y * 689287499);
 
         //3d
         //int h = (cellPos.x * 92837111) ^ (cellPos.y * 689287499) ^ (cellPos.z * 283923481);
 
         //h can be negative if a cellPos is negative, which is why we need the Abs
-        int hashPos = System.Math.Abs(h) % this.tableSize;
+        int arrayIndex = System.Math.Abs(hash) % this.tableSize;
 
-        return hashPos;
+        return arrayIndex;
     }
     
 
@@ -107,22 +108,24 @@ public class SpatialHashing
     public void AddParticlesToGrid(List<Vector3> particlePositions)
     {
         //Reset
-        for (int i = 0; i < particlesInCells.Length; i++)
+        //[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+        for (int i = 0; i < tableArray.Length; i++)
         {
-            particlesInCells[i] = 0;
+            tableArray[i] = 0;
 
             isParticleInCell[i] = 0; 
         }
 
 
         //Add particles
+        //[0 0 0 0 0 2 0 0 0 0 0 2 0 1 0 0 0 0 0 0 0] <- 5 particles are in 3 cells
         foreach (Vector3 particlePos in particlePositions)
         {
             Vector2Int cellPos = ConvertFromWorldToCell(particlePos);
 
             int index = Get1DArrayIndex(cellPos);
 
-            particlesInCells[index] += 1;
+            tableArray[index] += 1;
 
             isParticleInCell[index] = 1;
         }
@@ -131,11 +134,19 @@ public class SpatialHashing
         //Fix data structure
 
         //Partial sums
-        for (int i = 1; i < particlesInCells.Length; i++)
+        //[0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5 5]
+        for (int i = 1; i < tableArray.Length; i++)
         {
-            particlesInCells[i] += particlesInCells[i - 1];
+            tableArray[i] += tableArray[i - 1];
         }
 
+        //[0 0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5]
+        //[5 1 4 2 3]
+        //Particle 5 1 are in cell with index 5
+        //When the hashing function returns 5 we know that the first particle in this cell has index 0 in the particle array
+        //How many particles are in the cell? First look at the index after: 2, then subtract the 0, so 2 - 0 = 2 particles
+        //How many in the cell with index 11? 4 - 2 = 2
+        //index 13? 5 - 4 = 1
         for (int i = 0; i < particlePositions.Count; i++)
         {
             Vector3 thisParticlePos = particlePositions[i];
@@ -144,9 +155,9 @@ public class SpatialHashing
 
             int index = Get1DArrayIndex(cellPos);
 
-            particlesInCells[index] -= 1;
+            tableArray[index] -= 1;
 
-            particles[particlesInCells[index]] = i;
+            allParticles[tableArray[index]] = i;
         }
     }
 
@@ -160,7 +171,7 @@ public class SpatialHashing
     {
         string displayString = "";
 
-        foreach (int integer in particlesInCells)
+        foreach (int integer in tableArray)
         {
             displayString += integer + "";
         }
@@ -180,7 +191,7 @@ public class SpatialHashing
 
         displayString = "";
 
-        foreach (int integer in particles)
+        foreach (int integer in allParticles)
         {
             displayString += integer + "";
         }
