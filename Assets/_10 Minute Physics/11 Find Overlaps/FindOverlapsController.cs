@@ -16,8 +16,11 @@ public class FindOverlapsController : MonoBehaviour
 
     //Private
 
+    //The data structure we will use to improve the performance of ball-ball collision
+    private SpatialHashing spatialHashing;
+
     //Grid
-    private GridMap grid;
+    private PlayArea grid;
     //Grid settings
     private readonly float cellSize = 0.2f;
     private readonly int numberOfCells = 20;
@@ -34,7 +37,8 @@ public class FindOverlapsController : MonoBehaviour
     //Balls
     private readonly int numberOfBalls = 20;
 
-    private readonly float ballRadius = 0.2f;
+    //Has to be the same as cellSize
+    //private readonly float ballRadius = 0.2f;
 
     private List<BilliardBall> allBalls;
 
@@ -42,7 +46,9 @@ public class FindOverlapsController : MonoBehaviour
 
     private void Start()
     {
-        grid = new GridMap(numberOfCells, cellSize, numberOfBalls);
+        spatialHashing = new SpatialHashing(cellSize, numberOfBalls);
+
+        grid = new PlayArea(numberOfCells, cellSize);
 
 
         //Center camera on grid
@@ -70,7 +76,8 @@ public class FindOverlapsController : MonoBehaviour
 
         Vector2 mapSize = new(grid.GridWidth, grid.GridWidth);
 
-        SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, ballRadius, ballRadius, mapSize, grid.GetGridCenter());
+        //Add balls within an area
+        SetupBalls.AddRandomBallsWithinRectangle(ballPrefabGO, numberOfBalls, allBalls, cellSize, cellSize, mapSize, grid.GetGridCenter());
 
         BilliardMaterials.GiveBallsRandomColor(ballPrefabGO, allBalls);
 
@@ -147,16 +154,16 @@ public class FindOverlapsController : MonoBehaviour
 
 
         //Step 2. Add all balls to the grid data structure
-        //grid.Reset();
+        List<Vector3> ballPositions = new List<Vector3>();
 
-        //foreach(Ball thisBall in allBalls)
-        //{
-        //    grid.AddBallToGrid(thisBall);
-        //}
+        for (int i = 0; i < allBalls.Count; i++)
+        {
+            ballPositions.Add(allBalls[i].pos);
+        }
 
-        grid.AddParticlesToGrid(allBalls);
+        spatialHashing.AddParticlesToGrid(ballPositions);
 
-
+        //For debugging
         //grid.DisplayDataStructures();
 
 
@@ -165,15 +172,15 @@ public class FindOverlapsController : MonoBehaviour
         {
             BilliardBall thisBall = allBalls[i];
 
-            Vector2Int ballCellPos = grid.ConvertFromWorldToCell(thisBall.pos);
+            Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos);
 
             //Check this cell and 8 surrounding cells for other balls
             //We are using spatial hashing so we dont need to check if a surroundig cell is within the grid because the grid is infinite 
-            foreach (Vector2Int cell in GridMap.cellCoordinates)
+            foreach (Vector2Int cell in SpatialHashing.cellCoordinates)
             {
                 Vector2Int cellPos = ballCellPos + cell;
 
-                int arrayIndex = grid.Get1DArrayIndex(cellPos);
+                int arrayIndex = spatialHashing.Get1DArrayIndex(cellPos);
 
                 /*
                 List<Ball> ballsInCell = grid.ballsInCellsSlow[arrayIndex];
@@ -185,14 +192,14 @@ public class FindOverlapsController : MonoBehaviour
                 }
                 */
 
-                int particlePos = grid.particlesInCells[arrayIndex];
+                int particlePos = spatialHashing.particlesInCells[arrayIndex];
 
                 //How many balls in this cell?
-                int numberOfParticles = grid.particlesInCells[arrayIndex + 1] - particlePos;
+                int numberOfParticles = spatialHashing.particlesInCells[arrayIndex + 1] - particlePos;
                 
                 for (int j = particlePos; j < particlePos + numberOfParticles; j++)
                 {
-                    Ball otherBall = allBalls[grid.particles[j]];
+                    Ball otherBall = allBalls[spatialHashing.particles[j]];
 
                     BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
                 }
