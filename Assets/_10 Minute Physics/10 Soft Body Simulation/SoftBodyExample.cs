@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//From https://github.com/przemyslawzaworski/Unity3D-C-programming/blob/master/SoftBodyStanfordBunny.cs
 public class SoftBodyExample: MonoBehaviour
 {
 	public float edgeCompliance = 5.0f;

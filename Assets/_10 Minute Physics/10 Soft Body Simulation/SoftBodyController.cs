@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Simple and unbreakable simulation of soft bodies
+//Based on https://matthias-research.github.io/pages/tenMinutePhysics/index.html
 [RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public class SoftBodyController : MonoBehaviour
 {
