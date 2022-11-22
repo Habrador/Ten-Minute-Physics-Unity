@@ -16,27 +16,29 @@ public class SoftBodySimulation
 
 	private float edgeCompliance = 5.0f;
 
+	//The Unity mesh used to display the soft body mesh
 	private Mesh softBodyMesh;
 	
+	//How many vertices (particles) and tets do we have?
 	private int numParticles;
 	private int numTets;
 
-	//Same as in previous examples
+	//Same as in ball physics
 	private float[] pos;
 	private float[] prevPos;
 	private float[] vel;
 
 	//For soft body 
-	private float[] restVol;
-	private float[] edgeLengths;
+	private float[] restVol; //One volume constraint per tetra
+	private float[] edgeLengths; //One distance constraint per edge
 	private float[] invMass;
-	private float volCompliance = 0.0f;
+	private float volCompliance = 0f;
 	private float[] temp;
 	private float[] grads;
 
 	private int[][] volIdOrder = new int[][] { new int[] { 1, 3, 2 }, new int[] { 0, 2, 3 }, new int[] { 0, 3, 1 }, new int[] { 0, 1, 2 } };
 
-	//Grabbing
+	//Grabbing with mouse
 	private int grabId = -1;
 	private float grabInvMass = 0.0f;
 
@@ -50,8 +52,8 @@ public class SoftBodySimulation
 		this.tetIds = tetraData.GetTetIds;
 		this.tetEdgeIds = tetraData.GetTetEdgeIds;
 
-		this.numParticles = verts.Length / 3;
-		this.numTets = tetIds.Length / 4;
+		this.numParticles = tetraData.GetNumberOfVertices;
+		this.numTets = tetraData.GetNumberOfTetrahedrons;
 
 		//Init the pos, prev pos, and vel
 		this.pos = new float[verts.Length];
@@ -87,6 +89,8 @@ public class SoftBodySimulation
 		//Init the mesh
 		InitMesh(meshFilter, tetraData);
 	}
+
+    
 
 
 
@@ -163,9 +167,11 @@ public class SoftBodySimulation
 		{
 			PreSolve(sdt, gravity);
 
-			Solve(sdt);
+			SolveConstraints(sdt);
 
 			PostSolve(sdt);
+
+			UpdateMeshes();
 		}
 	}
 
@@ -180,10 +186,16 @@ public class SoftBodySimulation
 				continue;
 			}
 			
+			//v = v + dt * g
 			VecAdd(this.vel, i, gravity, 0, dt);
+			
+			//xPrev = x
 			VecCopy(this.prevPos, i, this.pos, i);
+
+			//x = x + dt * v
 			VecAdd(this.pos, i, this.vel, i, dt);
 			
+
 			//Floor collision
 			float y = this.pos[3 * i + 1];
 			
@@ -191,15 +203,18 @@ public class SoftBodySimulation
 			{
 				VecCopy(this.pos, i, this.prevPos, i);
 
-				this.pos[3 * i + 1] = 0.0f;
+				this.pos[3 * i + 1] = 0f;
 			}
 		}
 	}
 
 
 
-	void Solve(float dt)
+	void SolveConstraints(float dt)
 	{
+		//Constraints
+		//x = x + deltaX where deltaX is the correction vector
+
 		this.SolveEdges(this.edgeCompliance, dt);
 		this.SolveVolumes(this.volCompliance, dt);
 	}
@@ -210,11 +225,14 @@ public class SoftBodySimulation
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
-			if (this.invMass[i] == 0.0f)
+			if (this.invMass[i] == 0f)
+			{
 				continue;
-			VecSetDiff(this.vel, i, this.pos, i, this.prevPos, i, 1.0f / dt);
+			}
+
+			//v = (x - xPrev) / dt
+			VecSetDiff(this.vel, i, this.pos, i, this.prevPos, i, 1f / dt);
 		}
-		this.UpdateMeshes();
 	}
 
 
@@ -230,13 +248,20 @@ public class SoftBodySimulation
 			var w0 = this.invMass[id0];
 			var w1 = this.invMass[id1];
 			var w = w0 + w1;
-			if (w == 0.0f)
+			
+			if (w == 0f)
+			{
 				continue;
+			}
 
 			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
 			var len = Mathf.Sqrt(VecLengthSquared(this.grads, 0));
+
 			if (len == 0.0f)
+			{
 				continue;
+			}
+
 			VecScale(this.grads, 0, 1.0f / len);
 			var restLen = this.edgeLengths[i];
 			var C = len - restLen;
@@ -270,7 +295,9 @@ public class SoftBodySimulation
 				w += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
 			}
 			if (w == 0.0f)
+			{
 				continue;
+			}
 
 			var vol = this.GetTetVolume(i);
 			var restVol = this.restVol[i];
@@ -333,79 +360,127 @@ public class SoftBodySimulation
 
 
 	//
+	// Vector operations
+	//
+
+	//anr = vertex a index in the list of all vertices if they had (x,y,z) position at that array index. BUT we dont have that list, so to make it easier to loop through all particles where x, y, z are at 3 difference indices, we just multiply by 3
+	//anr = 0 -> 0 * 3 = 0 -> 0, 1, 2
+	//anr = 1 -> 1 * 3 = 3 -> 3, 4, 5
+
+	//a = 0
+	private void VecSetZero(float[] a, int anr)
+	{
+		anr *= 3;
+
+		a[anr + 0] = 0f;
+		a[anr + 1] = 0f;
+		a[anr + 2] = 0f;
+	}
+
+	//a * scale
+	private void VecScale(float[] a, int anr, float scale)
+	{
+		anr *= 3;
+
+		a[anr + 0] *= scale;
+		a[anr + 1] *= scale;
+		a[anr + 2] *= scale;
+	}
+
+	//a = b
+	private void VecCopy(float[] a, int anr, float[] b, int bnr)
+	{
+		anr *= 3; 
+		bnr *= 3;
+
+		a[anr + 0] = b[bnr + 0];
+		a[anr + 1] = b[bnr + 1];
+		a[anr + 2] = b[bnr + 2];
+	}
+
+	//a = a + (b * scale) 
+	private void VecAdd(float[] a, int anr, float[] b, int bnr, float scale = 1f)
+	{
+		anr *= 3; 
+		bnr *= 3;
+		
+		a[anr + 0] += b[bnr + 0] * scale;
+		a[anr + 1] += b[bnr + 1] * scale;
+		a[anr + 2] += b[bnr + 2] * scale;
+	}
+
+	//diff = (a - b) * scale
+	private void VecSetDiff(float[] diff, int dnr, float[] a, int anr, float[] b, int bnr, float scale = 1f)
+	{
+		dnr *= 3; 
+		anr *= 3; 
+		bnr *= 3;
+		
+		diff[dnr + 0] = (a[anr + 0] - b[bnr + 0]) * scale;
+		diff[dnr + 1] = (a[anr + 1] - b[bnr + 1]) * scale;
+		diff[dnr + 2] = (a[anr + 2] - b[bnr + 2]) * scale;
+	}
+
+
+	//lengthSqr(a) 
+	private float VecLengthSquared(float[] a, int anr)
+	{
+		anr *= 3;
+
+		float a0 = a[anr + 0]; 
+		float a1 = a[anr + 1]; 
+		float a2 = a[anr + 2];
+		
+		float lengthSqr = a0 * a0 + a1 * a1 + a2 * a2;
+
+		return lengthSqr;
+	}
+
+	//lengthSqr(a - b)
+	private float VecDistSquared(float[] a, int anr, float[] b, int bnr)
+	{
+		anr *= 3; 
+		bnr *= 3;
+		
+		float a0 = a[anr    ] - b[bnr    ]; 
+		float a1 = a[anr + 1] - b[bnr + 1]; 
+		float a2 = a[anr + 2] - b[bnr + 2];
+		
+		float distSqr = a0 * a0 + a1 * a1 + a2 * a2;
+
+		return distSqr;
+	}
+
+	//a dot b
+	private float VecDot(float[] a, int anr, float[] b, int bnr)
+	{
+		anr *= 3; 
+		bnr *= 3;
+		
+		float dot = a[anr] * b[bnr] + a[anr + 1] * b[bnr + 1] + a[anr + 2] * b[bnr + 2];
+
+		return dot;
+	}
+
+	//a = b cross c
+	private void VecSetCross(float[] a, int anr, float[] b, int bnr, float[] c, int cnr)
+	{
+		anr *= 3; 
+		bnr *= 3; 
+		cnr *= 3;
+		
+		a[anr + 0] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
+		a[anr + 1] = b[bnr + 2] * c[cnr + 0] - b[bnr + 0] * c[cnr + 2];
+		a[anr + 2] = b[bnr + 0] * c[cnr + 1] - b[bnr + 1] * c[cnr + 0];
+	}
+
+
+	//
 	// Help methods
 	//
 
-	void VecSetZero(float[] a, int anr)
-	{
-		anr *= 3;
-		a[anr++] = 0.0f;
-		a[anr++] = 0.0f;
-		a[anr] = 0.0f;
-	}
-
-	void VecScale(float[] a, int anr, float scale)
-	{
-		anr *= 3;
-		a[anr++] *= scale;
-		a[anr++] *= scale;
-		a[anr] *= scale;
-	}
-
-	void VecCopy(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; bnr *= 3;
-		a[anr++] = b[bnr++];
-		a[anr++] = b[bnr++];
-		a[anr] = b[bnr];
-	}
-
-	void VecAdd(float[] a, int anr, float[] b, int bnr, float scale = 1.0f)
-	{
-		anr *= 3; bnr *= 3;
-		a[anr++] += b[bnr++] * scale;
-		a[anr++] += b[bnr++] * scale;
-		a[anr] += b[bnr] * scale;
-	}
-
-	void VecSetDiff(float[] dst, int dnr, float[] a, int anr, float[] b, int bnr, float scale = 1.0f)
-	{
-		dnr *= 3; anr *= 3; bnr *= 3;
-		dst[dnr++] = (a[anr++] - b[bnr++]) * scale;
-		dst[dnr++] = (a[anr++] - b[bnr++]) * scale;
-		dst[dnr] = (a[anr] - b[bnr]) * scale;
-	}
-
-	float VecLengthSquared(float[] a, int anr)
-	{
-		anr *= 3;
-		float a0 = a[anr]; float a1 = a[anr + 1]; float a2 = a[anr + 2];
-		return a0 * a0 + a1 * a1 + a2 * a2;
-	}
-
-	float VecDistSquared(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; bnr *= 3;
-		float a0 = a[anr] - b[bnr]; float a1 = a[anr + 1] - b[bnr + 1]; float a2 = a[anr + 2] - b[bnr + 2];
-		return a0 * a0 + a1 * a1 + a2 * a2;
-	}
-
-	float VecDot(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; bnr *= 3;
-		return a[anr] * b[bnr] + a[anr + 1] * b[bnr + 1] + a[anr + 2] * b[bnr + 2];
-	}
-
-	void VecSetCross(float[] a, int anr, float[] b, int bnr, float[] c, int cnr)
-	{
-		anr *= 3; bnr *= 3; cnr *= 3;
-		a[anr++] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
-		a[anr++] = b[bnr + 2] * c[cnr + 0] - b[bnr + 0] * c[cnr + 2];
-		a[anr] = b[bnr + 0] * c[cnr + 1] - b[bnr + 1] * c[cnr + 0];
-	}
-
 	//Move all vertices
-	void Translate(float x, float y, float z)
+	private void Translate(float x, float y, float z)
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
@@ -428,7 +503,7 @@ public class SoftBodySimulation
 		
 		VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
 		
-		float volume= VecDot(this.temp, 3, this.temp, 2) / 6.0f;
+		float volume = VecDot(this.temp, 3, this.temp, 2) / 6f;
 
 		return volume;
 	}
@@ -439,28 +514,29 @@ public class SoftBodySimulation
 	// Mesh user interactions
 	//
 
-
 	//Yeet the mesh upwards
 	private void Yeet()
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
+			//Add constant to y coordinate
 			this.pos[3 * i + 1] += 0.1f;
 		}
 	}
 
 
+
 	//Squash the mesh so it becomes flat against the ground
-	void Squash()
+	void Squeeze()
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
-			//Squash y coordinate which is up
+			//Set y coordinate to slightly above floor height
 			this.pos[3 * i + 1] = this.floorHeight + 0.01f;
 		}
 
 		//Is needed!
-		this.UpdateMeshes();
+		UpdateMeshes();
 	}
 
 
