@@ -264,6 +264,7 @@ public class SoftBodySimulation
 	//Gradients of constraint function grad_C1 = (x2 - x1) / abs(x2 - x1) and grad_C2 = -grad_C1
 	//delta_x1 = w1 / (w1 + w2) * C * grad_C1
 	//delta_x2 = w2 / (w1 + w2) * C * grad_C2
+	//Which was shown here https://www.youtube.com/watch?v=jrociOAYqxA (13:30)
 	void SolveEdges(float compliance, float dt)
 	{
 		var alpha = compliance / dt / dt;
@@ -307,11 +308,13 @@ public class SoftBodySimulation
 	//Solve volume constraint
 	//Constraint function is now defined as C = 6(V - V_rest). The 6 is to make the equation simpler because of volume
 	//4 gradients:
-	//grad_C1 = (x4-x2)x(x3-x2)
+	//grad_C1 = (x4-x2)x(x3-x2) <- direction perpendicular to the triangle opposite of p1 to maximally increase the volume when moving p1
 	//grad_C2 = (x3-x1)x(x4-x1)
 	//grad_C3 = (x4-x1)x(x2-x1)
 	//grad_C4 = (x2-x1)x(x3-x1)
 	//V = 1/6 * ((x2-x1)x(x3-x1))*(x4-x1)
+	//lambda =  6(V - V_rest) / (w1 * abs(grad_C1)^2 + w2 * abs(grad_C2)^2 + w3 * abs(grad_C3)^2 + w4 * abs(grad_C4)^2)
+	//delta_xi = -lambda * w_i * grad_Ci
 	void SolveVolumes(float compliance, float dt)
 	{
 		var alpha = compliance / dt / dt;
@@ -507,7 +510,7 @@ public class SoftBodySimulation
 		return dot;
 	}
 
-	//a = b cross c
+	//a = b x c
 	private void VecSetCross(float[] a, int anr, float[] b, int bnr, float[] c, int cnr)
 	{
 		anr *= 3; 
@@ -535,6 +538,8 @@ public class SoftBodySimulation
 	}
 
 	//Calculate the volume of a tetrahedron
+	//V = 1/6 * (a x b) * c where a,b,c all originate from the same vertex 
+	//Tetra p1 p2 p3 p4 -> a = p2-p1, b = p3-p1, c = p4-p1
 	float GetTetVolume(int nr)
 	{
 		var id0 = this.tetIds[4 * nr];
