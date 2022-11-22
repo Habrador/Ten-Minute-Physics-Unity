@@ -5,57 +5,61 @@ using UnityEngine;
 public class SoftBodySimulation
 {
 	//Tetrahedralizer data structures
-	private float[] verts;
 	private int[] tetIds;
 	private int[] tetEdgeIds;
-	private int[] tetSurfaceTriIds;
 
 	//Simulation settings
-	private float[] gravity = new float[] { 0.0f, -10.0f, 0.0f };
-	private int numSubSteps = 10;
+	private readonly float[] gravity = new float[] { 0.0f, -9.81f, 0.0f };
+	private readonly int numSubSteps = 10;
+
+	private readonly float floorHeight = 0f;
 
 	private float edgeCompliance = 5.0f;
-	private float startMeshScale = 2.0f;
 
-	private Mesh _Mesh;
+	private Mesh softBodyMesh;
 	
 	private int numParticles;
 	private int numTets;
 
-	float[] pos;
-	float[] prevPos;
-	float[] vel;
-	float[] restVol;
-	float[] edgeLengths;
-	float[] invMass;
-	float volCompliance = 0.0f;
-	float[] temp;
-	float[] grads;
-	int[][] volIdOrder;
+	//Same as in previous examples
+	private float[] pos;
+	private float[] prevPos;
+	private float[] vel;
+
+	//For soft body 
+	private float[] restVol;
+	private float[] edgeLengths;
+	private float[] invMass;
+	private float volCompliance = 0.0f;
+	private float[] temp;
+	private float[] grads;
+
+	private int[][] volIdOrder = new int[][] { new int[] { 1, 3, 2 }, new int[] { 0, 2, 3 }, new int[] { 0, 3, 1 }, new int[] { 0, 1, 2 } };
 
 	//Grabbing
-	int grabId = -1;
-	float grabInvMass = 0.0f;
+	private int grabId = -1;
+	private float grabInvMass = 0.0f;
 
 
 
-	public SoftBodySimulation(MeshFilter meshFilter, SoftBodyMesh softBodyMesh)
+	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, float meshScale = 2f)
 	{
-		//Data structures
-		this.verts = softBodyMesh.GetVerts;
-		this.tetIds = softBodyMesh.GetTetIds;
-		this.tetEdgeIds = softBodyMesh.GetTetEdgeIds;
-		this.tetSurfaceTriIds = softBodyMesh.GetTetSurfaceTriIds;
+		//Tetra data structures
+		float[] verts = tetraData.GetVerts;
 
+		this.tetIds = tetraData.GetTetIds;
+		this.tetEdgeIds = tetraData.GetTetEdgeIds;
 
 		this.numParticles = verts.Length / 3;
 		this.numTets = tetIds.Length / 4;
+
+		//Init the pos, prev pos, and vel
 		this.pos = new float[verts.Length];
 
 		for (int i = 0; i < pos.Length; i++)
 		{
 			pos[i] = verts[i];
-			pos[i] *= startMeshScale;
+			pos[i] *= meshScale;
 		}
 
 		this.prevPos = new float[verts.Length];
@@ -63,40 +67,25 @@ public class SoftBodySimulation
 		for (int i = 0; i < prevPos.Length; i++)
 		{
 			prevPos[i] = verts[i];
-			prevPos[i] *= startMeshScale;
+			prevPos[i] *= meshScale;
 		}
 		
-		this.vel = new float[3 * this.numParticles];
+		this.vel = new float[verts.Length];
+
+		//Init the data structures that are new for soft body mesh
 		this.restVol = new float[this.numTets];
 		this.edgeLengths = new float[this.tetEdgeIds.Length / 2];
 		this.invMass = new float[this.numParticles];
 		this.temp = new float[4 * 3];
 		this.grads = new float[4 * 3];
-		this.volIdOrder = new int[][] { new int[] { 1, 3, 2 }, new int[] { 0, 2, 3 }, new int[] { 0, 3, 1 }, new int[] { 0, 1, 2 } };
 
 		InitPhysics();
 
+		//Move the bunny upwards
 		Translate(0.0f, 20.0f, 0.0f);
 
-
-		Mesh mesh = new Mesh();
-
-		List<Vector3> vertices = new List<Vector3>();
-
-		for (int i = 0; i < verts.Length; i += 3)
-		{
-			Vector3 v = new Vector3((float)verts[i], (float)verts[i + 1], (float)verts[i + 2]);
-			vertices.Add(v);
-		}
-		
-		mesh.vertices = vertices.ToArray();
-		mesh.triangles = tetSurfaceTriIds;
-		mesh.RecalculateNormals();
-
-		meshFilter.sharedMesh = mesh;
-
-		_Mesh = meshFilter.sharedMesh;
-		_Mesh.MarkDynamic();
+		//Init the mesh
+		InitMesh(meshFilter, tetraData);
 	}
 
 
@@ -121,7 +110,7 @@ public class SoftBodySimulation
 
 	public Mesh MyOnDestroy()
 	{
-		return _Mesh;
+		return softBodyMesh;
 	}
 
 
@@ -195,6 +184,7 @@ public class SoftBodySimulation
 			VecCopy(this.prevPos, i, this.pos, i);
 			VecAdd(this.pos, i, this.vel, i, dt);
 			
+			//Floor collision
 			float y = this.pos[3 * i + 1];
 			
 			if (y < 0f)
@@ -298,6 +288,51 @@ public class SoftBodySimulation
 
 
 	//
+	// Unity mesh 
+	//
+
+	private void InitMesh(MeshFilter meshFilter, TetrahedronData tetData)
+	{
+		Mesh mesh = new();
+
+		List<Vector3> vertices = GenerateMeshVertices(this.pos);
+
+		mesh.vertices = vertices.ToArray();
+		mesh.triangles = tetData.GetTetSurfaceTriIds;
+		mesh.RecalculateNormals();
+
+		meshFilter.sharedMesh = mesh;
+
+		this.softBodyMesh = meshFilter.sharedMesh;
+		this.softBodyMesh.MarkDynamic();
+	}
+
+	private void UpdateMeshes()
+	{
+		List<Vector3> vertices = GenerateMeshVertices(this.pos);
+
+		this.softBodyMesh.SetVertices(vertices);
+		this.softBodyMesh.RecalculateBounds();
+		this.softBodyMesh.RecalculateNormals();
+	}
+
+	private List<Vector3> GenerateMeshVertices(float[] pos)
+	{
+		List<Vector3> vertices = new();
+
+		for (int i = 0; i < pos.Length; i += 3)
+		{
+			Vector3 v = new(pos[i], pos[i + 1], pos[i + 2]);
+
+			vertices.Add(v);
+		}
+
+		return vertices;
+	}
+
+
+
+	//
 	// Help methods
 	//
 
@@ -369,6 +404,7 @@ public class SoftBodySimulation
 		a[anr] = b[bnr + 0] * c[cnr + 1] - b[bnr + 1] * c[cnr + 0];
 	}
 
+	//Move all vertices
 	void Translate(float x, float y, float z)
 	{
 		for (var i = 0; i < this.numParticles; i++)
@@ -378,38 +414,29 @@ public class SoftBodySimulation
 		}
 	}
 
-	void UpdateMeshes()
-	{
-		List<Vector3> vertices = new List<Vector3>();
-
-		for (int i = 0; i < verts.Length; i += 3)
-		{
-			Vector3 v = new Vector3(this.pos[i], this.pos[i + 1], this.pos[i + 2]);
-			vertices.Add(v);
-		}
-		
-		_Mesh.vertices = vertices.ToArray();
-		_Mesh.RecalculateBounds();
-		_Mesh.RecalculateNormals();
-	}
-
+	//Calculate the volume of a tetrahedron
 	float GetTetVolume(int nr)
 	{
 		var id0 = this.tetIds[4 * nr];
 		var id1 = this.tetIds[4 * nr + 1];
 		var id2 = this.tetIds[4 * nr + 2];
 		var id3 = this.tetIds[4 * nr + 3];
+
 		VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
 		VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
 		VecSetDiff(this.temp, 2, this.pos, id3, this.pos, id0);
+		
 		VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
-		return VecDot(this.temp, 3, this.temp, 2) / 6.0f;
+		
+		float volume= VecDot(this.temp, 3, this.temp, 2) / 6.0f;
+
+		return volume;
 	}
 
 
 
 	//
-	// Mesh interactions
+	// Mesh user interactions
 	//
 
 
@@ -428,10 +455,11 @@ public class SoftBodySimulation
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
-			//Squach y coordinate
-			this.pos[3 * i + 1] = 0.01f;
+			//Squash y coordinate which is up
+			this.pos[3 * i + 1] = this.floorHeight + 0.01f;
 		}
 
+		//Is needed!
 		this.UpdateMeshes();
 	}
 

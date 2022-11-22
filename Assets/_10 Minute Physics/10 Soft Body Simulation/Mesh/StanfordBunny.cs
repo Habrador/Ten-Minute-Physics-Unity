@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StanfordBunny : SoftBodyMesh
+public class StanfordBunny : TetrahedronData
 {
 	private readonly float[] verts;
 

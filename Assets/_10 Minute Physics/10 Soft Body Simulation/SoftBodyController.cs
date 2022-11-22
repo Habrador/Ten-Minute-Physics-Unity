@@ -15,7 +15,7 @@ public class SoftBodyController : MonoBehaviour
     {
         MeshFilter meshFilter = this.GetComponent<MeshFilter>();
 
-        SoftBodyMesh softBodyMesh = new StanfordBunny();
+        TetrahedronData softBodyMesh = new StanfordBunny();
 
         softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh);
     }
