@@ -14,8 +14,11 @@ public class SoftBodySimulation
 
 	private readonly float floorHeight = 0f;
 
-	//The higher the softer
+	//Compliance alpha is the inverse of physical stiffness k
+	//alpha = 0 means infinitely stiff (hard)
 	private float edgeCompliance = 5.0f;
+	//Should be 0 or the mesh becomes very flat even for small values 
+	private float volCompliance = 0.0f;
 
 	//The Unity mesh used to display the soft body mesh
 	private Mesh softBodyMesh;
@@ -34,14 +37,14 @@ public class SoftBodySimulation
 	private float[] restVol;
 	//The length of an edge before deformation
 	private float[] restEdgeLengths;
-	//How much inverese mass is connected to a particle (1/w)
+	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	private float[] invMass;
 	//
 	private float[] temp;
 	//C
 	private float[] grads;
 
-	private float volCompliance = 0f;
+	
 
 	
 
@@ -228,7 +231,7 @@ public class SoftBodySimulation
 		//x = x + deltaX where deltaX is the correction vector
 		//deltaX = lambda * w * gradC
 		//lambda = -C / (w1 * abs(grad_C1)^2 + w2 * abs(grad_C2)^2 + ... + (alpha / dt^2)) where w1, w2, ... wn is the number of participating particles in the constraint. n=2 if we have an edge, n=4 if we have a tetra
-		//alpha - inverse of physical stiffness
+		//alpha = compliance
 
 		this.SolveEdges(this.edgeCompliance, dt);
 		this.SolveVolumes(this.volCompliance, dt);
@@ -259,6 +262,8 @@ public class SoftBodySimulation
 	//Current length: l
 	//Constraint function: C = l - l_rest which is 0 when the constraint is fulfilled 
 	//Gradients of constraint function grad_C1 = (x2 - x1) / abs(x2 - x1) and grad_C2 = -grad_C1
+	//delta_x1 = w1 / (w1 + w2) * C * grad_C1
+	//delta_x2 = w2 / (w1 + w2) * C * grad_C2
 	void SolveEdges(float compliance, float dt)
 	{
 		var alpha = compliance / dt / dt;

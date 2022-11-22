@@ -17,7 +17,7 @@ public abstract class TetrahedronData
         get;
     }
 
-    //Indices of the tetras
+    //Indices of the 4 coordinates in each tetra. So to get the total amount of tetras, you GetTetIds.Length / 4
     public abstract int[] GetTetIds
     {
         get;
@@ -30,7 +30,7 @@ public abstract class TetrahedronData
     }
 
     //Triangles that form the surface of the mesh
-    //mesh.triangles = GetTetSurfaceTriIds
+    //mesh.triangles = GetTetSurfaceTriIds because you can assign these directly it means they work as if the verts had been ordered as p1, p2, p3 and not x1, y1, z1, x2,...???
     public abstract int[] GetTetSurfaceTriIds
     {
         get;
