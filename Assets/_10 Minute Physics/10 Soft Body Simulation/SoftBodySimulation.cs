@@ -14,6 +14,7 @@ public class SoftBodySimulation
 
 	private readonly float floorHeight = 0f;
 
+	//The higher the softer
 	private float edgeCompliance = 5.0f;
 
 	//The Unity mesh used to display the soft body mesh
@@ -28,15 +29,21 @@ public class SoftBodySimulation
 	private float[] prevPos;
 	private float[] vel;
 
-	//For soft body 
-	private float[] restVol; //One volume constraint per tetra
-	private float[] edgeLengths; //One distance constraint per edge
+	//For soft body
+	//The volume at start before deformation
+	private float[] restVol;
+	//The length of an edge before deformation
+	private float[] restEdgeLengths;
+	//How much inverese mass is connected to a particle (1/w)
 	private float[] invMass;
-	private float volCompliance = 0f;
+	//
 	private float[] temp;
+	//C
 	private float[] grads;
 
-	private int[][] volIdOrder = new int[][] { new int[] { 1, 3, 2 }, new int[] { 0, 2, 3 }, new int[] { 0, 3, 1 }, new int[] { 0, 1, 2 } };
+	private float volCompliance = 0f;
+
+	
 
 	//Grabbing with mouse
 	private int grabId = -1;
@@ -76,12 +83,12 @@ public class SoftBodySimulation
 
 		//Init the data structures that are new for soft body mesh
 		this.restVol = new float[this.numTets];
-		this.edgeLengths = new float[this.tetEdgeIds.Length / 2];
+		this.restEdgeLengths = new float[this.tetEdgeIds.Length / 2];
 		this.invMass = new float[this.numParticles];
 		this.temp = new float[4 * 3];
 		this.grads = new float[4 * 3];
 
-		InitPhysics();
+		InitSoftBodyPhysics();
 
 		//Move the bunny upwards
 		Translate(0.0f, 20.0f, 0.0f);
@@ -123,35 +130,39 @@ public class SoftBodySimulation
 	// Simulation
 	//
 
-	void InitPhysics()
+	//Fill the data structures needed or soft body physics
+	void InitSoftBodyPhysics()
 	{
-		for (var i = 0; i < invMass.Length; i++)
+		//Init rest volume
+		for (int i = 0; i < this.numTets; i++)
 		{
-			invMass[i] = 0.0f;
+			this.restVol[i] = GetTetVolume(i);
 		}
 
-		for (var i = 0; i < restVol.Length; i++)
-		{
-			restVol[i] = 0.0f;
-		}
 
-		for (var i = 0; i < this.numTets; i++)
+		//Init inverse mass (1/w)
+		for (int i = 0; i < this.numTets; i++)
 		{
-			var vol = this.GetTetVolume(i);
-			this.restVol[i] = vol;
-			var pInvMass = vol > 0.0f ? 1.0f / (vol / 4.0f) : 0.0f;
-			this.invMass[this.tetIds[4 * i]] += pInvMass;
+			float vol = restVol[i];
+			
+			//How much mass is connected to a particle in a tetra = volume / 4
+			//But we want the inverse mass because its how the lambda equation uses the mass so we save computations
+			float pInvMass = vol > 0f ? 1f / (vol / 4f) : 0f;
+
+			this.invMass[this.tetIds[4 * i + 0]] += pInvMass;
 			this.invMass[this.tetIds[4 * i + 1]] += pInvMass;
 			this.invMass[this.tetIds[4 * i + 2]] += pInvMass;
 			this.invMass[this.tetIds[4 * i + 3]] += pInvMass;
 		}
 
-		for (var i = 0; i < this.edgeLengths.Length; i++)
+
+		//Init rest edge length
+		for (var i = 0; i < this.restEdgeLengths.Length; i++)
 		{
-			var id0 = this.tetEdgeIds[2 * i];
+			var id0 = this.tetEdgeIds[2 * i + 0];
 			var id1 = this.tetEdgeIds[2 * i + 1];
 
-			this.edgeLengths[i] = Mathf.Sqrt(VecDistSquared(this.pos, id0, this.pos, id1));
+			this.restEdgeLengths[i] = Mathf.Sqrt(VecDistSquared(this.pos, id0, this.pos, id1));
 		}
 	}
 
@@ -201,8 +212,9 @@ public class SoftBodySimulation
 			
 			if (y < 0f)
 			{
+				//Set the pos to previous pos
 				VecCopy(this.pos, i, this.prevPos, i);
-
+				//But the y of the previous pos should be at the ground
 				this.pos[3 * i + 1] = 0f;
 			}
 		}
@@ -214,6 +226,9 @@ public class SoftBodySimulation
 	{
 		//Constraints
 		//x = x + deltaX where deltaX is the correction vector
+		//deltaX = lambda * w * gradC
+		//lambda = -C / (w1 * abs(grad_C1)^2 + w2 * abs(grad_C2)^2 + ... + (alpha / dt^2)) where w1, w2, ... wn is the number of participating particles in the constraint. n=2 if we have an edge, n=4 if we have a tetra
+		//alpha - inverse of physical stiffness
 
 		this.SolveEdges(this.edgeCompliance, dt);
 		this.SolveVolumes(this.volCompliance, dt);
@@ -236,18 +251,26 @@ public class SoftBodySimulation
 	}
 
 
-
+	//Solve distance constraint
+	//2 particles:
+	//Positions: x1, x2
+	//Inverse mass: w1, w2
+	//Rest length l_rest
+	//Current length: l
+	//Constraint function: C = l - l_rest which is 0 when the constraint is fulfilled 
+	//Gradients of constraint function grad_C1 = (x2 - x1) / abs(x2 - x1) and grad_C2 = -grad_C1
 	void SolveEdges(float compliance, float dt)
 	{
 		var alpha = compliance / dt / dt;
 
-		for (var i = 0; i < this.edgeLengths.Length; i++)
+		for (int i = 0; i < this.restEdgeLengths.Length; i++)
 		{
-			var id0 = this.tetEdgeIds[2 * i];
-			var id1 = this.tetEdgeIds[2 * i + 1];
-			var w0 = this.invMass[id0];
-			var w1 = this.invMass[id1];
-			var w = w0 + w1;
+			int id0 = this.tetEdgeIds[2 * i];
+			int id1 = this.tetEdgeIds[2 * i + 1];
+
+			float w0 = this.invMass[id0];
+			float w1 = this.invMass[id1];
+			float w = w0 + w1;
 			
 			if (w == 0f)
 			{
@@ -255,7 +278,8 @@ public class SoftBodySimulation
 			}
 
 			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
-			var len = Mathf.Sqrt(VecLengthSquared(this.grads, 0));
+			
+			float len = Mathf.Sqrt(VecLengthSquared(this.grads, 0));
 
 			if (len == 0.0f)
 			{
@@ -263,9 +287,11 @@ public class SoftBodySimulation
 			}
 
 			VecScale(this.grads, 0, 1.0f / len);
-			var restLen = this.edgeLengths[i];
-			var C = len - restLen;
-			var s = -C / (w + alpha);
+			
+			float restLen = this.restEdgeLengths[i];
+			float C = len - restLen;
+			float s = -C / (w + alpha);
+			
 			VecAdd(this.pos, id0, this.grads, 0, s * w0);
 			VecAdd(this.pos, id1, this.grads, 0, -s * w1);
 		}
@@ -273,40 +299,54 @@ public class SoftBodySimulation
 
 
 
+	//Solve volume constraint
+	//Constraint function is now defined as C = 6(V - V_rest). The 6 is to make the equation simpler because of volume
+	//4 gradients:
+	//grad_C1 = (x4-x2)x(x3-x2)
+	//grad_C2 = (x3-x1)x(x4-x1)
+	//grad_C3 = (x4-x1)x(x2-x1)
+	//grad_C4 = (x2-x1)x(x3-x1)
+	//V = 1/6 * ((x2-x1)x(x3-x1))*(x4-x1)
 	void SolveVolumes(float compliance, float dt)
 	{
 		var alpha = compliance / dt / dt;
 
-		for (var i = 0; i < this.numTets; i++)
+		for (int i = 0; i < this.numTets; i++)
 		{
-			var w = 0.0f;
+			float w = 0f;
 
-			for (var j = 0; j < 4; j++)
+			for (int j = 0; j < 4; j++)
 			{
-				var id0 = this.tetIds[4 * i + this.volIdOrder[j][0]];
-				var id1 = this.tetIds[4 * i + this.volIdOrder[j][1]];
-				var id2 = this.tetIds[4 * i + this.volIdOrder[j][2]];
+				int id0 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][0]];
+				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
+				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
 				VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
 				VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
+
 				VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
+				
 				VecScale(this.grads, j, 1.0f / 6.0f);
 
 				w += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
 			}
-			if (w == 0.0f)
+
+			if (w == 0f)
 			{
 				continue;
 			}
 
-			var vol = this.GetTetVolume(i);
-			var restVol = this.restVol[i];
-			var C = vol - restVol;
-			var s = -C / (w + alpha);
+			float vol = this.GetTetVolume(i);
+			float restVol = this.restVol[i];
+			
+			float C = vol - restVol;
+			
+			float s = -C / (w + alpha);
 
-			for (var j = 0; j < 4; j++)
+			for (int j = 0; j < 4; j++)
 			{
-				var id = this.tetIds[4 * i + j];
+				int id = this.tetIds[4 * i + j];
+
 				VecAdd(this.pos, id, this.grads, j, s * this.invMass[id]);
 			}
 		}
@@ -324,7 +364,7 @@ public class SoftBodySimulation
 
 		List<Vector3> vertices = GenerateMeshVertices(this.pos);
 
-		mesh.vertices = vertices.ToArray();
+		mesh.SetVertices(vertices);
 		mesh.triangles = tetData.GetTetSurfaceTriIds;
 		mesh.RecalculateNormals();
 
@@ -479,7 +519,7 @@ public class SoftBodySimulation
 	// Help methods
 	//
 
-	//Move all vertices
+	//Move all vertices a distance of (x, y, z)
 	private void Translate(float x, float y, float z)
 	{
 		for (var i = 0; i < this.numParticles; i++)
