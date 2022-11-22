@@ -12,6 +12,7 @@ public class SoftBodySimulation
 	private readonly float[] gravity = new float[] { 0.0f, -9.81f, 0.0f };
 	private readonly int numSubSteps = 10;
 
+	//Environment collision data 
 	private readonly float floorHeight = 0f;
 
 	//Compliance alpha is the inverse of physical stiffness k
@@ -24,29 +25,28 @@ public class SoftBodySimulation
 	private Mesh softBodyMesh;
 	
 	//How many vertices (particles) and tets do we have?
-	private int numParticles;
-	private int numTets;
+	private readonly int numParticles;
+	private readonly int numTets;
+
 
 	//Same as in ball physics
-	private float[] pos;
-	private float[] prevPos;
-	private float[] vel;
+	private readonly float[] pos;
+	private readonly float[] prevPos;
+	private readonly float[] vel;
 
-	//For soft body
+
+	//For soft body physics using tetrahedrons
 	//The volume at start before deformation
-	private float[] restVol;
+	private readonly float[] restVol;
 	//The length of an edge before deformation
-	private float[] restEdgeLengths;
+	private readonly float[] restEdgeLengths;
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
-	private float[] invMass;
-	//
-	private float[] temp;
+	private readonly float[] invMass;
+	//Needed when we calculate the volume of a tetrahedron so we don't have to create an array a million times
+	private readonly float[] temp;
 	//C
-	private float[] grads;
+	private readonly float[] grads;
 
-	
-
-	
 
 	//Grabbing with mouse
 	private int grabId = -1;
@@ -542,17 +542,24 @@ public class SoftBodySimulation
 	//Tetra p1 p2 p3 p4 -> a = p2-p1, b = p3-p1, c = p4-p1
 	float GetTetVolume(int nr)
 	{
-		var id0 = this.tetIds[4 * nr];
-		var id1 = this.tetIds[4 * nr + 1];
-		var id2 = this.tetIds[4 * nr + 2];
-		var id3 = this.tetIds[4 * nr + 3];
+		//The 4 vertices belonging to this tetra 
+		int id0 = this.tetIds[4 * nr + 0];
+		int id1 = this.tetIds[4 * nr + 1];
+		int id2 = this.tetIds[4 * nr + 2];
+		int id3 = this.tetIds[4 * nr + 3];
 
+		//a, b, c
+		//temp has size 12 so we fill 3*3 = 9 positions in that array where a is the first 3 coordinates
 		VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
 		VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
 		VecSetDiff(this.temp, 2, this.pos, id3, this.pos, id0);
 		
+		//a x b
+		//Here we fill the last 3 positions in the array with the cross product, a starts at index 0*3 and b at index 1*3
 		VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
-		
+
+		//1/6 * (a x b) * c
+		//(a x b) is stored at index 3*3 and c is in index 2*3
 		float volume = VecDot(this.temp, 3, this.temp, 2) / 6f;
 
 		return volume;

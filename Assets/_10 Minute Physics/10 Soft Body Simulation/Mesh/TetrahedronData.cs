@@ -11,13 +11,20 @@ public abstract class TetrahedronData
         new int[] { 0, 1, 2 } 
     };
 
-    //Vertices coordinates [x1, y1, z1, x2, y2, z3,...] after each other
+    //Vertex coordinates [x1, y1, z1, x2, y2, z3,...] which is easier to save than using Vector3
     public abstract float[] GetVerts
     {
         get;
     }
 
-    //Indices of the 4 coordinates in each tetra. So to get the total amount of tetras, you GetTetIds.Length / 4
+    //Indices of the 4 vertices in each tetra
+    //To get the total amount of tetras: GetTetIds.Length / 4
+    //To get all 4 vertices of a tetra where nr is less than GetTetIds.Length / 4
+    //int id0 = tetIds[4 * nr + 0];
+    //int id1 = tetIds[4 * nr + 1];
+    //int id2 = tetIds[4 * nr + 2];
+    //int id3 = tetIds[4 * nr + 3];
+    //To get the actual vertex you have to multiply the id with 3 (and you get the x coordinate)
     public abstract int[] GetTetIds
     {
         get;
