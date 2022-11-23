@@ -37,6 +37,7 @@ public class SoftBodySimulation
 	//Simulation settings
 	private readonly float[] gravity = new float[] { 0f, -9.81f, 0f };
 	private readonly int numSubSteps = 10;
+	private bool simulate = true;
 
 	//Soft body behavior settings
 	//Compliance (alpha) is the inverse of physical stiffness (k)
@@ -50,9 +51,9 @@ public class SoftBodySimulation
 
 	//Grabbing with mouse
 	private int grabId = -1;
+	//We grab a single particle and then we sit its inverted mass to 0. When we ungrab we have to reset its inverted mass to what itb was before 
 	private float grabInvMass = 0f;
 
-	private bool simulate = true;
 
 
 	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
@@ -118,17 +119,21 @@ public class SoftBodySimulation
 	{
 		simulate = true;
 	
+		//Launch the mesh upwards when pressing space
 		if (Input.GetKey(KeyCode.Space))
 		{
 			Yeet();
 		}
 
+		//Make the mesh flat when holding right mouse 
 		if (Input.GetMouseButton(1))
 		{
 			Squeeze();
 
 			simulate = false;
 		}
+
+		//Grabbing with left mouse button
 	}
 
 
@@ -659,14 +664,18 @@ public class SoftBodySimulation
 
 
 
-	void StartGrab(float[] pos)
+	private void StartGrab(float[] pos)
 	{
-		var p = new float[] { pos[0], pos[1], pos[2] };
-		float minD2 = System.Single.MaxValue;
+		float[] p = new float[] { pos[0], pos[1], pos[2] };
+
+		float minD2 = float.MaxValue;
+		
 		this.grabId = -1;
+		
 		for (int i = 0; i < this.numParticles; i++)
 		{
-			var d2 = VecDistSquared(p, 0, this.pos, i);
+			float d2 = VecDistSquared(p, 0, this.pos, i);
+			
 			if (d2 < minD2)
 			{
 				minD2 = d2;
@@ -674,35 +683,46 @@ public class SoftBodySimulation
 			}
 		}
 
+		//We have found a vertex
 		if (this.grabId >= 0)
 		{
+			//Save the current innverted mass
 			this.grabInvMass = this.invMass[this.grabId];
-			this.invMass[this.grabId] = 0.0f;
+			
+			//Set the inverted mass to 0 to mark it as fixed
+			this.invMass[this.grabId] = 0f;
+
+			//Set the position of the vertex to the position of the mouse coordinate
 			VecCopy(this.pos, this.grabId, p, 0);
 		}
 	}
 
 
 
-	void MoveGrabbed(float[] pos, float[] vel)
+	private void MoveGrabbed(float[] pos, float[] vel)
 	{
 		if (this.grabId >= 0)
 		{
-			var p = new float[] { pos[0], pos[1], pos[2] };
+			float[] p = new float[] { pos[0], pos[1], pos[2] };
+
 			VecCopy(this.pos, this.grabId, p, 0);
 		}
 	}
 
 
 
-	void EndGrab(float[] pos, float[] vel)
+	private void EndGrab()
 	{
 		if (this.grabId >= 0)
 		{
+			//Set the mass to whatever mass it was before we grabbed it
 			this.invMass[this.grabId] = this.grabInvMass;
-			var v = new float[] { vel[0], vel[1], vel[2] };
+
+			float[] v = new float[] { vel[0], vel[1], vel[2] };
+			
 			VecCopy(this.vel, this.grabId, v, 0);
 		}
+
 		this.grabId = -1;
 	}
 }
