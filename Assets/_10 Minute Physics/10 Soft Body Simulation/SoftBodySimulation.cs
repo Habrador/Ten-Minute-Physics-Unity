@@ -360,25 +360,34 @@ public class SoftBodySimulation
 		//For each tetra
 		for (int i = 0; i < this.numTets; i++)
 		{
-			float w = 0f;
+			float wTimesGrad = 0f;
 
+			//Foreach vertex in the tetra
 			for (int j = 0; j < 4; j++)
 			{
+				//The 3 opposite vertices
 				int id0 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][0]];
 				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
 				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
+				//(x4 - x2)
 				VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
+				//(x3 - x2)
 				VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
 
+				//(x4 - x2)x(x3 - x2)
 				VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
 				
-				VecScale(this.grads, j, 1.0f / 6.0f);
+				//The guy in the video is dividing by 6 in the code but multiplying in the video
+				//It makes no difference if we just do nothing...
+				//VecScale(this.grads, j, 1f / 6f);
 
-				w += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
+				//w1 * |grad_C1|^2
+				wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
 			}
 
-			if (w == 0f)
+			//All vertices are fixed so dont simulate
+			if (wTimesGrad == 0f)
 			{
 				continue;
 			}
@@ -387,14 +396,19 @@ public class SoftBodySimulation
 			float restVol = this.restVol[i];
 			
 			float C = vol - restVol;
-			
-			float s = -C / (w + alpha);
 
+			//The guy in the video is dividing by 6 in the code but multiplying in the video
+			//C *= 6f;
+
+			float lambda = -C / (wTimesGrad + alpha);
+
+			//Move each vertex
 			for (int j = 0; j < 4; j++)
 			{
 				int id = this.tetIds[4 * i + j];
 
-				VecAdd(this.pos, id, this.grads, j, s * this.invMass[id]);
+				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
+				VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
 			}
 		}
 	}

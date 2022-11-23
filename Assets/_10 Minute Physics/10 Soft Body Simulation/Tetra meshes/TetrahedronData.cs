@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class TetrahedronData
 {
+    //Used to find the opposite 3 vertices of a vertex
     public static int[][] volIdOrder = new int[][] { 
         new int[] { 1, 3, 2 }, 
         new int[] { 0, 2, 3 }, 
