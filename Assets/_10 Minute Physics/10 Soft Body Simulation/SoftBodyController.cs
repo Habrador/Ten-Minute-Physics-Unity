@@ -17,7 +17,11 @@ public class SoftBodyController : MonoBehaviour
 
         TetrahedronData softBodyMesh = new StanfordBunny();
 
-        softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh);
+        Vector3 startPos = new Vector3(0f, 20f, 0f);
+
+        float bunnyScale = 2f;
+
+        softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh, startPos, bunnyScale);
     }
 
 

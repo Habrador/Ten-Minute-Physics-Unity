@@ -5,35 +5,13 @@ using UnityEngine;
 public class SoftBodySimulation
 {
 	//Tetrahedralizer data structures
-	private int[] tetIds;
-	private int[] tetEdgeIds;
-
-	//Simulation settings
-	private readonly float[] gravity = new float[] { 0.0f, -9.81f, 0.0f };
-	private readonly int numSubSteps = 10;
-
-	//Environment collision data 
-	private readonly float floorHeight = 0f;
-
-	//Compliance alpha is the inverse of physical stiffness k
-	//alpha = 0 means infinitely stiff (hard)
-	private float edgeCompliance = 5.0f;
-	//Should be 0 or the mesh becomes very flat even for small values 
-	private float volCompliance = 0.0f;
-
-	//The Unity mesh used to display the soft body mesh
-	private Mesh softBodyMesh;
-	
-	//How many vertices (particles) and tets do we have?
-	private readonly int numParticles;
-	private readonly int numTets;
-
+	private readonly int[] tetIds;
+	private readonly int[] tetEdgeIds;
 
 	//Same as in ball physics
 	private readonly float[] pos;
 	private readonly float[] prevPos;
 	private readonly float[] vel;
-
 
 	//For soft body physics using tetrahedrons
 	//The volume at start before deformation
@@ -43,18 +21,38 @@ public class SoftBodySimulation
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	private readonly float[] invMass;
 	//Needed when we calculate the volume of a tetrahedron so we don't have to create an array a million times
-	private readonly float[] temp;
-	//C
-	private readonly float[] grads;
+	private readonly float[] temp = new float[4 * 3];
+	//Gradients needed when we calculate the edge and volume constraints
+	private readonly float[] grads = new float[4 * 3];
 
+	//The Unity mesh to display the soft body mesh
+	private Mesh softBodyMesh;
+
+	//How many vertices (particles) and tets do we have?
+	private readonly int numParticles;
+	private readonly int numTets;
+
+	//Simulation settings
+	private readonly float[] gravity = new float[] { 0f, -9.81f, 0f };
+	private readonly int numSubSteps = 10;
+
+	//Soft body behavior settings
+	//Compliance (alpha) is the inverse of physical stiffness (k)
+	//alpha = 0 means infinitely stiff (hard)
+	private readonly float edgeCompliance = 5.0f;
+	//Should be 0 or the mesh becomes very flat even for small values 
+	private readonly float volCompliance = 0.0f;
+
+	//Environment collision data 
+	private readonly float floorHeight = 0f;
 
 	//Grabbing with mouse
 	private int grabId = -1;
-	private float grabInvMass = 0.0f;
+	private float grabInvMass = 0f;
 
 
 
-	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, float meshScale = 2f)
+	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
 	{
 		//Tetra data structures
 		float[] verts = tetraData.GetVerts;
@@ -86,21 +84,18 @@ public class SoftBodySimulation
 
 		//Init the data structures that are new for soft body mesh
 		this.restVol = new float[this.numTets];
-		this.restEdgeLengths = new float[this.tetEdgeIds.Length / 2];
+		this.restEdgeLengths = new float[tetraData.GetNumberOfEdges]; 
 		this.invMass = new float[this.numParticles];
-		this.temp = new float[4 * 3];
-		this.grads = new float[4 * 3];
 
+		//Fill the data structures that are new for soft body mesh with start data
 		InitSoftBodyPhysics();
 
-		//Move the bunny upwards
-		Translate(0.0f, 20.0f, 0.0f);
+		//Move the mesh to its start position
+		Translate(startPos.x, startPos.y, startPos.z);
 
 		//Init the mesh
 		InitMesh(meshFilter, tetraData);
 	}
-
-    
 
 
 
@@ -134,7 +129,7 @@ public class SoftBodySimulation
 	//
 
 	//Fill the data structures needed or soft body physics
-	void InitSoftBodyPhysics()
+	private void InitSoftBodyPhysics()
 	{
 		//Init rest volume
 		for (int i = 0; i < this.numTets; i++)
@@ -148,8 +143,7 @@ public class SoftBodySimulation
 		{
 			float vol = restVol[i];
 			
-			//How much mass is connected to a particle in a tetra = volume / 4
-			//But we want the inverse mass because its how the lambda equation uses the mass so we save computations
+			//The mass connected to a particle in a tetra is roughly volume / 4
 			float pInvMass = vol > 0f ? 1f / (vol / 4f) : 0f;
 
 			this.invMass[this.tetIds[4 * i + 0]] += pInvMass;
@@ -344,7 +338,7 @@ public class SoftBodySimulation
 				continue;
 			}
 
-			float vol = this.GetTetVolume(i);
+			float vol = GetTetVolume(i);
 			float restVol = this.restVol[i];
 			
 			float C = vol - restVol;
@@ -366,14 +360,15 @@ public class SoftBodySimulation
 	// Unity mesh 
 	//
 
-	private void InitMesh(MeshFilter meshFilter, TetrahedronData tetData)
+	//Init the mesh when the simulation is started
+	private void InitMesh(MeshFilter meshFilter, TetrahedronData tetraData)
 	{
 		Mesh mesh = new();
 
 		List<Vector3> vertices = GenerateMeshVertices(this.pos);
 
 		mesh.SetVertices(vertices);
-		mesh.triangles = tetData.GetTetSurfaceTriIds;
+		mesh.triangles = tetraData.GetTetSurfaceTriIds;
 		mesh.RecalculateNormals();
 
 		meshFilter.sharedMesh = mesh;
@@ -382,6 +377,7 @@ public class SoftBodySimulation
 		this.softBodyMesh.MarkDynamic();
 	}
 
+	//Update the mesh with new vertex positions
 	private void UpdateMeshes()
 	{
 		List<Vector3> vertices = GenerateMeshVertices(this.pos);
@@ -391,6 +387,7 @@ public class SoftBodySimulation
 		this.softBodyMesh.RecalculateNormals();
 	}
 
+	//Generate the List of vertices needed for a Unity mesh
 	private List<Vector3> GenerateMeshVertices(float[] pos)
 	{
 		List<Vector3> vertices = new();
@@ -411,7 +408,7 @@ public class SoftBodySimulation
 	// Vector operations
 	//
 
-	//anr = vertex a index in the list of all vertices if they had (x,y,z) position at that array index. BUT we dont have that list, so to make it easier to loop through all particles where x, y, z are at 3 difference indices, we just multiply by 3
+	//anr = index of vertex a in the list of all vertices if it had an (x,y,z) position at that index. BUT we dont have that list, so to make it easier to loop through all particles where x, y, z are at 3 difference indices, we multiply by 3
 	//anr = 0 -> 0 * 3 = 0 -> 0, 1, 2
 	//anr = 1 -> 1 * 3 = 3 -> 3, 4, 5
 
@@ -420,7 +417,7 @@ public class SoftBodySimulation
 	{
 		anr *= 3;
 
-		a[anr + 0] = 0f;
+		a[anr    ] = 0f;
 		a[anr + 1] = 0f;
 		a[anr + 2] = 0f;
 	}
@@ -430,7 +427,7 @@ public class SoftBodySimulation
 	{
 		anr *= 3;
 
-		a[anr + 0] *= scale;
+		a[anr    ] *= scale;
 		a[anr + 1] *= scale;
 		a[anr + 2] *= scale;
 	}
@@ -441,7 +438,7 @@ public class SoftBodySimulation
 		anr *= 3; 
 		bnr *= 3;
 
-		a[anr + 0] = b[bnr + 0];
+		a[anr    ] = b[bnr    ];
 		a[anr + 1] = b[bnr + 1];
 		a[anr + 2] = b[bnr + 2];
 	}
@@ -452,7 +449,7 @@ public class SoftBodySimulation
 		anr *= 3; 
 		bnr *= 3;
 		
-		a[anr + 0] += b[bnr + 0] * scale;
+		a[anr    ] += b[bnr    ] * scale;
 		a[anr + 1] += b[bnr + 1] * scale;
 		a[anr + 2] += b[bnr + 2] * scale;
 	}
@@ -464,18 +461,18 @@ public class SoftBodySimulation
 		anr *= 3; 
 		bnr *= 3;
 		
-		diff[dnr + 0] = (a[anr + 0] - b[bnr + 0]) * scale;
+		diff[dnr    ] = (a[anr    ] - b[bnr    ]) * scale;
 		diff[dnr + 1] = (a[anr + 1] - b[bnr + 1]) * scale;
 		diff[dnr + 2] = (a[anr + 2] - b[bnr + 2]) * scale;
 	}
 
 
-	//lengthSqr(a) 
+	//sqrMagnitude(a) 
 	private float VecLengthSquared(float[] a, int anr)
 	{
 		anr *= 3;
 
-		float a0 = a[anr + 0]; 
+		float a0 = a[anr    ]; 
 		float a1 = a[anr + 1]; 
 		float a2 = a[anr + 2];
 		
@@ -483,8 +480,8 @@ public class SoftBodySimulation
 
 		return lengthSqr;
 	}
-
-	//lengthSqr(a - b)
+	
+	//sqrMagnitude(a - b)
 	private float VecDistSquared(float[] a, int anr, float[] b, int bnr)
 	{
 		anr *= 3; 
@@ -517,10 +514,11 @@ public class SoftBodySimulation
 		bnr *= 3; 
 		cnr *= 3;
 		
-		a[anr + 0] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
-		a[anr + 1] = b[bnr + 2] * c[cnr + 0] - b[bnr + 0] * c[cnr + 2];
-		a[anr + 2] = b[bnr + 0] * c[cnr + 1] - b[bnr + 1] * c[cnr + 0];
+		a[anr    ] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
+		a[anr + 1] = b[bnr + 2] * c[cnr    ] - b[bnr    ] * c[cnr + 2];
+		a[anr + 2] = b[bnr    ] * c[cnr + 1] - b[bnr + 1] * c[cnr    ];
 	}
+
 
 
 	//
@@ -530,12 +528,16 @@ public class SoftBodySimulation
 	//Move all vertices a distance of (x, y, z)
 	private void Translate(float x, float y, float z)
 	{
+		float[] moveDist = new float[] { x, y, z };
+
 		for (var i = 0; i < this.numParticles; i++)
 		{
-			VecAdd(this.pos, i, new float[] { x, y, z }, 0);
-			VecAdd(this.prevPos, i, new float[] { x, y, z }, 0);
+			VecAdd(this.pos,     i, moveDist, 0);
+			VecAdd(this.prevPos, i, moveDist, 0);
 		}
 	}
+
+
 
 	//Calculate the volume of a tetrahedron
 	//V = 1/6 * (a x b) * c where a,b,c all originate from the same vertex 

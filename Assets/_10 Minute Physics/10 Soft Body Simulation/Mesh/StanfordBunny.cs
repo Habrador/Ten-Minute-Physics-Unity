@@ -19,7 +19,7 @@ public class StanfordBunny : TetrahedronData
 
 	public StanfordBunny()
 	{
-		//Convert from double to float so I dont have to add an f behind each coordinate in vertsDouble
+		//Convert from double to float
 		verts = new float[vertsDouble.Length];
 
 		for (int i = 0; i < vertsDouble.Length; i++)
@@ -30,7 +30,8 @@ public class StanfordBunny : TetrahedronData
 
 
 
-	//These arrays are copied from the tutorial and you can create your own by using a tetrahedralizer
+	//The data is copied from the tutorial and you can create your own by using a tetrahedralizer
+	//https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/10-softBodies.html
 
 	//Vertices (x, y, z) come after each other so divide by 3 to get total vertices
 	private readonly double[] vertsDouble =

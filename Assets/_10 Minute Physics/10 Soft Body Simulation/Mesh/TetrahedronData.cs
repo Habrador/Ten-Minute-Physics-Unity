@@ -55,4 +55,8 @@ public abstract class TetrahedronData
     //How many vertices are there?
     public int GetNumberOfVertices => GetVerts.Length / 3;
 
+    //How many edges are there?
+    //There are 2 vertices per edge, hence we have to divide by 2 to get how many edges we have
+    public int GetNumberOfEdges => GetTetEdgeIds.Length / 2;
+
 }
