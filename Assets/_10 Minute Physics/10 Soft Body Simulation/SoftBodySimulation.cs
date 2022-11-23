@@ -19,6 +19,7 @@ public class SoftBodySimulation
 	//The length of an edge before deformation
 	private readonly float[] restEdgeLengths;
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
+	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
 	//Needed when we calculate the volume of a tetrahedron so we don't have to create an array a million times
 	private readonly float[] temp = new float[4 * 3];
@@ -50,6 +51,7 @@ public class SoftBodySimulation
 	private int grabId = -1;
 	private float grabInvMass = 0f;
 
+	private bool simulate = true;
 
 
 	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
@@ -101,6 +103,11 @@ public class SoftBodySimulation
 
 	public void MyFixedUpdate()
 	{
+		if (!simulate)
+		{
+			return;
+        }
+	
 		Simulate();
 	}
 
@@ -108,10 +115,18 @@ public class SoftBodySimulation
 
 	public void MyUpdate()
 	{
+		simulate = true;
+	
 		if (Input.GetKey(KeyCode.Space))
 		{
 			Yeet();
-			//Squash();
+		}
+
+		if (Input.GetMouseButton(1))
+		{
+			Squeeze();
+
+			simulate = false;
 		}
 	}
 
@@ -185,10 +200,12 @@ public class SoftBodySimulation
 
 
 
+	//Move the particles and handle environment collision
 	void PreSolve(float dt, float[] gravity)
 	{
 		for (var i = 0; i < this.numParticles; i++)
 		{
+			//This means the particle is fixed, so don't simulate it
 			if (this.invMass[i] == 0f)
 			{
 				continue;
@@ -203,6 +220,8 @@ public class SoftBodySimulation
 			//x = x + dt * v
 			VecAdd(this.pos, i, this.vel, i, dt);
 			
+
+			//Handle environment collision
 
 			//Floor collision
 			float y = this.pos[3 * i + 1];
@@ -219,6 +238,7 @@ public class SoftBodySimulation
 
 
 
+	//Handle the soft body physics
 	void SolveConstraints(float dt)
 	{
 		//Constraints
@@ -233,6 +253,7 @@ public class SoftBodySimulation
 
 
 
+	//Fix velocity
 	void PostSolve(float dt)
 	{
 		for (var i = 0; i < this.numParticles; i++)
@@ -455,6 +476,7 @@ public class SoftBodySimulation
 	}
 
 	//diff = (a - b) * scale
+	//Need the scale to simplify this v = (x - xPrev) / dt then scale is 1f/dt
 	private void VecSetDiff(float[] diff, int dnr, float[] a, int anr, float[] b, int bnr, float scale = 1f)
 	{
 		dnr *= 3; 
@@ -594,7 +616,6 @@ public class SoftBodySimulation
 			this.pos[3 * i + 1] = this.floorHeight + 0.01f;
 		}
 
-		//Is needed!
 		UpdateMeshes();
 	}
 
