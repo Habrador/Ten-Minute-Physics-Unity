@@ -21,9 +21,10 @@ public class SoftBodySimulation
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
-	//Needed when we calculate the volume of a tetrahedron so we don't have to create an array a million times
+	//These two arrays should be global so we don't have to create them a million times
+	//Needed when we calculate the volume of a tetrahedron
 	private readonly float[] temp = new float[4 * 3];
-	//Gradients needed when we calculate the edge and volume constraints
+	//Gradients needed when we calculate the edge and volume constraints 
 	private readonly float[] grads = new float[4 * 3];
 
 	//The Unity mesh to display the soft body mesh
@@ -180,15 +181,16 @@ public class SoftBodySimulation
 
 
 
+	//Main soft body simulation loop
 	void Simulate()
 	{
 		float dt = Time.fixedDeltaTime;
 
-		var sdt = dt / this.numSubSteps;
+		float sdt = dt / this.numSubSteps;
 
-		for (var step = 0; step < this.numSubSteps; step++)
+		for (int step = 0; step < this.numSubSteps; step++)
 		{
-			PreSolve(sdt, gravity);
+			PreSolve(sdt, this.gravity);
 
 			SolveConstraints(sdt);
 
@@ -203,6 +205,7 @@ public class SoftBodySimulation
 	//Move the particles and handle environment collision
 	void PreSolve(float dt, float[] gravity)
 	{
+		//For each particle
 		for (var i = 0; i < this.numParticles; i++)
 		{
 			//This means the particle is fixed, so don't simulate it
@@ -242,10 +245,11 @@ public class SoftBodySimulation
 	void SolveConstraints(float dt)
 	{
 		//Constraints
-		//x = x + deltaX where deltaX is the correction vector
-		//deltaX = lambda * w * gradC
-		//lambda = -C / (w1 * abs(grad_C1)^2 + w2 * abs(grad_C2)^2 + ... + (alpha / dt^2)) where w1, w2, ... wn is the number of participating particles in the constraint. n=2 if we have an edge, n=4 if we have a tetra
-		//alpha = compliance
+		//Enforce constraints by moving each vertex: x = x + deltaX
+		//- Correction vector: deltaX = lambda * w * gradC
+		//- Inverse mass: w
+		//- lambda = -C / (w1 * |grad_C1|^2 + w2 * |grad_C2|^2 + ... + wn * |grad_C|^2 + (alpha / dt^2)) where 1, 2, ... n is the number of participating particles in the constraint. n = 2 if we have an edge, n = 4 if we have a tetra. |grad_C1|^2 is the squared length
+		//- Compliance: alpha
 
 		this.SolveEdges(this.edgeCompliance, dt);
 		this.SolveVolumes(this.volCompliance, dt);
@@ -256,6 +260,7 @@ public class SoftBodySimulation
 	//Fix velocity
 	void PostSolve(float dt)
 	{
+		//For each particle
 		for (var i = 0; i < this.numParticles; i++)
 		{
 			if (this.invMass[i] == 0f)
@@ -271,50 +276,64 @@ public class SoftBodySimulation
 
 	//Solve distance constraint
 	//2 particles:
-	//Positions: x1, x2
-	//Inverse mass: w1, w2
+	//Positions: x0, x1
+	//Inverse mass: w0, w1
 	//Rest length l_rest
 	//Current length: l
 	//Constraint function: C = l - l_rest which is 0 when the constraint is fulfilled 
-	//Gradients of constraint function grad_C1 = (x2 - x1) / abs(x2 - x1) and grad_C2 = -grad_C1
-	//delta_x1 = w1 / (w1 + w2) * C * grad_C1
-	//delta_x2 = w2 / (w1 + w2) * C * grad_C2
+	//Gradients of constraint function grad_C0 = (x1 - x0) / abs(x1 - x0) and grad_C1 = -grad_C0
 	//Which was shown here https://www.youtube.com/watch?v=jrociOAYqxA (13:30)
 	void SolveEdges(float compliance, float dt)
 	{
-		var alpha = compliance / dt / dt;
+		float alpha = compliance / (dt * dt);
 
+		//For each edge
 		for (int i = 0; i < this.restEdgeLengths.Length; i++)
 		{
-			int id0 = this.tetEdgeIds[2 * i];
+			//2 vertices per edge in the data structure, so multiply by 2 to get the correct vertex index
+			int id0 = this.tetEdgeIds[2 * i    ];
 			int id1 = this.tetEdgeIds[2 * i + 1];
 
 			float w0 = this.invMass[id0];
 			float w1 = this.invMass[id1];
 			float w = w0 + w1;
 			
+			//This edge is fixed so dont simulate
 			if (w == 0f)
 			{
 				continue;
 			}
 
-			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
-			
-			float len = Mathf.Sqrt(VecLengthSquared(this.grads, 0));
+			//The current length of the edge l
 
-			if (len == 0.0f)
+			//x0-x1
+			//The result is stored in grads array
+			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
+
+			//sqrMargnitude(x0-x1)
+			float lSqr = VecLengthSquared(this.grads, 0);
+
+			float l = Mathf.Sqrt(lSqr);
+
+			//If they are at the same pos we get a divisio by 0 later so ignore
+			if (l == 0f)
 			{
 				continue;
 			}
 
-			VecScale(this.grads, 0, 1.0f / len);
+			//(xo-x1) * (1/abs(x0-x1)) = gradC
+			VecScale(this.grads, 0, 1f / l);
 			
-			float restLen = this.restEdgeLengths[i];
-			float C = len - restLen;
-			float s = -C / (w + alpha);
+			float l_rest = this.restEdgeLengths[i];
 			
-			VecAdd(this.pos, id0, this.grads, 0, s * w0);
-			VecAdd(this.pos, id1, this.grads, 0, -s * w1);
+			float C = l - l_rest;
+
+			//lambda because |grad_Cn|^2 = 1 and w = w0 + w1
+			float lambda = -C / (w + alpha);
+			
+			//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
+			VecAdd(this.pos, id0, this.grads, 0, lambda * w0);
+			VecAdd(this.pos, id1, this.grads, 0, -lambda * w1);
 		}
 	}
 
@@ -328,12 +347,13 @@ public class SoftBodySimulation
 	//grad_C3 = (x4-x1)x(x2-x1)
 	//grad_C4 = (x2-x1)x(x3-x1)
 	//V = 1/6 * ((x2-x1)x(x3-x1))*(x4-x1)
-	//lambda =  6(V - V_rest) / (w1 * abs(grad_C1)^2 + w2 * abs(grad_C2)^2 + w3 * abs(grad_C3)^2 + w4 * abs(grad_C4)^2)
+	//lambda =  6(V - V_rest) / (w1 * |grad_C1|^2 + w2 * |grad_C2|^2 + w3 * |grad_C3|^2 + w4 * |grad_C4|^2)
 	//delta_xi = -lambda * w_i * grad_Ci
 	void SolveVolumes(float compliance, float dt)
 	{
-		var alpha = compliance / dt / dt;
+		float alpha = compliance / (dt * dt);
 
+		//For each tetra
 		for (int i = 0; i < this.numTets; i++)
 		{
 			float w = 0f;
