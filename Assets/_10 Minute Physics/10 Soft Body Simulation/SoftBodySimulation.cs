@@ -383,9 +383,9 @@ public class SoftBodySimulation
 				//(x4 - x2)x(x3 - x2)
 				VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
 				
-				//The guy in the video is dividing by 6 in the code but multiplying in the video
-				//It makes no difference if we just do nothing...
-				//VecScale(this.grads, j, 1f / 6f);
+				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
+				//Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
+				VecScale(this.grads, j, 1f / 6f);
 
 				//w1 * |grad_C1|^2
 				wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
