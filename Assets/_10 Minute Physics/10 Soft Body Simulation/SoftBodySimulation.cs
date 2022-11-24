@@ -49,6 +49,7 @@ public class SoftBodySimulation
 
 	//Environment collision data 
 	private readonly float floorHeight = 0f;
+	private readonly Vector3 halfPlayGroundSize = new Vector3(8f, 8f, 5f); 
 
 
 	//Grabbing with mouse to move mesh around
@@ -237,19 +238,50 @@ public class SoftBodySimulation
 
 			//x = x + dt * v
 			VecAdd(this.pos, i, this.vel, i, dt);
-			
+
 
 			//Handle environment collision
 
 			//Floor collision
+			float x = this.pos[3 * i + 0];
 			float y = this.pos[3 * i + 1];
-			
+			float z = this.pos[3 * i + 2];
+
 			if (y < 0f)
 			{
 				//Set the pos to previous pos
 				VecCopy(this.pos, i, this.prevPos, i);
 				//But the y of the previous pos should be at the ground
 				this.pos[3 * i + 1] = 0f;
+			}
+			else if (y > halfPlayGroundSize.y)
+			{
+				VecCopy(this.pos, i, this.prevPos, i);
+				this.pos[3 * i + 1] = halfPlayGroundSize.y;
+			}
+
+			//X
+			if (x < -halfPlayGroundSize.x)
+			{
+				VecCopy(this.pos, i, this.prevPos, i);
+				this.pos[3 * i + 0] = -halfPlayGroundSize.x;
+			}
+			else if (x > halfPlayGroundSize.x)
+			{
+				VecCopy(this.pos, i, this.prevPos, i);
+				this.pos[3 * i + 0] = halfPlayGroundSize.x;
+			}
+
+			//Z
+			if (z < -halfPlayGroundSize.z)
+			{
+				VecCopy(this.pos, i, this.prevPos, i);
+				this.pos[3 * i + 2] = -halfPlayGroundSize.z;
+			}
+			else if (z > halfPlayGroundSize.z)
+			{
+				VecCopy(this.pos, i, this.prevPos, i);
+				this.pos[3 * i + 2] = halfPlayGroundSize.z;
 			}
 		}
 	}

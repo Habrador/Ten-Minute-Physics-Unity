@@ -38,7 +38,7 @@ public class SoftBodyController : MonoBehaviour
 
             TetrahedronData softBodyMesh = new StanfordBunny();
 
-            Vector3 startPos = new Vector3(0f + Random.Range(0, 10), 20f, 0f);
+            Vector3 startPos = new Vector3(0f + Random.Range(0, 2), 10f, 0f);
 
             float bunnyScale = 2f;
 
