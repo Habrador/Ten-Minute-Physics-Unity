@@ -17,7 +17,7 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private List<SoftBodySimulation> allSoftBodies = new ();
 
-    private int numberOfBodies = 1;
+    private int numberOfBodies = 2;
 
     private const int SEED = 0;
 
@@ -38,7 +38,12 @@ public class SoftBodyController : MonoBehaviour
 
             TetrahedronData softBodyMesh = new StanfordBunny();
 
-            Vector3 startPos = new Vector3(0f + Random.Range(0, 2), 10f, 0f);
+            float halfPlayground = 4f;
+
+            float randomX = Random.Range(-halfPlayground, halfPlayground);
+            float randomZ = Random.Range(-halfPlayground, halfPlayground);
+
+            Vector3 startPos = new Vector3(randomX, 10f, randomZ);
 
             float bunnyScale = 2f;
 
@@ -73,7 +78,9 @@ public class SoftBodyController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            grabber.StartGrab(allSoftBodies[0]);
+            List<IGrabbable> temp = new List<IGrabbable>(allSoftBodies);
+        
+            grabber.StartGrab(temp);
         }
 
         if (Input.GetMouseButtonUp(0))

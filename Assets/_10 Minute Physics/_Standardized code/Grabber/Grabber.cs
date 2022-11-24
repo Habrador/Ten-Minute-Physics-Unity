@@ -28,7 +28,7 @@ public class Grabber
 
 
 
-    public void StartGrab(IGrabbable softBody)
+    public void StartGrab(List<IGrabbable> bodies)
     {
         if (grabbedBody != null)
         {
@@ -38,24 +38,48 @@ public class Grabber
         //A ray from the mouse into the scene
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        softBody.IsRayHittingBody(ray, out CustomHit hit);
+        float maxDist = float.MaxValue;
 
-        if (hit != null)
+        IGrabbable closestBody = null;
+
+        CustomHit closestHit = default;
+
+        foreach (IGrabbable body in bodies)
         {
-            //Debug.Log("Ray hit");
+            body.IsRayHittingBody(ray, out CustomHit hit);
 
-            grabbedBody = softBody;
+            if (hit != null)
+            {
+                //Debug.Log("Ray hit");
 
-            //StartGrab is finding the closest vertex and setting it to the position where the ray hit the triangle
-            grabbedBody.StartGrab(hit.location);
+                //Debug.Log(hit.distance);
 
-            lastGrabPos = hit.location;
+                if (hit.distance < maxDist)
+                {
+                    closestBody = body;
 
-            distanceToGrabPos = (ray.origin - hit.location).magnitude;
+                    maxDist = hit.distance;
+
+                    closestHit = hit;
+                }
+            }
+            else
+            {
+                //Debug.Log("Ray missed");
+            }
         }
-        else
+
+        if (closestBody != null)
         {
-            //Debug.Log("Ray missed");
+            grabbedBody = closestBody;
+        
+            //StartGrab is finding the closest vertex and setting it to the position where the ray hit the triangle
+            closestBody.StartGrab(closestHit.location);
+
+            lastGrabPos = closestHit.location;
+
+            //distanceToGrabPos = (ray.origin - hit.location).magnitude;
+            distanceToGrabPos = closestHit.distance;
         }
     }
 

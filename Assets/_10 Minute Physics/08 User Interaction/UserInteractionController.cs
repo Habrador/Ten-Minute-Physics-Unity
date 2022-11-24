@@ -59,7 +59,11 @@ public class UserInteractionController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            grabber.StartGrab(ball);
+            List<IGrabbable> temp = new List<IGrabbable>();
+
+            temp.Add(ball);
+        
+            grabber.StartGrab(temp);
         }
 
         if (Input.GetMouseButtonUp(0))
