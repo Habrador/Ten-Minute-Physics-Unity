@@ -59,6 +59,13 @@ namespace UserInteraction
 
 
 
+        public Vector3 GetGrabbedPos()
+        {
+            return this.pos;
+        }
+
+
+
         //
         // Methods related to the simulation of the ball physics
         //

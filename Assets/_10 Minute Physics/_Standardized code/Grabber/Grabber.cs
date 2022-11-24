@@ -9,7 +9,7 @@ public class Grabber
     private readonly Camera mainCamera;
 
     //The mesh we grab
-    private IGrabbable grabbedSoftBody = null;
+    private IGrabbable grabbedBody = null;
 
     //Mesh grabbing data
 
@@ -30,7 +30,7 @@ public class Grabber
 
     public void StartGrab(IGrabbable softBody)
     {
-        if (grabbedSoftBody != null)
+        if (grabbedBody != null)
         {
             return;
         }
@@ -44,10 +44,10 @@ public class Grabber
         {
             //Debug.Log("Ray hit");
 
-            grabbedSoftBody = softBody;
+            grabbedBody = softBody;
 
             //StartGrab is finding the closest vertex and setting it to the position where the ray hit the triangle
-            grabbedSoftBody.StartGrab(hit.location);
+            grabbedBody.StartGrab(hit.location);
 
             lastGrabPos = hit.location;
 
@@ -64,7 +64,7 @@ public class Grabber
 
     public void MoveGrab()
     {
-        if (grabbedSoftBody == null)
+        if (grabbedBody == null)
         {
             return;
         }
@@ -74,17 +74,18 @@ public class Grabber
 
         Vector3 vertexPos = ray.origin + ray.direction * distanceToGrabPos;
 
-        lastGrabPos = vertexPos;
+        //Cache the old pos before we assign it
+        lastGrabPos = grabbedBody.GetGrabbedPos();
 
         //Moved the vertex to the new pos
-        grabbedSoftBody.MoveGrabbed(vertexPos);
+        grabbedBody.MoveGrabbed(vertexPos);
     }
 
 
 
     public void EndGrab()
     {
-        if (grabbedSoftBody == null)
+        if (grabbedBody == null)
         {
             return;
         }
@@ -97,11 +98,11 @@ public class Grabber
         Vector3 grabPos = ray.origin + ray.direction * distanceToGrabPos;
 
         float vel = (grabPos - lastGrabPos).magnitude / Time.deltaTime;
-
+        
         Vector3 dir = (grabPos - lastGrabPos).normalized;
 
-        grabbedSoftBody.EndGrab(grabPos, dir * vel);
+        grabbedBody.EndGrab(grabPos, dir * vel);
 
-        grabbedSoftBody = null;
+        grabbedBody = null;
     }
 }

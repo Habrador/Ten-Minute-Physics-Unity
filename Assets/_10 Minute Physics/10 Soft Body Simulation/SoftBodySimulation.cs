@@ -785,5 +785,14 @@ public class SoftBodySimulation : IGrabbable
 		//Find if the ray hit a triangle in the mesh
 		UsefulMethods.IsRayHittingMesh(ray, vertices, triangles, out hit);
 	}
+
+
+
+	public Vector3 GetGrabbedPos()
+	{
+		Vector3 grabbedPos = new Vector3(pos[3 * grabId + 0], pos[3 * grabId + 1], pos[3 * grabId + 2]);
+
+		return grabbedPos;
+    }
 }
 

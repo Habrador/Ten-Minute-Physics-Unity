@@ -11,4 +11,6 @@ public interface IGrabbable
     public void EndGrab(Vector3 grabPos, Vector3 vel);
 
     public void IsRayHittingBody(Ray ray, out CustomHit hit);
+
+    public Vector3 GetGrabbedPos();
 }
