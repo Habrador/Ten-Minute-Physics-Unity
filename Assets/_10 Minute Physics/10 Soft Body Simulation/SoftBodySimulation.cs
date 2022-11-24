@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SoftBodySimulation
+public class SoftBodySimulation : IGrabbable
 {
 	//Tetrahedralizer data structures
 	private readonly TetrahedronData tetraData;
@@ -758,7 +758,7 @@ public class SoftBodySimulation
 
 
 
-	public void EndGrab(Vector3 vel)
+	public void EndGrab(Vector3 newPos, Vector3 vel)
 	{
 		if (this.grabId >= 0)
 		{
@@ -771,6 +771,19 @@ public class SoftBodySimulation
 		}
 
 		this.grabId = -1;
+	}
+
+
+
+	public void IsRayHittingBody(Ray ray, out CustomHit hit)
+	{
+		//Mesh data
+		Vector3[] vertices = GetMeshVertices.ToArray();
+
+		int[] triangles = GetMeshTriangles;
+
+		//Find if the ray hit a triangle in the mesh
+		UsefulMethods.IsRayHittingMesh(ray, vertices, triangles, out hit);
 	}
 }
 

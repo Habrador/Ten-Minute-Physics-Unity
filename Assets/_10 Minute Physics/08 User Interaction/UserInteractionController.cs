@@ -18,7 +18,7 @@ public class UserInteractionController : MonoBehaviour
     private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 
     //What we use to grab the balls
-    private BallGrabber grabber;
+    private Grabber grabber;
 
     
 
@@ -31,7 +31,7 @@ public class UserInteractionController : MonoBehaviour
         ball.vel = new Vector3(3f, 5f, 2f);
 
         //Init the grabber
-        grabber = new BallGrabber(Camera.main);
+        grabber = new Grabber(Camera.main);
 
         Cursor.visible = true;
 

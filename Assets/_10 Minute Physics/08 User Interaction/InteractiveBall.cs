@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UserInteraction
 {
-    public class InteractiveBall : Ball
+    public class InteractiveBall : Ball, IGrabbable
     {
         //Has the user grabbed this ball with the mouse?
         //So the ball is no longer updating with physics
@@ -46,14 +46,14 @@ namespace UserInteraction
             this.vel = vel;
         }
 
-
-        public void IsRayHittingThisBall(Ray ray, out CustomHit hit)
+       
+        public void IsRayHittingBody(Ray ray, out CustomHit hit)
         {
             hit = null;
 
             if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
             {
-                hit = new CustomHit(hitDistance, this);
+                hit = new CustomHit(hitDistance, Vector3.zero, Vector3.zero);
             }
         }
 
