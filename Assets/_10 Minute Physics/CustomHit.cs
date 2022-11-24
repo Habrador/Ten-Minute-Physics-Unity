@@ -7,7 +7,9 @@ public class CustomHit
     //The distance along the ray to where the ray hit the object
     public float distance;
 
+    //Point of intersection
     public Vector3 location;
+    //Normal of the surface where the ray hit
     public Vector3 normal; 
 
     //What is index? Currently assumed to be the index of the first vertex of the triangle

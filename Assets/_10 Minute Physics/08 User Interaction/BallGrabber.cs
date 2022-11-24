@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace UserInteraction
 {
-    public class Grabber
+    public class BallGrabber
     {
         //Data needed 
-        private Camera mainCamera;
+        private readonly Camera mainCamera;
 
         //Ball grabbing data
         private float distanceToBall;
@@ -19,7 +19,7 @@ namespace UserInteraction
 
 
 
-        public Grabber(Camera mainCamera)
+        public BallGrabber(Camera mainCamera)
         {
             this.mainCamera = mainCamera;
         }

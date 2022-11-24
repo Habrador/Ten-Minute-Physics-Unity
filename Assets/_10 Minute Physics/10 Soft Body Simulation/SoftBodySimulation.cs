@@ -5,6 +5,7 @@ using UnityEngine;
 public class SoftBodySimulation
 {
 	//Tetrahedralizer data structures
+	private readonly TetrahedronData tetraData;
 	private readonly int[] tetIds;
 	private readonly int[] tetEdgeIds;
 
@@ -49,16 +50,25 @@ public class SoftBodySimulation
 	//Environment collision data 
 	private readonly float floorHeight = 0f;
 
-	//Grabbing with mouse
+
+	//Grabbing with mouse to move mesh around
+	
+	//The id of the particle we grabed with mouse
 	private int grabId = -1;
 	//We grab a single particle and then we sit its inverted mass to 0. When we ungrab we have to reset its inverted mass to what itb was before 
 	private float grabInvMass = 0f;
+	//For custom raycasting
+	public List<Vector3> GetMeshVertices => GenerateMeshVertices(pos);
+	public int[] GetMeshTriangles => tetraData.GetTetSurfaceTriIds;
+	public int GetGrabId => grabId; 
 
 
 
 	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
 	{
 		//Tetra data structures
+		this.tetraData = tetraData;
+
 		float[] verts = tetraData.GetVerts;
 
 		this.tetIds = tetraData.GetTetIds;
@@ -667,10 +677,12 @@ public class SoftBodySimulation
 
 
 
-	private void StartGrab(float[] pos)
+	//Input pos is the pos in a triangle we get when doing ray-triangle intersection
+	public void StartGrab(Vector3 triangleIntersectionPos)
 	{
-		float[] p = new float[] { pos[0], pos[1], pos[2] };
+		float[] p = new float[] { triangleIntersectionPos.x, triangleIntersectionPos.y, triangleIntersectionPos.z };
 
+		//Find the closest vertex to the pos on a triangle in the mesh
 		float minD2 = float.MaxValue;
 		
 		this.grabId = -1;
@@ -695,18 +707,18 @@ public class SoftBodySimulation
 			//Set the inverted mass to 0 to mark it as fixed
 			this.invMass[this.grabId] = 0f;
 
-			//Set the position of the vertex to the position of the mouse coordinate
+			//Set the position of the vertex to the position where the ray hit the triangle
 			VecCopy(this.pos, this.grabId, p, 0);
 		}
 	}
 
 
 
-	private void MoveGrabbed(float[] pos)
+	public void MoveGrabbed(Vector3 newPos)
 	{
 		if (this.grabId >= 0)
 		{
-			float[] p = new float[] { pos[0], pos[1], pos[2] };
+			float[] p = new float[] { newPos.x, newPos.y, newPos.z };
 
 			VecCopy(this.pos, this.grabId, p, 0);
 		}
@@ -714,14 +726,14 @@ public class SoftBodySimulation
 
 
 
-	private void EndGrab(float[] vel)
+	public void EndGrab(Vector3 vel)
 	{
 		if (this.grabId >= 0)
 		{
 			//Set the mass to whatever mass it was before we grabbed it
 			this.invMass[this.grabId] = this.grabInvMass;
 
-			float[] v = new float[] { vel[0], vel[1], vel[2] };
+			float[] v = new float[] { vel.x, vel.y, vel.z };
 			
 			VecCopy(this.vel, this.grabId, v, 0);
 		}

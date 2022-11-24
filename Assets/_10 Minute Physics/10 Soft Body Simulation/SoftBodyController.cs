@@ -1,19 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UserInteraction;
+
 
 //Simple and unbreakable simulation of soft bodies using Extended Position Based Dynamics (XPBD)
 //Based on https://matthias-research.github.io/pages/tenMinutePhysics/index.html
 public class SoftBodyController : MonoBehaviour
 {
+    //Public
     public GameObject softBodyMeshPrefabGO;
+    
+    public Texture2D cursorTexture;
 
 
+    //Private
     private List<SoftBodySimulation> allSoftBodies = new ();
 
     private int numberOfBodies = 1;
 
     private const int SEED = 0;
+
+    //What we use to grab the balls
+    private Grabber grabber;
 
 
 
@@ -37,6 +46,13 @@ public class SoftBodyController : MonoBehaviour
 
             allSoftBodies.Add(softBodySimulation);
         }
+
+        //Init the grabber
+        grabber = new Grabber(Camera.main);
+
+        Cursor.visible = true;
+
+        Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.ForceSoftware);
     }
 
 
@@ -46,6 +62,23 @@ public class SoftBodyController : MonoBehaviour
         foreach(SoftBodySimulation softBody in allSoftBodies)
         {
             softBody.MyUpdate();
+        }
+
+        grabber.MoveGrab();
+    }
+
+
+
+    private void LateUpdate()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            grabber.StartGrab(allSoftBodies[0]);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            grabber.EndGrab();
         }
     }
 
