@@ -433,6 +433,8 @@ public class SoftBodySimulation
 
 		mesh.SetVertices(vertices);
 		mesh.triangles = tetraData.GetTetSurfaceTriIds;
+
+		mesh.RecalculateBounds();
 		mesh.RecalculateNormals();
 
 		meshFilter.sharedMesh = mesh;
@@ -447,6 +449,7 @@ public class SoftBodySimulation
 		List<Vector3> vertices = GenerateMeshVertices(this.pos);
 
 		this.softBodyMesh.SetVertices(vertices);
+
 		this.softBodyMesh.RecalculateBounds();
 		this.softBodyMesh.RecalculateNormals();
 	}
@@ -699,7 +702,7 @@ public class SoftBodySimulation
 
 
 
-	private void MoveGrabbed(float[] pos, float[] vel)
+	private void MoveGrabbed(float[] pos)
 	{
 		if (this.grabId >= 0)
 		{
@@ -711,7 +714,7 @@ public class SoftBodySimulation
 
 
 
-	private void EndGrab()
+	private void EndGrab(float[] vel)
 	{
 		if (this.grabId >= 0)
 		{
