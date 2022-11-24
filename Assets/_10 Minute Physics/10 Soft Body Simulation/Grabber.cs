@@ -38,8 +38,13 @@ public class Grabber
         //A ray from the mouse into the scene
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
+        //Mesh data
+        Vector3[] vertices = softBody.GetMeshVertices.ToArray();
+
+        int[] triangles = softBody.GetMeshTriangles;
+
         //Find if the ray hit a triangle in the mesh
-        CustomPhysicsRaycast(ray, out CustomHit hit, softBody);
+        UsefulMethods.IsRayHittingMesh(ray, vertices, triangles, out CustomHit hit);
 
         if (hit != null)
         {
@@ -104,17 +109,5 @@ public class Grabber
         grabbedSoftBody.EndGrab(dir * vel);
 
         grabbedSoftBody = null;
-    }
-
-
-
-    //Cant use Physics.Raycast because it requires a mesh collider
-    private void CustomPhysicsRaycast(Ray ray, out CustomHit hit, SoftBodySimulation softBody)
-    {
-        hit = null;
-
-        List<Vector3> vertices = softBody.GetMeshVertices;
-
-        int[] triangles = softBody.GetMeshTriangles; 
     }
 }
