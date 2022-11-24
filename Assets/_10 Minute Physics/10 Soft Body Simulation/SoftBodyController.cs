@@ -17,7 +17,7 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private List<SoftBodySimulation> allSoftBodies = new ();
 
-    private int numberOfBodies = 2;
+    private int numberOfBodies = 1;
 
     private const int SEED = 0;
 

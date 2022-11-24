@@ -46,6 +46,13 @@ Catch and throw a ball with your mouse
 <img src="/_media/08-user-interaction.png" width="400">
 
 
+## 10. Simple and unbreakable simulation of soft bodies
+
+Basic soft body bunny physics. You can flatten it and throw it around with your mouse. 
+
+<img src="/_media/10-soft-body.gif" width="400">
+
+
 ## 11. Find overlaps among thousands of objects blazing fast
 
 Implements a version of the [Spatial Partitioning design pattern](https://github.com/Habrador/Unity-Programming-Patterns) called "Spatial Hashing" which is really useful if you have an unbounded grid. 
