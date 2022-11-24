@@ -49,7 +49,7 @@ public class SoftBodySimulation : IGrabbable
 
 	//Environment collision data 
 	private readonly float floorHeight = 0f;
-	private readonly Vector3 halfPlayGroundSize = new Vector3(8f, 8f, 3f); 
+	private readonly Vector3 halfPlayGroundSize = new Vector3(5f, 8f, 5f); 
 
 
 	//Grabbing with mouse to move mesh around
