@@ -9,45 +9,65 @@ public class SoftBodyController : MonoBehaviour
     public GameObject softBodyMeshPrefabGO;
 
 
-    private SoftBodySimulation softBodySimulation;
+    private List<SoftBodySimulation> allSoftBodies = new ();
+
+    private int numberOfBodies = 1;
+
+    private const int SEED = 0;
 
 
 
     private void Start()
     {
-        GameObject bunnyGO = Instantiate(softBodyMeshPrefabGO);
+        Random.InitState(SEED);
     
-        MeshFilter meshFilter = bunnyGO.GetComponent<MeshFilter>();
+        for (int i = 0; i < numberOfBodies; i++)
+        {
+            GameObject bunnyGO = Instantiate(softBodyMeshPrefabGO);
 
-        TetrahedronData softBodyMesh = new StanfordBunny();
+            MeshFilter meshFilter = bunnyGO.GetComponent<MeshFilter>();
 
-        Vector3 startPos = new Vector3(0f, 20f, 0f);
+            TetrahedronData softBodyMesh = new StanfordBunny();
 
-        float bunnyScale = 2f;
+            Vector3 startPos = new Vector3(0f + Random.Range(0, 10), 20f, 0f);
 
-        softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh, startPos, bunnyScale);
+            float bunnyScale = 2f;
+
+            SoftBodySimulation softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh, startPos, bunnyScale);
+
+            allSoftBodies.Add(softBodySimulation);
+        }
     }
 
 
 
     private void Update()
     {
-        softBodySimulation.MyUpdate();
+        foreach(SoftBodySimulation softBody in allSoftBodies)
+        {
+            softBody.MyUpdate();
+        }
     }
 
 
 
     private void FixedUpdate()
     {
-        softBodySimulation.MyFixedUpdate();
+        foreach (SoftBodySimulation softBody in allSoftBodies)
+        {
+            softBody.MyFixedUpdate();
+        }
     }
 
 
 
     private void OnDestroy()
     {
-        Mesh mesh = softBodySimulation.MyOnDestroy();
+        foreach (SoftBodySimulation softBody in allSoftBodies)
+        {
+            Mesh mesh = softBody.MyOnDestroy();
 
-        Destroy(mesh);
+            Destroy(mesh);
+        }
     }
 }
