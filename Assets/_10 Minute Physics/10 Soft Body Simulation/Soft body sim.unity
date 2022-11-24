@@ -500,3 +500,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   softBodyMeshPrefabGO: {fileID: 2855842333996432679, guid: 48e11e5925bedb74c92b70ca0bc8b7a4,
     type: 3}
+  cursorTexture: {fileID: 2800000, guid: 9502229508e68b04da8f92de5b1bd292, type: 3}
