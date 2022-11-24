@@ -2,18 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//Simple and unbreakable simulation of soft bodies
+//Simple and unbreakable simulation of soft bodies using Extended Position Based Dynamics (XPBD)
 //Based on https://matthias-research.github.io/pages/tenMinutePhysics/index.html
-[RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public class SoftBodyController : MonoBehaviour
 {
+    public GameObject softBodyMeshPrefabGO;
+
+
     private SoftBodySimulation softBodySimulation;
 
 
 
     private void Start()
     {
-        MeshFilter meshFilter = this.GetComponent<MeshFilter>();
+        GameObject bunnyGO = Instantiate(softBodyMeshPrefabGO);
+    
+        MeshFilter meshFilter = bunnyGO.GetComponent<MeshFilter>();
 
         TetrahedronData softBodyMesh = new StanfordBunny();
 
