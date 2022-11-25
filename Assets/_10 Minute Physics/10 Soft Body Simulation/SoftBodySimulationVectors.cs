@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class SoftBodySimulation : IGrabbable
+//Same as SoftBodySimulation but is using Vector3s instead of arrays where an index in the array is x, y, or z 
+public class SoftBodySimulationVectors : IGrabbable
 {
 	//Tetrahedralizer data structures
 	private readonly TetrahedronData tetraData;
@@ -11,9 +12,9 @@ public class SoftBodySimulation : IGrabbable
 	private readonly int[] tetEdgeIds;
 
 	//Same as in ball physics
-	private readonly float[] pos;
-	private readonly float[] prevPos;
-	private readonly float[] vel;
+	private readonly Vector3[] pos;
+	private readonly Vector3[] prevPos;
+	private readonly Vector3[] vel;
 
 	//For soft body physics using tetrahedrons
 	//The volume at start before deformation
@@ -23,11 +24,8 @@ public class SoftBodySimulation : IGrabbable
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
-	//These two arrays should be global so we don't have to create them a million times
-	//Needed when we calculate the volume of a tetrahedron
-	private readonly float[] temp = new float[4 * 3];
-	//Gradients needed when we calculate the edge and volume constraints 
-	private readonly float[] grads = new float[4 * 3];
+	//Should be global so we don't have to create them a million times
+	private readonly Vector3[] gradients = new Vector3[4];
 
 	//The Unity mesh to display the soft body mesh
 	private Mesh softBodyMesh;
@@ -37,7 +35,7 @@ public class SoftBodySimulation : IGrabbable
 	private readonly int numTets;
 
 	//Simulation settings
-	private readonly float[] gravity = new float[] { 0f, -9.81f, 0f };
+	private readonly Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 	private readonly int numSubSteps = 10;
 	private bool simulate = true;
 
@@ -60,7 +58,7 @@ public class SoftBodySimulation : IGrabbable
 	//We grab a single particle and then we sit its inverted mass to 0. When we ungrab we have to reset its inverted mass to what itb was before 
 	private float grabInvMass = 0f;
 	//For custom raycasting
-	public List<Vector3> GetMeshVertices => GenerateMeshVertices(pos);
+	//public List<Vector3> GetMeshVertices => new List<Vector3>(pos);
 	public int[] GetMeshTriangles => tetraData.GetTetSurfaceTriIds;
 	public int GetGrabId => grabId;
 
@@ -69,7 +67,7 @@ public class SoftBodySimulation : IGrabbable
 
 
 
-	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
+	public SoftBodySimulationVectors(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
 	{
 		//Tetra data structures
 		this.tetraData = tetraData;
@@ -83,19 +81,25 @@ public class SoftBodySimulation : IGrabbable
 		this.numTets = tetraData.GetNumberOfTetrahedrons;
 
 		//Init the pos, prev pos, and vel
-		this.pos = new float[verts.Length];
-		this.prevPos = new float[verts.Length];
+		this.pos = new Vector3[verts.Length / 3];
+
+		for (int i = 0; i < verts.Length; i += 3)
+		{
+			float x = verts[i + 0];
+			float y = verts[i + 1];
+			float z = verts[i + 2];
+
+			pos[i / 3] = new Vector3(x, y, z) * meshScale;
+		}
+
+		this.prevPos = new Vector3[verts.Length / 3];
 
 		for (int i = 0; i < pos.Length; i++)
 		{
-			pos[i] = verts[i];
-			pos[i] *= meshScale;
-
-			prevPos[i] = verts[i];
-			prevPos[i] *= meshScale;
+			prevPos[i] = pos[i];
 		}
-		
-		this.vel = new float[verts.Length];
+
+		this.vel = new Vector3[verts.Length / 3];
 
 		//Init the data structures that are new for soft body mesh
 		this.restVol = new float[this.numTets];
@@ -106,7 +110,7 @@ public class SoftBodySimulation : IGrabbable
 		InitSoftBodyPhysics();
 
 		//Move the mesh to its start position
-		Translate(startPos.x, startPos.y, startPos.z);
+		Translate(startPos);
 
 		//Init the mesh
 		InitMesh(meshFilter, tetraData);
@@ -195,7 +199,7 @@ public class SoftBodySimulation : IGrabbable
 			int id0 = this.tetEdgeIds[2 * i + 0];
 			int id1 = this.tetEdgeIds[2 * i + 1];
 
-			this.restEdgeLengths[i] = Mathf.Sqrt(VecDistSquared(this.pos, id0, this.pos, id1));
+			this.restEdgeLengths[i] = Vector3.Magnitude(this.pos[id0] - this.pos[id1]);
 		}
 	}
 
@@ -221,7 +225,7 @@ public class SoftBodySimulation : IGrabbable
 
 
 	//Move the particles and handle environment collision
-	void PreSolve(float dt, float[] gravity)
+	void PreSolve(float dt, Vector3 gravity)
 	{
 		//For each particle
 		for (int i = 0; i < this.numParticles; i++)
@@ -231,59 +235,59 @@ public class SoftBodySimulation : IGrabbable
 			{
 				continue;
 			}
-			
-			//v = v + dt * g
-			VecAdd(this.vel, i, gravity, 0, dt);
-			
-			//xPrev = x
-			VecCopy(this.prevPos, i, this.pos, i);
 
-			//x = x + dt * v
-			VecAdd(this.pos, i, this.vel, i, dt);
+			//Update vel
+			vel[i] += dt * gravity;
+
+			//Save old pos
+			prevPos[i] = pos[i];
+
+			//Update pos
+			pos[i] += dt * vel[i];
 
 
 			//Handle environment collision
 
 			//Floor collision
-			float x = this.pos[3 * i + 0];
-			float y = this.pos[3 * i + 1];
-			float z = this.pos[3 * i + 2];
+			float x = pos[i].x;
+			float y = pos[i].y;
+			float z = pos[i].z;
 
 			if (y < 0f)
 			{
 				//Set the pos to previous pos
-				VecCopy(this.pos, i, this.prevPos, i);
+				pos[i] = prevPos[i];
 				//But the y of the previous pos should be at the ground
-				this.pos[3 * i + 1] = 0f;
+				pos[i].y = 0f;
 			}
 			else if (y > halfPlayGroundSize.y)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
-				this.pos[3 * i + 1] = halfPlayGroundSize.y;
+				pos[i] = prevPos[i];
+				pos[i].y = halfPlayGroundSize.y;
 			}
 
 			//X
 			if (x < -halfPlayGroundSize.x)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
-				this.pos[3 * i + 0] = -halfPlayGroundSize.x;
+				pos[i] = prevPos[i];
+				pos[i].x = -halfPlayGroundSize.x;
 			}
 			else if (x > halfPlayGroundSize.x)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
-				this.pos[3 * i + 0] = halfPlayGroundSize.x;
+				pos[i] = prevPos[i];
+				pos[i].x = halfPlayGroundSize.x;
 			}
 
 			//Z
 			if (z < -halfPlayGroundSize.z)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
-				this.pos[3 * i + 2] = -halfPlayGroundSize.z;
+				pos[i] = prevPos[i];
+				pos[i].z = -halfPlayGroundSize.z;
 			}
 			else if (z > halfPlayGroundSize.z)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
-				this.pos[3 * i + 2] = halfPlayGroundSize.z;
+				pos[i] = prevPos[i];
+				pos[i].z = halfPlayGroundSize.z;
 			}
 		}
 	}
@@ -312,6 +316,8 @@ public class SoftBodySimulation : IGrabbable
 	//Fix velocity
 	void PostSolve(float dt)
 	{
+		float oneOverdt = 1f / dt;
+	
 		//For each particle
 		for (int i = 0; i < this.numParticles; i++)
 		{
@@ -321,7 +327,7 @@ public class SoftBodySimulation : IGrabbable
 			}
 
 			//v = (x - xPrev) / dt
-			VecSetDiff(this.vel, i, this.pos, i, this.prevPos, i, 1f / dt);
+			vel[i] = (pos[i] - prevPos[i]) * oneOverdt;
 		}
 	}
 
@@ -348,6 +354,7 @@ public class SoftBodySimulation : IGrabbable
 
 			float w0 = this.invMass[id0];
 			float w1 = this.invMass[id1];
+
 			float wTot = w0 + w1;
 			
 			//This edge is fixed so dont simulate
@@ -360,12 +367,10 @@ public class SoftBodySimulation : IGrabbable
 
 			//x0-x1
 			//The result is stored in grads array
-			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
+			Vector3 id0_minus_id1 = pos[id0] - pos[id1];
 
 			//sqrMargnitude(x0-x1)
-			float lSqr = VecLengthSquared(this.grads, 0);
-
-			float l = Mathf.Sqrt(lSqr);
+			float l = Vector3.Magnitude(id0_minus_id1);
 
 			//If they are at the same pos we get a divisio by 0 later so ignore
 			if (l == 0f)
@@ -374,7 +379,7 @@ public class SoftBodySimulation : IGrabbable
 			}
 
 			//(xo-x1) * (1/|x0-x1|) = gradC
-			VecScale(this.grads, 0, 1f / l);
+			Vector3 gradC = id0_minus_id1 / l;
 			
 			float l_rest = this.restEdgeLengths[i];
 			
@@ -382,10 +387,10 @@ public class SoftBodySimulation : IGrabbable
 
 			//lambda because |grad_Cn|^2 = 1 because if we move a particle 1 unit, the distance between the particles also grows with 1 unit, and w = w0 + w1
 			float lambda = -C / (wTot + alpha);
-			
+
 			//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-			VecAdd(this.pos, id0, this.grads, 0,  lambda * w0);
-			VecAdd(this.pos, id1, this.grads, 0, -lambda * w1);
+			pos[id0] += lambda * w0 * gradC;
+			pos[id1] += -lambda * w1 * gradC;
 		}
 	}
 
@@ -405,7 +410,7 @@ public class SoftBodySimulation : IGrabbable
 	void SolveVolumes(float compliance, float dt)
 	{
 		float alpha = compliance / (dt * dt);
-		
+
 		//For each tetra
 		for (int i = 0; i < this.numTets; i++)
 		{
@@ -422,37 +427,26 @@ public class SoftBodySimulation : IGrabbable
 				//TODO: These two vec diffs are for some reason the bottleneck
 				//(x4 - x2)
 				//VecSetDiff(temp, 0, pos, id1, pos, id0);
+				Vector3 id1_minus_id0 = pos[id1] - pos[id0];
 				//(x3 - x2)
 				//VecSetDiff(temp, 1, pos, id2, pos, id0);
-				
-				//This is 10 fps faster despite being the same code as above
-				int dnr = 0 * 3;
-				int anr = id1 * 3;
-				int bnr = id0 * 3;
+				Vector3 id2_minus_id0 = pos[id2] - pos[id0];
 
-                temp[dnr] = pos[anr] - pos[bnr];
-                temp[dnr + 1] = pos[anr + 1] - pos[bnr + 1];
-                temp[dnr + 2] = pos[anr + 2] - pos[bnr + 2];
+				//(x4 - x2)x(x3 - x2)
+				//VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
+				Vector3 cross = Vector3.Cross(id1_minus_id0, id2_minus_id0);
 
-                int dnr2 = 1 * 3;
-				int anr2 = id2 * 3;
-				int bnr2 = id0 * 3;
+				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
+				//Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
+				//VecScale(this.grads, j, 1f / 6f);
+				Vector3 gradC = cross * (1f / 6f);
 
-                temp[dnr2] = pos[anr2] - pos[bnr2];
-                temp[dnr2 + 1] = pos[anr2 + 1] - pos[bnr2 + 1];
-                temp[dnr2 + 2] = pos[anr2 + 2] - pos[bnr2 + 2];
-				
+				gradients[j] = gradC;
 
-                //(x4 - x2)x(x3 - x2)
-                VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
-
-                //Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
-                //Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
-                VecScale(this.grads, j, 1f / 6f);
-
-                //w1 * |grad_C1|^2
-                wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
-            }
+				//w1 * |grad_C1|^2
+				//wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
+				wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * Vector3.SqrMagnitude(gradC);
+			}
 
 			//All vertices are fixed so dont simulate
 			if (wTimesGrad == 0f)
@@ -477,9 +471,10 @@ public class SoftBodySimulation : IGrabbable
             {
                 int id = this.tetIds[4 * i + j];
 
-                //Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-                VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
-            }
+				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
+				//VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
+				pos[id] += lambda * this.invMass[id] * gradients[j];
+			}
 		}
 	}
 
@@ -494,9 +489,7 @@ public class SoftBodySimulation : IGrabbable
 	{
 		Mesh mesh = new();
 
-		List<Vector3> vertices = GenerateMeshVertices(this.pos);
-
-		mesh.SetVertices(vertices);
+		mesh.vertices = pos;
 		mesh.triangles = tetraData.GetTetSurfaceTriIds;
 
 		mesh.RecalculateBounds();
@@ -511,145 +504,10 @@ public class SoftBodySimulation : IGrabbable
 	//Update the mesh with new vertex positions
 	private void UpdateMesh()
 	{
-		List<Vector3> vertices = GenerateMeshVertices(this.pos);
-
-		this.softBodyMesh.SetVertices(vertices);
+		this.softBodyMesh.vertices = pos;
 
 		this.softBodyMesh.RecalculateBounds();
 		this.softBodyMesh.RecalculateNormals();
-	}
-
-	//Generate the List of vertices needed for a Unity mesh
-	private List<Vector3> GenerateMeshVertices(float[] pos)
-	{
-		List<Vector3> vertices = new();
-
-		for (int i = 0; i < pos.Length; i += 3)
-		{
-			Vector3 v = new(pos[i], pos[i + 1], pos[i + 2]);
-
-			vertices.Add(v);
-		}
-
-		return vertices;
-	}
-
-
-
-	//
-	// Vector operations
-	//
-
-	//anr = index of vertex a in the list of all vertices if it had an (x,y,z) position at that index. BUT we dont have that list, so to make it easier to loop through all particles where x, y, z are at 3 difference indices, we multiply by 3
-	//anr = 0 -> 0 * 3 = 0 -> 0, 1, 2
-	//anr = 1 -> 1 * 3 = 3 -> 3, 4, 5
-
-	//a = 0
-	private void VecSetZero(float[] a, int anr)
-	{
-		anr *= 3;
-
-		a[anr    ] = 0f;
-		a[anr + 1] = 0f;
-		a[anr + 2] = 0f;
-	}
-
-	//a * scale
-	private void VecScale(float[] a, int anr, float scale)
-	{
-		anr *= 3;
-
-		a[anr    ] *= scale;
-		a[anr + 1] *= scale;
-		a[anr + 2] *= scale;
-	}
-
-	//a = b
-	private void VecCopy(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-
-		a[anr    ] = b[bnr    ];
-		a[anr + 1] = b[bnr + 1];
-		a[anr + 2] = b[bnr + 2];
-	}
-
-	//a = a + (b * scale) 
-	private void VecAdd(float[] a, int anr, float[] b, int bnr, float scale = 1f)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		a[anr    ] += b[bnr    ] * scale;
-		a[anr + 1] += b[bnr + 1] * scale;
-		a[anr + 2] += b[bnr + 2] * scale;
-	}
-
-	//diff = (a - b) * scale
-	//Need the scale to simplify this v = (x - xPrev) / dt then scale is 1f/dt
-	private void VecSetDiff(float[] diff, int dnr, float[] a, int anr, float[] b, int bnr, float scale = 1f)
-	{
-		dnr *= 3; 
-		anr *= 3; 
-		bnr *= 3;
-
-		diff[dnr    ] = (a[anr    ] - b[bnr    ]) * scale;
-		diff[dnr + 1] = (a[anr + 1] - b[bnr + 1]) * scale;
-		diff[dnr + 2] = (a[anr + 2] - b[bnr + 2]) * scale;
-	}
-
-
-	//sqrMagnitude(a) 
-	private float VecLengthSquared(float[] a, int anr)
-	{
-		anr *= 3;
-
-		float a0 = a[anr    ]; 
-		float a1 = a[anr + 1]; 
-		float a2 = a[anr + 2];
-		
-		float lengthSqr = a0 * a0 + a1 * a1 + a2 * a2;
-
-		return lengthSqr;
-	}
-	
-	//sqrMagnitude(a - b)
-	private float VecDistSquared(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		float a0 = a[anr    ] - b[bnr    ]; 
-		float a1 = a[anr + 1] - b[bnr + 1]; 
-		float a2 = a[anr + 2] - b[bnr + 2];
-		
-		float distSqr = a0 * a0 + a1 * a1 + a2 * a2;
-
-		return distSqr;
-	}
-
-	//a dot b
-	private float VecDot(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		float dot = a[anr] * b[bnr] + a[anr + 1] * b[bnr + 1] + a[anr + 2] * b[bnr + 2];
-
-		return dot;
-	}
-
-	//a = b x c
-	private void VecSetCross(float[] a, int anr, float[] b, int bnr, float[] c, int cnr)
-	{
-		anr *= 3; 
-		bnr *= 3; 
-		cnr *= 3;
-		
-		a[anr    ] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
-		a[anr + 1] = b[bnr + 2] * c[cnr    ] - b[bnr    ] * c[cnr + 2];
-		a[anr + 2] = b[bnr    ] * c[cnr + 1] - b[bnr + 1] * c[cnr    ];
 	}
 
 
@@ -659,14 +517,12 @@ public class SoftBodySimulation : IGrabbable
 	//
 
 	//Move all vertices a distance of (x, y, z)
-	private void Translate(float x, float y, float z)
+	private void Translate(Vector3 moveDist)
 	{
-		float[] moveDist = new float[] { x, y, z };
-
 		for (int i = 0; i < this.numParticles; i++)
 		{
-			VecAdd(this.pos,     i, moveDist, 0);
-			VecAdd(this.prevPos, i, moveDist, 0);
+			pos[i] += moveDist;
+			prevPos[i] += moveDist;
 		}
 	}
 
@@ -684,18 +540,15 @@ public class SoftBodySimulation : IGrabbable
 		int id3 = this.tetIds[4 * nr + 3];
 
 		//a, b, c
-		//temp has size 12 so we fill 3*3 = 9 positions in that array where a is the first 3 coordinates
-		VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
-		VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
-		VecSetDiff(this.temp, 2, this.pos, id3, this.pos, id0);
-		
+		Vector3 a = pos[id1] - pos[id0];
+		Vector3 b = pos[id2] - pos[id0];
+		Vector3 c = pos[id3] - pos[id0];
+
 		//a x b
-		//Here we fill the last 3 positions in the array with the cross product, a starts at index 0*3 and b at index 1*3
-		VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
+		Vector3 aXb = Vector3.Cross(a, b);
 
 		//1/6 * (a x b) * c
-		//(a x b) is stored at index 3*3 and c is in index 2*3
-		float volume = VecDot(this.temp, 3, this.temp, 2) / 6f;
+		float volume = Vector3.Dot(aXb, c) / 6f;
 
 		return volume;
 	}
@@ -712,7 +565,7 @@ public class SoftBodySimulation : IGrabbable
 		for (int i = 0; i < this.numParticles; i++)
 		{
 			//Add constant to y coordinate
-			this.pos[3 * i + 1] += 0.1f;
+			this.pos[i].y += 0.1f;
 		}
 	}
 
@@ -724,7 +577,7 @@ public class SoftBodySimulation : IGrabbable
 		for (int i = 0; i < this.numParticles; i++)
 		{
 			//Set y coordinate to slightly above floor height
-			this.pos[3 * i + 1] = this.floorHeight + 0.01f;
+			this.pos[i].y = this.floorHeight + 0.01f;
 		}
 
 		UpdateMesh();
@@ -735,8 +588,6 @@ public class SoftBodySimulation : IGrabbable
 	//Input pos is the pos in a triangle we get when doing ray-triangle intersection
 	public void StartGrab(Vector3 triangleIntersectionPos)
 	{
-		float[] p = new float[] { triangleIntersectionPos.x, triangleIntersectionPos.y, triangleIntersectionPos.z };
-
 		//Find the closest vertex to the pos on a triangle in the mesh
 		float minD2 = float.MaxValue;
 		
@@ -744,7 +595,7 @@ public class SoftBodySimulation : IGrabbable
 		
 		for (int i = 0; i < this.numParticles; i++)
 		{
-			float d2 = VecDistSquared(p, 0, this.pos, i);
+			float d2 = Vector3.SqrMagnitude(triangleIntersectionPos - pos[i]);
 			
 			if (d2 < minD2)
 			{
@@ -763,7 +614,7 @@ public class SoftBodySimulation : IGrabbable
 			this.invMass[this.grabId] = 0f;
 
 			//Set the position of the vertex to the position where the ray hit the triangle
-			VecCopy(this.pos, this.grabId, p, 0);
+			pos[grabId] = triangleIntersectionPos;
 		}
 	}
 
@@ -773,24 +624,20 @@ public class SoftBodySimulation : IGrabbable
 	{
 		if (this.grabId >= 0)
 		{
-			float[] p = new float[] { newPos.x, newPos.y, newPos.z };
-
-			VecCopy(this.pos, this.grabId, p, 0);
+			pos[grabId] = newPos;
 		}
 	}
 
 
 
-	public void EndGrab(Vector3 newPos, Vector3 vel)
+	public void EndGrab(Vector3 newPos, Vector3 newParticleVel)
 	{
 		if (this.grabId >= 0)
 		{
 			//Set the mass to whatever mass it was before we grabbed it
 			this.invMass[this.grabId] = this.grabInvMass;
 
-			float[] v = new float[] { vel.x, vel.y, vel.z };
-			
-			VecCopy(this.vel, this.grabId, v, 0);
+			vel[grabId] = newParticleVel;
 		}
 
 		this.grabId = -1;
@@ -801,7 +648,7 @@ public class SoftBodySimulation : IGrabbable
 	public void IsRayHittingBody(Ray ray, out CustomHit hit)
 	{
 		//Mesh data
-		Vector3[] vertices = GetMeshVertices.ToArray();
+		Vector3[] vertices = pos;
 
 		int[] triangles = GetMeshTriangles;
 
@@ -813,9 +660,7 @@ public class SoftBodySimulation : IGrabbable
 
 	public Vector3 GetGrabbedPos()
 	{
-		Vector3 grabbedPos = new Vector3(pos[3 * grabId + 0], pos[3 * grabId + 1], pos[3 * grabId + 2]);
-
-		return grabbedPos;
+		return pos[grabId];
     }
 }
 

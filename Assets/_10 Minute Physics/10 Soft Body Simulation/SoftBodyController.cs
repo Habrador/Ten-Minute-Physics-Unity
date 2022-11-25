@@ -17,7 +17,7 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private List<SoftBodySimulation> allSoftBodies = new ();
 
-    private int numberOfBodies = 5;
+    private int numberOfBodies = 1;
 
     private const int SEED = 0;
 
@@ -51,9 +51,10 @@ public class SoftBodyController : MonoBehaviour
 
             float bunnyScale = 2f;
 
-            SoftBodySimulation softBodySimulation = new SoftBodySimulation(meshFilter, softBodyMesh, startPos, bunnyScale);
+            SoftBodySimulation softBodySim = new (meshFilter, softBodyMesh, startPos, bunnyScale);
+            //SoftBodySimulationVectors softBodySim = new (meshFilter, softBodyMesh, startPos, bunnyScale);
 
-            allSoftBodies.Add(softBodySimulation);
+            allSoftBodies.Add(softBodySim);
         }
 
         //Init the grabber
