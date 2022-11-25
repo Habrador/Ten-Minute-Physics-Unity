@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class SoftBodySimulation : IGrabbable
+public class SoftBodySimulationTutorial : IGrabbable
 {
 	//Tetrahedralizer data structures
 	private readonly TetrahedronData tetraData;
@@ -69,7 +69,7 @@ public class SoftBodySimulation : IGrabbable
 
 
 
-	public SoftBodySimulation(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
+	public SoftBodySimulationTutorial(MeshFilter meshFilter, TetrahedronData tetraData, Vector3 startPos, float meshScale = 2f)
 	{
 		//Tetra data structures
 		this.tetraData = tetraData;

@@ -15,7 +15,7 @@ public class SoftBodyController : MonoBehaviour
 
 
     //Private
-    private List<SoftBodySimulation> allSoftBodies = new ();
+    private readonly List<SoftBodySimulationVectors> allSoftBodies = new ();
 
     private int numberOfBodies = 1;
 
@@ -51,8 +51,8 @@ public class SoftBodyController : MonoBehaviour
 
             float bunnyScale = 2f;
 
-            SoftBodySimulation softBodySim = new (meshFilter, softBodyMesh, startPos, bunnyScale);
-            //SoftBodySimulationVectors softBodySim = new (meshFilter, softBodyMesh, startPos, bunnyScale);
+            //SoftBodySimulationTutorial softBodySim = new SoftBodySimulationTutorial(meshFilter, softBodyMesh, startPos, bunnyScale);
+            SoftBodySimulationVectors softBodySim = new SoftBodySimulationVectors(meshFilter, softBodyMesh, startPos, bunnyScale);
 
             allSoftBodies.Add(softBodySim);
         }
@@ -69,7 +69,7 @@ public class SoftBodyController : MonoBehaviour
 
     private void Update()
     {
-        foreach (SoftBodySimulation softBody in allSoftBodies)
+        foreach (SoftBodySimulationVectors softBody in allSoftBodies)
         {
             softBody.MyUpdate();
         }
@@ -111,7 +111,7 @@ public class SoftBodyController : MonoBehaviour
             return;
         }
 
-        foreach (SoftBodySimulation softBody in allSoftBodies)
+        foreach (SoftBodySimulationVectors softBody in allSoftBodies)
         {
             softBody.MyFixedUpdate();
         }
@@ -123,7 +123,7 @@ public class SoftBodyController : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (SoftBodySimulation softBody in allSoftBodies)
+        foreach (SoftBodySimulationVectors softBody in allSoftBodies)
         {
             Mesh mesh = softBody.MyOnDestroy();
 

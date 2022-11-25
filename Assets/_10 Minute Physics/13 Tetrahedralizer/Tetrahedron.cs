@@ -8,13 +8,17 @@ public static class Tetrahedron
     //
     // The volume of a tetrahedron
     //
+
+    //Division is slow so this should be faster...
+    private readonly static float one_over_six = 1f / 6f;
+
     public static float Volume(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
     {
         Vector3 d0 = p1 - p0;
         Vector3 d1 = p2 - p0;
         Vector3 d2 = p3 - p0;
 
-        float volume = Vector3.Dot(Vector3.Cross(d1, d2), d0) / 6f;
+        float volume = Vector3.Dot(Vector3.Cross(d1, d2), d0) * one_over_six;
 
         return volume;
     }

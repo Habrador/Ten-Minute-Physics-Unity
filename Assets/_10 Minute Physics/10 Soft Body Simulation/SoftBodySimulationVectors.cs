@@ -529,9 +529,7 @@ public class SoftBodySimulationVectors : IGrabbable
 
 
 	//Calculate the volume of a tetrahedron
-	//V = 1/6 * (a x b) * c where a,b,c all originate from the same vertex 
-	//Tetra p1 p2 p3 p4 -> a = p2-p1, b = p3-p1, c = p4-p1
-	float GetTetVolume(int nr)
+	private float GetTetVolume(int nr)
 	{
 		//The 4 vertices belonging to this tetra 
 		int id0 = this.tetIds[4 * nr + 0];
@@ -539,16 +537,12 @@ public class SoftBodySimulationVectors : IGrabbable
 		int id2 = this.tetIds[4 * nr + 2];
 		int id3 = this.tetIds[4 * nr + 3];
 
-		//a, b, c
-		Vector3 a = pos[id1] - pos[id0];
-		Vector3 b = pos[id2] - pos[id0];
-		Vector3 c = pos[id3] - pos[id0];
+		Vector3 a = pos[id0];
+		Vector3 b = pos[id1];
+		Vector3 c = pos[id2];
+		Vector3 d = pos[id3];
 
-		//a x b
-		Vector3 aXb = Vector3.Cross(a, b);
-
-		//1/6 * (a x b) * c
-		float volume = Vector3.Dot(aXb, c) / 6f;
+		float volume = Tetrahedron.Volume(a, b, c, d);
 
 		return volume;
 	}
