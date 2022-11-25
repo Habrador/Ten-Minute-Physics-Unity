@@ -17,14 +17,18 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private List<SoftBodySimulation> allSoftBodies = new ();
 
-    private int numberOfBodies = 1;
+    private int numberOfBodies = 5;
 
     private const int SEED = 0;
 
     //What we use to grab the balls
     private Grabber grabber;
 
+    System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 
+    bool simulate = true;
+
+    
 
     private void Start()
     {
@@ -64,12 +68,18 @@ public class SoftBodyController : MonoBehaviour
 
     private void Update()
     {
-        foreach(SoftBodySimulation softBody in allSoftBodies)
+        foreach (SoftBodySimulation softBody in allSoftBodies)
         {
             softBody.MyUpdate();
         }
 
         grabber.MoveGrab();
+
+        //Pause simulation
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            simulate = !simulate;
+        }
     }
 
 
@@ -93,10 +103,19 @@ public class SoftBodyController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //Timers.Reset();
+    
+        if (!simulate)
+        {
+            return;
+        }
+
         foreach (SoftBodySimulation softBody in allSoftBodies)
         {
             softBody.MyFixedUpdate();
         }
+
+        //Timers.Display();
     }
 
 

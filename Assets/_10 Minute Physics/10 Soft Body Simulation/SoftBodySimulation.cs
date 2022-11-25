@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class SoftBodySimulation : IGrabbable
 {
 	//Tetrahedralizer data structures
@@ -61,7 +62,10 @@ public class SoftBodySimulation : IGrabbable
 	//For custom raycasting
 	public List<Vector3> GetMeshVertices => GenerateMeshVertices(pos);
 	public int[] GetMeshTriangles => tetraData.GetTetSurfaceTriIds;
-	public int GetGrabId => grabId; 
+	public int GetGrabId => grabId;
+
+	//Optimizations
+	System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 
 
 
@@ -120,7 +124,7 @@ public class SoftBodySimulation : IGrabbable
 		{
 			return;
         }
-	
+
 		Simulate();
 	}
 
@@ -209,7 +213,7 @@ public class SoftBodySimulation : IGrabbable
 		float sdt = dt / this.numSubSteps;
 
 		for (int step = 0; step < this.numSubSteps; step++)
-		{
+		{		
 			PreSolve(sdt, this.gravity);
 
 			SolveConstraints(sdt);
@@ -405,12 +409,12 @@ public class SoftBodySimulation : IGrabbable
 	void SolveVolumes(float compliance, float dt)
 	{
 		float alpha = compliance / (dt * dt);
-
+		
 		//For each tetra
 		for (int i = 0; i < this.numTets; i++)
 		{
 			float wTimesGrad = 0f;
-
+			
 			//Foreach vertex in the tetra
 			for (int j = 0; j < 4; j++)
 			{
@@ -419,28 +423,48 @@ public class SoftBodySimulation : IGrabbable
 				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
 				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
+				//TODO: These two vec diffs are for some reason the bottleneck
 				//(x4 - x2)
-				VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
+				//VecSetDiff(temp, 0, pos, id1, pos, id0);
 				//(x3 - x2)
-				VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
-
-				//(x4 - x2)x(x3 - x2)
-				VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
+				//VecSetDiff(temp, 1, pos, id2, pos, id0);
 				
-				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
-				//Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
-				VecScale(this.grads, j, 1f / 6f);
+				//This is 10 fps faster despite being the same code as above
+				int dnr = 0 * 3;
+				int anr = id1 * 3;
+				int bnr = id0 * 3;
 
-				//w1 * |grad_C1|^2
-				wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
-			}
+                temp[dnr] = pos[anr] - pos[bnr];
+                temp[dnr + 1] = pos[anr + 1] - pos[bnr + 1];
+                temp[dnr + 2] = pos[anr + 2] - pos[bnr + 2];
+
+                int dnr2 = 1 * 3;
+				int anr2 = id2 * 3;
+				int bnr2 = id0 * 3;
+
+                temp[dnr2] = pos[anr2] - pos[bnr2];
+                temp[dnr2 + 1] = pos[anr2 + 1] - pos[bnr2 + 1];
+                temp[dnr2 + 2] = pos[anr2 + 2] - pos[bnr2 + 2];
+				
+
+                //(x4 - x2)x(x3 - x2)
+                VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
+
+                //Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
+                //Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
+                VecScale(this.grads, j, 1f / 6f);
+
+                //w1 * |grad_C1|^2
+                wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
+            }
 
 			//All vertices are fixed so dont simulate
 			if (wTimesGrad == 0f)
 			{
 				continue;
 			}
-
+			
+			
 			float vol = GetTetVolume(i);
 			float restVol = this.restVol[i];
 			
@@ -451,14 +475,15 @@ public class SoftBodySimulation : IGrabbable
 
 			float lambda = -C / (wTimesGrad + alpha);
 
-			//Move each vertex
-			for (int j = 0; j < 4; j++)
-			{
-				int id = this.tetIds[4 * i + j];
+			
+            //Move each vertex
+            for (int j = 0; j < 4; j++)
+            {
+                int id = this.tetIds[4 * i + j];
 
-				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-				VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
-			}
+                //Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
+                VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
+            }
 		}
 	}
 
@@ -572,7 +597,7 @@ public class SoftBodySimulation : IGrabbable
 		dnr *= 3; 
 		anr *= 3; 
 		bnr *= 3;
-		
+
 		diff[dnr    ] = (a[anr    ] - b[bnr    ]) * scale;
 		diff[dnr + 1] = (a[anr + 1] - b[bnr + 1]) * scale;
 		diff[dnr + 2] = (a[anr + 2] - b[bnr + 2]) * scale;
