@@ -144,7 +144,11 @@ public class SoftBodySimulation : IGrabbable
 			simulate = false;
 		}
 
-		//Grabbing with left mouse button
+		if (simulate)
+		{
+			//Update the visual mesh
+			UpdateMesh();
+		}
 	}
 
 
@@ -211,8 +215,6 @@ public class SoftBodySimulation : IGrabbable
 			SolveConstraints(sdt);
 
 			PostSolve(sdt);
-
-			UpdateMeshes();
 		}
 	}
 
@@ -486,7 +488,7 @@ public class SoftBodySimulation : IGrabbable
 	}
 
 	//Update the mesh with new vertex positions
-	private void UpdateMeshes()
+	private void UpdateMesh()
 	{
 		List<Vector3> vertices = GenerateMeshVertices(this.pos);
 
@@ -704,7 +706,7 @@ public class SoftBodySimulation : IGrabbable
 			this.pos[3 * i + 1] = this.floorHeight + 0.01f;
 		}
 
-		UpdateMeshes();
+		UpdateMesh();
 	}
 
 
