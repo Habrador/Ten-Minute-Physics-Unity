@@ -391,6 +391,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 
 
+	//TODO: This method is the bottleneck
 	//Solve volume constraint
 	//Constraint function is now defined as C = 6(V - V_rest). The 6 is to make the equation simpler because of volume
 	//4 gradients:
@@ -419,7 +420,6 @@ public class SoftBodySimulationTutorial : IGrabbable
 				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
 				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
-				//TODO: These two vec diffs are for some reason the bottleneck
 				//(x4 - x2)
 				//VecSetDiff(temp, 0, pos, id1, pos, id0);
 				//(x3 - x2)

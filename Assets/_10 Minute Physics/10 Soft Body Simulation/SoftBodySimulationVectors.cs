@@ -392,7 +392,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	}
 
 
-
+	//TODO: This method is the bottleneck
 	//Solve volume constraint
 	//Constraint function is now defined as C = 6(V - V_rest). The 6 is to make the equation simpler because of volume
 	//4 gradients:
@@ -418,14 +418,13 @@ public class SoftBodySimulationVectors : IGrabbable
 			{
 				int idThis = this.tetIds[4 * i + j];
 
-				//The 3 opposite vertices ids
-				int id0 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][0]];
-				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
-				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
+                //The 3 opposite vertices ids
+                int id0 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][0]];
+                int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
+                int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
-				//TODO: These two vec diffs are for some reason the bottleneck
-				//(x4 - x2)
-				Vector3 id1_minus_id0 = pos[id1] - pos[id0];
+                //(x4 - x2)
+                Vector3 id1_minus_id0 = pos[id1] - pos[id0];
 				//(x3 - x2)
 				Vector3 id2_minus_id0 = pos[id2] - pos[id0];
 
@@ -433,7 +432,7 @@ public class SoftBodySimulationVectors : IGrabbable
 				Vector3 cross = Vector3.Cross(id1_minus_id0, id2_minus_id0);
 
 				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
-				//Im not sure why hes doing it...
+				//Im not sure why hes doing it... maybe because alpha should not be affected by it?  
 				Vector3 gradC = cross * (1f / 6f);
 
 				this.gradients[j] = gradC;
@@ -447,7 +446,6 @@ public class SoftBodySimulationVectors : IGrabbable
 			{
 				continue;
 			}
-
 
 			float vol = GetTetVolume(i);
 			float restVol = this.restVol[i];
@@ -465,7 +463,6 @@ public class SoftBodySimulationVectors : IGrabbable
                 int id = this.tetIds[4 * i + j];
 
 				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-				//VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
 				pos[id] += lambda * this.invMass[id] * this.gradients[j];
 			}
 		}
