@@ -17,7 +17,7 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private readonly List<SoftBodySimulationVectors> allSoftBodies = new ();
 
-    private int numberOfBodies = 1;
+    private int numberOfBodies = 2;
 
     private const int SEED = 0;
 
@@ -33,14 +33,14 @@ public class SoftBodyController : MonoBehaviour
     private void Start()
     {
         Random.InitState(SEED);
-    
+
+        TetrahedronData softBodyMesh = new StanfordBunny();
+
         for (int i = 0; i < numberOfBodies; i++)
         {
             GameObject bunnyGO = Instantiate(softBodyMeshPrefabGO);
 
             MeshFilter meshFilter = bunnyGO.GetComponent<MeshFilter>();
-
-            TetrahedronData softBodyMesh = new StanfordBunny();
 
             float halfPlayground = 4f;
 

@@ -36,7 +36,8 @@ public class SoftBodySimulationVectors : IGrabbable
 
 	//Simulation settings
 	private readonly Vector3 gravity = new Vector3(0f, -9.81f, 0f);
-	private readonly int numSubSteps = 10;
+	//3 steps is minimum or the bodies will lose their shape  
+	private readonly int numSubSteps = 3;
 	private bool simulate = true;
 
 	//Soft body behavior settings
@@ -58,12 +59,8 @@ public class SoftBodySimulationVectors : IGrabbable
 	//We grab a single particle and then we sit its inverted mass to 0. When we ungrab we have to reset its inverted mass to what itb was before 
 	private float grabInvMass = 0f;
 	//For custom raycasting
-	//public List<Vector3> GetMeshVertices => new List<Vector3>(pos);
 	public int[] GetMeshTriangles => tetraData.GetTetSurfaceTriIds;
 	public int GetGrabId => grabId;
-
-	//Optimizations
-	System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 
 
 
@@ -307,8 +304,8 @@ public class SoftBodySimulationVectors : IGrabbable
 		//		- (alpha / dt^2) is what makes the costraint soft. Remove it and you get a hard constraint
 		//- Compliance (inverse stiffness): alpha 
 
-		this.SolveEdges(this.edgeCompliance, dt);
-		this.SolveVolumes(this.volCompliance, dt);
+		SolveEdges(this.edgeCompliance, dt);
+		SolveVolumes(this.volCompliance, dt);
 	}
 
 
@@ -415,37 +412,34 @@ public class SoftBodySimulationVectors : IGrabbable
 		for (int i = 0; i < this.numTets; i++)
 		{
 			float wTimesGrad = 0f;
-			
+		
 			//Foreach vertex in the tetra
 			for (int j = 0; j < 4; j++)
 			{
-				//The 3 opposite vertices
+				int idThis = this.tetIds[4 * i + j];
+
+				//The 3 opposite vertices ids
 				int id0 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][0]];
 				int id1 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][1]];
 				int id2 = this.tetIds[4 * i + TetrahedronData.volIdOrder[j][2]];
 
 				//TODO: These two vec diffs are for some reason the bottleneck
 				//(x4 - x2)
-				//VecSetDiff(temp, 0, pos, id1, pos, id0);
 				Vector3 id1_minus_id0 = pos[id1] - pos[id0];
 				//(x3 - x2)
-				//VecSetDiff(temp, 1, pos, id2, pos, id0);
 				Vector3 id2_minus_id0 = pos[id2] - pos[id0];
 
 				//(x4 - x2)x(x3 - x2)
-				//VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
 				Vector3 cross = Vector3.Cross(id1_minus_id0, id2_minus_id0);
 
 				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
-				//Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
-				//VecScale(this.grads, j, 1f / 6f);
+				//Im not sure why hes doing it...
 				Vector3 gradC = cross * (1f / 6f);
 
-				gradients[j] = gradC;
+				this.gradients[j] = gradC;
 
 				//w1 * |grad_C1|^2
-				//wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
-				wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * Vector3.SqrMagnitude(gradC);
+				wTimesGrad += this.invMass[idThis] * Vector3.SqrMagnitude(gradC);
 			}
 
 			//All vertices are fixed so dont simulate
@@ -453,18 +447,17 @@ public class SoftBodySimulationVectors : IGrabbable
 			{
 				continue;
 			}
-			
-			
+
+
 			float vol = GetTetVolume(i);
 			float restVol = this.restVol[i];
-			
+
 			float C = vol - restVol;
 
 			//The guy in the video is dividing by 6 in the code but multiplying in the video
 			//C *= 6f;
 
 			float lambda = -C / (wTimesGrad + alpha);
-
 			
             //Move each vertex
             for (int j = 0; j < 4; j++)
@@ -473,7 +466,7 @@ public class SoftBodySimulationVectors : IGrabbable
 
 				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
 				//VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
-				pos[id] += lambda * this.invMass[id] * gradients[j];
+				pos[id] += lambda * this.invMass[id] * this.gradients[j];
 			}
 		}
 	}

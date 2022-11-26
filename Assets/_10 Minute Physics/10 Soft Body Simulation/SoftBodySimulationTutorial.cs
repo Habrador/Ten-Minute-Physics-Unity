@@ -303,8 +303,8 @@ public class SoftBodySimulationTutorial : IGrabbable
 		//		- (alpha / dt^2) is what makes the costraint soft. Remove it and you get a hard constraint
 		//- Compliance (inverse stiffness): alpha 
 
-		this.SolveEdges(this.edgeCompliance, dt);
-		this.SolveVolumes(this.volCompliance, dt);
+		SolveEdges(this.edgeCompliance, dt);
+		SolveVolumes(this.volCompliance, dt);
 	}
 
 
