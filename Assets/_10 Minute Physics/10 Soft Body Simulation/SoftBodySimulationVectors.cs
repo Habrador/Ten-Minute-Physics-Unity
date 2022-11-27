@@ -255,55 +255,63 @@ public class SoftBodySimulationVectors : IGrabbable
 
 
 			//Handle environment collision
+			EnvironmentCollision(i);
+		}
+	}
 
-			//Floor collision
-			float x = pos[i].x;
-			float y = pos[i].y;
-			float z = pos[i].z;
 
-			if (y < 0f)
-			{
-				//Set the pos to previous pos
-				pos[i] = prevPos[i];
-				//But the y of the previous pos should be at the ground
-				pos[i].y = 0f;
-			}
-			else if (y > halfPlayGroundSize.y)
-			{
-				pos[i] = prevPos[i];
-				pos[i].y = halfPlayGroundSize.y;
-			}
 
-			//X
-			if (x < -halfPlayGroundSize.x)
-			{
-				pos[i] = prevPos[i];
-				pos[i].x = -halfPlayGroundSize.x;
-			}
-			else if (x > halfPlayGroundSize.x)
-			{
-				pos[i] = prevPos[i];
-				pos[i].x = halfPlayGroundSize.x;
-			}
+	//Collision with invisible walls and floor
+	private void EnvironmentCollision(int i)
+	{
+		//Floor collision
+		float x = pos[i].x;
+		float y = pos[i].y;
+		float z = pos[i].z;
 
-			//Z
-			if (z < -halfPlayGroundSize.z)
-			{
-				pos[i] = prevPos[i];
-				pos[i].z = -halfPlayGroundSize.z;
-			}
-			else if (z > halfPlayGroundSize.z)
-			{
-				pos[i] = prevPos[i];
-				pos[i].z = halfPlayGroundSize.z;
-			}
+		//X
+		if (x < -halfPlayGroundSize.x)
+		{
+			pos[i] = prevPos[i];
+			pos[i].x = -halfPlayGroundSize.x;
+		}
+		else if (x > halfPlayGroundSize.x)
+		{
+			pos[i] = prevPos[i];
+			pos[i].x = halfPlayGroundSize.x;
+		}
+
+		//Y
+		if (y < floorHeight)
+		{
+			//Set the pos to previous pos
+			pos[i] = prevPos[i];
+			//But the y of the previous pos should be at the ground
+			pos[i].y = floorHeight;
+		}
+		else if (y > halfPlayGroundSize.y)
+		{
+			pos[i] = prevPos[i];
+			pos[i].y = halfPlayGroundSize.y;
+		}
+
+		//Z
+		if (z < -halfPlayGroundSize.z)
+		{
+			pos[i] = prevPos[i];
+			pos[i].z = -halfPlayGroundSize.z;
+		}
+		else if (z > halfPlayGroundSize.z)
+		{
+			pos[i] = prevPos[i];
+			pos[i].z = halfPlayGroundSize.z;
 		}
 	}
 
 
 
 	//Handle the soft body physics
-	void SolveConstraints(float dt)
+	private void SolveConstraints(float dt)
 	{
 		//Constraints
 		//Enforce constraints by moving each vertex: x = x + deltaX
@@ -322,7 +330,7 @@ public class SoftBodySimulationVectors : IGrabbable
 
 
 	//Fix velocity
-	void PostSolve(float dt)
+	private void PostSolve(float dt)
 	{
 		float oneOverdt = 1f / dt;
 	
@@ -340,6 +348,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	}
 
 
+
 	//Solve distance constraint
 	//2 particles:
 	//Positions: x0, x1
@@ -349,7 +358,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	//Constraint function: C = l - l_rest which is 0 when the constraint is fulfilled 
 	//Gradients of constraint function grad_C0 = (x1 - x0) / |x1 - x0| and grad_C1 = -grad_C0
 	//Which was shown here https://www.youtube.com/watch?v=jrociOAYqxA (12:10)
-	void SolveEdges(float compliance, float dt)
+	private void SolveEdges(float compliance, float dt)
 	{
 		float alpha = compliance / (dt * dt);
 
@@ -415,7 +424,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	//lambda =  6(V - V_rest) / (w1 * |grad_C1|^2 + w2 * |grad_C2|^2 + w3 * |grad_C3|^2 + w4 * |grad_C4|^2 + alpha/dt^2)
 	//delta_xi = -lambda * w_i * grad_Ci
 	//Which was shown here https://www.youtube.com/watch?v=jrociOAYqxA (13:50)
-	void SolveVolumes(float compliance, float dt)
+	private void SolveVolumes(float compliance, float dt)
 	{
 		float alpha = compliance / (dt * dt);
 
@@ -502,6 +511,8 @@ public class SoftBodySimulationVectors : IGrabbable
 		softBodyMesh.MarkDynamic();
 	}
 
+
+
 	//Update the mesh with new vertex positions
 	private void UpdateMesh()
 	{
@@ -557,11 +568,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	//Yeet the mesh upwards
 	private void Yeet()
 	{
-		for (int i = 0; i < numParticles; i++)
-		{
-			//Add constant to y coordinate
-			pos[i].y += 0.1f;
-		}
+		Translate(new Vector3(0f, 0.2f, 0f));
 	}
 
 
