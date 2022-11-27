@@ -195,7 +195,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 			int id0 = this.tetEdgeIds[2 * i + 0];
 			int id1 = this.tetEdgeIds[2 * i + 1];
 
-			this.restEdgeLengths[i] = Mathf.Sqrt(VecDistSquared(this.pos, id0, this.pos, id1));
+			this.restEdgeLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
 		}
 	}
 
@@ -231,15 +231,15 @@ public class SoftBodySimulationTutorial : IGrabbable
 			{
 				continue;
 			}
-			
+
 			//v = v + dt * g
-			VecAdd(this.vel, i, gravity, 0, dt);
-			
+			VectorArrays.VecAdd(this.vel, i, gravity, 0, dt);
+
 			//xPrev = x
-			VecCopy(this.prevPos, i, this.pos, i);
+			VectorArrays.VecCopy(this.prevPos, i, this.pos, i);
 
 			//x = x + dt * v
-			VecAdd(this.pos, i, this.vel, i, dt);
+			VectorArrays.VecAdd(this.pos, i, this.vel, i, dt);
 
 
 			//Handle environment collision
@@ -252,37 +252,37 @@ public class SoftBodySimulationTutorial : IGrabbable
 			if (y < 0f)
 			{
 				//Set the pos to previous pos
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				//But the y of the previous pos should be at the ground
 				this.pos[3 * i + 1] = 0f;
 			}
 			else if (y > halfPlayGroundSize.y)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				this.pos[3 * i + 1] = halfPlayGroundSize.y;
 			}
 
 			//X
 			if (x < -halfPlayGroundSize.x)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				this.pos[3 * i + 0] = -halfPlayGroundSize.x;
 			}
 			else if (x > halfPlayGroundSize.x)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				this.pos[3 * i + 0] = halfPlayGroundSize.x;
 			}
 
 			//Z
 			if (z < -halfPlayGroundSize.z)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				this.pos[3 * i + 2] = -halfPlayGroundSize.z;
 			}
 			else if (z > halfPlayGroundSize.z)
 			{
-				VecCopy(this.pos, i, this.prevPos, i);
+				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 				this.pos[3 * i + 2] = halfPlayGroundSize.z;
 			}
 		}
@@ -321,7 +321,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 			}
 
 			//v = (x - xPrev) / dt
-			VecSetDiff(this.vel, i, this.pos, i, this.prevPos, i, 1f / dt);
+			VectorArrays.VecSetDiff(this.vel, i, this.pos, i, this.prevPos, i, 1f / dt);
 		}
 	}
 
@@ -360,10 +360,10 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 			//x0-x1
 			//The result is stored in grads array
-			VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
+			VectorArrays.VecSetDiff(this.grads, 0, this.pos, id0, this.pos, id1);
 
 			//sqrMargnitude(x0-x1)
-			float lSqr = VecLengthSquared(this.grads, 0);
+			float lSqr = VectorArrays.VecLengthSquared(this.grads, 0);
 
 			float l = Mathf.Sqrt(lSqr);
 
@@ -374,7 +374,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 			}
 
 			//(xo-x1) * (1/|x0-x1|) = gradC
-			VecScale(this.grads, 0, 1f / l);
+			VectorArrays.VecScale(this.grads, 0, 1f / l);
 			
 			float l_rest = this.restEdgeLengths[i];
 			
@@ -382,10 +382,10 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 			//lambda because |grad_Cn|^2 = 1 because if we move a particle 1 unit, the distance between the particles also grows with 1 unit, and w = w0 + w1
 			float lambda = -C / (wTot + alpha);
-			
+
 			//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-			VecAdd(this.pos, id0, this.grads, 0,  lambda * w0);
-			VecAdd(this.pos, id1, this.grads, 0, -lambda * w1);
+			VectorArrays.VecAdd(this.pos, id0, this.grads, 0,  lambda * w0);
+			VectorArrays.VecAdd(this.pos, id1, this.grads, 0, -lambda * w1);
 		}
 	}
 
@@ -441,17 +441,17 @@ public class SoftBodySimulationTutorial : IGrabbable
                 temp[dnr2] = pos[anr2] - pos[bnr2];
                 temp[dnr2 + 1] = pos[anr2 + 1] - pos[bnr2 + 1];
                 temp[dnr2 + 2] = pos[anr2 + 2] - pos[bnr2 + 2];
-				
 
-                //(x4 - x2)x(x3 - x2)
-                VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
 
-                //Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
-                //Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
-                VecScale(this.grads, j, 1f / 6f);
+				//(x4 - x2)x(x3 - x2)
+				VectorArrays.VecSetCross(this.grads, j, this.temp, 0, this.temp, 1);
+
+				//Multiplying by 1/6 in the denominator is the same as multiplying by 6 in the numerator
+				//Im not sure why hes doing it, because it should be faster to multiply C by 6 as in the formula...
+				VectorArrays.VecScale(this.grads, j, 1f / 6f);
 
                 //w1 * |grad_C1|^2
-                wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VecLengthSquared(this.grads, j);
+                wTimesGrad += this.invMass[this.tetIds[4 * i + j]] * VectorArrays.VecLengthSquared(this.grads, j);
             }
 
 			//All vertices are fixed so dont simulate
@@ -477,8 +477,8 @@ public class SoftBodySimulationTutorial : IGrabbable
             {
                 int id = this.tetIds[4 * i + j];
 
-                //Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
-                VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
+				//Move the vertices x = x + deltaX where deltaX = lambda * w * gradC
+				VectorArrays.VecAdd(this.pos, id, this.grads, j, lambda * this.invMass[id]);
             }
 		}
 	}
@@ -537,124 +537,6 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 
 	//
-	// Vector operations
-	//
-
-	//anr = index of vertex a in the list of all vertices if it had an (x,y,z) position at that index. BUT we dont have that list, so to make it easier to loop through all particles where x, y, z are at 3 difference indices, we multiply by 3
-	//anr = 0 -> 0 * 3 = 0 -> 0, 1, 2
-	//anr = 1 -> 1 * 3 = 3 -> 3, 4, 5
-
-	//a = 0
-	private void VecSetZero(float[] a, int anr)
-	{
-		anr *= 3;
-
-		a[anr    ] = 0f;
-		a[anr + 1] = 0f;
-		a[anr + 2] = 0f;
-	}
-
-	//a * scale
-	private void VecScale(float[] a, int anr, float scale)
-	{
-		anr *= 3;
-
-		a[anr    ] *= scale;
-		a[anr + 1] *= scale;
-		a[anr + 2] *= scale;
-	}
-
-	//a = b
-	private void VecCopy(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-
-		a[anr    ] = b[bnr    ];
-		a[anr + 1] = b[bnr + 1];
-		a[anr + 2] = b[bnr + 2];
-	}
-
-	//a = a + (b * scale) 
-	private void VecAdd(float[] a, int anr, float[] b, int bnr, float scale = 1f)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		a[anr    ] += b[bnr    ] * scale;
-		a[anr + 1] += b[bnr + 1] * scale;
-		a[anr + 2] += b[bnr + 2] * scale;
-	}
-
-	//diff = (a - b) * scale
-	//Need the scale to simplify this v = (x - xPrev) / dt then scale is 1f/dt
-	private void VecSetDiff(float[] diff, int dnr, float[] a, int anr, float[] b, int bnr, float scale = 1f)
-	{
-		dnr *= 3; 
-		anr *= 3; 
-		bnr *= 3;
-
-		diff[dnr    ] = (a[anr    ] - b[bnr    ]) * scale;
-		diff[dnr + 1] = (a[anr + 1] - b[bnr + 1]) * scale;
-		diff[dnr + 2] = (a[anr + 2] - b[bnr + 2]) * scale;
-	}
-
-
-	//sqrMagnitude(a) 
-	private float VecLengthSquared(float[] a, int anr)
-	{
-		anr *= 3;
-
-		float a0 = a[anr    ]; 
-		float a1 = a[anr + 1]; 
-		float a2 = a[anr + 2];
-		
-		float lengthSqr = a0 * a0 + a1 * a1 + a2 * a2;
-
-		return lengthSqr;
-	}
-	
-	//sqrMagnitude(a - b)
-	private float VecDistSquared(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		float a0 = a[anr    ] - b[bnr    ]; 
-		float a1 = a[anr + 1] - b[bnr + 1]; 
-		float a2 = a[anr + 2] - b[bnr + 2];
-		
-		float distSqr = a0 * a0 + a1 * a1 + a2 * a2;
-
-		return distSqr;
-	}
-
-	//a dot b
-	private float VecDot(float[] a, int anr, float[] b, int bnr)
-	{
-		anr *= 3; 
-		bnr *= 3;
-		
-		float dot = a[anr] * b[bnr] + a[anr + 1] * b[bnr + 1] + a[anr + 2] * b[bnr + 2];
-
-		return dot;
-	}
-
-	//a = b x c
-	private void VecSetCross(float[] a, int anr, float[] b, int bnr, float[] c, int cnr)
-	{
-		anr *= 3; 
-		bnr *= 3; 
-		cnr *= 3;
-		
-		a[anr    ] = b[bnr + 1] * c[cnr + 2] - b[bnr + 2] * c[cnr + 1];
-		a[anr + 1] = b[bnr + 2] * c[cnr    ] - b[bnr    ] * c[cnr + 2];
-		a[anr + 2] = b[bnr    ] * c[cnr + 1] - b[bnr + 1] * c[cnr    ];
-	}
-
-
-
-	//
 	// Help methods
 	//
 
@@ -665,8 +547,8 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 		for (int i = 0; i < this.numParticles; i++)
 		{
-			VecAdd(this.pos,     i, moveDist, 0);
-			VecAdd(this.prevPos, i, moveDist, 0);
+			VectorArrays.VecAdd(this.pos,     i, moveDist, 0);
+			VectorArrays.VecAdd(this.prevPos, i, moveDist, 0);
 		}
 	}
 
@@ -685,17 +567,17 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 		//a, b, c
 		//temp has size 12 so we fill 3*3 = 9 positions in that array where a is the first 3 coordinates
-		VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
-		VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
-		VecSetDiff(this.temp, 2, this.pos, id3, this.pos, id0);
-		
+		VectorArrays.VecSetDiff(this.temp, 0, this.pos, id1, this.pos, id0);
+		VectorArrays.VecSetDiff(this.temp, 1, this.pos, id2, this.pos, id0);
+		VectorArrays.VecSetDiff(this.temp, 2, this.pos, id3, this.pos, id0);
+
 		//a x b
 		//Here we fill the last 3 positions in the array with the cross product, a starts at index 0*3 and b at index 1*3
-		VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
+		VectorArrays.VecSetCross(this.temp, 3, this.temp, 0, this.temp, 1);
 
 		//1/6 * (a x b) * c
 		//(a x b) is stored at index 3*3 and c is in index 2*3
-		float volume = VecDot(this.temp, 3, this.temp, 2) / 6f;
+		float volume = VectorArrays.VecDot(this.temp, 3, this.temp, 2) / 6f;
 
 		return volume;
 	}
@@ -744,7 +626,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 		
 		for (int i = 0; i < this.numParticles; i++)
 		{
-			float d2 = VecDistSquared(p, 0, this.pos, i);
+			float d2 = VectorArrays.VecDistSquared(p, 0, this.pos, i);
 			
 			if (d2 < minD2)
 			{
@@ -763,7 +645,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 			this.invMass[this.grabId] = 0f;
 
 			//Set the position of the vertex to the position where the ray hit the triangle
-			VecCopy(this.pos, this.grabId, p, 0);
+			VectorArrays.VecCopy(this.pos, this.grabId, p, 0);
 		}
 	}
 
@@ -775,7 +657,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 		{
 			float[] p = new float[] { newPos.x, newPos.y, newPos.z };
 
-			VecCopy(this.pos, this.grabId, p, 0);
+			VectorArrays.VecCopy(this.pos, this.grabId, p, 0);
 		}
 	}
 
@@ -789,8 +671,8 @@ public class SoftBodySimulationTutorial : IGrabbable
 			this.invMass[this.grabId] = this.grabInvMass;
 
 			float[] v = new float[] { vel.x, vel.y, vel.z };
-			
-			VecCopy(this.vel, this.grabId, v, 0);
+
+			VectorArrays.VecCopy(this.vel, this.grabId, v, 0);
 		}
 
 		this.grabId = -1;
