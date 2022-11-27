@@ -17,16 +17,16 @@ public class SoftBodyController : MonoBehaviour
     //Private
     private readonly List<SoftBodySimulationVectors> allSoftBodies = new ();
 
-    private int numberOfBodies = 2;
+    private int numberOfBodies = 3;
 
     private const int SEED = 0;
 
     //What we use to grab the balls
     private Grabber grabber;
 
-    System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+    private bool simulate = true;
 
-    bool simulate = true;
+    private readonly Color[] colors = new Color[] { Color.red, Color.blue, Color.green, Color.yellow, Color.cyan };
 
     
 
@@ -42,6 +42,8 @@ public class SoftBodyController : MonoBehaviour
 
             MeshFilter meshFilter = bunnyGO.GetComponent<MeshFilter>();
 
+
+            //Random pos
             float halfPlayground = 4f;
 
             float randomX = Random.Range(-halfPlayground, halfPlayground);
@@ -49,10 +51,22 @@ public class SoftBodyController : MonoBehaviour
 
             Vector3 startPos = new Vector3(randomX, 10f, randomZ);
 
-            float bunnyScale = 2f;
+
+            //Random scale
+            float bunnyScale = Random.Range(2f, 5f);
+
+
+            //Random color
+            MeshRenderer mr = bunnyGO.GetComponent<MeshRenderer>();
+
+            Material mat = mr.material;
+
+            mat.color = colors[Random.Range(0, colors.Length)];
+            
 
             //SoftBodySimulationTutorial softBodySim = new SoftBodySimulationTutorial(meshFilter, softBodyMesh, startPos, bunnyScale);
             SoftBodySimulationVectors softBodySim = new SoftBodySimulationVectors(meshFilter, softBodyMesh, startPos, bunnyScale);
+
 
             allSoftBodies.Add(softBodySim);
         }

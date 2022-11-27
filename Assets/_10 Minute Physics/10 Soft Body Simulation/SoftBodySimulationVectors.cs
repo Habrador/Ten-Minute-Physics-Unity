@@ -46,7 +46,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	//Soft body behavior settings
 	//Compliance (alpha) is the inverse of physical stiffness (k)
 	//alpha = 0 means infinitely stiff (hard)
-	private readonly float edgeCompliance = 5.0f;
+	private readonly float edgeCompliance = 2f;
 	//Should be 0 or the mesh becomes very flat even for small values 
 	private readonly float volCompliance = 0.0f;
 
