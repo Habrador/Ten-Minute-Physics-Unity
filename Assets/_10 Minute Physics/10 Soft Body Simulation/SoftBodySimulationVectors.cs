@@ -52,7 +52,7 @@ public class SoftBodySimulationVectors : IGrabbable
 
 	//Environment collision data 
 	private readonly float floorHeight = 0f;
-	private readonly Vector3 halfPlayGroundSize = new Vector3(5f, 8f, 5f); 
+	private Vector3 halfPlayGroundSize = new Vector3(5f, 8f, 5f); 
 
 
 	//Grabbing with mouse to move mesh around
@@ -170,7 +170,11 @@ public class SoftBodySimulationVectors : IGrabbable
 			return;
         }
 
-		Simulate();
+		float dt = Time.fixedDeltaTime;
+
+		//ShrinkWalls(dt);
+
+		Simulate(dt);
 	}
 
 
@@ -214,10 +218,8 @@ public class SoftBodySimulationVectors : IGrabbable
 	//
 
 	//Main soft body simulation loop
-	void Simulate()
+	void Simulate(float dt)
 	{
-		float dt = Time.fixedDeltaTime;
-
 		float sdt = dt / numSubSteps;
 
 		for (int step = 0; step < numSubSteps; step++)
@@ -564,6 +566,23 @@ public class SoftBodySimulationVectors : IGrabbable
 	//
 	// Mesh user interactions
 	//
+
+	//Shrink walls
+	private void ShrinkWalls(float dt)
+	{
+		//Shrink walls
+		float wallSpeed = 0.1f;
+
+		halfPlayGroundSize.x -= wallSpeed * dt;
+		halfPlayGroundSize.z -= wallSpeed * dt;
+
+		float minWallSize = 0.5f;
+
+		halfPlayGroundSize.x = Mathf.Clamp(halfPlayGroundSize.x, minWallSize, 100f);
+		halfPlayGroundSize.z = Mathf.Clamp(halfPlayGroundSize.z, minWallSize, 100f);
+	}
+
+
 
 	//Yeet the mesh upwards
 	private void Yeet()

@@ -44,7 +44,7 @@ public class SoftBodyController : MonoBehaviour
 
 
             //Random pos
-            float halfPlayground = 4f;
+            float halfPlayground = 5f;
 
             float randomX = Random.Range(-halfPlayground, halfPlayground);
             float randomZ = Random.Range(-halfPlayground, halfPlayground);
