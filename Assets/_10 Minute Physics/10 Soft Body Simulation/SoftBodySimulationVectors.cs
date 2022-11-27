@@ -18,11 +18,11 @@ public class SoftBodySimulationVectors : IGrabbable
 	private readonly Vector3[] vel;
 
 	//For soft body physics using tetrahedrons
-	//The volume at start before deformation
+	//The volume of each undeformed tetrahedron
 	private readonly float[] restVolumes;
-	//The length of an edge before deformation
+	//The length of an undeformed tetrahedron edge
 	private readonly float[] restEdgeLengths;
-	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
+	//Inverese mass w = 1/m where m is how much mass is connected to a particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
 	//Should be global so we don't have to create them a million times
@@ -34,11 +34,13 @@ public class SoftBodySimulationVectors : IGrabbable
 	//How many vertices (particles) and tets do we have?
 	private readonly int numParticles;
 	private readonly int numTets;
+	private readonly int numEdges;
 
 	//Simulation settings
 	private readonly Vector3 gravity = new Vector3(0f, -9.81f, 0f);
 	//3 steps is minimum or the bodies will lose their shape  
 	private readonly int numSubSteps = 3;
+	//To pause the simulation
 	private bool simulate = true;
 
 	//Soft body behavior settings
@@ -75,17 +77,21 @@ public class SoftBodySimulationVectors : IGrabbable
 
 		numParticles = tetraData.GetNumberOfVertices;
 		numTets = tetraData.GetNumberOfTetrahedrons;
+		numEdges = tetraData.GetNumberOfEdges;
 
 		//Init the arrays 
 		//Has to be done in the constructor because readonly
 		pos = new Vector3[numParticles];
 		prevPos = new Vector3[numParticles];
 		vel = new Vector3[numParticles];
-		restVolumes = new float[numTets];
-		restEdgeLengths = new float[tetraData.GetNumberOfEdges];
 		invMass = new float[numParticles];
 
-		//Fill the data structures that are new for soft body mesh with start data
+		restVolumes = new float[numTets];
+
+		restEdgeLengths = new float[numEdges];
+		
+
+		//Fill the arrays
 		FillArrays(meshScale);
 
 		//Move the mesh to its start position
@@ -100,7 +106,7 @@ public class SoftBodySimulationVectors : IGrabbable
 	//Fill the data structures needed or soft body physics
 	private void FillArrays(float meshScale)
 	{
-		//[x, y, z, x, y, z, ...]
+		//[x0, y0, z0, x1, y1, z1, ...]
 		float[] flatVerts = tetraData.GetVerts;
 
 
@@ -116,10 +122,7 @@ public class SoftBodySimulationVectors : IGrabbable
 
 
 		//Particle previous position
-		for (int i = 0; i < pos.Length; i++)
-		{
-			prevPos[i] = pos[i];
-		}
+		//Not needed because is already set to 0s
 
 
 		//Particle velocity
@@ -351,7 +354,7 @@ public class SoftBodySimulationVectors : IGrabbable
 		float alpha = compliance / (dt * dt);
 
 		//For each edge
-		for (int i = 0; i < restEdgeLengths.Length; i++)
+		for (int i = 0; i < numEdges; i++)
 		{
 			//2 vertices per edge in the data structure, so multiply by 2 to get the correct vertex index
 			int id0 = tetEdgeIds[2 * i    ];
