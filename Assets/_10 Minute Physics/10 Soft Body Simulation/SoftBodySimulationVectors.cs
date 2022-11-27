@@ -228,6 +228,8 @@ public class SoftBodySimulationVectors : IGrabbable
 
 			SolveConstraints(sdt);
 
+			HandleEnvironmentCollision();
+
 			PostSolve(sdt);
 		}
 	}
@@ -254,9 +256,15 @@ public class SoftBodySimulationVectors : IGrabbable
 
 			//Update pos
 			pos[i] += dt * vel[i];
+		}
+	}
 
 
-			//Handle environment collision
+
+	private void HandleEnvironmentCollision()
+	{
+		for (int i = 0; i < numParticles; i++)
+		{
 			EnvironmentCollision(i);
 		}
 	}
@@ -571,12 +579,12 @@ public class SoftBodySimulationVectors : IGrabbable
 	private void ShrinkWalls(float dt)
 	{
 		//Shrink walls
-		float wallSpeed = 0.1f;
+		float wallSpeed = 0.4f;
 
 		halfPlayGroundSize.x -= wallSpeed * dt;
 		halfPlayGroundSize.z -= wallSpeed * dt;
 
-		float minWallSize = 0.5f;
+		float minWallSize = 0.2f;
 
 		halfPlayGroundSize.x = Mathf.Clamp(halfPlayGroundSize.x, minWallSize, 100f);
 		halfPlayGroundSize.z = Mathf.Clamp(halfPlayGroundSize.z, minWallSize, 100f);
