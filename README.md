@@ -67,7 +67,7 @@ Is not optimizing the code from #11, but is showing how you can use a more detai
 
 ## 13. Tetrahedralizer (TODO)
 
-Implemetation of an algorithm in that splits a mesh into tetrahedrons.
+Implemetation of an algorithm that splits a mesh into tetrahedrons.
 
 
 

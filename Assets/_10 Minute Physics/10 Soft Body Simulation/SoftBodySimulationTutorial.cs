@@ -688,7 +688,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 		int[] triangles = GetMeshTriangles;
 
 		//Find if the ray hit a triangle in the mesh
-		UsefulMethods.IsRayHittingMesh(ray, vertices, triangles, out hit);
+		Intersections.IsRayHittingMesh(ray, vertices, triangles, out hit);
 	}
 
 

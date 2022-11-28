@@ -252,7 +252,7 @@ public static class Tetrahedralizer
                     Vector3 p = new Vector3(x, y, z);
 
                     //Only add the point if it is within the mesh
-                    if (UsefulMethods.IsPointInsideMesh(verts, tris, p, 0.5f * h))
+                    if (Intersections.IsPointInsideMesh(verts, tris, p, 0.5f * h))
                     {
                         tetVerts.Add(p);
                     }
@@ -728,7 +728,7 @@ public static class Tetrahedralizer
             //The center of the tetrahedron is outside of the original mesh 
             Vector3 center = (p0 + p1 + p2 + p3) / 4f;
 
-            if (!UsefulMethods.IsPointInsideMesh(meshVerts, meshTris, center))
+            if (!Intersections.IsPointInsideMesh(meshVerts, meshTris, center))
             {
                 continue;
             }

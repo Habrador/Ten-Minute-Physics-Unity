@@ -51,7 +51,7 @@ namespace UserInteraction
         {
             hit = null;
 
-            if (UsefulMethods.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
+            if (Intersections.IsRayHittingSphere(ray, pos, radius, out float hitDistance))
             {
                 hit = new CustomHit(hitDistance, Vector3.zero, Vector3.zero);
             }
