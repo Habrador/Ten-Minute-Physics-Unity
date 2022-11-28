@@ -50,13 +50,13 @@ public class ClothController : MonoBehaviour
             Vector3 startPos = new Vector3(randomX, 10f, randomZ);
             */
 
-            Vector3 startPos = Vector3.zero;
+            Vector3 startPos = new Vector3(0f, -5f, 0f);
 
 
             //Scale
             //float clothScale = Random.Range(2f, 5f);
 
-            float clothScale = 1f;
+            float clothScale = 10f;
 
 
             //Random color
@@ -129,7 +129,7 @@ public class ClothController : MonoBehaviour
 
         foreach (ClothSimulationTutorial cloth in allCloth)
         {
-            cloth.MyFixedUpdate();
+            //cloth.MyFixedUpdate();
         }
     }
     

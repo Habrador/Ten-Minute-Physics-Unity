@@ -12,7 +12,6 @@ public class ClothSimulationTutorial : IGrabbable
 	private readonly float[] vel;
 
 	//For soft body cloth physics
-	private readonly float[] restPos;
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
@@ -63,7 +62,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 
-	public ClothSimulationTutorial(MeshFilter meshFilter, ClothData clothData, Vector3 pos, float scale = 1f, float bendingCompliance = 1f)
+	public ClothSimulationTutorial(MeshFilter meshFilter, ClothData clothData, Vector3 startPosOffset, float meshScale = 1f, float bendingCompliance = 1f)
 	{
 		this.clothData = clothData;
 	
@@ -71,10 +70,19 @@ public class ClothSimulationTutorial : IGrabbable
 		this.numParticles = clothData.GetVerts.Length / 3;
 
 		this.pos = (float[])clothData.GetVerts.Clone();
-		this.prevPos = (float[])clothData.GetVerts.Clone();
-		this.restPos = (float[])clothData.GetVerts.Clone();
-		this.vel = new float[3 * this.numParticles];
+		//These can start at 0 because they are filled with their correct values after the first iteration 
+		this.prevPos = new float[this.pos.Length];
+		this.vel = new float[this.pos.Length];
 		this.invMass = new float[this.numParticles];
+
+		//Give the mesh the correct scale
+		for (int i = 0; i < this.pos.Length; i++)
+		{
+			this.pos[i] *= meshScale;
+		}
+
+		//Give the mesh the correct start position
+		Translate(startPosOffset.x, startPosOffset.y, startPosOffset.z);
 
 
 		//Stretching and bending constraints
@@ -567,6 +575,24 @@ public class ClothSimulationTutorial : IGrabbable
 		}
 
 		return vertices;
+	}
+
+
+
+	//
+	// Help methods
+	//
+
+	//Move all vertices a distance of (x, y, z)
+	private void Translate(float x, float y, float z)
+	{
+		float[] moveDist = new float[] { x, y, z };
+
+		for (int i = 0; i < this.numParticles; i++)
+		{
+			VectorArrays.VecAdd(this.pos, i, moveDist, 0);
+			VectorArrays.VecAdd(this.prevPos, i, moveDist, 0);
+		}
 	}
 
 

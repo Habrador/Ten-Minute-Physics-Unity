@@ -86,7 +86,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 		this.pos = new float[verts.Length];
 		this.prevPos = new float[verts.Length];
 
-		for (int i = 0; i < pos.Length; i++)
+		for (int i = 0; i < this.pos.Length; i++)
 		{
 			pos[i] = verts[i];
 			pos[i] *= meshScale;
