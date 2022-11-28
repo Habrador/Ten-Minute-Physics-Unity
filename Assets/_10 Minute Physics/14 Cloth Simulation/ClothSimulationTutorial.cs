@@ -15,12 +15,10 @@ public class ClothSimulationTutorial : IGrabbable
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
-	//Neighboring edges (-1 if has no neighbor)
-	private int[] neighbors;
-	//
-	private int[] stretchingIds;
-	//
-	private int[] bendingIds;
+	//vertex index of the edges that prevent stretching
+	private readonly int[] stretchingIds;
+	//vertex index of the edges that prevent bending
+	private readonly int[] bendingIds;
 	//The rest length of each edge in the triangulation 
 	private readonly float[] stretchingLengths;
 	//The rest length of each edge that connnects two triangles across the common edge to minimize bending
@@ -34,7 +32,7 @@ public class ClothSimulationTutorial : IGrabbable
 	//The Unity mesh to display the cloth
 	private Mesh clothMesh;
 
-	//How many vertices (particles) and tets do we have?
+	//How many vertices (particles) do we have?
 	private readonly int numParticles;
 
 	//Simulation settings
@@ -56,7 +54,7 @@ public class ClothSimulationTutorial : IGrabbable
 	//We grab a single particle and then we sit its inverted mass to 0. When we ungrab we have to reset its inverted mass to what itb was before 
 	private float grabInvMass = 0f;
 	//For custom raycasting
-	public List<Vector3> GetMeshVertices => GenerateMeshVertices(pos);
+	public List<Vector3> GetMeshVertices => GenerateMeshVertices(this.pos);
 	public int[] GetMeshTriangles => clothData.GetFaceTriIds;
 	public int GetGrabId => grabId;
 
@@ -86,7 +84,11 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 		//Stretching and bending constraints
-		neighbors = FindTriNeighbors(clothData.GetFaceTriIds);
+
+		//Neighboring edges (-1 if has no neighbor)
+		int[] neighbors = new int[clothData.GetFaceTriIds.Length];
+
+		FindTriNeighbors(clothData.GetFaceTriIds);
 
 		int numTris = clothData.GetFaceTriIds.Length / 3;
 		
@@ -148,18 +150,21 @@ public class ClothSimulationTutorial : IGrabbable
 
 	private int[] FindTriNeighbors(int[] triIds)
 	{
-		//Create common edges
+		//Create common edges (common edge = shared edge)
 		List<ClothEdge> edges = new ();
 
 		int numTris = triIds.Length / 3;
 
+		//For each triangle
 		for (int i = 0; i < numTris; i++)
 		{
+			//For each vertex in the triangle, create 1 edge going from that vertex to the next vertex in the triangle  
 			for (int j = 0; j < 3; j++)
 			{
 				int id0 = triIds[3 * i + j];
-				int id1 = triIds[3 * i + (j + 1) % 3];
+				int id1 = triIds[3 * i + (j + 1) % 3]; //% 3 so the last vertex connects to the first vertex
 
+				//According to the tutorial, we need to save the following to be able to find opposite edges
 				edges.Add( new ClothEdge(Mathf.Min(id0, id1), Mathf.Max(id0, id1), 3 * i + j));
 			}
 		}
@@ -168,9 +173,9 @@ public class ClothSimulationTutorial : IGrabbable
 		edges.Sort((a, b) => ((a.id0 < b.id0) || (a.id0 == b.id0 && a.id1 < b.id1)) ? -1 : 1);
 
 		//Find matching edges
-		neighbors = new int[3 * numTris];
+		int[] neighbors = new int[triIds.Length];
 
-		//Set all edges to be open
+		//Init all edges to have no neighbors
 		System.Array.Fill(neighbors, -1);
 
 		//Find opposite edges
@@ -205,6 +210,7 @@ public class ClothSimulationTutorial : IGrabbable
 	private void InitPhysics(int[] triIds)
 	{
 		//Init inverse mass
+		//How much mass is connected to a vertex? Use the area of the triangle and divide by 3
 		int numTris = triIds.Length / 3;
 
 		float[] e0 = { 0f, 0f, 0f };
@@ -213,6 +219,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 		for (int i = 0; i < numTris; i++)
 		{
+			//Calculate the area of the triangle
 			int id0 = triIds[3 * i];
 			int id1 = triIds[3 * i + 1];
 			int id2 = triIds[3 * i + 2];
@@ -223,7 +230,7 @@ public class ClothSimulationTutorial : IGrabbable
 			
 			float A = 0.5f * Mathf.Sqrt(VectorArrays.VecLengthSquared(c, 0));
 			
-			float pInvMass = A > 0f ? 1f / A / 3f : 0f;
+			float pInvMass = A > 0f ? 1f / (A / 3f) : 0f;
 			
 			this.invMass[id0] += pInvMass;
 			this.invMass[id1] += pInvMass;
