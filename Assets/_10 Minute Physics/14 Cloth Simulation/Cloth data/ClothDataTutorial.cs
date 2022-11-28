@@ -10,7 +10,7 @@ public class ClothDataTutorial : ClothData
 	//Getters
 	public override float[] GetVerts => verts;
 
-	public override int[] FaceTriIds => faceTriIds;
+	public override int[] GetFaceTriIds => faceTriIds;
 
 
 

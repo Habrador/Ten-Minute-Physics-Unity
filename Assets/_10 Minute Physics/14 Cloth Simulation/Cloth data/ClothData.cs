@@ -13,7 +13,7 @@ public abstract class ClothData
 
     //Triangles that form the surface of the mesh
     //mesh.triangles = GetTetSurfaceTriIds because you can assign these directly it means they work as if the verts had been ordered as p1, p2, p3 and not x1, y1, z1, x2,...???
-    public abstract int[] FaceTriIds
+    public abstract int[] GetFaceTriIds
     {
         get;
     }
