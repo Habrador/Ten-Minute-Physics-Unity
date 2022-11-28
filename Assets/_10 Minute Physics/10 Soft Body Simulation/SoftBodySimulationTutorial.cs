@@ -37,7 +37,7 @@ public class SoftBodySimulationTutorial : IGrabbable
 	private readonly int numTets;
 
 	//Simulation settings
-	private readonly float[] gravity = new float[] { 0f, -9.81f, 0f };
+	private readonly float[] gravity = { 0f, -9.81f, 0f };
 	private readonly int numSubSteps = 10;
 	private bool simulate = true;
 
