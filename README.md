@@ -1,11 +1,11 @@
 # Ten Minute Physics in Unity
 
-Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/)
+Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/).
 
 
 ## 1-2. Cannon ball
 
-Simulate a bouncy cannon ball
+Simulate a bouncy cannon ball.
 
 <img src="/_media/01-bouncy-ball.png" width="400">
 
@@ -18,14 +18,14 @@ Simulate billiard balls with different size and mass. Watch these YouTube videos
 
 ## 4. Pinball
 
-Simulate a pinball game
+Simulate a pinball game.
 
 <img src="/_media/04-pinball.png" width="400">
 
 
 ## 5. Beads on wire
 
-Simulate beads attached to a circular wire
+Simulate beads attached to a circular wire.
 
 <img src="/_media/05-beads-on-wire.png" width="400">
 
@@ -41,38 +41,43 @@ Simulate the chaotic behavior of pendulums with as many arms as you want and whe
 
 ## 8. Interaction
 
-Catch and throw a ball with your mouse
+Catch and throw a ball with your mouse.
 
 <img src="/_media/08-user-interaction.png" width="400">
 
 
-## 10. Simple and unbreakable simulation of soft bodies
+## 10. Soft body physics
 
-Basic soft body bunny physics. You can flatten it and throw it around with your mouse. 
+Simple unbreakable soft body bunny physics. You can flatten it and throw it around with your mouse. 
 
 <img src="/_media/10-soft-body.gif" width="400">
 
 
-## 11. Find overlaps among thousands of objects blazing fast
+## 11. Find overlaps among objects
 
-Implements a version of the [Spatial Partitioning design pattern](https://github.com/Habrador/Unity-Programming-Patterns) called "Spatial Hashing" which is really useful if you have an unbounded grid. 
+Find overlaps among thousands of objects blazing fast. Implements a version of the [Spatial Partitioning design pattern](https://github.com/Habrador/Unity-Programming-Patterns) called "Spatial Hashing" which is really useful if you have an unbounded grid. 
 
 <img src="/_media/11-spatial-hashing.png" width="400">
 
 
+## 12. Optimized soft body physics (TODO)
+
+Is not optimizing the code from #11, but is showing how you can use a more detailed mesh and make that faster. You use two meshes: one with fewer triangles that is tetrahedralized, and one with more triangles, and then they interract during the simulation.  
+
+
 ## 13. Tetrahedralizer (TODO)
 
-Implemetation of an algorithm in Unity that splits a mesh into tetrahedrons
+Implemetation of an algorithm in that splits a mesh into tetrahedrons.
 
 
 
 # Bonus
 
-Bonus implementations related to the code above
+Bonus implementations related to the code above.
 
 
 ## 3-Body Problem
 
-Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem)
+Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem).
 
 [![Link to youtube video 3-body problem](https://img.youtube.com/vi/o5HWPeP-JS4/0.jpg)](https://www.youtube.com/watch?v=o5HWPeP-JS4)
