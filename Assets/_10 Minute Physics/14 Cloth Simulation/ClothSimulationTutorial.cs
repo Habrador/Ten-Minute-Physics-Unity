@@ -63,7 +63,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 
-	public ClothSimulationTutorial(MeshFilter meshFilter, ClothData clothData, Vector3 pos, float scale, float bendingCompliance = 1f)
+	public ClothSimulationTutorial(MeshFilter meshFilter, ClothData clothData, Vector3 pos, float scale = 1f, float bendingCompliance = 1f)
 	{
 		this.clothData = clothData;
 	
@@ -75,6 +75,7 @@ public class ClothSimulationTutorial : IGrabbable
 		this.restPos = (float[])clothData.GetVerts.Clone();
 		this.vel = new float[3 * this.numParticles];
 		this.invMass = new float[this.numParticles];
+
 
 		//Stretching and bending constraints
 		neighbors = FindTriNeighbors(clothData.GetFaceTriIds);
@@ -379,6 +380,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 	private void SolveConstraints(float dt)
 	{
+		//Two edge constraints
 		SolveStretching(this.stretchingCompliance, dt);
 		SolveBending(this.bendingCompliance, dt);
 	}
@@ -459,7 +461,9 @@ public class ClothSimulationTutorial : IGrabbable
 	}
 
 
+
 	//Similar to how stretching constraints work 
+	//The only difference is how we identify which vertices are part of the edge 
 	private void SolveBending(float compliance, float dt)
 	{
 		float alpha = compliance / (dt * dt);
