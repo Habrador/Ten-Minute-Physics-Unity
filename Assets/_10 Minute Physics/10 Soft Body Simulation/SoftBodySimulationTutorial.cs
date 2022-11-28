@@ -114,6 +114,43 @@ public class SoftBodySimulationTutorial : IGrabbable
 
 
 
+	//Fill the data structures needed or soft body physics
+	private void InitSoftBodyPhysics()
+	{
+		//Init rest volume
+		for (int i = 0; i < this.numTets; i++)
+		{
+			this.restVol[i] = GetTetVolume(i);
+		}
+
+
+		//Init inverse mass (1/w)
+		for (int i = 0; i < this.numTets; i++)
+		{
+			float vol = restVol[i];
+
+			//The mass connected to a particle in a tetra is roughly volume / 4
+			float pInvMass = vol > 0f ? 1f / (vol / 4f) : 0f;
+
+			this.invMass[this.tetIds[4 * i + 0]] += pInvMass;
+			this.invMass[this.tetIds[4 * i + 1]] += pInvMass;
+			this.invMass[this.tetIds[4 * i + 2]] += pInvMass;
+			this.invMass[this.tetIds[4 * i + 3]] += pInvMass;
+		}
+
+
+		//Init rest edge length
+		for (int i = 0; i < this.restEdgeLengths.Length; i++)
+		{
+			int id0 = this.tetEdgeIds[2 * i + 0];
+			int id1 = this.tetEdgeIds[2 * i + 1];
+
+			this.restEdgeLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
+		}
+	}
+
+
+
 	public void MyFixedUpdate()
 	{
 		if (!simulate)
@@ -163,43 +200,6 @@ public class SoftBodySimulationTutorial : IGrabbable
 	//
 	// Simulation
 	//
-
-	//Fill the data structures needed or soft body physics
-	private void InitSoftBodyPhysics()
-	{
-		//Init rest volume
-		for (int i = 0; i < this.numTets; i++)
-		{
-			this.restVol[i] = GetTetVolume(i);
-		}
-
-
-		//Init inverse mass (1/w)
-		for (int i = 0; i < this.numTets; i++)
-		{
-			float vol = restVol[i];
-			
-			//The mass connected to a particle in a tetra is roughly volume / 4
-			float pInvMass = vol > 0f ? 1f / (vol / 4f) : 0f;
-
-			this.invMass[this.tetIds[4 * i + 0]] += pInvMass;
-			this.invMass[this.tetIds[4 * i + 1]] += pInvMass;
-			this.invMass[this.tetIds[4 * i + 2]] += pInvMass;
-			this.invMass[this.tetIds[4 * i + 3]] += pInvMass;
-		}
-
-
-		//Init rest edge length
-		for (int i = 0; i < this.restEdgeLengths.Length; i++)
-		{
-			int id0 = this.tetEdgeIds[2 * i + 0];
-			int id1 = this.tetEdgeIds[2 * i + 1];
-
-			this.restEdgeLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
-		}
-	}
-
-
 
 	//Main soft body simulation loop
 	void Simulate()
