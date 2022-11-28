@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Should be class so it can be null
 public class CustomHit
 {
     //The distance along the ray to where the ray hit the object
