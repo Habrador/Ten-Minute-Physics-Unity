@@ -70,6 +70,12 @@ Is not optimizing the code from #11, but is showing how you can use a more detai
 Implemetation of an algorithm that splits a mesh into tetrahedrons.
 
 
+## 14. Cloth simulation
+
+Basic cloth simulation.
+
+<img src="/_media/14-cloth-simulation.gif" width="400">
+
 
 # Bonus
 
