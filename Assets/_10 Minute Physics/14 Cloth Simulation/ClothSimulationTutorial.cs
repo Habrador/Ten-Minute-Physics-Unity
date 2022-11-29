@@ -15,14 +15,14 @@ public class ClothSimulationTutorial : IGrabbable
 	//Inverese mass w = 1/m where m is how nuch mass is connected to each particle
 	//If a particle is fixed we set its mass to 0
 	private readonly float[] invMass;
-	//vertex index of the edges that prevent stretching
+	//vertex index of the edges that prevent stretching (2 vertices)
 	private readonly int[] stretchingIds;
-	//vertex index of the edges that prevent bending
+	//vertex index of the edges that prevent bending (4 vertices, the first 2 are the common edge, the last 2 are the vertices the bending edge is going between)
 	private readonly int[] bendingIds;
 	//The rest length of each edge in the triangulation 
-	private readonly float[] stretchingLengths;
+	private readonly float[] stretchingRestLengths;
 	//The rest length of each edge that connnects two triangles across the common edge to minimize bending
-	private readonly float[] bendingLengths;
+	private readonly float[] bendingRestLengths;
 
 	//This array should be global so we don't have to create it a million times
 	//Gradients needed when we calculate the edge constraints 
@@ -125,8 +125,10 @@ public class ClothSimulationTutorial : IGrabbable
 					int id2 = clothData.GetFaceTriIds[3 * i + (j + 2) % 3];
 					int id3 = clothData.GetFaceTriIds[3 * ni + (nj + 2) % 3];
 					
+					//The vertices of the common edge
 					triPairIds.Add(id0);
 					triPairIds.Add(id1);
+					//The vertices the bending edge is going between
 					triPairIds.Add(id2);
 					triPairIds.Add(id3);
 				}
@@ -136,14 +138,14 @@ public class ClothSimulationTutorial : IGrabbable
 
 		this.stretchingIds = edgeIds.ToArray();
 		this.bendingIds = triPairIds.ToArray();
-		this.stretchingLengths = new float[this.stretchingIds.Length / 2];
-		this.bendingLengths = new float[this.bendingIds.Length / 4];
+		this.stretchingRestLengths = new float[this.stretchingIds.Length / 2];
+		this.bendingRestLengths = new float[this.bendingIds.Length / 4];
 
 		this.stretchingCompliance = 0f;
 		this.bendingCompliance = bendingCompliance;
 
 		//Init the array values
-		InitPhysics(clothData.GetFaceTriIds);
+		InitArrays(clothData.GetFaceTriIds);
 
 		//Init the mesh
 		InitMesh(meshFilter, clothData.GetFaceTriIds);
@@ -151,9 +153,17 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 
-
-	//Find triangle neighboring edges (-1 if has no neighbor) - also known as opposite or common edge
+	//Identify triangle neighboring edges - also known as opposite or common edge
 	//Explained in the video https://www.youtube.com/watch?v=z5oWopN39OU at 4:00
+	//Edges are identified by their global edge number (-1 if has no neighbor)
+	//How to use this data?
+	//Compute the global edge number: 3 * triNumber + localEdgeNumber where localEdgeNumber is from the vertex the edge is going from in counter-clockwise order
+	//What's the opposite edge to t0, e2?
+	//globalEdgeNumber = 3 * 0 + 2 = 2 -> neighbors[2] = 4
+	//How do we go from global edge number to local edge number? 
+	//triangle index = FloorToInt(4 / 3) = 1.3333 = 1
+	//edge index = 4 % 3 = 1
+	//So opposite edge is t1, e1
 	private int[] FindTriNeighbors(int[] triIds)
 	{
 		//Create a list with all edges
@@ -170,8 +180,6 @@ public class ClothSimulationTutorial : IGrabbable
 				int id0 = triIds[3 * i + j];
 				int id1 = triIds[3 * i + (j + 1) % 3]; //% 3 so the last vertex connects to the first vertex
 
-				//According to the tutorial, we need to save the following to be able to find opposite edges
-				//A global edge number is defined as 3 * triNumber + localEdgeNumber where localEdgeNumber is from the vertex the edge is going from
 				int globalEdgeNumber = 3 * i + j;
 
 				edges.Add( new ClothEdge(Mathf.Min(id0, id1), Mathf.Max(id0, id1), globalEdgeNumber));
@@ -188,7 +196,6 @@ public class ClothSimulationTutorial : IGrabbable
 		System.Array.Fill(neighbors, -1);
 
 		//Find opposite edges
-		//Could we accomplish the same with two for loops which are maybe easier to understand? 
 		int nr = 0;
 
 		while (nr < edges.Count)
@@ -211,20 +218,13 @@ public class ClothSimulationTutorial : IGrabbable
 			}
 		}
 
-		//How to use this data?
-		//What's the opposite edge to t0, e2?
-		//Compute the global edge number: 3 * 0 + 2 = 2 -> neighbors[2] = 4 which is t1, e1
-		//How do we go from global edge number to local edge number? 
-		//triangle index = FloorToInt(4 / 3) = 1.3333 = 1
-		//edge index = 4 % 3 = 1
-
 		return neighbors;
 	}
 
 
 
 
-	private void InitPhysics(int[] triIds)
+	private void InitArrays(int[] triIds)
 	{
 		//Init inverse mass
 		//How much mass is connected to a vertex? Use the area of the triangle and divide by 3
@@ -241,10 +241,14 @@ public class ClothSimulationTutorial : IGrabbable
 			int id1 = triIds[3 * i + 1];
 			int id2 = triIds[3 * i + 2];
 
+			//a
 			VectorArrays.VecSetDiff(e0, 0, this.pos, id1, this.pos, id0);
+			//b
 			VectorArrays.VecSetDiff(e1, 0, this.pos, id2, this.pos, id0);
+			//a x b
 			VectorArrays.VecSetCross(c, 0, e0, 0, e1, 0);
-			
+
+			//A = 0.5 * |a x b|
 			float A = 0.5f * Mathf.Sqrt(VectorArrays.VecLengthSquared(c, 0));
 			
 			float pInvMass = A > 0f ? 1f / (A / 3f) : 0f;
@@ -256,21 +260,22 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 		//Init stretching lengths
-		for (int i = 0; i < this.stretchingLengths.Length; i++)
+		for (int i = 0; i < this.stretchingRestLengths.Length; i++)
 		{
 			int id0 = this.stretchingIds[2 * i];
 			int id1 = this.stretchingIds[2 * i + 1];
 			
-			this.stretchingLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
+			this.stretchingRestLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
 		}
 
 		//Init bending lengths
-		for (int i = 0; i < this.bendingLengths.Length; i++)
+		for (int i = 0; i < this.bendingRestLengths.Length; i++)
 		{
+			//Index 0 and 1 in the array is the common edge, 2 and 3 are the vertices the edge is going between
 			int id0 = this.bendingIds[4 * i + 2];
 			int id1 = this.bendingIds[4 * i + 3];
 
-			this.bendingLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
+			this.bendingRestLengths[i] = Mathf.Sqrt(VectorArrays.VecDistSquared(this.pos, id0, this.pos, id1));
 		}
 
 
@@ -322,21 +327,12 @@ public class ClothSimulationTutorial : IGrabbable
 	{
 		simulate = true;
 
-		/*
+		
 		//Launch the mesh upwards when pressing space
 		if (Input.GetKey(KeyCode.Space))
 		{
 			Yeet();
 		}
-
-		//Make the mesh flat when holding right mouse 
-		if (Input.GetMouseButton(1))
-		{
-			Squeeze();
-
-			simulate = false;
-		}
-		*/
 
 		if (simulate)
 		{
@@ -443,7 +439,7 @@ public class ClothSimulationTutorial : IGrabbable
 		float alpha = compliance / (dt * dt);
 
 		//For each edge
-		for (var i = 0; i < this.stretchingLengths.Length; i++)
+		for (var i = 0; i < this.stretchingRestLengths.Length; i++)
 		{
 			//2 vertices per edge in the data structure, so multiply by 2 to get the correct vertex index
 			int id0 = this.stretchingIds[2 * i];
@@ -479,7 +475,7 @@ public class ClothSimulationTutorial : IGrabbable
 			//(xo-x1) * (1/|x0-x1|) = gradC
 			VectorArrays.VecScale(this.grads, 0, 1f / l);
 
-			float l_rest = this.stretchingLengths[i];
+			float l_rest = this.stretchingRestLengths[i];
 
 			float C = l - l_rest;
 
@@ -501,7 +497,7 @@ public class ClothSimulationTutorial : IGrabbable
 		float alpha = compliance / (dt * dt);
 
 		//For each edge
-		for (int i = 0; i < this.bendingLengths.Length; i++)
+		for (int i = 0; i < this.bendingRestLengths.Length; i++)
 		{
 			//2 vertices per edge, but this edge is going between two vertices opposite of each other in two triangles, crossing the common edge 
 			int id0 = this.bendingIds[4 * i + 2];
@@ -537,7 +533,7 @@ public class ClothSimulationTutorial : IGrabbable
 			//(xo-x1) * (1/|x0-x1|) = gradC
 			VectorArrays.VecScale(this.grads, 0, 1f / l);
 
-			float l_rest = this.bendingLengths[i];
+			float l_rest = this.bendingRestLengths[i];
 
 			float C = l - l_rest;
 
@@ -624,6 +620,25 @@ public class ClothSimulationTutorial : IGrabbable
 	//
 	// Mesh user interactions
 	//
+
+
+	//Yeet the mesh upwards
+	private void Yeet()
+	{
+		for (int i = 0; i < this.numParticles; i++)
+		{
+			//Dont move the fixed particles
+			if (invMass[i] == 0f)
+			{
+				continue;
+            }
+		
+			//Add constant to y coordinate
+			this.pos[3 * i + 1] += 0.1f;
+		}
+	}
+
+
 
 	//Input pos is the pos in a triangle we get when doing ray-triangle intersection
 	public void StartGrab(Vector3 triangleIntersectionPos)

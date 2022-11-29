@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Help struct to easier find neighboring edges
 public struct ClothEdge
 {
     public int id0, id1;

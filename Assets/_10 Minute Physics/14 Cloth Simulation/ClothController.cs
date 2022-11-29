@@ -29,6 +29,11 @@ public class ClothController : MonoBehaviour
 
     private void Start()
     {
+        //TestFindNeighbors();
+
+        //return;
+
+
         Random.InitState(SEED);
 
         ClothData clothData = new ClothDataTutorial();
@@ -84,7 +89,7 @@ public class ClothController : MonoBehaviour
     }
 
 
-    
+
     private void Update()
     {
         foreach (ClothSimulationTutorial cloth in allCloth)
@@ -100,7 +105,7 @@ public class ClothController : MonoBehaviour
         //    simulate = !simulate;
         //}
     }
-    
+
 
     /*
     private void LateUpdate()
@@ -119,7 +124,7 @@ public class ClothController : MonoBehaviour
     }
 
     */
-    
+
     private void FixedUpdate()
     {
         if (!simulate)
@@ -132,9 +137,9 @@ public class ClothController : MonoBehaviour
             //cloth.MyFixedUpdate();
         }
     }
-    
 
-    
+
+
     private void OnDestroy()
     {
         foreach (ClothSimulationTutorial cloth in allCloth)
@@ -144,4 +149,92 @@ public class ClothController : MonoBehaviour
             Destroy(mesh);
         }
     }
+
+
+
+    private void TestFindNeighbors()
+    {
+        List<ClothEdge> edges = new();
+
+        //T0: 1-3-2
+        //T1: 0-1-2
+
+        edges.Add(new ClothEdge(1, 3, 0));
+        edges.Add(new ClothEdge(2, 3, 1));
+        edges.Add(new ClothEdge(1, 2, 2));
+
+        edges.Add(new ClothEdge(0, 1, 3));
+        edges.Add(new ClothEdge(1, 2, 4));
+        edges.Add(new ClothEdge(0, 2, 5));
+
+        foreach (ClothEdge e in edges)
+        {
+            Debug.Log($"{e.id0}, {e.id1}, {e.edgeNr}");
+        }
+
+
+        edges.Sort((a, b) => ((a.id0 < b.id0) || (a.id0 == b.id0 && a.id1 < b.id1)) ? -1 : 1);
+
+        Debug.Log("Sorted:");
+
+        foreach (ClothEdge e in edges)
+        {
+            Debug.Log($"{e.id0}, {e.id1}, {e.edgeNr}");
+        }
+
+
+        //Find matching edges
+        int[] neighbors = new int[edges.Count];
+
+        //Init all edges to have no neighbors
+        System.Array.Fill(neighbors, -1);
+
+        //Find opposite edges
+        /*
+        int nr = 0;
+
+        while (nr < edges.Count)
+        {
+            ClothEdge e0 = edges[nr];
+
+            nr++;
+
+            if (nr < edges.Count)
+            {
+                ClothEdge e1 = edges[nr];
+
+                if (e0.id0 == e1.id0 && e0.id1 == e1.id1)
+                {
+                    neighbors[e0.edgeNr] = e1.edgeNr;
+                    neighbors[e1.edgeNr] = e0.edgeNr;
+                }
+
+                nr++;
+            }
+        }
+        */
+
+        //Same result...
+        for (int i = 0; i < edges.Count - 1; i++)
+        {
+            ClothEdge e0 = edges[i];
+            ClothEdge e1 = edges[i + 1];
+
+            if (e0.id0 == e1.id0 && e0.id1 == e1.id1)
+            {
+                neighbors[e0.edgeNr] = e1.edgeNr;
+                neighbors[e1.edgeNr] = e0.edgeNr;
+            }
+        }
+
+        Debug.Log("Neighbors:");
+
+        foreach (int neighbor in neighbors)
+        {
+            Debug.Log(neighbor);
+        }
+    }
+
+
+
 }
