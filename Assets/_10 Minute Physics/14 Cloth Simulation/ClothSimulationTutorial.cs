@@ -85,26 +85,28 @@ public class ClothSimulationTutorial : IGrabbable
 
 		//Stretching and bending constraints
 
-		//Neighboring edges (-1 if has no neighbor)
-		int[] neighbors = new int[clothData.GetFaceTriIds.Length];
-
-		FindTriNeighbors(clothData.GetFaceTriIds);
+		//If an edge has a neighbor, the neighbors global edge number is in this list (-1 if has no neighbor)
+		int[] neighbors = FindTriNeighbors(clothData.GetFaceTriIds);
 
 		int numTris = clothData.GetFaceTriIds.Length / 3;
 		
 		List<int> edgeIds = new ();
 		List<int> triPairIds = new ();
 
+		//For each triangle
 		for (int i = 0; i < numTris; i++)
 		{
+			//For each edge in the triangle
 			for (int j = 0; j < 3; j++)
 			{
 				int id0 = clothData.GetFaceTriIds[3 * i + j];
 				int id1 = clothData.GetFaceTriIds[3 * i + (j + 1) % 3];
 
-				//Each edge only once
+				//Global edge number
 				int n = neighbors[3 * i + j];
 
+				//Each edge only once
+				//Create distance constraint
 				if (n < 0 || id0 < id1)
 				{
 					edgeIds.Add(id0);
@@ -112,10 +114,12 @@ public class ClothSimulationTutorial : IGrabbable
 				}
 
 				//Tri pair
+				//Create bending constraint
 				if (n >= 0)
 				{
 					//Opposite ids
-					int ni = Mathf.FloorToInt(n / 3); //NOT SURE IF THESE ARE INTS
+					//From global edge number to local edge number 
+					int ni = Mathf.FloorToInt(n / 3);
 					int nj = n % 3;
 					
 					int id2 = clothData.GetFaceTriIds[3 * i + (j + 2) % 3];
@@ -148,9 +152,11 @@ public class ClothSimulationTutorial : IGrabbable
 
 
 
+	//Find triangle neighboring edges (-1 if has no neighbor) - also known as opposite or common edge
+	//Explained in the video https://www.youtube.com/watch?v=z5oWopN39OU at 4:00
 	private int[] FindTriNeighbors(int[] triIds)
 	{
-		//Create common edges (common edge = shared edge)
+		//Create a list with all edges
 		List<ClothEdge> edges = new ();
 
 		int numTris = triIds.Length / 3;
@@ -165,11 +171,14 @@ public class ClothSimulationTutorial : IGrabbable
 				int id1 = triIds[3 * i + (j + 1) % 3]; //% 3 so the last vertex connects to the first vertex
 
 				//According to the tutorial, we need to save the following to be able to find opposite edges
-				edges.Add( new ClothEdge(Mathf.Min(id0, id1), Mathf.Max(id0, id1), 3 * i + j));
+				//A global edge number is defined as 3 * triNumber + localEdgeNumber where localEdgeNumber is from the vertex the edge is going from
+				int globalEdgeNumber = 3 * i + j;
+
+				edges.Add( new ClothEdge(Mathf.Min(id0, id1), Mathf.Max(id0, id1), globalEdgeNumber));
 			}
 		}
 
-		//Sort so common edges are next to each other
+		//Sort so common edges are next to each other, meaning the edge going from 1 -> 2 is followed by the edge going from 2 -> 1, which is now also going from 1 -> 2 because how we defined the edges
 		edges.Sort((a, b) => ((a.id0 < b.id0) || (a.id0 == b.id0 && a.id1 < b.id1)) ? -1 : 1);
 
 		//Find matching edges
@@ -179,6 +188,7 @@ public class ClothSimulationTutorial : IGrabbable
 		System.Array.Fill(neighbors, -1);
 
 		//Find opposite edges
+		//Could we accomplish the same with two for loops which are maybe easier to understand? 
 		int nr = 0;
 
 		while (nr < edges.Count)
@@ -200,6 +210,13 @@ public class ClothSimulationTutorial : IGrabbable
 				nr++;
 			}
 		}
+
+		//How to use this data?
+		//What's the opposite edge to t0, e2?
+		//Compute the global edge number: 3 * 0 + 2 = 2 -> neighbors[2] = 4 which is t1, e1
+		//How do we go from global edge number to local edge number? 
+		//triangle index = FloorToInt(4 / 3) = 1.3333 = 1
+		//edge index = 4 % 3 = 1
 
 		return neighbors;
 	}
