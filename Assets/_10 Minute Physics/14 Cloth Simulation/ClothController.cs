@@ -97,7 +97,7 @@ public class ClothController : MonoBehaviour
             cloth.MyUpdate();
         }
 
-        //grabber.MoveGrab();
+        grabber.MoveGrab();
 
         ////Pause simulation
         //if (Input.GetKeyDown(KeyCode.P))
@@ -107,12 +107,12 @@ public class ClothController : MonoBehaviour
     }
 
 
-    /*
+
     private void LateUpdate()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            List<IGrabbable> temp = new List<IGrabbable>(allSoftBodies);
+            List<IGrabbable> temp = new List<IGrabbable>(allCloth);
 
             grabber.StartGrab(temp);
         }
@@ -123,7 +123,7 @@ public class ClothController : MonoBehaviour
         }
     }
 
-    */
+
 
     private void FixedUpdate()
     {
@@ -134,7 +134,7 @@ public class ClothController : MonoBehaviour
 
         foreach (ClothSimulationTutorial cloth in allCloth)
         {
-            //cloth.MyFixedUpdate();
+            cloth.MyFixedUpdate();
         }
     }
 

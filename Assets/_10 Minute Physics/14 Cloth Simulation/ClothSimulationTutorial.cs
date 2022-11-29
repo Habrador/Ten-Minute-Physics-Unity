@@ -37,7 +37,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 	//Simulation settings
 	private readonly float[] gravity = { 0f, -9.81f, 0f };
-	private readonly int numSubSteps = 15;
+	private readonly int numSubSteps = 3;
 	private bool simulate = true;
 
 	//Soft body behavior settings
@@ -279,7 +279,7 @@ public class ClothSimulationTutorial : IGrabbable
 		}
 
 
-		//Attach the cloth to the roof so it doesnt fall down
+		//Attach the cloth to the roof so it doesnt fall down (the vertex to the top left and top right)
 		float minX = float.MaxValue;
 		float maxX = -float.MaxValue;
 		float maxY = -float.MaxValue;
@@ -399,7 +399,7 @@ public class ClothSimulationTutorial : IGrabbable
 			{
 				VectorArrays.VecCopy(this.pos, i, this.prevPos, i);
 
-				this.pos[3 * i + 1] = 0f;
+				this.pos[3 * i + 1] = 0.01f;
 			}
 		}
 	}
