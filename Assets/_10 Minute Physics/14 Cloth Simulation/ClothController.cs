@@ -36,7 +36,8 @@ public class ClothController : MonoBehaviour
 
         Random.InitState(SEED);
 
-        ClothData clothData = new ClothDataTutorial();
+        //ClothData clothData = new ClothDataTutorial();
+        ClothData clothData = new ClothDataProcedural();
 
 
         for (int i = 0; i < numberOfBodies; i++)

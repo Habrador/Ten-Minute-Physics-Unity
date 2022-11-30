@@ -23,12 +23,53 @@ public class ClothDataTutorial : ClothData
 		{
 			verts[i] = (float)verticesDouble[i];
 		}
+
+		//Figure out the dimensions of the cloth so we can recreate a similar version ut with lower resolution
+		//FindClothDimensions();
 	}
 
 
 
+	private void FindClothDimensions()
+	{
+		float minX = float.MaxValue;
+		float maxX = float.MinValue;
+		float minY = float.MaxValue;
+		float maxY = float.MinValue;
 
-	private double[] verticesDouble = {
+		int numParticles = verts.Length / 3;
+
+		for (int i = 0; i < numParticles; i++)
+		{
+			float x = verts[3 * i + 0];
+			float y = verts[3 * i + 1];
+
+			if (x < minX)
+			{
+				minX = x;
+            }
+			if (x > maxX)
+			{
+				maxX = x;
+			}
+
+			if (y < minY)
+			{
+				minY = y;
+			}
+			if (y > maxY)
+			{
+				maxY = y;
+			}
+		}
+
+		Debug.Log($"x: {minX}, {maxX}");
+		Debug.Log($"y: {minY}, {maxY}");
+	}
+
+
+
+	private readonly double[] verticesDouble = {
 		-0.200000, 1.145859, -0.000000,  -0.200000, 1.105859, -0.000000,  -0.200000, 1.065859, -0.000000,  -0.200000, 1.025859, -0.000000,  -0.200000, 0.985859, -0.000000,
 		-0.200000, 0.945859, -0.000000,  -0.200000, 0.905859, -0.000000,  -0.200000, 0.865859, -0.000000,  -0.200000, 0.825859, -0.000000,  -0.200000, 0.785859, -0.000000,
 		-0.200000, 0.745859, -0.000000,  -0.200000, 0.705859, -0.000000,  -0.200000, 0.665859, -0.000000,  -0.200000, 0.625859, -0.000000,  -0.200000, 0.585859, -0.000000,
@@ -696,7 +737,7 @@ public class ClothDataTutorial : ClothData
 		-0.170000, 1.115859, -0.000000 };
     
 
-	private int[] faceTriIds = {
+	private readonly int[] faceTriIds = {
 			863, 1294, 3320,  866, 1297, 3319,  869, 1300, 3318,  872, 1303, 3317,  875, 1306, 3316,
 			878, 1309, 3315,  3314, 28, 1312,  3313, 29, 1315,  887, 1318, 3312,  3311, 31, 1321,
 			893, 1324, 3310,  896, 1327, 3309,  3308, 34, 1330,  902, 1333, 3307,  905, 1336, 3306,
@@ -1977,6 +2018,4 @@ public class ClothDataTutorial : ClothData
 			2501, 3316, 1306,  2504, 3316, 2501,  245, 875, 3316,  3317, 1303, 243,  2508, 3317, 2505,
 			2508, 242, 872,  3318, 1300, 240,  2512, 3318, 2509,  239, 869, 3318,  2513, 3319, 1297,
 			2516, 3319, 2513,  236, 866, 3319,  2517, 3320, 1294,  2520, 3320, 2517,  2520, 233, 863 };
-
-
 }

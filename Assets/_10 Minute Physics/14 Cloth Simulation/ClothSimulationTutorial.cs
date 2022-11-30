@@ -37,7 +37,7 @@ public class ClothSimulationTutorial : IGrabbable
 
 	//Simulation settings
 	private readonly float[] gravity = { 0f, -9.81f, 0f };
-	private readonly int numSubSteps = 3;
+	private readonly int numSubSteps = 5;
 	private bool simulate = true;
 
 	//Soft body behavior settings
