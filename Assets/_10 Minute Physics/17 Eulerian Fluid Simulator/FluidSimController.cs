@@ -14,29 +14,23 @@ public class FluidSimController : MonoBehaviour
 
     private void Start()
     {
+        //Density of the fluid (water)
         float density = 1000f;
 
-        /*
-        int res = 50;
-        canvas.width = window.innerWidth - 20;
-        canvas.height = window.innerHeight - 100;
+        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 annd domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
+        float simHeight = 1f;
 
-        var simHeight = 1.1;
-        var cScale = canvas.height / simHeight;
-        var simWidth = canvas.width / cScale;
+        //How detailed the simulation is in height direction
+        int simResolution = 50;
 
-        float domainHeight = 1f;
-        var domainWidth = domainHeight / simHeight * simWidth;
-        var h = domainHeight / res;
+        //The size of a cell
+        float h = simHeight / simResolution;
 
-        int numX = Mathf.FloorToInt(domainWidth / h);
-        int numY = Mathf.FloorToInt(domainHeight / h);
-        */
-
-        int numX = 100;
-        int numY = 50;
-
-        float h = 0.2f;
+        //How many cells do we have
+        //y is up
+        int numY = Mathf.FloorToInt(simHeight / h);
+        //Twice as wide
+        int numX = 2 * numY;
 
         fluidSim = new FluidSimTutorial(density, numX, numY, h);
     }

@@ -5,35 +5,42 @@ using UnityEngine;
 public class FluidSimTutorial
 {
 	//Simulation parameters
-	private float density;
-	private float gravity = -9.81f;
+	private readonly float density;
+	private const float GRAVITY = -9.81f;
 	private int numIters = 100;
+	//Parameter to get a stable simulation 
 	private float overRelaxation = 1.9f;
 
 	//Simulation grid settings
-	private int numX;
-	private int numY;
-	private int numCells;
-	private float h;
+	private readonly int numX;
+	private readonly int numY;
+	private readonly int numCells;
+	//Cell height
+	private readonly float h;
 
 	//Simulation data structures
+	//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
 	//Velocity field
-	private float[] u;
-	private float[] v;
-	private float[] newU;
-	private float[] newV;
+	private readonly float[] u; //x component stored in the middle of the left vertical line
+	private readonly float[] v; //y component stored in the middle of the bottom horizontal line
+	private readonly float[] newU;
+	private readonly float[] newV;
 	//Pressure field
-	private float[] p;
+	private readonly float[] p;
 	//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
-	private float[] s;
+	private readonly float[] s;
 	//Smoke mass
-	private float[] m;
-	private float[] newM;
+	private readonly float[] m;
+	private readonly float[] newM;
 
 	private enum SampleArray
 	{
 		uField, vField, sField
 	}
+
+
+	//Covert betwen 2d and 1d array
+	private int To1D(int i, int j) => (i * numY) + j;
 
 
 
@@ -59,7 +66,7 @@ public class FluidSimTutorial
 
 		System.Array.Fill(this.m, 1f);
 
-		int num = numX * numY;
+		//int num = numX * numY;
 	}
 
 
@@ -72,11 +79,15 @@ public class FluidSimTutorial
 	//1. Modify velocity values (add exteral forces like gravity)
 	//2. Make the fluid incompressible (projection)
 	//3. Move the velocity field (advection)
-	private void simulate(float dt, float gravity, int numIters)
+	private void Simulate(float dt, float gravity, int numIters)
 	{
+		//1. Modify velocity values (add exteral forces like gravity)
 		Integrate(dt, gravity);
 
-		System.Array.Fill(this.p, 0f);
+		//2. Make the fluid incompressible (projection)
+
+		//Reset pressure
+		System.Array.Fill(p, 0f);
 
 		SolveIncompressibility(numIters, dt);
 
@@ -89,18 +100,22 @@ public class FluidSimTutorial
 
 
 
+	//Modify velocity values from external forces like gravity
 	private void Integrate(float dt, float gravity)
 	{
-		int n = this.numY;
+		//int n = numY;
 
-		for (int i = 1; i < this.numX; i++)
+		//Ignore the border except for x on right side???
+		for (int i = 1; i < numX; i++)
 		{
-			for (int j = 1; j < this.numY - 1; j++)
+			for (int j = 1; j < numY - 1; j++)
 			{
-				//If not an obstacle
-				if (this.s[i * n + j] != 0 && this.s[i * n + j - 1] != 0)
+				//If this cell is not an obstacle and cell below it is not a obstacle
+				if (s[To1D(i, j)] != 0f && s[To1D(i, j - 1)] != 0f)
 				{
-					this.v[i * n + j] += gravity * dt;
+					//v = v + dt * g
+					//Only horizontal component of the velocity (v) is affected by gravity (so not u)  
+					v[To1D(i, j)] += gravity * dt;
 				}
 			}
 		}
@@ -108,10 +123,14 @@ public class FluidSimTutorial
 
 
 
+	//Make the fluid incompressible by modifying the velocity values
+	//Divergence div = total outflow = total amount of fluid the leaves the cell, which should be zero if the fluid is incompressible 
+	//Will also calculate pressure as a bonus
 	private void SolveIncompressibility(int numIters, float dt)
 	{
-
 		int n = this.numY;
+
+		//Used in the pressure calculations: p = p + (d/s) * (rho * h / dt) = p + (d/s) * cp
 		float cp = this.density * this.h / dt;
 
 		for (int iter = 0; iter < numIters; iter++)
@@ -121,37 +140,45 @@ public class FluidSimTutorial
 			{
 				for (int j = 1; j < this.numY - 1; j++)
 				{
-					//Ignore obstacles
-					if (this.s[i * n + j] == 0f)
+					//Ignore this cell if its an obstacle
+					if (s[i * n + j] == 0f)
 					{
 						continue;
 					}
 
-					//int s = this.s[i * n + j]; //NOT SURE WHY THIS IS NEEDED IN THE TUTORIAL 
-					float sx0 = this.s[(i - 1) * n + j];
-					float sx1 = this.s[(i + 1) * n + j];
-					float sy0 = this.s[i * n + j - 1];
-					float sy1 = this.s[i * n + j + 1];
+					//Check how many of the surrounding cells are obstacles 
+					float sx0 = s[To1D(i - 1, j)]; //Left
+					float sx1 = s[To1D(i + 1, j)]; //Right
+					float sy0 = s[To1D(i, j - 1)]; //Bottom
+					float sy1 = s[To1D(i, j + 1)]; //Top
 
-					float s = sx0 + sx1 + sy0 + sy1;
+					float sTot = sx0 + sx1 + sy0 + sy1;
 
-					if (s == 0f)
+					//Do nothing if all surrounding cells are obstacles
+					if (sTot == 0f)
 					{
 						continue;
 					}
+
+					//Divergence
+					//if u[To1D(i + 1, j)] > 0 fluid leaves the cell
+					//if u[To1D(i, j)] > 0 fluid enters the cell
+					//So total flow in u-direction is u[To1D(i + 1, j)] - u[To1D(i, j)]
+					float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
+
+					float divergence_Over_sTot = -divergence / sTot;
+
+					divergence_Over_sTot *= overRelaxation;
 					
-					float div = this.u[(i + 1) * n + j] - this.u[i * n + j] + this.v[i * n + j + 1] - this.v[i * n + j];
+					//Calculate the pressure
+					p[To1D(i, j)] += cp * divergence_Over_sTot;
 
-					float p = -div / s;
-
-					p *= this.overRelaxation;
-					
-					this.p[i * n + j] += cp * p;
-
-					this.u[i * n + j] -= sx0 * p;
-					this.u[(i + 1) * n + j] += sx1 * p;
-					this.v[i * n + j] -= sy0 * p;
-					this.v[i * n + j + 1] += sy1 * p;
+					//Update velocities to ensure incompressibility
+					//Signs are flipped compared to Tutorial video because divergence_Over_sTot has a negative sign in its calculation
+					u[To1D(i, j)] -= sx0 * divergence_Over_sTot; //sx0 is 0 if left cell is wall so no fluid will enter the cell
+					u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
+					v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
+					v[To1D(i, j + 1)] += sy1 * divergence_Over_sTot;
 				}
 			}
 		}
