@@ -7,8 +7,10 @@ public class FluidSimTutorial
 	//Simulation parameters
 	private readonly float density;
 	private const float GRAVITY = -9.81f;
-	private int numIters = 100;
-	//Parameter to get a stable simulation 
+	//We need several íterations each update to make the fluid incompressible 
+	private readonly int numIters = 100;
+	//Trick to get a stable simulation by speeding up convergence [1, 2]
+	//Multiply it with the divergence
 	private float overRelaxation = 1.9f;
 
 	//Simulation grid settings
@@ -29,17 +31,17 @@ public class FluidSimTutorial
 	private readonly float[] p;
 	//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
 	private readonly float[] s;
-	//Smoke mass
+	//Smoke density [0,1]
 	private readonly float[] m;
 	private readonly float[] newM;
 
 	private enum SampleArray
 	{
-		uField, vField, sField
+		uField, vField, smokeField
 	}
 
 
-	//Covert betwen 2d and 1d array
+	//Convert between 2d and 1d array
 	private int To1D(int i, int j) => (i * numY) + j;
 
 
@@ -65,8 +67,6 @@ public class FluidSimTutorial
 		this.newM = new float[this.numCells];
 
 		System.Array.Fill(this.m, 1f);
-
-		//int num = numX * numY;
 	}
 
 
@@ -79,20 +79,18 @@ public class FluidSimTutorial
 	//1. Modify velocity values (add exteral forces like gravity)
 	//2. Make the fluid incompressible (projection)
 	//3. Move the velocity field (advection)
-	private void Simulate(float dt, float gravity, int numIters)
+	private void Simulate(float dt, int numIters)
 	{
 		//1. Modify velocity values (add exteral forces like gravity)
-		Integrate(dt, gravity);
+		Integrate(dt, GRAVITY);
 
 		//2. Make the fluid incompressible (projection)
-
-		//Reset pressure
-		System.Array.Fill(p, 0f);
-
 		SolveIncompressibility(numIters, dt);
 
+		//Fix border velocities 
 		Extrapolate();
 
+		//3. Move the velocity field (advection)
 		AdvectVel(dt);
 		
 		AdvectSmoke(dt);
@@ -103,9 +101,7 @@ public class FluidSimTutorial
 	//Modify velocity values from external forces like gravity
 	private void Integrate(float dt, float gravity)
 	{
-		//int n = numY;
-
-		//Ignore the border except for x on right side???
+		//TODO: Ignore the border except for x on right side??? Might be a bug and should be numX - 1
 		for (int i = 1; i < numX; i++)
 		{
 			for (int j = 1; j < numY - 1; j++)
@@ -128,20 +124,21 @@ public class FluidSimTutorial
 	//Will also calculate pressure as a bonus
 	private void SolveIncompressibility(int numIters, float dt)
 	{
-		int n = this.numY;
+		//Reset pressure
+		System.Array.Fill(p, 0f);
 
 		//Used in the pressure calculations: p = p + (d/s) * (rho * h / dt) = p + (d/s) * cp
-		float cp = this.density * this.h / dt;
+		float cp = density * h / dt;
 
 		for (int iter = 0; iter < numIters; iter++)
 		{
 			//For each cell except the border
-			for (int i = 1; i < this.numX - 1; i++)
+			for (int i = 1; i < numX - 1; i++)
 			{
-				for (int j = 1; j < this.numY - 1; j++)
+				for (int j = 1; j < numY - 1; j++)
 				{
 					//Ignore this cell if its an obstacle
-					if (s[i * n + j] == 0f)
+					if (s[To1D(i, j)] == 0f)
 					{
 						continue;
 					}
@@ -171,6 +168,7 @@ public class FluidSimTutorial
 					divergence_Over_sTot *= overRelaxation;
 					
 					//Calculate the pressure
+					//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update 
 					p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 					//Update velocities to ensure incompressibility
@@ -186,20 +184,21 @@ public class FluidSimTutorial
 
 
 
+	//Fix the border velocities by copying neighbor values 
 	private void Extrapolate()
 	{
-		int n = this.numY;
-
-		for (int i = 0; i < this.numX; i++)
+		for (int i = 0; i < numX; i++)
 		{
-			this.u[i * n + 0] = this.u[i * n + 1];
-			this.u[i * n + this.numY - 1] = this.u[i * n + this.numY - 2];
+			u[To1D(i, 0)] = u[To1D(i, 1)];
+
+			u[To1D(i, numY - 1)] = u[To1D(i, numY - 2)];
 		}
 
-		for (int j = 0; j < this.numY; j++)
+		for (int j = 0; j < numY; j++)
 		{
-			this.v[0 * n + j] = this.v[1 * n + j];
-			this.v[(this.numX - 1) * n + j] = this.v[(this.numX - 2) * n + j];
+			v[To1D(0, j)] = v[To1D(1, j)];
+
+			v[To1D(numX - 1, j)] = v[To1D(numX - 2, j)];
 		}
 	}
 
@@ -212,6 +211,7 @@ public class FluidSimTutorial
 
 		int n = this.numY;
 		float h = this.h;
+		//The position of the velocity components are on the borders of the cell - not the middle
 		float h2 = 0.5f * h;
 
 		for (var i = 1; i < this.numX; i++)
@@ -277,7 +277,7 @@ public class FluidSimTutorial
 					float x = i * h + h2 - dt * u;
 					float y = j * h + h2 - dt * v;
 
-					this.newM[i * n + j] = SampleField(x, y, SampleArray.sField);
+					this.newM[i * n + j] = SampleField(x, y, SampleArray.smokeField);
 				}
 			}
 		}
@@ -293,24 +293,26 @@ public class FluidSimTutorial
 
 	private float AvgU(int i, int j)
 	{
-		int n = numY;
+		float uTot = u[To1D(i, j - 1)] + u[To1D(i, j)] + u[To1D(i + 1, j - 1)] + u[To1D(i + 1, j)];
 
-		float uAverage = (u[i * n + j - 1] + u[i * n + j] + u[(i + 1) * n + j - 1] + u[(i + 1) * n + j]) * 0.25f;
+		float uAverage = uTot * 0.25f;
 		
 		return uAverage;
 	}
 
 	private float AvgV(int i, int j)
 	{
-		int n = numY;
+		float vTot = v[To1D(i - 1, j)] + v[To1D(i, j)] + v[To1D(i - 1, j + 1)] + v[To1D(i, j + 1)];
 
-		float vAverage = (v[(i - 1) * n + j] + v[i * n + j] + v[(i - 1) * n + j + 1] + v[i * n + j + 1]) * 0.25f;
+		float vAverage = vTot * 0.25f;
 
 		return vAverage;
 	}
 
 
 
+	//Get data from the simulation at coordinate x, y which are NOT cell coordinates
+	//If we want the velocity we compute a weighted average of the 4 closest velocity components
 	private float SampleField(float x, float y, SampleArray field)
 	{
 		int n = this.numY;
@@ -331,7 +333,7 @@ public class FluidSimTutorial
 		{
 			case SampleArray.uField: f = this.u; dy = h2; break;
 			case SampleArray.vField: f = this.v; dx = h2; break;
-			case SampleArray.sField: f = this.m; dx = h2; dy = h2; break;
+			case SampleArray.smokeField: f = this.m; dx = h2; dy = h2; break;
 		}
 
 		if (f == null)
