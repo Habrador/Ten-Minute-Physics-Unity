@@ -2,6 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//The state of a fluid at a given instant of time is modeled as a velocity vector field and a pressure field, assuming density and temperature are constant. The velocity of air at a radiator is pointing upwards due to heat rising. The Navier-Stokes equations describe the evolution of this velocity field over time. 
+//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell.  
+//Similar to the stable fluid simulations by Jos Stam so read "Real-Time Fluid Dynamics for Games"
+//Improvements:
+// - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
+// - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
+// - Multiple fluids - see p.12 "Real-Time Fluid Dynamics for Games"
 public class FluidSimTutorial
 {
 	//Simulation parameters
@@ -23,25 +30,25 @@ public class FluidSimTutorial
 	//Simulation data structures
 	//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
 	//Velocity field
-	private readonly float[] u; //x component stored in the middle of the left vertical line
-	private readonly float[] v; //y component stored in the middle of the bottom horizontal line
-	private readonly float[] newU;
-	private readonly float[] newV;
+	private readonly float[] u; //x component stored in the middle of the left vertical line of each cell
+	private readonly float[] v; //y component stored in the middle of the bottom horizontal line of each cell
+	private readonly float[] uNew;
+	private readonly float[] vNew;
 	//Pressure field
 	private readonly float[] p;
 	//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
 	private readonly float[] s;
 	//Smoke density [0,1]
 	private readonly float[] m;
-	private readonly float[] newM;
+	private readonly float[] mNew;
 
 	private enum SampleArray
 	{
 		uField, vField, smokeField
 	}
 
-
 	//Convert between 2d and 1d array
+	//i is x and j is y
 	private int To1D(int i, int j) => (i * numY) + j;
 
 
@@ -50,21 +57,22 @@ public class FluidSimTutorial
     {
 		this.density = density;
 
-		this.numX = numX + 2; //Add 2 extra because we need a border
+		//Add 2 extra cells because we need a border
+		this.numX = numX + 2; 
 		this.numY = numY + 2;
 		this.numCells = this.numX * this.numY;
 		this.h = h;
 		
 		this.u = new float[this.numCells];
 		this.v = new float[this.numCells];
-		this.newU = new float[this.numCells];
-		this.newV = new float[this.numCells];
+		this.uNew = new float[this.numCells];
+		this.vNew = new float[this.numCells];
 
 		this.p = new float[this.numCells];
 		this.s = new float[this.numCells];
 
 		this.m = new float[this.numCells];
-		this.newM = new float[this.numCells];
+		this.mNew = new float[this.numCells];
 
 		System.Array.Fill(this.m, 1f);
 	}
@@ -75,10 +83,14 @@ public class FluidSimTutorial
 	// Simulation
 	//
 
-	//Simulation loop
+	//Simulation loop for the fluid
 	//1. Modify velocity values (add exteral forces like gravity)
-	//2. Make the fluid incompressible (projection)
-	//3. Move the velocity field (advection)
+	//2. Make the fluid incompressible (projection) - what creates the vortices that produces swirly-like flows. 
+	//3. Move the velocity field (advection) - the velocity field is moved along itself
+	//Other sources use add source - diffuse - project - advect. Diffusion is not needed if we dont take viscocity into account?  
+	//Simulation loop for the smoke
+	//1. Move the smoke along the velocity field 
+	//...one can also add diffusion to make the densities spread across the cells?
 	private void Simulate(float dt, int numIters)
 	{
 		//1. Modify velocity values (add exteral forces like gravity)
@@ -90,7 +102,7 @@ public class FluidSimTutorial
 		//Fix border velocities 
 		Extrapolate();
 
-		//3. Move the velocity field (advection)
+		//3. Move the velocity field (advection). We will here simulate particles, meaning we get a Semi-Lagrangian advection
 		AdvectVel(dt);
 		
 		AdvectSmoke(dt);
@@ -130,6 +142,7 @@ public class FluidSimTutorial
 		//Used in the pressure calculations: p = p + (d/s) * (rho * h / dt) = p + (d/s) * cp
 		float cp = density * h / dt;
 
+		//Gauss-Seidel relaxation
 		for (int iter = 0; iter < numIters; iter++)
 		{
 			//For each cell except the border
@@ -185,6 +198,9 @@ public class FluidSimTutorial
 
 
 	//Fix the border velocities by copying neighbor values 
+	//If the fluid is in a box with solid walls: 
+	//The horizontal component of the velocity should be 0 on the vertical walls
+	//The vertical component of the velocity should be 0 on the horizontal walls
 	private void Extrapolate()
 	{
 		for (int i = 0; i < numX; i++)
@@ -204,12 +220,18 @@ public class FluidSimTutorial
 
 
 
+	//Move the velocity field
+	//Semi-Lagrangian advection so we are simulating particles
+	//1. Calculate (u, v_bar) at the u component, where v_bar is the average
+	//2. The previous pos x_prev = x - dt * v if we assume the particle moved in a straight line
+	//3. Interpolate the velocity at x(prev)
 	private void AdvectVel(float dt)
 	{
-		this.u.CopyTo(newU, 0);
-		this.v.CopyTo(newV, 0);
+		this.u.CopyTo(uNew, 0);
+		this.v.CopyTo(vNew, 0);
 
 		int n = this.numY;
+
 		float h = this.h;
 		//The position of the velocity components are on the borders of the cell - not the middle
 		float h2 = 0.5f * h;
@@ -221,7 +243,7 @@ public class FluidSimTutorial
 
 				//cnt++; //Is just set to 0 at the start and is just accumulated here...
 
-				// u component
+				//Update u component
 				if (this.s[i * n + j] != 0.0 && this.s[(i - 1) * n + j] != 0.0 && j < this.numY - 1)
 				{
 					var x = i * h;
@@ -232,9 +254,9 @@ public class FluidSimTutorial
 					x = x - dt * u;
 					y = y - dt * v;
 					u = SampleField(x, y, SampleArray.uField);
-					this.newU[i * n + j] = u;
+					this.uNew[i * n + j] = u;
 				}
-				// v component
+				//Update v component
 				if (this.s[i * n + j] != 0.0 && this.s[i * n + j - 1] != 0.0 && i < this.numX - 1)
 				{
 					var x = i * h + h2;
@@ -245,20 +267,25 @@ public class FluidSimTutorial
 					x = x - dt * u;
 					y = y - dt * v;
 					v = SampleField(x, y, SampleArray.vField);
-					this.newV[i * n + j] = v;
+					this.vNew[i * n + j] = v;
 				}
 			}
 		}
 
-		this.newU.CopyTo(u, 0);
-		this.newV.CopyTo(v, 0);
+		this.uNew.CopyTo(u, 0);
+		this.vNew.CopyTo(v, 0);
 	}
 
 
+
+	//Move the smoke field
+	//Same as advecting velocity
+	//Use the velocity at the center of the cell and walk back in a straight line 
+	//Find the particles that over a single time step ended up exactly at the cell's center. Remember to use the densities of the previous update to find the densities this update  
 	private void AdvectSmoke(float dt)
 	{
 		//Copy all values from m to newM, we cant just swap because of obstacles and border???
-		this.m.CopyTo(newM, 0);
+		this.m.CopyTo(mNew, 0);
 
 		int n = this.numY;
 		float h = this.h;
@@ -277,12 +304,12 @@ public class FluidSimTutorial
 					float x = i * h + h2 - dt * u;
 					float y = j * h + h2 - dt * v;
 
-					this.newM[i * n + j] = SampleField(x, y, SampleArray.smokeField);
+					this.mNew[i * n + j] = SampleField(x, y, SampleArray.smokeField);
 				}
 			}
 		}
 
-		this.newM.CopyTo(this.m, 0);
+		this.mNew.CopyTo(this.m, 0);
 	}
 
 
