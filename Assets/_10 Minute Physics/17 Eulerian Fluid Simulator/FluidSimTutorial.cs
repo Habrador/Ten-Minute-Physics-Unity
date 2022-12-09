@@ -4,7 +4,7 @@ using UnityEngine;
 
 //The state of a fluid at a given instant of time is modeled as a velocity vector field and a pressure field, assuming density and temperature are constant. The velocity of air at a radiator is pointing upwards due to heat rising. The Navier-Stokes equations describe the evolution of this velocity field over time. 
 //Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell.  
-//Similar to the stable fluid simulations by Jos Stam so read "Real-Time Fluid Dynamics for Games"
+//Similar to the fluid simulations by Jos Stam so read "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" if you want to learn what's going on
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
@@ -30,6 +30,7 @@ public class FluidSimTutorial
 	//Simulation data structures
 	//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
 	//Velocity field
+	//A staggered grid is improving the numerical results with less artificial dissipation  
 	private readonly float[] u; //x component stored in the middle of the left vertical line of each cell
 	private readonly float[] v; //y component stored in the middle of the bottom horizontal line of each cell
 	private readonly float[] uNew;
@@ -84,13 +85,15 @@ public class FluidSimTutorial
 	//
 
 	//Simulation loop for the fluid
-	//1. Modify velocity values (add exteral forces like gravity)
-	//2. Make the fluid incompressible (projection) - what creates the vortices that produces swirly-like flows. 
-	//3. Move the velocity field (advection) - the velocity field is moved along itself
-	//Other sources use add source - diffuse - project - advect. Diffusion is not needed if we dont take viscocity into account?  
+	//1. External forces. Modify velocity values by adding:
+	//	- Body forces applied to entire fluid like gravity and buoyancy from temperature differences
+	//	- Local forces applied to a region of the fluid like a fan blowing
+	//2. Projection. Make the fluid incompressible by projecting a vector field. What creates the vortices that produces swirly-like flows. Here we calculate the pressure  
+	//3. Advection. Move the velocity field along itself (self-advection)
+	//(4.) Diffusion. Viscocity is a how resistive a fluid is to flow. The resistance results in diffusion of momentum (and thus velocity (the velocity is dissipated = slowed down). Is not needed here because we dont take viscocity into account (yet).  
 	//Simulation loop for the smoke
-	//1. Move the smoke along the velocity field 
-	//...one can also add diffusion to make the densities spread across the cells?
+	//1. Advection. Move the smoke along the velocity field 
+	//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
 	private void Simulate(float dt, int numIters)
 	{
 		//1. Modify velocity values (add exteral forces like gravity)
