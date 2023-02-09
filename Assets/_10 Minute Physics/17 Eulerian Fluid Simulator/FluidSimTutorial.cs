@@ -31,8 +31,11 @@ public class FluidSimTutorial
 	//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
 	//Velocity field (u, v, w) 
 	//A staggered grid is improving the numerical results with less artificial dissipation  
-	private readonly float[] u; //x component stored in the middle of the left vertical line of each cell
-	private readonly float[] v; //y component stored in the middle of the bottom horizontal line of each cell
+	//u component stored in the middle of the left vertical line of each cell
+	//v component stored in the middle of the bottom horizontal line of each cell
+	//This means we can't have a velocity vector because u,v are at different locations
+	private readonly float[] u; 
+	private readonly float[] v;
 	private readonly float[] uNew;
 	private readonly float[] vNew;
 	//Pressure field
@@ -64,7 +67,7 @@ public class FluidSimTutorial
 		this.numCells = this.numX * this.numY;
 		this.h = h;
 		
-		this.u = new float[this.numCells];
+		this.u = new float[this.numCells]; //Should be this.numCells + 1 because we use a staggered grid? 
 		this.v = new float[this.numCells];
 		this.uNew = new float[this.numCells];
 		this.vNew = new float[this.numCells];
@@ -89,8 +92,12 @@ public class FluidSimTutorial
 	//	- Body forces applied to entire fluid like gravity and buoyancy from temperature differences
 	//	- Local forces applied to a region of the fluid like a fan blowing
 	//2. Projection. Make the fluid incompressible by projecting a vector field. What creates the vortices that produces swirly-like flows. Here we calculate the pressure  
-	//3. Advection. Move the velocity field along itself (self-advection)
-	//(4.) Diffusion. This is the teabag in hot water effect - the tea spreads out over time. In a similar way, all fluids will come to rest over time. If you stir a cup of water the movement of the water will stop. Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distriuted throughout the fluid (and thus velocity. The velocity is dissipated = slowed down). Is not needed here because we dont take viscocity into account (yet).  
+	//3. Advection. Move the velocity field along itself (self-advection) - the fluid's momentum is being advected by the velocity field
+	//(4.) Diffusion. This is the teabag in hot water effect - the tea spreads out over time. In a similar way, all fluids will come to rest over time. If you stir a cup of water the movement of the water will stop. Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other (similar to damping in a spring). The resistance results in diffusion of momentum which becomes distriuted throughout the fluid (and thus velocity. The velocity is dissipated = slowed down). Is not needed here because we dont take viscocity into account (yet).  
+	//People are mixing convection, advection, and diffusion, but according to: https://physics.stackexchange.com/questions/168218/what-is-the-exact-difference-between-diffusion-convection-and-advection, this is the difference:
+	//- Convection is the collective motion of particles in a fluid and actually encompasses both diffusion and advection.
+	//	- Advection is the motion of particles along the bulk flow (Larger scale)
+	//  - Diffusion is the net movement of particles from high concentration to low concentration (Smaller scale)
 	//Simulation loop for the smoke
 	//1. Advection. Move the smoke along the velocity field 
 	//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
