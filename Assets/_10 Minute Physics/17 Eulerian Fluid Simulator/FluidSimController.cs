@@ -9,7 +9,7 @@ using UnityEngine;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 public class FluidSimController : MonoBehaviour
 {
-    private FluidSimTutorial fluidSim;
+    private Fluid fluidSim;
 
     private Scene scene;
 
@@ -40,9 +40,47 @@ public class FluidSimController : MonoBehaviour
 
 
 
+    //sceneNr is tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
     private void SetupScene(int sceneNr = 0)
     {
+        scene.sceneNr = sceneNr;
+        scene.obstacleRadius = 0.15f;
+        scene.overRelaxation = 1.9f;
 
+        scene.dt = Time.fixedDeltaTime;
+        scene.numIters = 40;
+
+        //How detailed the simulation is in height direction
+        int res = 100;
+
+        if (sceneNr == 0)
+        {
+            res = 50;
+        }
+        else if (sceneNr == 3)
+        {
+            res = 200;
+        }
+
+
+        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 annd domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
+        float simHeight = 1f;
+
+        //The size of a cell
+        float h = simHeight / res;
+
+        //How many cells do we have
+        //y is up
+        int numY = Mathf.FloorToInt(simHeight / h);
+        //Twice as wide
+        int numX = 2 * numY;
+
+        //Density of the fluid (water)
+        float density = 1000f;
+
+        Fluid f = scene.fluid = new Fluid(density, numX, numY, h);
+
+        int n = f.numY;
     }
 
 

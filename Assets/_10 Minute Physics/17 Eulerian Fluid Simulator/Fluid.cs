@@ -9,7 +9,7 @@ using UnityEngine;
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
 // - Multiple fluids - see p.12 "Real-Time Fluid Dynamics for Games"
-public class FluidSimTutorial
+public class Fluid
 {
 	//Simulation parameters
 	private readonly float density;
@@ -22,7 +22,7 @@ public class FluidSimTutorial
 
 	//Simulation grid settings
 	private readonly int numX;
-	private readonly int numY;
+	public int numY;
 	private readonly int numCells;
 	//Cell height
 	private readonly float h;
@@ -57,7 +57,7 @@ public class FluidSimTutorial
 
 
 
-	public FluidSimTutorial(float density, int numX, int numY, float h)
+	public Fluid(float density, int numX, int numY, float h)
     {
 		this.density = density;
 
