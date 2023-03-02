@@ -9,37 +9,18 @@ using UnityEngine;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 public class FluidSimController : MonoBehaviour
 {
-    private Fluid fluidSim;
-
     private Scene scene;
+
+
 
     private void Start()
     {
-        //Density of the fluid (water)
-        float density = 1000f;
-
-        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 annd domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
-        float simHeight = 1f;
-
-        //How detailed the simulation is in height direction
-        int simResolution = 50;
-
-        //The size of a cell
-        float h = simHeight / simResolution;
-
-        //How many cells do we have
-        //y is up
-        int numY = Mathf.FloorToInt(simHeight / h);
-        //Twice as wide
-        int numX = 2 * numY;
-
-        //fluidSim = new FluidSimTutorial(density, numX, numY, h);
-
         scene = new Scene();
     }
 
 
 
+    //Init the simulation after a button has been pressed
     //sceneNr is tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
     private void SetupScene(int sceneNr = 0)
     {
@@ -80,16 +61,108 @@ public class FluidSimController : MonoBehaviour
 
         Fluid f = scene.fluid = new Fluid(density, numX, numY, h);
 
+        //not same as numY above because we add a border?
         int n = f.numY;
+
+        //Tank
+        if (sceneNr == 0)
+        {           
+            //Add a solid border
+            for (int i = 0; i < f.numX; i++)
+            {
+                for (int j = 0; j < f.numY; j++)
+                {
+                    //Fluid
+                    float s = 1f;
+                    
+                    if (i == 0 || i == f.numX - 1 || j == 0)
+                    {
+                        s = 0f;
+                    }
+
+                    f.s[i * n + j] = s;
+                }
+            }
+
+            scene.gravity = -9.81f;
+            scene.showPressure = true;
+            scene.showSmoke = false;
+            scene.showStreamlines = false;
+            scene.showVelocities = false;
+        }
+        //Wind tunnel
+        else if (sceneNr == 1 || sceneNr == 3)
+        {
+            //Wind velocity
+            float inVel = 2f;
+            
+            for (int i = 0; i < f.numX; i++)
+            {
+                for (int j = 0; j < f.numY; j++)
+                {
+                    //Fluid
+                    float s = 1f;
+
+                    if (i == 0 || j == 0 || j == f.numY - 1)
+                    {
+                        //Solid
+                        s = 0f;
+                    }
+                    f.s[i * n + j] = s;
+
+                    if (i == 1)
+                    {
+                        f.u[i * n + j] = inVel;
+                    }
+                }
+            }
+
+            //Add smoke
+            float pipeH = 0.1f * f.numY;
+            
+            int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
+            int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
+
+            for (var j = minJ; j < maxJ; j++)
+            {
+                f.m[j] = 0f; //Why is this 0???
+            }
+
+
+            //setObstacle(0.4, 0.5, true);
+
+
+            scene.gravity = 0f; //???
+            scene.showPressure = false;
+            scene.showSmoke = true;
+            scene.showStreamlines = false;
+            scene.showVelocities = false;
+
+            if (sceneNr == 3)
+            {
+                //scene.dt = 1.0 / 120.0;
+                scene.numIters = 100;
+                scene.showPressure = true;
+            }
+        }
+        //Paint
+        else if (sceneNr == 2)
+        {
+            scene.gravity = 0f;
+            scene.overRelaxation = 1f;
+            scene.showPressure = false;
+            scene.showSmoke = true;
+            scene.showStreamlines = false;
+            scene.showVelocities = false;
+            scene.obstacleRadius = 0.1f;
+        }
     }
+
 
 
     //UI
     private void OnGUI()
     {
-        
-
-
         GUILayout.BeginHorizontal("box");
 
         int fontSize = 20;

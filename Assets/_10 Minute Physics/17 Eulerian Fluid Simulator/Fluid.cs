@@ -21,7 +21,7 @@ public class Fluid
 	private float overRelaxation = 1.9f;
 
 	//Simulation grid settings
-	private readonly int numX;
+	public int numX;
 	public int numY;
 	private readonly int numCells;
 	//Cell height
@@ -34,16 +34,16 @@ public class Fluid
 	//u component stored in the middle of the left vertical line of each cell
 	//v component stored in the middle of the bottom horizontal line of each cell
 	//This means we can't have a velocity vector because u,v are at different locations
-	private readonly float[] u; 
+	public readonly float[] u; 
 	private readonly float[] v;
 	private readonly float[] uNew;
 	private readonly float[] vNew;
 	//Pressure field
 	private readonly float[] p;
 	//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
-	private readonly float[] s;
+	public float[] s;
 	//Smoke density [0,1]
-	private readonly float[] m;
+	public readonly float[] m;
 	private readonly float[] mNew;
 
 	private enum SampleArray
