@@ -49,28 +49,37 @@ public class FluidSimController : MonoBehaviour
     //UI
     private void OnGUI()
     {
+        
+
+
         GUILayout.BeginHorizontal("box");
 
         int fontSize = 20;
 
+        RectOffset offset = new RectOffset(10, 10, 10, 10);
+
         //Buttons
-        GUIStyle buttonStyle = GUI.skin.GetStyle("Button");
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+
+        //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
 
         buttonStyle.fontSize = fontSize;
+
+        buttonStyle.margin = offset;
 
         if (GUILayout.Button($"Wind Tunnel", buttonStyle))
         {
             SetupScene(1);
         }
-        if (GUILayout.Button("Hires Tunnel"))
+        if (GUILayout.Button("Hires Tunnel", buttonStyle))
         {
             SetupScene(3);
         }
-        if (GUILayout.Button("Tank"))
+        if (GUILayout.Button("Tank", buttonStyle))
         {
             SetupScene(0);
         }
-        if (GUILayout.Button("Paint"))
+        if (GUILayout.Button("Paint", buttonStyle))
         {
             SetupScene(2);
         }
@@ -79,6 +88,7 @@ public class FluidSimController : MonoBehaviour
         GUIStyle toggleStyle = GUI.skin.GetStyle("Toggle");
 
         toggleStyle.fontSize = fontSize;
+        toggleStyle.margin = offset;
 
         scene.showStreamlines = GUILayout.Toggle(scene.showStreamlines, "Streamlines", toggleStyle);
 
