@@ -11,6 +11,7 @@ public class FluidSimController : MonoBehaviour
 {
     private FluidSimTutorial fluidSim;
 
+    private Scene scene;
 
     private void Start()
     {
@@ -32,6 +33,65 @@ public class FluidSimController : MonoBehaviour
         //Twice as wide
         int numX = 2 * numY;
 
-        fluidSim = new FluidSimTutorial(density, numX, numY, h);
+        //fluidSim = new FluidSimTutorial(density, numX, numY, h);
+
+        scene = new Scene();
+    }
+
+
+
+    private void SetupScene(int sceneNr = 0)
+    {
+
+    }
+
+
+    //UI
+    private void OnGUI()
+    {
+        GUILayout.BeginHorizontal("box");
+
+        int fontSize = 20;
+
+        //Buttons
+        GUIStyle buttonStyle = GUI.skin.GetStyle("Button");
+
+        buttonStyle.fontSize = fontSize;
+
+        if (GUILayout.Button($"Wind Tunnel", buttonStyle))
+        {
+            SetupScene(1);
+        }
+        if (GUILayout.Button("Hires Tunnel"))
+        {
+            SetupScene(3);
+        }
+        if (GUILayout.Button("Tank"))
+        {
+            SetupScene(0);
+        }
+        if (GUILayout.Button("Paint"))
+        {
+            SetupScene(2);
+        }
+
+        //Checkboxes
+        GUIStyle toggleStyle = GUI.skin.GetStyle("Toggle");
+
+        toggleStyle.fontSize = fontSize;
+
+        scene.showStreamlines = GUILayout.Toggle(scene.showStreamlines, "Streamlines", toggleStyle);
+
+        scene.showVelocities = GUILayout.Toggle(scene.showVelocities, "Velocities");
+
+        scene.showPressure = GUILayout.Toggle(scene.showPressure, "Pressure");
+
+        scene.showSmoke = GUILayout.Toggle(scene.showSmoke, "Smoke");
+
+        scene.useOverRelaxation = GUILayout.Toggle(scene.useOverRelaxation, "Overrelax");
+
+        scene.overRelaxation = scene.useOverRelaxation ? 1.9f : 1.0f;
+
+        GUILayout.EndHorizontal();
     }
 }
