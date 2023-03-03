@@ -44,8 +44,7 @@ public class FluidSimController : MonoBehaviour
 
 
     //Init the simulation after a button has been pressed
-    //sceneNr is tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
-    private void SetupScene(int sceneNr = 0)
+    private void SetupScene(Scene.SceneNr sceneNr = Scene.SceneNr.Tank)
     {
         scene.sceneNr = sceneNr;
         scene.obstacleRadius = 0.15f;
@@ -57,11 +56,11 @@ public class FluidSimController : MonoBehaviour
         //How detailed the simulation is in height direction
         int res = 100;
 
-        if (sceneNr == 0)
+        if (sceneNr == Scene.SceneNr.Tank)
         {
             res = 50;
         }
-        else if (sceneNr == 3)
+        else if (sceneNr == Scene.SceneNr.HighResWindTunnel)
         {
             res = 200;
         }
@@ -88,7 +87,7 @@ public class FluidSimController : MonoBehaviour
         int n = f.numY;
 
         //Tank
-        if (sceneNr == 0)
+        if (sceneNr == Scene.SceneNr.Tank)
         {           
             //Add a solid border
             for (int i = 0; i < f.numX; i++)
@@ -114,7 +113,7 @@ public class FluidSimController : MonoBehaviour
             scene.showVelocities = false;
         }
         //Wind tunnel
-        else if (sceneNr == 1 || sceneNr == 3)
+        else if (sceneNr == Scene.SceneNr.WindTunnel || sceneNr == Scene.SceneNr.HighResWindTunnel)
         {
             //Wind velocity
             float inVel = 2f;
@@ -161,7 +160,7 @@ public class FluidSimController : MonoBehaviour
             scene.showStreamlines = false;
             scene.showVelocities = false;
 
-            if (sceneNr == 3)
+            if (sceneNr == Scene.SceneNr.HighResWindTunnel)
             {
                 //scene.dt = 1.0 / 120.0;
                 scene.numIters = 100;
@@ -169,7 +168,7 @@ public class FluidSimController : MonoBehaviour
             }
         }
         //Paint
-        else if (sceneNr == 2)
+        else if (sceneNr == Scene.SceneNr.Paint)
         {
             scene.gravity = 0f;
             scene.overRelaxation = 1f;
@@ -203,19 +202,19 @@ public class FluidSimController : MonoBehaviour
 
         if (GUILayout.Button($"Wind Tunnel", buttonStyle))
         {
-            SetupScene(1);
+            SetupScene(Scene.SceneNr.WindTunnel);
         }
         if (GUILayout.Button("Hires Tunnel", buttonStyle))
         {
-            SetupScene(3);
+            SetupScene(Scene.SceneNr.HighResWindTunnel);
         }
         if (GUILayout.Button("Tank", buttonStyle))
         {
-            SetupScene(0);
+            SetupScene(Scene.SceneNr.Tank);
         }
         if (GUILayout.Button("Paint", buttonStyle))
         {
-            SetupScene(2);
+            SetupScene(Scene.SceneNr.Paint);
         }
 
         //Checkboxes

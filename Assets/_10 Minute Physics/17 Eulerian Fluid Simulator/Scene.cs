@@ -5,15 +5,24 @@ using UnityEngine;
 //Settings for the fluid simulation and a ref to the fluid simulation itself
 public class Scene
 {
+    //The tutorial is using an int: tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
+    public enum SceneNr
+    {
+        Tank, WindTunnel, Paint, HighResWindTunnel
+    }
+
+    //public int sceneNr = 0;
+
+    public SceneNr sceneNr;
+
+    //Display settings
     public bool showStreamlines = false;
     public bool showVelocities = false;
     public bool showPressure = false;
     public bool showSmoke = true;
+
+    //Simulation settings
     public bool useOverRelaxation = true; //Is not in the tutorial but needs to be there to make Unity's toggles work
-
-    
-
-    public int sceneNr = 0;
 
     public float dt;
 

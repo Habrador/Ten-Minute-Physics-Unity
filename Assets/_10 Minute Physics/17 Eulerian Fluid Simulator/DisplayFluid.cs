@@ -60,8 +60,8 @@ public class DisplayFluid
 					color.r = 255 * s;
 					color.g = 255 * s;
 					color.b = 255 * s;
-					
-					if (scene.sceneNr == 2)
+
+					if (scene.sceneNr == Scene.SceneNr.Paint)
 					{
 						color = GetSciColor(s, 0f, 1f);
 					}	
