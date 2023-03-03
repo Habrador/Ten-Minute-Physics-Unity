@@ -12,7 +12,7 @@ public class DisplayFluid
 
 		//c.fillStyle = "#FF0000";
 		
-		Fluid f = scene.fluid;
+		FluidSim f = scene.fluid;
 		
 		int n = f.numY;
 

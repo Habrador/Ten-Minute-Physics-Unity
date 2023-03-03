@@ -5,13 +5,16 @@ using UnityEngine;
 //Settings for the fluid simulation and a ref to the fluid simulation itself
 public class Scene
 {
+    public FluidSim fluid = null;
+
     //The tutorial is using an int: tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
+    //public int sceneNr = 0;
+
+    //...but an enum is better
     public enum SceneNr
     {
         Tank, WindTunnel, Paint, HighResWindTunnel
     }
-
-    //public int sceneNr = 0;
 
     public SceneNr sceneNr;
 
@@ -25,7 +28,6 @@ public class Scene
     public bool useOverRelaxation = true; //Is not in the tutorial but needs to be there to make Unity's toggles work
 
     //Trick to get a stable simulation by speeding up convergence [1, 2]
-    //Multiply it with the divergence
     public float overRelaxation = 1.9f;
 
     public float dt;
@@ -33,9 +35,8 @@ public class Scene
     //Need several íterations each update to make the fluid incompressible
     public int numIters = 100;
 
+    //Is sometimes 0 for some reason...
     public float gravity = -9.81f;
-
-    public Fluid fluid;
 
     //Useful for debugging 
     public int frameNr = 0;

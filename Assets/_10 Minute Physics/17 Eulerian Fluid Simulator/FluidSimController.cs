@@ -83,7 +83,7 @@ public class FluidSimController : MonoBehaviour
         //Density of the fluid (water)
         float density = 1000f;
 
-        Fluid f = scene.fluid = new Fluid(density, numX, numY, h);
+        FluidSim f = scene.fluid = new FluidSim(density, numX, numY, h);
 
         //not same as numY above because we add a border?
         int n = f.numY;
