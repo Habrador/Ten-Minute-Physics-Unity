@@ -16,6 +16,8 @@ public class FluidSimController : MonoBehaviour
     private void Start()
     {
         scene = new Scene();
+
+        SetupScene(Scene.SceneNr.WindTunnel);
     }
 
 
@@ -35,7 +37,7 @@ public class FluidSimController : MonoBehaviour
         //Simulate the fluid
         if (!scene.isPaused)
         {
-            scene.fluid.Simulate(scene.dt, scene.gravity, scene.numIters);
+            scene.fluid.Simulate(scene.dt, scene.gravity, scene.numIters, scene.overRelaxation);
 
             scene.frameNr++;
         }
@@ -66,7 +68,7 @@ public class FluidSimController : MonoBehaviour
         }
 
 
-        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 annd domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
+        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 and domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
         float simHeight = 1f;
 
         //The size of a cell
@@ -86,7 +88,6 @@ public class FluidSimController : MonoBehaviour
         //not same as numY above because we add a border?
         int n = f.numY;
 
-        //Tank
         if (sceneNr == Scene.SceneNr.Tank)
         {           
             //Add a solid border
@@ -112,7 +113,6 @@ public class FluidSimController : MonoBehaviour
             scene.showStreamlines = false;
             scene.showVelocities = false;
         }
-        //Wind tunnel
         else if (sceneNr == Scene.SceneNr.WindTunnel || sceneNr == Scene.SceneNr.HighResWindTunnel)
         {
             //Wind velocity
@@ -132,6 +132,7 @@ public class FluidSimController : MonoBehaviour
                     }
                     f.s[i * n + j] = s;
 
+                    //Add constant velocity in the first column
                     if (i == 1)
                     {
                         f.u[i * n + j] = inVel;
@@ -167,7 +168,6 @@ public class FluidSimController : MonoBehaviour
                 scene.showPressure = true;
             }
         }
-        //Paint
         else if (sceneNr == Scene.SceneNr.Paint)
         {
             scene.gravity = 0f;

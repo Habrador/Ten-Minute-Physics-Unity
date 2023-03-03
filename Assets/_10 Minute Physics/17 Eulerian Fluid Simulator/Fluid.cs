@@ -13,12 +13,7 @@ public class Fluid
 {
 	//Simulation parameters
 	private readonly float density;
-	//private const float GRAVITY = -9.81f; //Is apparently sometimes 0???
-	//We need several íterations each update to make the fluid incompressible 
-	private readonly int numIters = 100;
-	//Trick to get a stable simulation by speeding up convergence [1, 2]
-	//Multiply it with the divergence
-	private float overRelaxation = 1.9f;
+	
 
 	//Simulation grid settings
 	public int numX;
@@ -53,7 +48,7 @@ public class Fluid
 
 	//Convert between 2d and 1d array
 	//i is x and j is y
-	private int To1D(int i, int j) => (i * numY) + j;
+	public int To1D(int i, int j) => (i * numY) + j;
 
 
 
@@ -101,13 +96,13 @@ public class Fluid
 	//Simulation loop for the smoke
 	//1. Advection. Move the smoke along the velocity field 
 	//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
-	public void Simulate(float dt, float gravity, int numIters)
+	public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 	{
 		//1. Modify velocity values (add exteral forces like gravity)
 		Integrate(dt, gravity);
 
 		//2. Make the fluid incompressible (projection)
-		SolveIncompressibility(numIters, dt);
+		SolveIncompressibility(numIters, dt, overRelaxation);
 
 		//Fix border velocities 
 		Extrapolate();
@@ -144,7 +139,7 @@ public class Fluid
 	//Make the fluid incompressible by modifying the velocity values
 	//Divergence div = total outflow = total amount of fluid the leaves the cell, which should be zero if the fluid is incompressible 
 	//Will also calculate pressure as a bonus
-	private void SolveIncompressibility(int numIters, float dt)
+	private void SolveIncompressibility(int numIters, float dt, float overRelaxation)
 	{
 		//Reset pressure
 		System.Array.Fill(p, 0f);

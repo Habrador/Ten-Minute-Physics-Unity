@@ -24,13 +24,16 @@ public class Scene
     //Simulation settings
     public bool useOverRelaxation = true; //Is not in the tutorial but needs to be there to make Unity's toggles work
 
+    //Trick to get a stable simulation by speeding up convergence [1, 2]
+    //Multiply it with the divergence
+    public float overRelaxation = 1.9f;
+
     public float dt;
 
+    //Need several íterations each update to make the fluid incompressible
     public int numIters = 100;
 
     public float gravity = -9.81f;
-
-    public float overRelaxation = 1.9f;
 
     public Fluid fluid;
 
