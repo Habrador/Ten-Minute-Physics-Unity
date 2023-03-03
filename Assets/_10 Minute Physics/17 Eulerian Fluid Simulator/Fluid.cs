@@ -13,7 +13,7 @@ public class Fluid
 {
 	//Simulation parameters
 	private readonly float density;
-	private const float GRAVITY = -9.81f;
+	//private const float GRAVITY = -9.81f; //Is apparently sometimes 0???
 	//We need several íterations each update to make the fluid incompressible 
 	private readonly int numIters = 100;
 	//Trick to get a stable simulation by speeding up convergence [1, 2]
@@ -23,9 +23,9 @@ public class Fluid
 	//Simulation grid settings
 	public int numX;
 	public int numY;
-	private readonly int numCells;
+	public int numCells;
 	//Cell height
-	private readonly float h;
+	public float h;
 
 	//Simulation data structures
 	//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
@@ -39,7 +39,7 @@ public class Fluid
 	private readonly float[] uNew;
 	private readonly float[] vNew;
 	//Pressure field
-	private readonly float[] p;
+	public float[] p;
 	//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
 	public float[] s;
 	//Smoke density [0,1]
@@ -101,10 +101,10 @@ public class Fluid
 	//Simulation loop for the smoke
 	//1. Advection. Move the smoke along the velocity field 
 	//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
-	private void Simulate(float dt, int numIters)
+	public void Simulate(float dt, float gravity, int numIters)
 	{
 		//1. Modify velocity values (add exteral forces like gravity)
-		Integrate(dt, GRAVITY);
+		Integrate(dt, gravity);
 
 		//2. Make the fluid incompressible (projection)
 		SolveIncompressibility(numIters, dt);

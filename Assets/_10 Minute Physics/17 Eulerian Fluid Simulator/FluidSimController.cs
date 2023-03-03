@@ -20,6 +20,29 @@ public class FluidSimController : MonoBehaviour
 
 
 
+    private void Update()
+    {
+        //Display the fluid
+        //Draw();
+    }
+
+
+
+    private void FixedUpdate()
+    {
+        return;
+    
+        //Simulate the fluid
+        if (!scene.isPaused)
+        {
+            scene.fluid.Simulate(scene.dt, scene.gravity, scene.numIters);
+
+            scene.frameNr++;
+        }
+    }
+
+
+
     //Init the simulation after a button has been pressed
     //sceneNr is tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
     private void SetupScene(int sceneNr = 0)
@@ -167,10 +190,10 @@ public class FluidSimController : MonoBehaviour
 
         int fontSize = 20;
 
-        RectOffset offset = new RectOffset(10, 10, 10, 10);
+        RectOffset offset = new (10, 10, 10, 10);
 
         //Buttons
-        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        GUIStyle buttonStyle = new (GUI.skin.button);
 
         //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
 
@@ -214,5 +237,16 @@ public class FluidSimController : MonoBehaviour
         scene.overRelaxation = scene.useOverRelaxation ? 1.9f : 1.0f;
 
         GUILayout.EndHorizontal();
+
+        /* 
+        //This was in Draw() but should be here, we just have to calculate min/max pressure twice or cache it somewhere  
+        if (scene.showPressure)
+        {
+            var s = "pressure: " + minP.toFixed(0) + " - " + maxP.toFixed(0) + " N/m";
+            c.fillStyle = "#000000";
+            c.font = "16px Arial";
+            c.fillText(s, 10, 35);
+        }
+        */
     }
 }
