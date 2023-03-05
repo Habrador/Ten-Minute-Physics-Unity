@@ -9,15 +9,21 @@ using UnityEngine;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 public class FluidSimController : MonoBehaviour
 {
+    public Material fluidMaterial;
+
     private Scene scene;
+
+    private DisplayFluid displayFluid;
 
 
 
     private void Start()
-    {
+    {    
         scene = new Scene();
 
-        SetupScene(Scene.SceneNr.WindTunnel);
+        displayFluid = new DisplayFluid(fluidMaterial);
+
+        //SetupScene(Scene.SceneNr.WindTunnel);
     }
 
 
@@ -26,6 +32,8 @@ public class FluidSimController : MonoBehaviour
     {
         //Display the fluid
         //Draw();
+
+        displayFluid.TestDraw();
     }
 
 

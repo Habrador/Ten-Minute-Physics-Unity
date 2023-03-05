@@ -5,6 +5,56 @@ using UnityEngine;
 //Display the fluid simulation on a texture
 public class DisplayFluid
 {
+	private Material fluidMaterial;
+
+	private Texture2D fluidTexture;
+
+
+
+	public DisplayFluid(Material fluidMaterial)
+	{
+		this.fluidMaterial = fluidMaterial;
+
+		fluidTexture = new Texture2D(4, 2);
+
+		//So the pixels dont blend
+		fluidTexture.filterMode = FilterMode.Point;
+
+		fluidTexture.wrapMode = TextureWrapMode.Clamp;
+
+		this.fluidMaterial.mainTexture = fluidTexture;
+	}
+
+
+
+	public void TestDraw()
+	{
+		//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top (i.e. row after row)
+		//which fits how the fluid simulation arrays are set up
+		//Color32 is 0->255 (byte)
+		//Color is 0->1 (float)
+		Color32[] colors = new Color32[8];
+
+		//This works even though Color is 0->1 because it converts float->byte
+		colors[0] = Color.black; //BL 
+		colors[1] = Color.white;
+		colors[2] = Color.white;
+		colors[3] = Color.blue; //BR
+
+		colors[4] = Color.red; //TL
+		colors[5] = Color.white;
+		colors[6] = Color.white;
+		colors[7] = Color.green; //TR
+
+		fluidTexture.SetPixels32(colors);
+
+		fluidTexture.Apply();
+
+		//Debug.Log(colors[4]); //RGBA(255, 0, 0, 255)
+	}
+
+
+
 	public void Draw(Scene scene)
 	{
 		//c is CanvasRenderingContext2D which is like a texture
