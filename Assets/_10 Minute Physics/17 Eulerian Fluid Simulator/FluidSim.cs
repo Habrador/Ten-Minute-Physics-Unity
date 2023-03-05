@@ -56,13 +56,15 @@ public class FluidSim
     {
 		this.density = density;
 
-		//Add 2 extra cells because we need a border
+		//Add 2 extra cells because we need a border, or are we adding two u's on each side???
+		//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column 
+		//He says border cells in the video
 		this.numX = numX + 2; 
 		this.numY = numY + 2;
 		this.numCells = this.numX * this.numY;
 		this.h = h;
 		
-		this.u = new float[this.numCells]; //Should be this.numCells + 1 because we use a staggered grid? 
+		this.u = new float[this.numCells];
 		this.v = new float[this.numCells];
 		this.uNew = new float[this.numCells];
 		this.vNew = new float[this.numCells];

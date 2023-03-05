@@ -5,9 +5,9 @@ using UnityEngine;
 //Display the fluid simulation on a texture
 public class DisplayFluid
 {
-	private Material fluidMaterial;
+	private readonly Material fluidMaterial;
 
-	private Texture2D fluidTexture;
+	private readonly Texture2D fluidTexture;
 
 
 
@@ -15,7 +15,7 @@ public class DisplayFluid
 	{
 		this.fluidMaterial = fluidMaterial;
 
-		fluidTexture = new Texture2D(4, 2);
+		fluidTexture = new (4, 2);
 
 		//So the pixels dont blend
 		fluidTexture.filterMode = FilterMode.Point;
@@ -27,6 +27,7 @@ public class DisplayFluid
 
 
 
+	//For testing
 	public void TestDraw()
 	{
 		//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top (i.e. row after row)
@@ -303,7 +304,8 @@ public class DisplayFluid
 
 
 	//Scientific color scheme
-	private Color GetSciColor(float val, float minVal, float maxVal)
+	//Color32 is 0-255
+	private Color32 GetSciColor(float val, float minVal, float maxVal)
 	{
 		val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
 		
@@ -329,6 +331,6 @@ public class DisplayFluid
 			case 3: r = 1f; g = 1f - s; b = 0f;     break;
 		}
 
-		return new Color(255 * r, 255 * g, 255 * b, 255);
+		return new Color32((byte)(255 * r), (byte)(255 * g), (byte)(255 * b), 255);
 	}
 }

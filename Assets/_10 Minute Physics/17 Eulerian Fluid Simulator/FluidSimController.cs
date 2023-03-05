@@ -24,6 +24,8 @@ public class FluidSimController : MonoBehaviour
         displayFluid = new DisplayFluid(fluidMaterial);
 
         //SetupScene(Scene.SceneNr.WindTunnel);
+
+        //SetupScene(Scene.SceneNr.Tank);
     }
 
 
