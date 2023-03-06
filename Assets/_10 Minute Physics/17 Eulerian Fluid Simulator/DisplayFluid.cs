@@ -290,6 +290,7 @@ public class DisplayFluid
 	private float[] GetSciColor(float val, float minVal, float maxVal)
 	{
 		//Clamp val to be within the range
+		//val has to be less than maxVal or "int num = Mathf.FloorToInt(val / m);" wont work
 		val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
 
 		//Convert to 0->1 range
@@ -303,6 +304,7 @@ public class DisplayFluid
 
 		int num = Mathf.FloorToInt(val / m);
 		
+		//s is strength?
 		float s = (val - num * m) / m;
 
 		float r = 0f;
