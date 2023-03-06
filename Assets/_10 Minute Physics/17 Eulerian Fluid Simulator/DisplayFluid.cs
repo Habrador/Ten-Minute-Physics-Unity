@@ -87,14 +87,7 @@ public class DisplayFluid
 		//float h = f.h;
 
 		//Find min and max pressure
-		float minP = f.p[0];
-		float maxP = f.p[0];
-
-		for (int i = 0; i < f.numCells; i++)
-		{
-			minP = Mathf.Min(minP, f.p[i]);
-			maxP = Mathf.Max(maxP, f.p[i]);
-		}
+		MinMax minMaxP = f.GetMinMaxPressure();
 
 		//Find the colors
 		//Better to use array instead of Color32 to avoid confusion when converting between float, byte, int, etc
@@ -111,7 +104,7 @@ public class DisplayFluid
 					//Smoke, which is confusing becuase s is solid in FluidSim
 					float s = f.m[i * n + j]; 
 
-					color = GetSciColor(p, minP, maxP);
+					color = GetSciColor(p, minMaxP.min, minMaxP.max);
 					
 					//To color the smoke according to the scientific color scheme 
 					//Everything that's not smoke becomes black

@@ -396,4 +396,23 @@ public class FluidSim
 
 		return val;
 	}
+
+
+
+	//Return min and max pressure
+	public MinMax GetMinMaxPressure()
+	{
+		float minP = p[0];
+		float maxP = p[0];
+
+		for (int i = 0; i < numCells; i++)
+		{
+			minP = Mathf.Min(minP, p[i]);
+			maxP = Mathf.Max(maxP, p[i]);
+		}
+
+		MinMax minMaxPressure = new (minP, maxP);
+
+		return minMaxPressure;
+	}
 }
