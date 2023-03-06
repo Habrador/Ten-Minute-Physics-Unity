@@ -10,13 +10,17 @@ using FluidSimulator;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 public class FluidSimController : MonoBehaviour
 {
+    //Public
     public Material fluidMaterial;
 
+
+    //Private
     private Scene scene;
 
     private DisplayFluid displayFluid;
 
     private FluidUI fluidUI;
+
 
 
     private void Start()
@@ -37,8 +41,6 @@ public class FluidSimController : MonoBehaviour
     private void Update()
     {
         //Display the fluid
-        //Draw();
-
         displayFluid.TestDraw();
     }
 
@@ -69,7 +71,7 @@ public class FluidSimController : MonoBehaviour
         scene.dt = Time.fixedDeltaTime;
         scene.numIters = 40;
 
-        //How detailed the simulation is in height direction
+        //How detailed the simulation is in height (y) direction
         int res = 100;
 
         if (sceneNr == Scene.SceneNr.Tank)
@@ -99,99 +101,121 @@ public class FluidSimController : MonoBehaviour
 
         FluidSim f = scene.fluid = new FluidSim(density, numX, numY, h);
 
-        //not same as numY above because we add a border?
-        int n = f.numY;
-
         if (sceneNr == Scene.SceneNr.Tank)
-        {           
-            //Add a solid border
-            for (int i = 0; i < f.numX; i++)
-            {
-                for (int j = 0; j < f.numY; j++)
-                {
-                    //Fluid
-                    float s = 1f;
-                    
-                    if (i == 0 || i == f.numX - 1 || j == 0)
-                    {
-                        s = 0f;
-                    }
-
-                    f.s[i * n + j] = s;
-                }
-            }
-
-            scene.gravity = -9.81f;
-            scene.showPressure = true;
-            scene.showSmoke = false;
-            scene.showStreamlines = false;
-            scene.showVelocities = false;
+        {
+            SetupTank(f);
         }
         else if (sceneNr == Scene.SceneNr.WindTunnel || sceneNr == Scene.SceneNr.HighResWindTunnel)
         {
-            //Wind velocity
-            float inVel = 2f;
-            
-            for (int i = 0; i < f.numX; i++)
-            {
-                for (int j = 0; j < f.numY; j++)
-                {
-                    //Fluid
-                    float s = 1f;
-
-                    if (i == 0 || j == 0 || j == f.numY - 1)
-                    {
-                        //Solid
-                        s = 0f;
-                    }
-                    f.s[i * n + j] = s;
-
-                    //Add constant velocity in the first column
-                    if (i == 1)
-                    {
-                        f.u[i * n + j] = inVel;
-                    }
-                }
-            }
-
-            //Add smoke
-            float pipeH = 0.1f * f.numY;
-            
-            int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
-            int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
-
-            for (var j = minJ; j < maxJ; j++)
-            {
-                f.m[j] = 0f; //Why is this 0???
-            }
-
-
-            //setObstacle(0.4, 0.5, true);
-
-
-            scene.gravity = 0f; //???
-            scene.showPressure = false;
-            scene.showSmoke = true;
-            scene.showStreamlines = false;
-            scene.showVelocities = false;
-
-            if (sceneNr == Scene.SceneNr.HighResWindTunnel)
-            {
-                //scene.dt = 1.0 / 120.0;
-                scene.numIters = 100;
-                scene.showPressure = true;
-            }
+            SetupWindTunnel(f, sceneNr);
         }
         else if (sceneNr == Scene.SceneNr.Paint)
         {
-            scene.gravity = 0f;
-            scene.overRelaxation = 1f;
-            scene.showPressure = false;
-            scene.showSmoke = true;
-            scene.showStreamlines = false;
-            scene.showVelocities = false;
-            scene.obstacleRadius = 0.1f;
+            SetupPaint();
         }
+    }
+
+
+
+    private void SetupTank(FluidSim f)
+    {
+        int n = f.numY;
+
+        //Add a solid border
+        for (int i = 0; i < f.numX; i++)
+        {
+            for (int j = 0; j < f.numY; j++)
+            {
+                //Fluid
+                float s = 1f;
+
+                if (i == 0 || i == f.numX - 1 || j == 0)
+                {
+                    s = 0f;
+                }
+
+                f.s[i * n + j] = s;
+            }
+        }
+
+        scene.gravity = -9.81f;
+        scene.showPressure = true;
+        scene.showSmoke = false;
+        scene.showStreamlines = false;
+        scene.showVelocities = false;
+    }
+
+
+
+    private void SetupWindTunnel(FluidSim f, Scene.SceneNr sceneNr)
+    {
+        int n = f.numY;
+
+        //Wind velocity
+        float inVel = 2f;
+
+        for (int i = 0; i < f.numX; i++)
+        {
+            for (int j = 0; j < f.numY; j++)
+            {
+                //Fluid
+                float s = 1f;
+
+                if (i == 0 || j == 0 || j == f.numY - 1)
+                {
+                    //Solid
+                    s = 0f;
+                }
+                f.s[i * n + j] = s;
+
+                //Add constant velocity in the first column
+                if (i == 1)
+                {
+                    f.u[i * n + j] = inVel;
+                }
+            }
+        }
+
+        //Add smoke
+        float pipeH = 0.1f * f.numY;
+
+        int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
+        int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
+
+        for (var j = minJ; j < maxJ; j++)
+        {
+            f.m[j] = 0f; //Why is this 0???
+        }
+
+
+        //setObstacle(0.4, 0.5, true);
+
+
+        scene.gravity = 0f; //???
+        scene.showPressure = false;
+        scene.showSmoke = true;
+        scene.showStreamlines = false;
+        scene.showVelocities = false;
+
+        if (sceneNr == Scene.SceneNr.HighResWindTunnel)
+        {
+            //scene.dt = 1.0 / 120.0;
+            scene.numIters = 100;
+            scene.showPressure = true;
+        }
+    }
+
+
+
+    private void SetupPaint()
+    {
+        scene.gravity = 0f;
+        scene.overRelaxation = 1f;
+        scene.showPressure = false;
+        scene.showSmoke = true;
+        scene.showStreamlines = false;
+        scene.showVelocities = false;
+        scene.obstacleRadius = 0.1f;
     }
 
 
