@@ -32,7 +32,7 @@ namespace FluidSimulator
 		//v component stored in the middle of the bottom horizontal line of each cell
 		//This means we can't have a velocity vector because u,v are at different locations
 		public readonly float[] u; 
-		private readonly float[] v;
+		public readonly float[] v;
 		private readonly float[] uNew;
 		private readonly float[] vNew;
 		//Pressure field

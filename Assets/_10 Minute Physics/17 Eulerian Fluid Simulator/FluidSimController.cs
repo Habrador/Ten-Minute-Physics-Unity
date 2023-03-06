@@ -166,6 +166,7 @@ public class FluidSimController : MonoBehaviour
                     //Solid
                     s = 0f;
                 }
+
                 f.s[i * n + j] = s;
 
                 //Add constant velocity in the first column
@@ -188,7 +189,10 @@ public class FluidSimController : MonoBehaviour
         }
 
 
-        //setObstacle(0.4, 0.5, true);
+        //Position the obstacle
+        //The obstacle in the demo is only reset if we click on wind tunnel button
+        //Otherwise it has the same position as last scene
+        SetObstacle(0.4f, 0.5f, true);
 
 
         scene.gravity = 0f; //???
@@ -216,6 +220,68 @@ public class FluidSimController : MonoBehaviour
         scene.showStreamlines = false;
         scene.showVelocities = false;
         scene.obstacleRadius = 0.1f;
+    }
+
+
+
+    //Position and obstacle in the fluid and make it interact with the fluid if it has a velocity
+    private void SetObstacle(float x, float y, bool reset)
+    {
+        //So we can give the fluid a velocity by moving around the obstacle
+        float vx = 0f;
+        float vy = 0f;
+
+        if (!reset)
+        {
+            vx = (x - scene.obstacleX) / scene.dt;
+            vy = (y - scene.obstacleY) / scene.dt;
+        }
+
+        scene.obstacleX = x;
+        scene.obstacleY = y;
+
+        float r = scene.obstacleRadius;
+        
+        FluidSim f = scene.fluid;
+        
+        int n = f.numY;
+        
+        //float cd = Mathf.Sqrt(2f) * f.h;
+
+        //Mark cells as obstacle
+        for (int i = 1; i < f.numX - 2; i++)
+        {
+            for (int j = 1; j < f.numY - 2; j++)
+            {
+                f.s[i * n + j] = 1f;
+
+                float dx = (i + 0.5f) * f.h - x;
+                float dy = (j + 0.5f) * f.h - y;
+
+                //Is the cell within the obstacle?
+                if (dx * dx + dy * dy < r * r)
+                {
+                    f.s[i * n + j] = 0f;
+
+                    if (scene.sceneNr == Scene.SceneNr.Paint)
+                    {
+                        f.m[i * n + j] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);
+                    }
+                    else
+                    {
+                        f.m[i * n + j] = 1f;
+                    }
+
+                    //Give the fluid a velocity if we have moved it
+                    f.u[i * n + j] = vx;
+                    f.u[(i + 1) * n + j] = vx;
+                    f.v[i * n + j] = vy;
+                    f.v[i * n + j + 1] = vy;
+                }
+            }
+        }
+
+        scene.showObstacle = true;
     }
 
 
