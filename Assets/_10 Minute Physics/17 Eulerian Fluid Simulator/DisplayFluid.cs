@@ -7,22 +7,13 @@ public class DisplayFluid
 {
 	private readonly Material fluidMaterial;
 
-	private readonly Texture2D fluidTexture;
+	private Texture2D fluidTexture;
 
 
 
 	public DisplayFluid(Material fluidMaterial)
 	{
 		this.fluidMaterial = fluidMaterial;
-
-		fluidTexture = new (4, 2);
-
-		//So the pixels dont blend
-		fluidTexture.filterMode = FilterMode.Point;
-
-		fluidTexture.wrapMode = TextureWrapMode.Clamp;
-
-		this.fluidMaterial.mainTexture = fluidTexture;
 	}
 
 
@@ -30,6 +21,18 @@ public class DisplayFluid
 	//For testing
 	public void TestDraw()
 	{
+		if (fluidTexture == null)
+		{
+			fluidTexture = new(4, 2);
+
+			//So the pixels dont blend
+			fluidTexture.filterMode = FilterMode.Point;
+
+			fluidTexture.wrapMode = TextureWrapMode.Clamp;
+
+			this.fluidMaterial.mainTexture = fluidTexture;
+		}
+	
 		//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top (i.e. row after row)
 		//which fits how the fluid simulation arrays are set up
 		//Color32 is 0->255 (byte)
@@ -58,18 +61,30 @@ public class DisplayFluid
 
 	public void Draw(Scene scene)
 	{
-		//c is CanvasRenderingContext2D which is like a texture
-		//c.clearRect(0, 0, canvas.width, canvas.height);
-
-		//c.fillStyle = "#FF0000";
-		
 		FluidSim f = scene.fluid;
-		
+
+		//Generate a new texture if none exists or if we have changed resolution
+		if (this.fluidTexture == null || this.fluidTexture.width != f.numX || this.fluidTexture.height != f.numY)
+		{
+			this.fluidTexture = new(f.numX, f.numY);
+
+			//So the pixels dont blend
+			//fluidTexture.filterMode = FilterMode.Point;
+			this.fluidTexture.filterMode = FilterMode.Bilinear;
+
+			//So the borders dont wrap with the border on the other side
+			this.fluidTexture.wrapMode = TextureWrapMode.Clamp;
+
+			this.fluidMaterial.mainTexture = fluidTexture;
+		}
+
+		Color32[] textureColors = new Color32[f.numX * f.numY];
+
 		int n = f.numY;
 
-		float cellScale = 1.1f;
+		//float cellScale = 1.1f;
 
-		float h = f.h;
+		//float h = f.h;
 
 		//Find min and max pressure
 		float minP = f.p[0];
@@ -81,9 +96,10 @@ public class DisplayFluid
 			maxP = Mathf.Max(maxP, f.p[i]);
 		}
 
-		//id = c.getImageData(0, 0, canvas.width, canvas.height)
-
-		Color color = new Color(255, 255, 255, 255);
+		//Find the colors
+		//Better to use array instead of Color32 to avoid confusion when converting between float, byte, int, etc
+		//And it also matches the original code better
+		float[] color = { 255, 255, 255, 255 };
 
 		for (int i = 0; i < f.numX; i++)
 		{
@@ -92,25 +108,27 @@ public class DisplayFluid
 				if (scene.showPressure)
 				{
 					float p = f.p[i * n + j];
-					float s = f.m[i * n + j];
+					//Smoke, which is confusing becuase s is solid in FluidSim
+					float s = f.m[i * n + j]; 
 
 					color = GetSciColor(p, minP, maxP);
 					
 					//To color the smoke according to the scientific color scheme 
+					//Everything that's not smoke becomes black
 					if (scene.showSmoke)
 					{
-						color.r = Mathf.Max(0f, color.r - 255 * s);
-						color.g = Mathf.Max(0f, color.g - 255 * s);
-						color.b = Mathf.Max(0f, color.b - 255 * s);
+						color[0] = Mathf.Max(0f, color[0] - 255 * s);
+						color[1] = Mathf.Max(0f, color[1] - 255 * s);
+						color[2] = Mathf.Max(0f, color[2] - 255 * s);
 					}
 				}
 				else if (scene.showSmoke)
 				{
 					float s = f.m[i * n + j];
-					
-					color.r = 255 * s;
-					color.g = 255 * s;
-					color.b = 255 * s;
+
+					color[0] = 255 * s;
+					color[1] = 255 * s;
+					color[2] = 255 * s;
 
 					if (scene.sceneNr == Scene.SceneNr.Paint)
 					{
@@ -120,39 +138,23 @@ public class DisplayFluid
 				//Obstacle means black
 				else if (f.s[i * n + j] == 0f)
 				{
-					color.r = 0;
-					color.g = 0;
-					color.b = 0;
+					color[0] = 0;
+					color[1] = 0;
+					color[2] = 0;
 				}
 
-				//Put the color on the texture
-				/*
-				int x = Mathf.FloorToInt(cX(i * h));
-				int y = Mathf.FloorToInt(cY((j + 1) * h));
-				int cx = Mathf.FloorToInt(cScale * cellScale * h) + 1;
-				int cy = Mathf.FloorToInt(cScale * cellScale * h) + 1;
+				//Add the color to the texture
+				//Color32 is 0-255
+				Color32 pixelColor = new ((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
 
-				float r = color.r;
-				float g = color.g;
-				float b = color.b;
-
-				for (int yi = y; yi < y + cy; yi++)
-				{
-					var p = 4 * (yi * canvas.width + x)
-
-					for (var xi = 0; xi < cx; xi++)
-					{
-						id.data[p++] = r;
-						id.data[p++] = g;
-						id.data[p++] = b;
-						id.data[p++] = 255;
-					}
-				}
-				*/
+				textureColors[i * n + j] = pixelColor;
 			}
 		}
 
 		//c.putImageData(id, 0, 0);
+		fluidTexture.SetPixels32(textureColors);
+
+		fluidTexture.Apply();
 
 		if (scene.showVelocities)
 		{
@@ -287,32 +289,23 @@ public class DisplayFluid
 	}
 	*/
 
-	/*
-	function setColor(r, g, b)
-	{
-		c.fillStyle = `rgb(
-			${ Math.floor(255 * r)},
-			${ Math.floor(255 * g)},
-			${ Math.floor(255 * b)})`
-		c.strokeStyle = `rgb(
-			${ Math.floor(255 * r)},
-			${ Math.floor(255 * g)},
-			${ Math.floor(255 * b)})`
-	}
-	*/
-
 
 
 	//Scientific color scheme
-	//Color32 is 0-255
-	private Color32 GetSciColor(float val, float minVal, float maxVal)
+	//Also known as jet or rainbow???
+	//Lerps blue -> green -> yellow -> red where red is high pressure
+	private float[] GetSciColor(float val, float minVal, float maxVal)
 	{
+		//Clamp val to be within the range
 		val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
-		
+
+		//Convert to 0->1 range
 		float d = maxVal - minVal;
 		
-		val = d == 0.0f ? 0.5f : (val - minVal) / d;
+		//If min and max are the same, set val to be in the middle or we get a division by zero
+		val = (d == 0.0f) ? 0.5f : (val - minVal) / d;
 		
+		//0.25 means 4 buckets 0->3
 		float m = 0.25f;
 
 		int num = Mathf.FloorToInt(val / m);
@@ -323,14 +316,17 @@ public class DisplayFluid
 		float g = 0f;
 		float b = 0f;
 
+		//blue -> green -> yellow -> red
 		switch (num)
 		{
-			case 0: r = 0f; g = s;      b = 1f;     break;
-			case 1: r = 0f; g = 1f;     b = 1f - s; break;
-			case 2: r = s;  g = 1f;     b = 0f;     break;
-			case 3: r = 1f; g = 1f - s; b = 0f;     break;
+			case 0: r = 0f; g = s;      b = 1f;     break; //100% blue, green increases
+			case 1: r = 0f; g = 1f;     b = 1f - s; break; //100% green, blue decreases
+			case 2: r = s;  g = 1f;     b = 0f;     break; //100% green, red increases
+			case 3: r = 1f; g = 1f - s; b = 0f;     break; //100% red, green decreases 
 		}
 
-		return new Color32((byte)(255 * r), (byte)(255 * g), (byte)(255 * b), 255);
+		float[] color = { 255 * r, 255 * g, 255 * b, 255 };
+
+		return color;
 	}
 }
