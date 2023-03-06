@@ -46,6 +46,7 @@ public class Scene
     //Obstacles
     public bool showObstacle = false;
 
+    //Local space
     public float obstacleX = 0f;
     public float obstacleY = 0f;
 

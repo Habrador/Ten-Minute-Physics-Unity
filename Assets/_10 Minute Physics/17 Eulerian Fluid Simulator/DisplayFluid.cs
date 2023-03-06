@@ -61,6 +61,35 @@ public class DisplayFluid
 
 	public void Draw(Scene scene)
 	{
+		UpdateTexture(scene);
+
+		//float cellScale = 1.1f;
+
+		//float h = f.h;
+
+		if (scene.showVelocities)
+		{
+			//ShowVelocities();
+		}
+
+		if (scene.showStreamlines)
+		{
+			//ShowStreamlines();
+		}
+
+		if (scene.showObstacle)
+		{
+			ShowObstacle(scene);
+		}
+
+		//Moved the display of min and max pressure as text to the UI method
+	}
+
+
+
+	//Paint the fluid, not obstacles
+	private void UpdateTexture(Scene scene)
+	{
 		FluidSim f = scene.fluid;
 
 		//Generate a new texture if none exists or if we have changed resolution
@@ -80,11 +109,8 @@ public class DisplayFluid
 
 		Color32[] textureColors = new Color32[f.numX * f.numY];
 
+		//To convert from 2d to 1d array
 		int n = f.numY;
-
-		//float cellScale = 1.1f;
-
-		//float h = f.h;
 
 		//Find min and max pressure
 		MinMax minMaxP = f.GetMinMaxPressure();
@@ -101,15 +127,16 @@ public class DisplayFluid
 				if (scene.showPressure)
 				{
 					float p = f.p[i * n + j];
-					//Smoke, which is confusing becuase s is solid in FluidSim
-					float s = f.m[i * n + j]; 
 
 					color = GetSciColor(p, minMaxP.min, minMaxP.max);
-					
+
 					//To color the smoke according to the scientific color scheme 
 					//Everything that's not smoke becomes black
 					if (scene.showSmoke)
 					{
+						//Smoke, which is confusing becuase s is solid in FluidSim
+						float s = f.m[i * n + j];
+
 						color[0] = Mathf.Max(0f, color[0] - 255 * s);
 						color[1] = Mathf.Max(0f, color[1] - 255 * s);
 						color[2] = Mathf.Max(0f, color[2] - 255 * s);
@@ -126,9 +153,10 @@ public class DisplayFluid
 					if (scene.sceneNr == Scene.SceneNr.Paint)
 					{
 						color = GetSciColor(s, 0f, 1f);
-					}	
+					}
 				}
-				//Obstacle means black
+				//If not obstacle then paint it black
+				//The obstacle itself will be painted later
 				else if (f.s[i * n + j] == 0f)
 				{
 					color[0] = 0;
@@ -138,46 +166,34 @@ public class DisplayFluid
 
 				//Add the color to the texture
 				//Color32 is 0-255
-				Color32 pixelColor = new ((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
+				Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
 
 				textureColors[i * n + j] = pixelColor;
 			}
 		}
 
-		//c.putImageData(id, 0, 0);
 		fluidTexture.SetPixels32(textureColors);
 
 		fluidTexture.Apply();
-
-		if (scene.showVelocities)
-		{
-			//ShowVelocities();
-		}
-
-		if (scene.showStreamlines)
-		{
-			//ShowStreamlines();
-		}
-
-		if (scene.showObstacle)
-		{
-			//ShowObstacle();
-		}
-
-		//Moved the display of min and max pressure as text to the UI method
 	}
 
-	/*
+	
+
+	//From local to global space
+	//The local coordinate system starts at bottom-left of the plane
+	//The size depends on the scale of the plane, number of cells, and the cell width
 	private float cX(float x)
 	{
-		return x * cScale;
+		//return x * cScale;
+		return x;
 	}
 
 	private float cY(float y)
 	{
-		return canvas.height - y * cScale;
+		//return canvas.height - y * cScale;
+		return y;
 	}
-	*/
+	
 
 
 	/*
@@ -256,31 +272,32 @@ public class DisplayFluid
 	}
 	*/
 
-	/*
-	private void ShowObstacle()
+	
+	private void ShowObstacle(Scene scene)
 	{
-		c.strokeW
-			r = scene.obstacleRadius + f.h;
-		if (scene.showPressure)
-			c.fillStyle = "#000000";
-		else
-			c.fillStyle = "#DDDDDD";
-		c.beginPath();
-		c.arc(
-			cX(scene.obstacleX), cY(scene.obstacleY), cScale * r, 0.0, 2.0 * Math.PI);
-		c.closePath();
-		c.fill();
+		FluidSim f = scene.fluid;
 
-		c.lineWidth = 3.0;
-		c.strokeStyle = "#000000";
-		c.beginPath();
-		c.arc(
-			cX(scene.obstacleX), cY(scene.obstacleY), cScale * r, 0.0, 2.0 * Math.PI);
-		c.closePath();
-		c.stroke();
-		c.lineWidth = 1.0;
+		//Make it slightly bigger to avoid jagged edges?
+		float r = scene.obstacleRadius + f.h;
+
+		DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
+
+		//Black like the bg 
+		if (scene.showPressure)
+		{
+			color = DisplayShapes.ColorOptions.Black;
+		}
+
+		//Circle center in global space
+		Vector3 circleCenter = new (cX(scene.obstacleX), cY(scene.obstacleY), 0.1f);
+
+		//Display a circle mesh
+		DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
+		
+		
+		//The guy is also giving the circle a border...
 	}
-	*/
+	
 
 
 
