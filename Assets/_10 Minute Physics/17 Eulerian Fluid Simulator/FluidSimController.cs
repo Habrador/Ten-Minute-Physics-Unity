@@ -257,5 +257,38 @@ public class FluidSimController : MonoBehaviour
             c.fillText(s, 10, 35);
         }
         */
+
+        if (scene.showPressure)
+        {
+            if (scene.fluid == null)
+            {
+                return;
+            }
+
+            //Find min and max pressure
+            FluidSim f = scene.fluid;
+
+            float minP = f.p[0];
+            float maxP = f.p[0];
+
+            for (int i = 0; i < f.numCells; i++)
+            {
+                minP = Mathf.Min(minP, f.p[i]);
+                maxP = Mathf.Max(maxP, f.p[i]);
+            }
+
+            int intMinP = Mathf.RoundToInt(minP);
+            int intMaxP = Mathf.RoundToInt(maxP);
+
+
+            string pressureText = $"Pressure: {intMinP}, {intMaxP} N/m";
+
+            GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+            textStyle.fontSize = fontSize;
+            textStyle.margin = offset;
+
+            GUILayout.Label(pressureText, textStyle);
+        }
     }
 }

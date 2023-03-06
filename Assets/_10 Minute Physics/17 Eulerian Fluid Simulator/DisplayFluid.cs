@@ -319,10 +319,10 @@ public class DisplayFluid
 		//blue -> green -> yellow -> red
 		switch (num)
 		{
-			case 0: r = 0f; g = s;      b = 1f;     break; //100% blue, green increases
-			case 1: r = 0f; g = 1f;     b = 1f - s; break; //100% green, blue decreases
-			case 2: r = s;  g = 1f;     b = 0f;     break; //100% green, red increases
-			case 3: r = 1f; g = 1f - s; b = 0f;     break; //100% red, green decreases 
+			case 0: r = 0f; g = s;      b = 1f;     break; //max blue, green increases
+			case 1: r = 0f; g = 1f;     b = 1f - s; break; //max green, blue decreases
+			case 2: r = s;  g = 1f;     b = 0f;     break; //max green, red increases
+			case 3: r = 1f; g = 1f - s; b = 0f;     break; //max red, green decreases 
 		}
 
 		float[] color = { 255 * r, 255 * g, 255 * b, 255 };
