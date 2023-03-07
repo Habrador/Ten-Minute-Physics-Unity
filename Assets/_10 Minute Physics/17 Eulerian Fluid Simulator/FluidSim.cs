@@ -39,7 +39,7 @@ namespace FluidSimulator
 		public float[] p;
 		//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
 		public float[] s;
-		//Smoke density [0,1]
+		//Smoke density [0,1]: 0 means max smoke??? Which makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
 		private readonly float[] mNew;
 

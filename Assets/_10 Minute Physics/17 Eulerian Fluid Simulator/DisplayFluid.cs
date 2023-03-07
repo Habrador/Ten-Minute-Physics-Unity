@@ -146,12 +146,15 @@ namespace FluidSimulator
 					}
 					else if (scene.showSmoke)
 					{
+						//Not sure why hes using s in stead of m because s means obstacle in the simulation part
 						float s = f.m[i * n + j];
 
+						//s = 0 means max smoke, so it becomes black
 						color[0] = 255 * s;
 						color[1] = 255 * s;
 						color[2] = 255 * s;
 
+						//In the paint scene we color the smoke 
 						if (scene.sceneNr == Scene.SceneNr.Paint)
 						{
 							color = GetSciColor(s, 0f, 1f);
@@ -183,7 +186,8 @@ namespace FluidSimulator
 
 		//From local to global space
 		//The local coordinate system starts at bottom-left of the plane
-		//The size depends on the scale of the plane, number of cells, and the cell width
+		//The size depends on the number of cells, and the cell width
+		//The simulation area can be 200 m while the plane size is 0.5 m
 		private float cX(float x)
 		{
 			//return x * cScale;

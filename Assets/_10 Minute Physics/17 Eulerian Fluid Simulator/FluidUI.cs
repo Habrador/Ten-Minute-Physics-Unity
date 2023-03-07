@@ -7,7 +7,10 @@ namespace FluidSimulator
     public class FluidUI
     {
         private readonly FluidSimController controller;
-    
+
+        private bool mouseDown = false;
+
+
 
         public FluidUI(FluidSimController controller)
         {
@@ -103,6 +106,78 @@ namespace FluidSimulator
 
                 GUILayout.Label(pressureText, textStyle);
             }
+        }
+
+
+
+        public void Interaction(Scene scene)
+        {
+            mouseDown = false;
+
+            
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector2 mousePos = Vector2.zero;
+            
+                StartDrag(mousePos.x, mousePos.y);
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                EndDrag();
+            }
+
+            //canvas.addEventListener('mousemove', event => {
+            //    drag(event.x, event.y);
+            //});
+
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                scene.isPaused = !scene.isPaused;
+            }
+            //Move the simulation in steps
+            else if (Input.GetKeyDown(KeyCode.M))
+            {
+                scene.isPaused = false;
+
+                controller.Simulate();
+
+                scene.isPaused = true;
+            }
+        }
+
+
+
+        private void StartDrag(float x, float y)
+        {
+            //let bounds = canvas.getBoundingClientRect();
+
+            //let mx = x - bounds.left - canvas.clientLeft;
+            //let my = y - bounds.top - canvas.clientTop;
+            //mouseDown = true;
+
+            //x = mx / cScale;
+            //y = (canvas.height - my) / cScale;
+
+            //setObstacle(x, y, true);
+        }
+
+        private void Drag(float x, float y)
+        {
+            //if (mouseDown)
+            //{
+            //    let bounds = canvas.getBoundingClientRect();
+            //    let mx = x - bounds.left - canvas.clientLeft;
+            //    let my = y - bounds.top - canvas.clientTop;
+            //    x = mx / cScale;
+            //    y = (canvas.height - my) / cScale;
+            //    setObstacle(x, y, false);
+            //}
+        }
+
+        private void EndDrag()
+        {
+            mouseDown = false;
         }
     }
 }

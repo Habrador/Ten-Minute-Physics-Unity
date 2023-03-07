@@ -40,7 +40,7 @@ namespace FluidSimulator
         //Is sometimes 0 for some reason...
         public float gravity = -9.81f;
 
-        //Useful for debugging 
+        //Is used for some reason when we are in the "paint" scene to add smoke in some sinus curve
         public int frameNr = 0;
 
         public bool isPaused = false;
