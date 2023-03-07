@@ -41,7 +41,7 @@ namespace FluidSimulator
 		private readonly float[] vNew;
 		//Pressure field
 		public float[] p;
-		//If obstacle (0) or fluid (1), should be float because easier to sample
+		//If obstacle (0) or fluid (1), because the sampler algorithm becomes simpler
 		public float[] s;
 		//Smoke density [0,1]: 0 means max smoke, which makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
@@ -131,7 +131,7 @@ namespace FluidSimulator
 			{
 				for (int j = 1; j < numY - 1; j++)
 				{
-					//If this cell is not an obstacle and cell below it is not a obstacle
+					//If this cell is not an obstacle and cell below is not an obstacle
 					if (s[To1D(i, j)] != 0f && s[To1D(i, j - 1)] != 0f)
 					{
 						//v = v + dt * g
@@ -268,7 +268,7 @@ namespace FluidSimulator
 						var x = i * h;
 						var y = j * h + h2;
 						var u = this.u[i * n + j];
-						var v = AvgV(i, j);
+						var v = AverageV(i, j);
 						//var v = this.sampleField(x,y, V_FIELD);
 						x = x - dt * u;
 						y = y - dt * v;
@@ -280,7 +280,7 @@ namespace FluidSimulator
 					{
 						var x = i * h + h2;
 						var y = j * h;
-						var u = AvgU(i, j);
+						var u = AverageU(i, j);
 						//var u = this.sampleField(x,y, U_FIELD);
 						var v = this.v[i * n + j];
 						x = x - dt * u;
@@ -337,7 +337,8 @@ namespace FluidSimulator
 		// Help methods
 		//
 
-		private float AvgU(int i, int j)
+		//Average u around v[To1D(i, j)]
+		private float AverageU(int i, int j)
 		{
 			float uTot = u[To1D(i, j - 1)] + u[To1D(i, j)] + u[To1D(i + 1, j - 1)] + u[To1D(i + 1, j)];
 
@@ -346,7 +347,8 @@ namespace FluidSimulator
 			return uAverage;
 		}
 
-		private float AvgV(int i, int j)
+		//Average v around u[To1D(i, j)] 
+		private float AverageV(int i, int j)
 		{
 			float vTot = v[To1D(i - 1, j)] + v[To1D(i, j)] + v[To1D(i - 1, j + 1)] + v[To1D(i, j + 1)];
 
