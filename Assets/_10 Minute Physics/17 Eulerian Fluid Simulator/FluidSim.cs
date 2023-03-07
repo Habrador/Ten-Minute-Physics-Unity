@@ -25,7 +25,11 @@ namespace FluidSimulator
 		public float h;
 
 		//Simulation data structures
-		//Orientation of the grid: i + 1 means right, j + 1 means up, so 0,0 is bottom-left 
+		//Orientation of the grid:
+		// i + 1 means right, j + 1 means up
+		// (0,0) is bottom-left
+		// width = numX * h
+		// height = numY * h
 		//Velocity field (u, v, w) 
 		//A staggered grid is improving the numerical results with less artificial dissipation  
 		//u component stored in the middle of the left vertical line of each cell
@@ -37,9 +41,9 @@ namespace FluidSimulator
 		private readonly float[] vNew;
 		//Pressure field
 		public float[] p;
-		//Scalar value to determine if obstacle (0) or fluid (1), should be float because easier to sample
+		//If obstacle (0) or fluid (1), should be float because easier to sample
 		public float[] s;
-		//Smoke density [0,1]: 0 means max smoke??? Which makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
+		//Smoke density [0,1]: 0 means max smoke, which makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
 		private readonly float[] mNew;
 
@@ -140,15 +144,14 @@ namespace FluidSimulator
 
 
 
-		//Make the fluid incompressible by modifying the velocity values
-		//Divergence div = total outflow = total amount of fluid the leaves the cell, which should be zero if the fluid is incompressible 
+		//Make the fluid incompressible (zero outflow) by modifying the velocity values 
 		//Will also calculate pressure as a bonus
 		private void SolveIncompressibility(int numIters, float dt, float overRelaxation)
 		{
 			//Reset pressure
 			System.Array.Fill(p, 0f);
 
-			//Used in the pressure calculations: p = p + (d/s) * (rho * h / dt) = p + (d/s) * cp
+			//Used in the pressure calculations: p = p + (d/s) * ((rho * h) / dt) = p + (d/s) * cp
 			float cp = density * h / dt;
 
 			//Gauss-Seidel relaxation
@@ -179,18 +182,25 @@ namespace FluidSimulator
 							continue;
 						}
 
-						//Divergence
+						//Divergence = total amount of fluid the leaves the cell 
+						//- If it's positive we have too much outflow
+						//- If it's negative we have too much inflow
+						//- If it's zero the fluid is incompressible
 						//if u[To1D(i + 1, j)] > 0 fluid leaves the cell
-						//if u[To1D(i, j)] > 0 fluid enters the cell
-						//So total flow in u-direction is u[To1D(i + 1, j)] - u[To1D(i, j)]
+						//if u[To1D(i, j)] > 0 fluid enters the cell, so should be negative because we calculate total outflow
+						//So total outflow flow in u-direction is u[To1D(i + 1, j)] - u[To1D(i, j)]
+						//Same idea applies to v-direction
+						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
+						//Why -div???
 						float divergence_Over_sTot = -divergence / sTot;
 
 						divergence_Over_sTot *= overRelaxation;
-					
+
 						//Calculate the pressure
 						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update 
+						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility

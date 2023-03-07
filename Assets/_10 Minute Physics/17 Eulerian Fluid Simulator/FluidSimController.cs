@@ -193,7 +193,8 @@ public class FluidSimController : MonoBehaviour
 
         for (var j = minJ; j < maxJ; j++)
         {
-            f.m[j] = 0f; //Why is this 0???
+            //0 means max smoke
+            f.m[j] = 0f;
         }
 
 
@@ -264,6 +265,7 @@ public class FluidSimController : MonoBehaviour
                 //1 means fluid
                 f.s[i * n + j] = 1f;
 
+                //Distance from center of cell to circle center???
                 float dx = (i + 0.5f) * f.h - x;
                 float dy = (j + 0.5f) * f.h - y;
 
