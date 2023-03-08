@@ -8,6 +8,10 @@ using FluidSimulator;
 //Eulerian means we simulate the fluid in a grid - not by using particles (Lagrangian). One can also use a combination of both methods
 //Can simulate both liquids and gas
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
+//To figure out:
+// - Why no gravity in the wind tunnel simulation?
+// - Figure out the wall situation during the different simulations
+// - Why is -divergence / sTot * overrelaxation added to the pressure calculations?
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -92,7 +96,8 @@ public class FluidSimController : MonoBehaviour
         }
 
 
-        //The height of the simulation is 1 m (in the tutorial) but the guy is also setting simHeight = 1.1 and domainHeight = 1 so Im not sure which is which. But he says 1 m in the video
+        //The height of the simulation is 1 m (in the video)
+        //But the guy is also setting simHeight = 1.1 and domainHeight = 1 so Im not sure the difference between them
         float simHeight = 1f;
 
         //The size of a cell
@@ -100,13 +105,14 @@ public class FluidSimController : MonoBehaviour
 
         //How many cells do we have
         //y is up
-        int numY = Mathf.FloorToInt(simHeight / h);
-        //Twice as wide
+        int numY = res;
+        //The texture we use here is twice as wide as high
         int numX = 2 * numY;
 
         //Density of the fluid (water)
         float density = 1000f;
 
+        //Create a new fluid simulator
         FluidSim f = scene.fluid = new FluidSim(density, numX, numY, h);
 
         if (sceneNr == Scene.SceneNr.Tank)
@@ -137,8 +143,13 @@ public class FluidSimController : MonoBehaviour
                 //Fluid
                 float s = 1f;
 
+                //i == 0 (left wall)
+                //j == 0 (bottom wall)
+                //i == f.numX - 1 (right wall)
+                //Why no top wall???
                 if (i == 0 || i == f.numX - 1 || j == 0)
                 {
+                    //Solid
                     s = 0f;
                 }
 
@@ -169,6 +180,8 @@ public class FluidSimController : MonoBehaviour
                 //Fluid
                 float s = 1f;
 
+                //Left wall, bottom wall, top wall
+                //Why no right wall, but left wall???
                 if (i == 0 || j == 0 || j == f.numY - 1)
                 {
                     //Solid
@@ -177,7 +190,7 @@ public class FluidSimController : MonoBehaviour
 
                 f.s[i * n + j] = s;
 
-                //Add constant velocity in the first column
+                //Add constant right velocity to the fluid in the second column
                 if (i == 1)
                 {
                     f.u[i * n + j] = inVel;
@@ -191,9 +204,9 @@ public class FluidSimController : MonoBehaviour
         int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
         int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
 
-        for (var j = minJ; j < maxJ; j++)
+        for (int j = minJ; j < maxJ; j++)
         {
-            //0 means max smoke
+            //0 means max smoke in the first column (i = 0): f.m[0 * n + j] = f.m[j]
             f.m[j] = 0f;
         }
 
@@ -204,7 +217,7 @@ public class FluidSimController : MonoBehaviour
         SetObstacle(0.4f, 0.5f, true);
 
 
-        scene.gravity = 0f; //???
+        scene.gravity = 0f; //Why no gravity???
         scene.showPressure = false;
         scene.showSmoke = true;
         scene.showStreamlines = false;
