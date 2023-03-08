@@ -202,6 +202,7 @@ public class FluidSimController : MonoBehaviour
         //Add smoke
         float pipeH = 0.1f * f.numY;
 
+        //In the middle of the simulation
         int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
         int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
 
@@ -284,6 +285,7 @@ public class FluidSimController : MonoBehaviour
                 float dy = (j + 0.5f) * f.h - y;
 
                 //Is the cell within the obstacle?
+                //Using the square is faster than actual Pythagoras Sqrt(dx * dx + dy * dy) < Sqrt(r^2) but gives the same result 
                 if (dx * dx + dy * dy < r * r)
                 {
                     //0 means obstacle 

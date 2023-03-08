@@ -28,8 +28,6 @@ namespace FluidSimulator
 		//Orientation of the grid:
 		// i + 1 means right, j + 1 means up
 		// (0,0) is bottom-left
-		// width = numX * h
-		// height = numY * h
 		//Velocity field (u, v, w) 
 		//A staggered grid is improving the numerical results with less artificial dissipation  
 		//u component stored in the middle of the left vertical line of each cell
@@ -56,6 +54,9 @@ namespace FluidSimulator
 		//(i, j) = (x, y)
 		public int To1D(int i, int j) => (i * numY) + j;
 
+		//These are not the same as the height we set at start because of the two border cells
+		public float GetWidth() => numX * h;
+		public float GetHeight() => numY * h; 
 
 
 		public FluidSim(float density, int numX, int numY, float h)
@@ -65,6 +66,7 @@ namespace FluidSimulator
 			//Add 2 extra cells because we need a border, or are we adding two u's on each side???
 			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column 
 			//He says border cells in the video
+			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
 			this.numX = numX + 2; 
 			this.numY = numY + 2;
 			this.numCells = this.numX * this.numY;
