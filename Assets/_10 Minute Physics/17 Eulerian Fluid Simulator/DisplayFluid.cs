@@ -120,7 +120,7 @@ namespace FluidSimulator
 			//Find the colors
 			//Better to use array instead of Color32 to avoid confusion when converting between float, byte, int, etc
 			//And it also matches the original code better
-			float[] color = { 255, 255, 255, 255 };
+			Vector4 color = new (255, 255, 255, 255); 
 
 			for (int i = 0; i < f.numX; i++)
 			{
@@ -310,7 +310,7 @@ namespace FluidSimulator
 		//Scientific color scheme
 		//Also known as jet or rainbow???
 		//Lerps blue -> green -> yellow -> red where red is high pressure
-		private float[] GetSciColor(float val, float minVal, float maxVal)
+		private Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{
 			//Clamp val to be within the range
 			//val has to be less than maxVal or "int num = Mathf.FloorToInt(val / m);" wont work
@@ -343,7 +343,7 @@ namespace FluidSimulator
 				case 3: r = 1f; g = 1f - s; b = 0f;     break; //max red, green decreases 
 			}
 
-			float[] color = { 255 * r, 255 * g, 255 * b, 255 };
+			Vector4 color = new ( 255 * r, 255 * g, 255 * b, 255);
 
 			return color;
 		}
