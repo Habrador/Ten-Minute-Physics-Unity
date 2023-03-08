@@ -12,6 +12,7 @@ using FluidSimulator;
 // - Why no gravity in the wind tunnel simulation?
 // - Figure out the wall situation during the different simulations
 // - Why is -divergence / sTot * overrelaxation added to the pressure calculations?
+// - The purpose of the sin function when we paint with obstacle
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -249,7 +250,7 @@ public class FluidSimController : MonoBehaviour
     //Position an obstacle in the fluid and make it interact with the fluid if it has a velocity
     private void SetObstacle(float x, float y, bool reset)
     {
-        //So we can give the fluid a velocity by moving around the obstacle
+        //To give the fluid a velocity by moving around the obstacle
         float vx = 0f;
         float vy = 0f;
 
@@ -275,10 +276,10 @@ public class FluidSimController : MonoBehaviour
         {
             for (int j = 1; j < f.numY - 2; j++)
             {
-                //1 means fluid
+                //Start by setting all cells to fluids (= 1)
                 f.s[i * n + j] = 1f;
 
-                //Distance from center of cell to circle center???
+                //Distance from circle center to cell center
                 float dx = (i + 0.5f) * f.h - x;
                 float dy = (j + 0.5f) * f.h - y;
 
@@ -300,10 +301,11 @@ public class FluidSimController : MonoBehaviour
                     }
 
                     //Give the fluid a velocity if we have moved it
-                    f.u[i * n + j] = vx;
-                    f.u[(i + 1) * n + j] = vx;
-                    f.v[i * n + j] = vy;
-                    f.v[i * n + j + 1] = vy;
+                    //These are the 4 velocities belonging to this cell
+                    f.u[i * n + j] = vx; //Left
+                    f.u[(i + 1) * n + j] = vx; //Right
+                    f.v[i * n + j] = vy; //Bottom
+                    f.v[i * n + (j + 1)] = vy; //Top
                 }
             }
         }
