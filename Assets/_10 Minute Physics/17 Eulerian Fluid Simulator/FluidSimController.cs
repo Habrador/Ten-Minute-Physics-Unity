@@ -9,12 +9,13 @@ using FluidSimulator;
 //Can simulate both liquids and gas
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
-// - Why no gravity in the wind tunnel simulation?
+// - Why no gravity in the wind tunnel simulation? Because we use water density and simulate air because air pressure is negligible when the height of the simulation is 1m? So why are we using water density then???
 // - Figure out the wall situation during the different simulations
 // - Why is -divergence / sTot * overrelaxation added to the pressure calculations?
 // - The purpose of the sin function when we paint with obstacle
 // - Why Integrate() is not ignoring the last column in x
 // - Figure out where the pressure equation comes from
+// - In the wind tunnel, why do we only set in velocity and smoke density once in the beginning?
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -118,6 +119,7 @@ public class FluidSimController : MonoBehaviour
         //Create a new fluid simulator
         FluidSim f = scene.fluid = new FluidSim(density, numX, numY, h);
 
+        //Init the different simulations
         if (sceneNr == Scene.SceneNr.Tank)
         {
             SetupTank(f);
@@ -193,7 +195,8 @@ public class FluidSimController : MonoBehaviour
 
                 f.s[i * n + j] = s;
 
-                //Add constant right velocity to the fluid in the second column
+                //Add right velocity to the fluid in the second column
+                //Don't we need a velocity on the right border as well?
                 if (i == 1)
                 {
                     f.u[i * n + j] = inVel;

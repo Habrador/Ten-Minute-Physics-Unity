@@ -112,18 +112,19 @@ namespace FluidSimulator
 		//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
-			//1. Modify velocity values (add exteral forces like gravity)
+			//Modify velocity values (add exteral forces like gravity)
 			Integrate(dt, gravity);
 
-			//2. Make the fluid incompressible (projection)
+			//Make the fluid incompressible (projection)
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities 
 			Extrapolate();
 
-			//3. Move the velocity field (advection)
+			//Move the velocity field (advection)
 			AdvectVel(dt);
 		
+			//Move the smoke
 			AdvectSmoke(dt);
 		}
 
