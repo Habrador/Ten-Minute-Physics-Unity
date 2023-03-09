@@ -434,6 +434,7 @@ namespace FluidSimulator
 			float h1 = 1f / h;
 
 			//To go from coordinate to cell we do: FloorToInt(pos / cellSize) 
+			//We've already made sure the cell index can't go below 0
 			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), this.numX - 1);
 			int x1 = Mathf.Min(x0 + 1, this.numX - 1);
 
@@ -441,12 +442,22 @@ namespace FluidSimulator
 			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
 
 			//The weights used to interpolate between the 4 values
-			float tx = ((x - dx) - x0 * h) * h1;
-			float ty = ((y - dy) - y0 * h) * h1;
+			//According to the video, the weights are:
+			//w_00 = 1 - x/h
+			//w_01 = x/h
+			//w_10 = 1 - y/h
+			//w_11 = y/h
+			float tx = ((x - dx) - x0 * h) * h1; //w_01
+			float ty = ((y - dy) - y0 * h) * h1; //w_11
 
-			float sx = 1f - tx;
-			float sy = 1f - ty;
+			float sx = 1f - tx; //w_00
+			float sy = 1f - ty; //w_10
 
+			//v =
+			//	w_00 * w_10 * v_i,j +
+			//	w_01 * w_10 * v_i+1,j +
+			//	w_00 * w_11 * v_i,j+1 +
+			//	w_01 * w_11 * v_i+1,j+1
 			float val = 
 				sx * sy * f[To1D(x0, y0)] +
 				tx * sy * f[To1D(x1, y0)] +
