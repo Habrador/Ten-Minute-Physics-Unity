@@ -253,9 +253,9 @@ namespace FluidSimulator
 
 		//Move the velocity field along itself
 		//Semi-Lagrangian advection where we are simulating particles
-		//1. Calculate (u, v_bar) at the u component, where v_bar is the average
+		//1. Calculate (u, v_average) at the u component
 		//2. The previous pos x_prev = x - dt * v if we assume the particle moved in a straight line
-		//3. Interpolate the velocity at x(prev)
+		//3. Interpolate the velocity at x_prev
 		private void AdvectVel(float dt)
 		{
 			//Copy current velocities to the new velocities because some cells are not being processed, such as obstacles
@@ -329,14 +329,14 @@ namespace FluidSimulator
 		//Move the smoke field
 		//Same as advecting velocity
 		//Use the velocity at the center of the cell and walk back in a straight line 
-		//Find the particles that over a single time step ended up exactly at the cell's center. Remember to use the densities of the previous update to find the densities this update  
+		//Find the particles that over a single time step ended up exactly at the cell's center
 		private void AdvectSmoke(float dt)
 		{
 			//Copy all values from m to newM, we cant just swap because of obstacles and border???
 			this.m.CopyTo(mNew, 0);
 
-			int n = this.numY;
 			float h = this.h;
+			
 			float h2 = 0.5f * h;
 
 			//For all cells except the border
@@ -345,14 +345,22 @@ namespace FluidSimulator
 				for (int j = 1; j < this.numY - 1; j++)
 				{
 					//If this cell is not an obstacle
-					if (this.s[i * n + j] != 0)
+					if (this.s[To1D(i, j)] != 0f)
 					{
-						float u = (this.u[i * n + j] + this.u[(i + 1) * n + j]) * 0.5f;
-						float v = (this.v[i * n + j] + this.v[i * n + j + 1]) * 0.5f;
-						float x = i * h + h2 - dt * u;
-						float y = j * h + h2 - dt * v;
+						//The velocity in the middle of the cell is the average of the velocities on the border
+						float u = (this.u[To1D(i, j)] + this.u[To1D(i + 1, j)]) * 0.5f;
+						float v = (this.v[To1D(i, j)] + this.v[To1D(i, j + 1)]) * 0.5f;
 
-						this.mNew[i * n + j] = SampleField(x, y, SampleArray.smokeField);
+						//The position of the center in simulation space
+						float x = i * h + h2;
+						float y = j * h + h2;
+
+						//The pos of the smoke particle that moved to this u,v position
+						x -= dt * u;
+						y -= dt * v;
+
+						//Sample the smoke field at this position 
+						this.mNew[To1D(i, j)] = SampleField(x, y, SampleArray.smokeField);
 					}
 				}
 			}
