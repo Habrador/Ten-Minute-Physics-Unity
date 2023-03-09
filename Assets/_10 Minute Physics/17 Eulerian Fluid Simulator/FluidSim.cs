@@ -396,29 +396,32 @@ namespace FluidSimulator
 
 
 
-		//Get data from the simulation at coordinate x, y which are NOT cell coordinates
-		//If we want the velocity we compute a weighted average of the 4 closest velocity components
+		//Get data (u, v, smoke density) from the simulation at coordinate x,y
+		//x,y are NOT cell indices but coordinates in simulation space
 		private float SampleField(float x, float y, SampleArray field)
 		{
-			int n = this.numY;
 			float h = this.h;
 		
 			float h1 = 1f / h;
 			float h2 = 0.5f * h;
 
+			//Make sure x,y are within the simulation space 
+			//Why is minimum h and not 0???
 			x = Mathf.Max(Mathf.Min(x, this.numX * h), h);
 			y = Mathf.Max(Mathf.Min(y, this.numY * h), h);
 
 			float dx = 0f;
 			float dy = 0f;
 
+			//Which array do we want to sample
+			//Using f is confusing because its whats being used for FluidSim elsewhere... 
 			float[] f = null;
 
 			switch (field)
 			{
-				case SampleArray.uField: f = this.u; dy = h2; break;
-				case SampleArray.vField: f = this.v; dx = h2; break;
-				case SampleArray.smokeField: f = this.m; dx = h2; dy = h2; break;
+				case SampleArray.uField: f = this.u; dy = h2; break; //u is stored in the middle of the vertical cell lines
+				case SampleArray.vField: f = this.v; dx = h2; break; //v is stored in the middle of the horizontal cell lines
+				case SampleArray.smokeField: f = this.m; dx = h2; dy = h2; break; //Is stored in the center of each cell
 			}
 
 			if (f == null)
@@ -428,22 +431,25 @@ namespace FluidSimulator
 				return -1f;
 			}
 
+			//Which cell indices do we want to interpolate from?
 			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), this.numX - 1);
-			float tx = ((x - dx) - x0 * h) * h1;
 			int x1 = Mathf.Min(x0 + 1, this.numX - 1);
 
 			int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * h1), this.numY - 1);
-			float ty = ((y - dy) - y0 * h) * h1;
 			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
+
+			//The interpolation values
+			float tx = ((x - dx) - x0 * h) * h1;
+			float ty = ((y - dy) - y0 * h) * h1;
 
 			float sx = 1f - tx;
 			float sy = 1f - ty;
 
 			float val = 
-				sx * sy * f[x0 * n + y0] +
-				tx * sy * f[x1 * n + y0] +
-				tx * ty * f[x1 * n + y1] +
-				sx * ty * f[x0 * n + y1];
+				sx * sy * f[To1D(x0, y0)] +
+				tx * sy * f[To1D(x1, y0)] +
+				tx * ty * f[To1D(x1, y1)] +
+				sx * ty * f[To1D(x0, y1)];
 
 			return val;
 		}
