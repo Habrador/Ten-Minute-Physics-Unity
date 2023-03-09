@@ -401,14 +401,11 @@ namespace FluidSimulator
 		private float SampleField(float x, float y, SampleArray field)
 		{
 			float h = this.h;
-		
-			float h1 = 1f / h;
-			float h2 = 0.5f * h;
 
-			//Make sure x,y are within the simulation space 
-			//Why is minimum h and not 0???
-			x = Mathf.Max(Mathf.Min(x, this.numX * h), h);
-			y = Mathf.Max(Mathf.Min(y, this.numY * h), h);
+			//Make sure x and y are within the simulation space 
+			//Why is minimum h and not 0.5 * h? Because later we do x - (0.5 * h) to calculate which cell we are in, so x has to be at least h or we end up to the left of the velocity to the left we want to interpolate from (if we interpolate v at least) 
+			x = Mathf.Max(Mathf.Min(x, this.numX * h), h); //this.numX * h = total width
+			y = Mathf.Max(Mathf.Min(y, this.numY * h), h); //this.numY * h = total height
 
 			float dx = 0f;
 			float dy = 0f;
@@ -416,6 +413,8 @@ namespace FluidSimulator
 			//Which array do we want to sample
 			//Using f is confusing because its whats being used for FluidSim elsewhere... 
 			float[] f = null;
+
+			float h2 = 0.5f * h;
 
 			switch (field)
 			{
@@ -431,14 +430,17 @@ namespace FluidSimulator
 				return -1f;
 			}
 
-			//Which cell indices do we want to interpolate from?
+			//Which cell indices do we want to interpolate between?
+			float h1 = 1f / h;
+
+			//To go from coordinate to cell we do: FloorToInt(pos / cellSize) 
 			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), this.numX - 1);
 			int x1 = Mathf.Min(x0 + 1, this.numX - 1);
 
 			int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * h1), this.numY - 1);
 			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
 
-			//The interpolation values
+			//The weights used to interpolate between the 4 values
 			float tx = ((x - dx) - x0 * h) * h1;
 			float ty = ((y - dy) - y0 * h) * h1;
 
