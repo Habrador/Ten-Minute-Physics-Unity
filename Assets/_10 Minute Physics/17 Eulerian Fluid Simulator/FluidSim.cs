@@ -44,7 +44,7 @@ namespace FluidSimulator
 		//Should use float instead of bool because it makes some calculations simpler
 		public float[] s;
 		//Smoke density [0,1]: 0 means max smoke
-		//m short for mass?
+		//m short for mass? He calls it density field in the video
 		//Makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
 		private readonly float[] mNew;
@@ -97,35 +97,30 @@ namespace FluidSimulator
 		//
 
 		//Simulation loop for the fluid
-		//1. External forces. Modify velocity values by adding:
-		//	- Body forces applied to entire fluid like gravity and buoyancy from temperature differences
-		//	- Local forces applied to a region of the fluid like a fan blowing
-		//2. Projection. Make the fluid incompressible by projecting a vector field. What creates the vortices that produces swirly-like flows. Here we calculate the pressure  
-		//3. Advection. Move the velocity field along itself (self-advection) - the fluid's momentum is being advected by the velocity field
-		//(4.) Diffusion. This is the teabag in hot water effect - the tea spreads out over time. In a similar way, all fluids will come to rest over time. If you stir a cup of water the movement of the water will stop. Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other (similar to damping in a spring). The resistance results in diffusion of momentum which becomes distriuted throughout the fluid (and thus velocity. The velocity is dissipated = slowed down). Is not needed here because we dont take viscocity into account (yet).  
 		//People are mixing convection, advection, and diffusion, but according to: https://physics.stackexchange.com/questions/168218/what-is-the-exact-difference-between-diffusion-convection-and-advection, this is the difference:
-		//- Convection is the collective motion of particles in a fluid and actually encompasses both diffusion and advection.
+		//	- Convection is the collective motion of particles in a fluid and actually encompasses both diffusion and advection.
 		//	- Advection is the motion of particles along the bulk flow (Larger scale)
 		//  - Diffusion is the net movement of particles from high concentration to low concentration (Smaller scale)
-		//Simulation loop for the smoke
-		//1. Advection. Move the smoke along the velocity field 
-		//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
-			//Modify velocity values (add exteral forces like gravity)
+			//Modify velocity values (add exteral forces like gravity or a fan blowing)
 			Integrate(dt, gravity);
 
 			//Make the fluid incompressible (projection)
+			//Here we also calculate pressure
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities 
 			Extrapolate();
 
-			//Move the velocity field (advection)
+			//Move the velocity field along itself (advection)
 			AdvectVel(dt);
-		
-			//Move the smoke
+
+			//Move the smoke along the velocity field
+			//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
 			AdvectSmoke(dt);
+
+			//Diffusion. Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
 		}
 
 
@@ -213,7 +208,7 @@ namespace FluidSimulator
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
 						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
-						//Directly modifying u and v is due to using gauss-seidel iteration to solve the pressure system. This is used because you can get better convergence by updating the degrees of freedom immediately rather than using a temporary copy.
+						//Why are we using u,v instead of uNew and vNew? From the Discord: Directly modifying u and v is due to using gauss-seidel iteration to solve the pressure system. This is used because you can get better convergence by updating the degrees of freedom immediately rather than using a temporary copy.
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
