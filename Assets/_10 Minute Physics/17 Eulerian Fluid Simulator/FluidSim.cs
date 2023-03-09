@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Fluid Simulation in 200 lines of code (excluding comments)
 //The state of a fluid at a given instant of time is modeled as a velocity vector field and a pressure field, assuming density and temperature are constant. The velocity of air at a radiator is pointing upwards due to heat rising. The Navier-Stokes equations describe the evolution of this velocity field over time. 
 //Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell.  
 //Similar to the fluid simulations by Jos Stam so read "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" if you want to learn what's going on
@@ -39,9 +40,12 @@ namespace FluidSimulator
 		private readonly float[] vNew;
 		//Pressure field
 		public float[] p;
-		//If obstacle (0) or fluid (1), because the sampler algorithm becomes simpler
+		//If obstacle (0) or fluid (1)
+		//Should use float instead of bool because it makes some calculations simpler
 		public float[] s;
-		//Smoke density [0,1]: 0 means max smoke, which makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
+		//Smoke density [0,1]: 0 means max smoke
+		//m short for mass?
+		//Makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
 		private readonly float[] mNew;
 
@@ -51,12 +55,12 @@ namespace FluidSimulator
 		}
 
 		//Convert between 2d and 1d array
-		//(i, j) = (x, y)
 		public int To1D(int i, int j) => (i * numY) + j;
 
 		//These are not the same as the height we set at start because of the two border cells
 		public float GetWidth() => numX * h;
 		public float GetHeight() => numY * h; 
+
 
 
 		public FluidSim(float density, int numX, int numY, float h)
@@ -117,7 +121,7 @@ namespace FluidSimulator
 			//Fix border velocities 
 			Extrapolate();
 
-			//3. Move the velocity field (advection). We will here simulate particles, meaning we get a Semi-Lagrangian advection
+			//3. Move the velocity field (advection)
 			AdvectVel(dt);
 		
 			AdvectSmoke(dt);
@@ -170,7 +174,7 @@ namespace FluidSimulator
 							continue;
 						}
 
-						//Check how many of the surrounding cells are obstacles 
+						//Cache how many of the surrounding cells are obstacles 
 						float sx0 = s[To1D(i - 1, j)]; //Left
 						float sx1 = s[To1D(i + 1, j)]; //Right
 						float sy0 = s[To1D(i, j - 1)]; //Bottom
@@ -195,7 +199,7 @@ namespace FluidSimulator
 						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
-						//Why -div???
+						//Why -div??? Because the greater the inflow the larger the pressure?
 						float divergence_Over_sTot = -divergence / sTot;
 
 						divergence_Over_sTot *= overRelaxation;
@@ -206,8 +210,10 @@ namespace FluidSimulator
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
-						//Signs are flipped compared to Tutorial video because divergence_Over_sTot has a negative sign in its calculation
-						u[To1D(i, j)] -= sx0 * divergence_Over_sTot; //sx0 is 0 if left cell is wall so no fluid will enter the cell
+						//Signs are flipped compared to video because of the -divergence
+						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
+						//Directly modifying u and v is due to using gauss-seidel iteration to solve the pressure system. This is used because you can get better convergence by updating the degrees of freedom immediately rather than using a temporary copy.
+						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
 						v[To1D(i, j + 1)] += sy1 * divergence_Over_sTot;
@@ -218,24 +224,31 @@ namespace FluidSimulator
 
 
 
-		//Fix the border velocities by copying neighbor values 
-		//If the fluid is in a box with solid walls: 
-		//The horizontal component of the velocity should be 0 on the vertical walls
-		//The vertical component of the velocity should be 0 on the horizontal walls
+		//Fix the border velocities by copying neighbor values or set them to zero
 		private void Extrapolate()
 		{
+			//For each column
 			for (int i = 0; i < numX; i++)
 			{
+				//Bottom border row gets the same velocity in u direction as the row above
 				u[To1D(i, 0)] = u[To1D(i, 1)];
 
+				//Top border row gets the same velocity in u direction as the row below
 				u[To1D(i, numY - 1)] = u[To1D(i, numY - 2)];
+
+				//The v velocities are already zero
 			}
 
+			//For each row
 			for (int j = 0; j < numY; j++)
 			{
+				//Left border column gets the same velocity in v direction as the column to the right
 				v[To1D(0, j)] = v[To1D(1, j)];
 
+				//Right border column gets the same velocity in v direction as the column to the left 
 				v[To1D(numX - 1, j)] = v[To1D(numX - 2, j)];
+
+				//The u velocities are already zero
 			}
 		}
 

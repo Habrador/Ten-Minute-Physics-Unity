@@ -13,6 +13,8 @@ using FluidSimulator;
 // - Figure out the wall situation during the different simulations
 // - Why is -divergence / sTot * overrelaxation added to the pressure calculations?
 // - The purpose of the sin function when we paint with obstacle
+// - Why Integrate() is not ignoring the last column in x
+// - Figure out where the pressure equation comes from
 public class FluidSimController : MonoBehaviour
 {
     //Public

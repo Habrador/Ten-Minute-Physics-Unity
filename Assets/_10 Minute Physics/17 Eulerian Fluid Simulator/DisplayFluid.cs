@@ -101,6 +101,8 @@ namespace FluidSimulator
 
 				//So the pixels dont blend
 				//fluidTexture.filterMode = FilterMode.Point;
+
+				//Blend the pixels 
 				this.fluidTexture.filterMode = FilterMode.Bilinear;
 
 				//So the borders dont wrap with the border on the other side
@@ -132,11 +134,12 @@ namespace FluidSimulator
 
 						color = GetSciColor(p, minMaxP.min, minMaxP.max);
 
-						//To color the smoke according to the scientific color scheme 
+						//Color the smoke according to the scientific color scheme 
 						//Everything that's not smoke becomes black
 						if (scene.showSmoke)
 						{
-							//Smoke, which is confusing becuase s is solid in FluidSim
+							//Smoke, which is confusing because s is solid in FluidSim
+							//s = 0 means max smoke
 							float s = f.m[i * n + j];
 
 							color[0] = Mathf.Max(0f, color[0] - 255 * s);
@@ -149,7 +152,7 @@ namespace FluidSimulator
 						//Not sure why hes using s in stead of m because s means obstacle in the simulation part
 						float s = f.m[i * n + j];
 
-						//s = 0 means max smoke, so it becomes black
+						//s = 0 means max smoke, and 255 * 0 = 0 -> black 
 						color[0] = 255 * s;
 						color[1] = 255 * s;
 						color[2] = 255 * s;
@@ -160,7 +163,7 @@ namespace FluidSimulator
 							color = GetSciColor(s, 0f, 1f);
 						}
 					}
-					//If not obstacle then paint it black
+					//If both pressure and smoke are deactivated, then paint everything black
 					//The obstacle itself will be painted later
 					else if (f.s[i * n + j] == 0f)
 					{
@@ -169,7 +172,7 @@ namespace FluidSimulator
 						color[2] = 0;
 					}
 
-					//Add the color to the texture
+					//Add the color to this pixel
 					//Color32 is 0-255
 					Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
 
@@ -177,6 +180,7 @@ namespace FluidSimulator
 				}
 			}
 
+			//Add all colors to the texture
 			fluidTexture.SetPixels32(textureColors);
 
 			fluidTexture.Apply();
