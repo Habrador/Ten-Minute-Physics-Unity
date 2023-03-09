@@ -114,10 +114,11 @@ namespace FluidSimulator
 			Extrapolate();
 
 			//Move the velocity field along itself (advection)
+			//This will introduce viscosity which can be reduced with vorticity confinement
 			AdvectVel(dt);
 
 			//Move the smoke along the velocity field
-			//...one can also add diffusion to make the densities spread across the cells. This is not always needed because numerical error in the advection term causes it to diffuse anyway
+			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term causes it to diffuse anyway
 			AdvectSmoke(dt);
 
 			//Diffusion. Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
@@ -146,7 +147,7 @@ namespace FluidSimulator
 
 
 
-		//Make the fluid incompressible (zero outflow) by modifying the velocity values 
+		//Make the fluid incompressible (fluid in = fluid out) by modifying the velocity values 
 		//Will also calculate pressure as a bonus
 		private void SolveIncompressibility(int numIters, float dt, float overRelaxation)
 		{
@@ -250,60 +251,77 @@ namespace FluidSimulator
 
 
 
-		//Move the velocity field
-		//Semi-Lagrangian advection so we are simulating particles
+		//Move the velocity field along itself
+		//Semi-Lagrangian advection where we are simulating particles
 		//1. Calculate (u, v_bar) at the u component, where v_bar is the average
 		//2. The previous pos x_prev = x - dt * v if we assume the particle moved in a straight line
 		//3. Interpolate the velocity at x(prev)
 		private void AdvectVel(float dt)
 		{
-			this.u.CopyTo(uNew, 0);
-			this.v.CopyTo(vNew, 0);
-
-			int n = this.numY;
+			//Copy current velocities to the new velocities because some cells are not being processed, such as obstacles
+			this.u.CopyTo(this.uNew, 0);
+			this.v.CopyTo(this.vNew, 0);
 
 			float h = this.h;
-			//The position of the velocity components are on the borders of the cell - not the middle
+			//The position of the velocity components are in the middle of the border of the cells
 			float h2 = 0.5f * h;
 
-			for (var i = 1; i < this.numX; i++)
+			for (int i = 1; i < this.numX; i++)
 			{
-				for (var j = 1; j < this.numY; j++)
+				for (int j = 1; j < this.numY; j++)
 				{
-
-					//cnt++; //Is just set to 0 at the start and is just accumulated here...
+					//Is just set to 0 at the start and is just accumulated here...
+					//cnt++;
 
 					//Update u component
-					if (this.s[i * n + j] != 0.0 && this.s[(i - 1) * n + j] != 0.0 && j < this.numY - 1)
+					//If this cell and the cell left of it is not an obstacle
+					//Why j < this.numY - 1 and not in the for loop? Then u < this.numX - 1 wouldn't have been included either
+					//Using j < this.numY would have resulted in an error becuase we need the surrounding vs to this u 
+					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i - 1, j)] != 0f && j < this.numY - 1)
 					{
-						var x = i * h;
-						var y = j * h + h2;
-						var u = this.u[i * n + j];
-						var v = AverageV(i, j);
-						//var v = this.sampleField(x,y, V_FIELD);
-						x = x - dt * u;
-						y = y - dt * v;
+						//The pos of the u velocity in simulation space
+						float x = i * h;
+						float y = j * h + h2;
+
+						//The current velocity
+						float u = this.u[To1D(i, j)];
+						float v = AverageV(i, j);
+						
+						//The pos of the fluid particle that moved to this u position
+						x -= dt * u;
+						y -= dt * v;
+						
+						//The interpolated u as this position
 						u = SampleField(x, y, SampleArray.uField);
-						this.uNew[i * n + j] = u;
+						
+						this.uNew[To1D(i, j)] = u;
 					}
 					//Update v component
-					if (this.s[i * n + j] != 0.0 && this.s[i * n + j - 1] != 0.0 && i < this.numX - 1)
+					//If this cell and the cell below is not an obstacle
+					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i, j - 1)] != 0f && i < this.numX - 1)
 					{
-						var x = i * h + h2;
-						var y = j * h;
-						var u = AverageU(i, j);
-						//var u = this.sampleField(x,y, U_FIELD);
-						var v = this.v[i * n + j];
-						x = x - dt * u;
-						y = y - dt * v;
+						//The pos of the v velocity in simulation space
+						float x = i * h + h2;
+						float y = j * h;
+
+						//The current velocity
+						float u = AverageU(i, j);
+						float v = this.v[To1D(i, j)];
+
+						//The pos of the fluid particle that moved to this v position
+						x -= dt * u;
+						y -= dt * v;
+						
+						//The interpolated v at this position
 						v = SampleField(x, y, SampleArray.vField);
-						this.vNew[i * n + j] = v;
+						
+						this.vNew[To1D(i, j)] = v;
 					}
 				}
 			}
 
-			this.uNew.CopyTo(u, 0);
-			this.vNew.CopyTo(v, 0);
+			this.uNew.CopyTo(this.u, 0);
+			this.vNew.CopyTo(this.v, 0);
 		}
 
 
