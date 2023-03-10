@@ -80,6 +80,7 @@ namespace FluidSimulator
             //float simWidth = cellsX * h;
             //float simHeight = cellsY * h;
 
+            //For actual simulation
             float simWidth = fluid.GetWidth();
             float simHeight = fluid.GetHeight();
 
@@ -89,6 +90,35 @@ namespace FluidSimulator
             Vector2 simSpaceCoordinates = new (x, y);
 
             return simSpaceCoordinates;
+        }
+
+
+
+        //Convert from simulation space to world space
+        public Vector2 SimToWorld(float x, float y)
+        {
+            //For testing
+            //int cellsX = 4;
+            //int cellsY = 2;
+
+            //float h = 3f;
+
+            //float simWidth = cellsX * h;
+            //float simHeight = cellsY * h;
+
+            //For actual simulation
+            float simWidth = fluid.GetWidth();
+            float simHeight = fluid.GetHeight();
+
+            x /= simWidth / simPlaneWidth;
+            y /= simHeight / simPlaneHeight;
+
+            x -= simPlaneWidth * 0.5f;
+            y -= simPlaneHeight * 0.5f;
+
+            Vector2 worldSpaceCoordinates = new(x, y);
+
+            return worldSpaceCoordinates;
         }
     }
 }

@@ -44,6 +44,13 @@ public class FluidSimController : MonoBehaviour
         //SetupScene(Scene.SceneNr.WindTunnel);
 
         //SetupScene(Scene.SceneNr.Tank);
+
+        //Test converting between spaces
+        //Vector2 test = scene.WorldToSim(-1f, 7f);
+
+        //test = scene.SimToWorld(test.x, test.y);
+
+        //Debug.Log(test);
     }
 
 
