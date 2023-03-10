@@ -60,7 +60,7 @@ public class FluidSimController : MonoBehaviour
     private void LateUpdate()
     {
         //Interactions such as moving obstacles with mouse
-        fluidUI.Interaction(scene);
+        //fluidUI.Interaction(scene);
     }
 
 
@@ -340,5 +340,7 @@ public class FluidSimController : MonoBehaviour
     private void OnGUI()
     {
         fluidUI.DisplayUI(scene);
+
+        fluidUI.Interaction(scene);
     }
 }

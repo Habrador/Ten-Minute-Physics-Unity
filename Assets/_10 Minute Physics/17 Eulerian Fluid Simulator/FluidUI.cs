@@ -110,12 +110,15 @@ namespace FluidSimulator
 
 
 
+        //Has to be called from OnGUI because we use Event???
         public void Interaction(Scene scene)
         {
             mouseDown = false;
 
-            
-            if (Input.GetMouseButtonDown(0))
+            Event mouseEvent = Event.current;
+
+            if (mouseEvent.type == EventType.MouseDown)
+            //if (Input.GetMouseButtonDown(0))
             {
                 //Fire a ray against a plane to get the position of the mouse in world space
                 Plane plane = new (-Vector3.forward, Vector3.zero);
@@ -137,14 +140,39 @@ namespace FluidSimulator
                 }
             }
 
-            if (Input.GetMouseButtonUp(0))
+
+
+            if (mouseEvent.type == EventType.MouseUp)
+            //if (Input.GetMouseButtonUp(0))
             {
                 EndDrag();
             }
 
-            //canvas.addEventListener('mousemove', event => {
-            //    drag(event.x, event.y);
-            //});
+
+
+            if (mouseEvent.type == EventType.MouseDrag)
+            {
+                //Fire a ray against a plane to get the position of the mouse in world space
+                Plane plane = new(-Vector3.forward, Vector3.zero);
+
+                //Create a ray from the mouse click position
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                if (plane.Raycast(ray, out float enter))
+                {
+                    //Get the point that is clicked in world space
+                    Vector3 mousePos = ray.GetPoint(enter);
+
+                    //Debug.Log(mousePos);
+
+                    //From world space to simulation space
+                    Vector2 coordinates = scene.WorldToSim(mousePos.x, mousePos.y);
+
+                    Drag(coordinates.x, coordinates.y);
+                }
+            }
+               
+
 
             if (Input.GetKeyDown(KeyCode.P))
             {
@@ -163,27 +191,28 @@ namespace FluidSimulator
 
 
 
+        //x,y are in simulation space
         private void StartDrag(float x, float y)
         {
             mouseDown = true;
 
             //Debug.Log(x + " " + y);
 
-            //controller.SetObstacle(x, y, true);
+            controller.SetObstacle(x, y, true);
         }
 
+
+
+        //x,y are in simulation space
         private void Drag(float x, float y)
         {
-            //if (mouseDown)
-            //{
-            //    let bounds = canvas.getBoundingClientRect();
-            //    let mx = x - bounds.left - canvas.clientLeft;
-            //    let my = y - bounds.top - canvas.clientTop;
-            //    x = mx / cScale;
-            //    y = (canvas.height - my) / cScale;
-            //    setObstacle(x, y, false);
-            //}
+            if (mouseDown)
+            {
+                controller.SetObstacle(x, y, false);
+            }
         }
+
+
 
         private void EndDrag()
         {
