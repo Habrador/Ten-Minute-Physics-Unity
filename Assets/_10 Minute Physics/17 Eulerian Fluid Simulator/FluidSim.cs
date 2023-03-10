@@ -149,6 +149,7 @@ namespace FluidSimulator
 
 		//Make the fluid incompressible (fluid in = fluid out) by modifying the velocity values 
 		//Will also calculate pressure as a bonus
+		//When the method is done the fluid should be incompressible and we have the pressure that was needed to make the fluid incompressible
 		private void SolveIncompressibility(int numIters, float dt, float overRelaxation)
 		{
 			//Reset pressure
