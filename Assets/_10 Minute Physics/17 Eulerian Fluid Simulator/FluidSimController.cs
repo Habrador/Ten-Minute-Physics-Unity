@@ -10,11 +10,10 @@ using FluidSimulator;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
 // - Why no gravity in the wind tunnel simulation? Because we use water density and simulate air because air pressure is negligible when the height of the simulation is 1m? So why are we using water density then???
-// - Figure out the wall situation during the different simulations
-// - Why is -divergence / sTot * overrelaxation added to the pressure calculations?
+// - Figure out the wall situation during the different simulations. because theres a wall to the left and we add velocity in setup, this velocity remains in the data structure throughout the simulation??? This is also what he says in the video
 // - The purpose of the sin function when we paint with obstacle
 // - Why Integrate() is not ignoring the last column in x
-// - Figure out where the pressure equation comes from
+// - Figure out where the pressure equation works. If we want divergence to be zero, how can pressure be non-zero when divergence is included in the calculations? Why is -divergence / sTot * overrelaxation added to the pressure calculations?
 // - In the wind tunnel, why do we only set in velocity and smoke density once in the beginning?
 public class FluidSimController : MonoBehaviour
 {
@@ -39,6 +38,10 @@ public class FluidSimController : MonoBehaviour
 
         fluidUI = new FluidUI(this);
 
+        //The size of the plane we run the simulation on so we can convert from world space to simulation space
+        scene.simPlaneWidth = 2f;
+        scene.simPlaneHeight = 1f;
+
         //SetupScene(Scene.SceneNr.WindTunnel);
 
         //SetupScene(Scene.SceneNr.Tank);
@@ -47,9 +50,17 @@ public class FluidSimController : MonoBehaviour
 
 
     private void Update()
-    {
+    {    
         //Display the fluid
         displayFluid.TestDraw();
+    }
+
+
+
+    private void LateUpdate()
+    {
+        //Interactions such as moving obstacles with mouse
+        fluidUI.Interaction(scene);
     }
 
 
@@ -187,6 +198,7 @@ public class FluidSimController : MonoBehaviour
 
                 //Left wall, bottom wall, top wall
                 //Why no right wall, but left wall???
+                //The smoke seems to disappear when it reaches the right border
                 if (i == 0 || j == 0 || j == f.numY - 1)
                 {
                     //Solid
@@ -197,6 +209,7 @@ public class FluidSimController : MonoBehaviour
 
                 //Add right velocity to the fluid in the second column
                 //Don't we need a velocity on the right border as well?
+                //Wont disappear after first update because there's a wall to the left?
                 if (i == 1)
                 {
                     f.u[i * n + j] = inVel;
@@ -254,7 +267,8 @@ public class FluidSimController : MonoBehaviour
 
 
     //Position an obstacle in the fluid and make it interact with the fluid if it has a velocity
-    private void SetObstacle(float x, float y, bool reset)
+    //x,y are in simulation space - NOT world space
+    public void SetObstacle(float x, float y, bool reset)
     {
         //To give the fluid a velocity by moving around the obstacle
         float vx = 0f;

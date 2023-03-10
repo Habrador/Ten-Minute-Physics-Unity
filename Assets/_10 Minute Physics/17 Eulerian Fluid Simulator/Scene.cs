@@ -53,5 +53,42 @@ namespace FluidSimulator
         public float obstacleY = 0f;
 
         public float obstacleRadius = 0.15f;
+
+        //The plane we simulate the fluid on
+        //The plane is assumed to be centered around world space origo
+        public float simPlaneWidth;
+        public float simPlaneHeight;
+
+
+
+        //Convert from world space to simulation space
+        public Vector2 WorldToSim(float x, float y)
+        {
+            //The plane is assumed to be centered around world space origo
+            //Origo of the simulation space is in bottom-left of the plane, so start by moving origo
+            x += simPlaneWidth * 0.5f;
+            y += simPlaneHeight * 0.5f;
+
+            //Scale the coordinates to match simulation space
+
+            //For testing
+            //int cellsX = 4;
+            //int cellsY = 2;
+
+            //float h = 3f;
+
+            //float simWidth = cellsX * h;
+            //float simHeight = cellsY * h;
+
+            float simWidth = fluid.GetWidth();
+            float simHeight = fluid.GetHeight();
+
+            x *= simWidth / simPlaneWidth;
+            y *= simHeight / simPlaneHeight;
+
+            Vector2 simSpaceCoordinates = new (x, y);
+
+            return simSpaceCoordinates;
+        }
     }
 }

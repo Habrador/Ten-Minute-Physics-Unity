@@ -117,9 +117,24 @@ namespace FluidSimulator
             
             if (Input.GetMouseButtonDown(0))
             {
-                Vector2 mousePos = Vector2.zero;
-            
-                StartDrag(mousePos.x, mousePos.y);
+                //Fire a ray against a plane to get the position of the mouse in world space
+                Plane plane = new (-Vector3.forward, Vector3.zero);
+
+                //Create a ray from the mouse click position
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                if (plane.Raycast(ray, out float enter))
+                {
+                    //Get the point that is clicked in world space
+                    Vector3 mousePos = ray.GetPoint(enter);
+
+                    //Debug.Log(mousePos);
+
+                    //From world space to simulation space
+                    Vector2 coordinates = scene.WorldToSim(mousePos.x, mousePos.y);
+
+                    StartDrag(coordinates.x, coordinates.y);
+                }
             }
 
             if (Input.GetMouseButtonUp(0))
@@ -150,16 +165,11 @@ namespace FluidSimulator
 
         private void StartDrag(float x, float y)
         {
-            //let bounds = canvas.getBoundingClientRect();
+            mouseDown = true;
 
-            //let mx = x - bounds.left - canvas.clientLeft;
-            //let my = y - bounds.top - canvas.clientTop;
-            //mouseDown = true;
+            //Debug.Log(x + " " + y);
 
-            //x = mx / cScale;
-            //y = (canvas.height - my) / cScale;
-
-            //setObstacle(x, y, true);
+            //controller.SetObstacle(x, y, true);
         }
 
         private void Drag(float x, float y)
