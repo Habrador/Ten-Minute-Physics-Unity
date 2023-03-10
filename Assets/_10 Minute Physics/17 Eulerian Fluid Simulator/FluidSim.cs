@@ -196,14 +196,15 @@ namespace FluidSimulator
 						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
-						//Why -div??? Because the greater the inflow the larger the pressure?
+						//negative because the greater the inflow the larger pressure is needed
 						float divergence_Over_sTot = -divergence / sTot;
 
 						divergence_Over_sTot *= overRelaxation;
 
 						//Calculate the pressure
-						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update 
-						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct
+						//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
+						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update, summing up the total pressure needed to make the fluid incompressible
+						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct...
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
