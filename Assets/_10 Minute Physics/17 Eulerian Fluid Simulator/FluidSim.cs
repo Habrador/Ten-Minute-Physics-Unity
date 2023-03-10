@@ -442,6 +442,7 @@ namespace FluidSimulator
 			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
 
 			//The weights used to interpolate between the 4 values
+			//This basically 3 lerps
 			//According to the video, the weights are:
 			//w_00 = 1 - x/h
 			//w_01 = x/h

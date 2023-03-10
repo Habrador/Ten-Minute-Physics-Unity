@@ -14,7 +14,6 @@ using FluidSimulator;
 // - The purpose of the sin function when we paint with obstacle
 // - Why Integrate() is not ignoring the last column in x
 // - Figure out where the pressure equation works. If we want divergence to be zero, how can pressure be non-zero when divergence is included in the calculations? Why is -divergence / sTot * overrelaxation added to the pressure calculations?
-// - In the wind tunnel, why do we only set in velocity and smoke density once in the beginning?
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -70,6 +69,15 @@ public class FluidSimController : MonoBehaviour
         return;
 
         Simulate();
+    }
+
+
+
+    private void OnGUI()
+    {
+        fluidUI.DisplayUI(scene);
+
+        fluidUI.Interaction(scene);
     }
 
 
@@ -332,15 +340,5 @@ public class FluidSimController : MonoBehaviour
         }
 
         scene.showObstacle = true;
-    }
-
-
-
-    //UI
-    private void OnGUI()
-    {
-        fluidUI.DisplayUI(scene);
-
-        fluidUI.Interaction(scene);
     }
 }
