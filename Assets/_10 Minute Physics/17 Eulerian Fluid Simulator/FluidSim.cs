@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //Fluid Simulation in 200 lines of code (excluding comments)
-//The state of a fluid at a given instant of time is modeled as a velocity vector field and a pressure field, assuming density and temperature are constant. The velocity of air at a radiator is pointing upwards due to heat rising. The Navier-Stokes equations describe the evolution of this velocity field over time. 
-//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell.  
-//Similar to the fluid simulations by Jos Stam so read "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" if you want to learn what's going on
+//The state of a fluid at a given instant of time is modeled as a velocity vector field. The Navier-Stokes equations describe the evolution of this velocity field over time.  
+//The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
+//The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" are also similar
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
-// - Multiple fluids - see p.12 "Real-Time Fluid Dynamics for Games"
 namespace FluidSimulator
 {
 	public class FluidSim
@@ -114,10 +113,13 @@ namespace FluidSimulator
 			Extrapolate();
 
 			//Move the velocity field along itself (advection)
+			//Advection should be done in a divergence-free velocity field, so advect has to come after project
+			//When we move fluid around and want it to conserve volume, the velocity field we are moving it in must be divergence-free
 			//This will introduce viscosity which can be reduced with vorticity confinement
 			AdvectVel(dt);
 
 			//Move the smoke along the velocity field
+			//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell. 
 			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term causes it to diffuse anyway
 			AdvectSmoke(dt);
 
@@ -137,8 +139,8 @@ namespace FluidSimulator
 					//If this cell is not an obstacle and cell below is not an obstacle
 					if (s[To1D(i, j)] != 0f && s[To1D(i, j - 1)] != 0f)
 					{
-						//v = v + dt * g
-						//Only horizontal component of the velocity (v) is affected by gravity (so not u)  
+						//Forward Euler
+						//Only horizontal component of the velocity (v) is affected by gravity
 						v[To1D(i, j)] += gravity * dt;
 					}
 				}

@@ -32,7 +32,9 @@ namespace FluidSimulator
         //Trick to get a stable simulation by speeding up convergence [1, 2]
         public float overRelaxation = 1.9f;
 
-        public float dt;
+        //The time step. Default is 1/120 in the source code while Unity default is 1/50
+        //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
+        public float dt = Time.fixedDeltaTime;
 
         //Need several íterations each update to make the fluid incompressible
         public int numIters = 100;
