@@ -9,6 +9,7 @@ using UnityEngine;
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
+// - In advection, instead of using forward Euler use at least a second order Runge-Kutta
 namespace EulerianFluidSimulator
 {
 	public class FluidSim
@@ -67,7 +68,7 @@ namespace EulerianFluidSimulator
 			this.density = density;
 
 			//Add 2 extra cells because we need a border, or are we adding two u's on each side???
-			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column 
+			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
 			//He says border cells in the video
 			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
 			this.numX = numX + 2; 
@@ -112,15 +113,15 @@ namespace EulerianFluidSimulator
 			//Fix border velocities 
 			Extrapolate();
 
-			//Move the velocity field along itself (advection)
-			//Advection should be done in a divergence-free velocity field, so advect has to come after project
-			//When we move fluid around and want it to conserve volume, the velocity field we are moving it in must be divergence-free
+			//Move the velocity field along itself (self-advection)
+			//The cells are static while a real fluid has particles that move around, so we have to move the velocity values in the grid
+			//Advection should be done in a divergence-free velocity field, which also satisfies the required boundary conditions -> so advect has to come after project or you may get odd artifacts
 			//This will introduce viscosity which can be reduced with vorticity confinement
 			AdvectVel(dt);
 
 			//Move the smoke along the velocity field
 			//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell. 
-			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term causes it to diffuse anyway
+			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term (we are using averages) causes it to diffuse anyway
 			AdvectSmoke(dt);
 
 			//Diffusion. Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
@@ -157,6 +158,7 @@ namespace EulerianFluidSimulator
 			//Reset pressure
 			System.Array.Fill(p, 0f);
 
+			//Poisson equation???
 			//Used in the pressure calculations: p = p + (d/s) * ((rho * h) / dt) = p + (d/s) * cp
 			float cp = density * h / dt;
 
