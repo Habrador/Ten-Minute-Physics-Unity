@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //Settings for the fluid simulation and a ref to the fluid simulation itself
-namespace FluidSimulator
+namespace EulerianFluidSimulator
 {
-    public class Scene
+    public class FluidScene
     {
         public FluidSim fluid = null;
 

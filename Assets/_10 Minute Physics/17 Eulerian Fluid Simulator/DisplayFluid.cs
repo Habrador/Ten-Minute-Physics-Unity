@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //Display the fluid simulation on a texture
-namespace FluidSimulator
+namespace EulerianFluidSimulator
 {
 	public class DisplayFluid
 	{
@@ -61,7 +61,7 @@ namespace FluidSimulator
 
 
 
-		public void Draw(Scene scene)
+		public void Draw(FluidScene scene)
 		{
 			UpdateTexture(scene);
 
@@ -90,7 +90,7 @@ namespace FluidSimulator
 
 
 		//Paint the fluid, not obstacles
-		private void UpdateTexture(Scene scene)
+		private void UpdateTexture(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 
@@ -158,7 +158,7 @@ namespace FluidSimulator
 						color[2] = 255 * s;
 
 						//In the paint scene we color the smoke 
-						if (scene.sceneNr == Scene.SceneNr.Paint)
+						if (scene.sceneNr == FluidScene.SceneNr.Paint)
 						{
 							color = GetSciColor(s, 0f, 1f);
 						}
@@ -283,7 +283,7 @@ namespace FluidSimulator
 		*/
 
 	
-		private void ShowObstacle(Scene scene)
+		private void ShowObstacle(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 

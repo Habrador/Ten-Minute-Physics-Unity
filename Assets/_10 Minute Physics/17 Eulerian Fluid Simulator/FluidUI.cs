@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FluidSimulator
+namespace EulerianFluidSimulator
 {
     public class FluidUI
     {
@@ -19,7 +19,7 @@ namespace FluidSimulator
 
 
 
-        public void DisplayUI(Scene scene)
+        public void DisplayUI(FluidScene scene)
         {
             GUILayout.BeginHorizontal("box");
 
@@ -38,19 +38,19 @@ namespace FluidSimulator
 
             if (GUILayout.Button($"Wind Tunnel", buttonStyle))
             {
-                controller.SetupScene(Scene.SceneNr.WindTunnel);
+                controller.SetupScene(FluidScene.SceneNr.WindTunnel);
             }
             if (GUILayout.Button("Hires Tunnel", buttonStyle))
             {
-                controller.SetupScene(Scene.SceneNr.HighResWindTunnel);
+                controller.SetupScene(FluidScene.SceneNr.HighResWindTunnel);
             }
             if (GUILayout.Button("Tank", buttonStyle))
             {
-                controller.SetupScene(Scene.SceneNr.Tank);
+                controller.SetupScene(FluidScene.SceneNr.Tank);
             }
             if (GUILayout.Button("Paint", buttonStyle))
             {
-                controller.SetupScene(Scene.SceneNr.Paint);
+                controller.SetupScene(FluidScene.SceneNr.Paint);
             }
 
             //Checkboxes
@@ -111,7 +111,7 @@ namespace FluidSimulator
 
 
         //Has to be called from OnGUI because we use Event???
-        public void Interaction(Scene scene)
+        public void Interaction(FluidScene scene)
         {
             mouseDown = false;
 

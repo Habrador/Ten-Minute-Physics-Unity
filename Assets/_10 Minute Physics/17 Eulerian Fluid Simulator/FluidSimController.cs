@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using FluidSimulator;
+using EulerianFluidSimulator;
 
 //Most basic fluid simulator
 //Based on: "How to write an Eulerian Fluid Simulator with 200 lines of code" https://matthias-research.github.io/pages/tenMinutePhysics/
@@ -21,7 +21,7 @@ public class FluidSimController : MonoBehaviour
 
 
     //Private
-    private Scene scene;
+    private FluidScene scene;
 
     private DisplayFluid displayFluid;
 
@@ -31,7 +31,7 @@ public class FluidSimController : MonoBehaviour
 
     private void Start()
     {    
-        scene = new Scene();
+        scene = new FluidScene();
 
         displayFluid = new DisplayFluid(fluidMaterial);
 
@@ -104,7 +104,7 @@ public class FluidSimController : MonoBehaviour
 
 
     //Init the simulation after a button has been pressed
-    public void SetupScene(Scene.SceneNr sceneNr = Scene.SceneNr.Tank)
+    public void SetupScene(FluidScene.SceneNr sceneNr = FluidScene.SceneNr.Tank)
     {
         scene.sceneNr = sceneNr;
         scene.obstacleRadius = 0.15f;
@@ -116,11 +116,11 @@ public class FluidSimController : MonoBehaviour
         //How detailed the simulation is in height (y) direction
         int res = 100;
 
-        if (sceneNr == Scene.SceneNr.Tank)
+        if (sceneNr == FluidScene.SceneNr.Tank)
         {
             res = 50;
         }
-        else if (sceneNr == Scene.SceneNr.HighResWindTunnel)
+        else if (sceneNr == FluidScene.SceneNr.HighResWindTunnel)
         {
             res = 200;
         }
@@ -146,15 +146,15 @@ public class FluidSimController : MonoBehaviour
         FluidSim f = scene.fluid = new FluidSim(density, numX, numY, h);
 
         //Init the different simulations
-        if (sceneNr == Scene.SceneNr.Tank)
+        if (sceneNr == FluidScene.SceneNr.Tank)
         {
             SetupTank(f);
         }
-        else if (sceneNr == Scene.SceneNr.WindTunnel || sceneNr == Scene.SceneNr.HighResWindTunnel)
+        else if (sceneNr == FluidScene.SceneNr.WindTunnel || sceneNr == FluidScene.SceneNr.HighResWindTunnel)
         {
             SetupWindTunnel(f, sceneNr);
         }
-        else if (sceneNr == Scene.SceneNr.Paint)
+        else if (sceneNr == FluidScene.SceneNr.Paint)
         {
             SetupPaint();
         }
@@ -197,7 +197,7 @@ public class FluidSimController : MonoBehaviour
 
 
 
-    private void SetupWindTunnel(FluidSim f, Scene.SceneNr sceneNr)
+    private void SetupWindTunnel(FluidSim f, FluidScene.SceneNr sceneNr)
     {
         int n = f.numY;
 
@@ -258,7 +258,7 @@ public class FluidSimController : MonoBehaviour
         scene.showStreamlines = false;
         scene.showVelocities = false;
 
-        if (sceneNr == Scene.SceneNr.HighResWindTunnel)
+        if (sceneNr == FluidScene.SceneNr.HighResWindTunnel)
         {
             //Can run Simulate() multiple times to make a smaller time step
             //scene.dt = 1.0 / 120.0;
@@ -326,7 +326,7 @@ public class FluidSimController : MonoBehaviour
                     //0 means obstacle 
                     f.s[i * n + j] = 0f;
 
-                    if (scene.sceneNr == Scene.SceneNr.Paint)
+                    if (scene.sceneNr == FluidScene.SceneNr.Paint)
                     {
                         //Add/remove smoke because of the sinus this loops 0 -> 1 -> 0
                         f.m[i * n + j] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);

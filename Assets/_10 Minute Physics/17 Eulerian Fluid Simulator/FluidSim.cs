@@ -9,7 +9,7 @@ using UnityEngine;
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
-namespace FluidSimulator
+namespace EulerianFluidSimulator
 {
 	public class FluidSim
 	{
