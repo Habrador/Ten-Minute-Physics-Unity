@@ -6,10 +6,12 @@ using UnityEngine;
 //The state of a fluid at a given instant of time is modeled as a velocity vector field. The Navier-Stokes equations describe the evolution of this velocity field over time.  
 //The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
 //The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" are also similar
+//The report "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
-// - In advection, instead of using forward Euler use at least a second order Runge-Kutta
+// - In advection, instead of using forward Euler use at least a second order Runge-Kutta. See "Real time simulation and control of Newtonian fluids..." for alternatives such as MacCormack
+// - numIters doesnt have to be a constant. The loop can stop when all cells have a divergence less than 0.0001
 namespace EulerianFluidSimulator
 {
 	public class FluidSim
@@ -158,8 +160,18 @@ namespace EulerianFluidSimulator
 			//Reset pressure
 			System.Array.Fill(p, 0f);
 
-			//Poisson equation???
-			//Used in the pressure calculations: p = p + (d/s) * ((rho * h) / dt) = p + (d/s) * cp
+			//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
+			//Particles in higher pressure regions are pushed towards lower pressure regions
+			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally 
+			//p = p + (d/s) * ((rho * h) / dt)
+			//Where
+			//d - divergence
+			//s - number of surrounding cells that are not obstacles
+			//rho - density
+			//h - cell size
+			//dt - time step
+
+			//To optimize the pressure calculations -> p = p + (d/s) * cp
 			float cp = density * h / dt;
 
 			//Gauss-Seidel relaxation
@@ -201,13 +213,13 @@ namespace EulerianFluidSimulator
 						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
-						//negative because the greater the inflow the larger pressure is needed
+						//Why the minus sign?
+						//A positive divergence represents an influx of fluid and would correspond to an increase in cell pressure and subsequent increase in fluid outflow from the cell 
 						float divergence_Over_sTot = -divergence / sTot;
 
 						divergence_Over_sTot *= overRelaxation;
 
 						//Calculate the pressure
-						//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
 						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update, summing up the total pressure needed to make the fluid incompressible
 						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct...
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
@@ -215,7 +227,7 @@ namespace EulerianFluidSimulator
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
 						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
-						//Why are we using u,v instead of uNew and vNew? From the Discord: Directly modifying u and v is due to using gauss-seidel iteration to solve the pressure system. This is used because you can get better convergence by updating the degrees of freedom immediately rather than using a temporary copy.
+						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
@@ -259,6 +271,7 @@ namespace EulerianFluidSimulator
 
 		//Move the velocity field along itself
 		//Semi-Lagrangian advection where we are simulating particles
+		//At time dt in the past what fluid would have arrived where we are now?
 		//1. Calculate (u, v_average) at the u component
 		//2. The previous pos x_prev = x - dt * v if we assume the particle moved in a straight line
 		//3. Interpolate the velocity at x_prev
