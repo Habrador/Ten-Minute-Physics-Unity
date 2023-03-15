@@ -305,14 +305,13 @@ namespace EulerianFluidSimulator
 			DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
 		
 		
-			//The guy is also giving the circle a border...
+			//The guy is also giving the circle a black border...
 		}
 	
 
 
-
 		//Scientific color scheme
-		//Also known as jet or rainbow???
+		//Also known as jet (turbo) or rainbow??? Similar to HSB color mode where we change the hue
 		//Lerps blue -> green -> yellow -> red where red is high pressure
 		private Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{

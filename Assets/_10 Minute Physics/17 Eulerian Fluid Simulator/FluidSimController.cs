@@ -10,10 +10,11 @@ using EulerianFluidSimulator;
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
 // - Why no gravity in the wind tunnel simulation? Because we use water density and simulate air because air pressure is negligible when the height of the simulation is 1m? So why are we using water density then???
-// - Figure out the wall situation during the different simulations. because theres a wall to the left and we add velocity in setup, this velocity remains in the data structure throughout the simulation??? This is also what he says in the video
+// - Figure out the wall situation during the different simulations. In the wind tunnel, figure out how wind is added. If we add wind next to a wall, then its never added because there's a wall to the left...
 // - The purpose of the sin function when we paint with obstacle
 // - Why Integrate() is not ignoring the last column in x
-// - Figure out where the pressure equation works. If we want divergence to be zero, how can pressure be non-zero when divergence is included in the calculations? Why is -divergence / sTot * overrelaxation added to the pressure calculations?
+// - Figure out how the pressure equation works
+// - How the scientific color scheme works
 public class FluidSimController : MonoBehaviour
 {
     //Public

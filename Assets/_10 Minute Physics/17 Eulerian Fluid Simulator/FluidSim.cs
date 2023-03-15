@@ -162,7 +162,7 @@ namespace EulerianFluidSimulator
 
 			//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
 			//Particles in higher pressure regions are pushed towards lower pressure regions
-			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally 
+			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally,  summing up the total pressure needed to make the fluid incompressible 
 			//p = p + (d/s) * ((rho * h) / dt)
 			//Where
 			//d - divergence
@@ -220,8 +220,7 @@ namespace EulerianFluidSimulator
 						divergence_Over_sTot *= overRelaxation;
 
 						//Calculate the pressure
-						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update, summing up the total pressure needed to make the fluid incompressible
-						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct... and another paper is including the "relaxation coefficient" in the pressure calculations
+						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
