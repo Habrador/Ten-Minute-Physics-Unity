@@ -198,7 +198,7 @@ namespace EulerianFluidSimulator
 
 			float h = f.h;
 
-			//The length of the lines which will be scaled by the velocity
+			//The length of the lines which will be scaled by the velocity in simulation space
 			float scale = 0.02f;
 
 			List<Vector2> linesToDisplay = new List<Vector2>();
@@ -248,6 +248,7 @@ namespace EulerianFluidSimulator
 
 			c.strokeStyle = "#000000";
 
+			//Dont display a streamline from each cell because it makes it difficult to see
 			for (var i = 1; i < f.numX - 1; i += 5)
 			{
 				for (var j = 1; j < f.numY - 1; j += 5)
@@ -280,6 +281,7 @@ namespace EulerianFluidSimulator
 		*/
 
 
+		//Show the circle obstacle
 		private void ShowObstacle(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
@@ -309,8 +311,8 @@ namespace EulerianFluidSimulator
 
 
 
-		//Scientific color scheme
-		//Rainbow (jet) or hot-to-cold
+		//Get a color from a color gradient which is colored according to the scientific color scheme
+		//The color scheme is also called rainbow (jet) or hot-to-cold
 		//Similar to HSV color mode where we change the hue (except the purple part)
 		//Rainbow is a linear interpolation between (0,0,255) and (255,0,0) in RGB color space (ignoring the purple part which would loop the circle like in HSV)
 		//Blue means low pressure and red is high pressure
