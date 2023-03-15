@@ -296,7 +296,9 @@ namespace EulerianFluidSimulator
 			}
 
 			//Circle center in global space
-			Vector3 circleCenter = new (cX(scene.obstacleX), cY(scene.obstacleY), 0.1f);
+			Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
+
+			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, 0.1f);
 
 			//Display a circle mesh
 			DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
