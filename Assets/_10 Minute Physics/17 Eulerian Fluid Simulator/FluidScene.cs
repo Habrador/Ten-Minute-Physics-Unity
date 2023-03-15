@@ -29,8 +29,12 @@ namespace EulerianFluidSimulator
         //Simulation settings
         public bool useOverRelaxation = true; //Is not in the tutorial but needs to be there to make Unity's toggles work
 
-        //Trick to get a stable simulation by speeding up convergence [1, 2]
-        //Is also called relaxation coefficient
+        //Relaxation
+        //https://www.sanfoundry.com/computational-fluid-dynamics-questions-answers-under-relaxation/
+        //Increase the convergence of the solution by changing the values of the variables during the iterative process.
+        //When the relaxation factor (coefficient) is > 1, the process is called over-relaxation. This will lead to a higher rate of convergence and leads to faster convergence. But the disadvantage is that stability will be decreased.
+        //If < 1 the stability will increase   
+        //Here we will use over-relaxation in the range [1, 2]
         public float overRelaxation = 1.9f;
 
         //The time step. Default is 1/120 in the source code while Unity default is 1/50

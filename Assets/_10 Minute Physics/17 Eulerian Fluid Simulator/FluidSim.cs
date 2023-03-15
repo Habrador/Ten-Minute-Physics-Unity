@@ -221,13 +221,13 @@ namespace EulerianFluidSimulator
 
 						//Calculate the pressure
 						//We need the += because even though pressure is initialized as zero before the method, we are running this method several times each update, summing up the total pressure needed to make the fluid incompressible
-						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct...
+						//Should overRelaxation be included in the pressure calculations??? According to the video the pressure values are still correct... and another paper is including the "relaxation coefficient" in the pressure calculations
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
 						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
-						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step
+						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
