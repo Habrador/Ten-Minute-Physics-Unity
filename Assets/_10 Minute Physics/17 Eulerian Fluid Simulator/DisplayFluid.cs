@@ -307,12 +307,15 @@ namespace EulerianFluidSimulator
 		
 			//The guy is also giving the circle a black border...
 		}
-	
+
 
 
 		//Scientific color scheme
-		//Also known as jet (turbo) or rainbow??? Similar to HSB color mode where we change the hue
-		//Lerps blue -> green -> yellow -> red where red is high pressure
+		//Rainbow (jet) or hot-to-cold
+		//Similar to HSV color mode where we change the hue (except the purple part)
+		//Rainbow is a linear interpolation between (0,0,255) and (255,0,0) in RGB color space (ignoring the purple part which would loop the circle like in HSV)
+		//Blue means low pressure and red is high pressure
+		//https://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale
 		private Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{
 			//Clamp val to be within the range
@@ -324,8 +327,13 @@ namespace EulerianFluidSimulator
 		
 			//If min and max are the same, set val to be in the middle or we get a division by zero
 			val = (d == 0.0f) ? 0.5f : (val - minVal) / d;
-		
+
 			//0.25 means 4 buckets 0->3
+			//Why 4? A walk on the edges of the RGB color cube:
+			//blue   (0,0,1) -> cyan   (0,1,1)
+			//cyan   (0,1,1) -> green  (0,1,0)
+			//green  (0,1,0) -> yellow (1,1,0)
+			//yellow (1,1,0) -> red    (1,0,0)
 			float m = 0.25f;
 
 			int num = Mathf.FloorToInt(val / m);
