@@ -65,18 +65,14 @@ namespace EulerianFluidSimulator
 		{
 			UpdateTexture(scene);
 
-			//float cellScale = 1.1f;
-
-			//float h = f.h;
-
 			if (scene.showVelocities)
 			{
-				//ShowVelocities();
+				ShowVelocities(scene);
 			}
 
 			if (scene.showStreamlines)
 			{
-				//ShowStreamlines();
+				ShowStreamlines(scene);
 			}
 
 			if (scene.showObstacle)
@@ -202,7 +198,9 @@ namespace EulerianFluidSimulator
 			//The length of the lines which will be scaled by the velocity in simulation space
 			float scale = 0.02f;
 
-			List<Vector2> linesToDisplay = new ();
+			List<Vector3> linesToDisplay = new ();
+
+			float z = 0.01f;
 
 			for (int i = 0; i < f.numX; i++)
 			{
@@ -231,14 +229,15 @@ namespace EulerianFluidSimulator
 					Vector2 vEnd = scene.SimToWorld(x, y1);
 
 
-					linesToDisplay.Add(uStart);
-					linesToDisplay.Add(uEnd);
-					linesToDisplay.Add(vStart);
-					linesToDisplay.Add(vEnd);
+					linesToDisplay.Add(new Vector3(uStart.x, uStart.y, z));
+					linesToDisplay.Add(new Vector3(uEnd.x, uEnd.y, z));
+					linesToDisplay.Add(new Vector3(vStart.x, vStart.y, z));
+					linesToDisplay.Add(new Vector3(vEnd.x, vEnd.y, z));
 				}
 			}
 
 			//Display the lines with some black color
+			DisplayShapes.DrawLineSegments(linesToDisplay, DisplayShapes.ColorOptions.Black);
 		}
 
 		
@@ -254,7 +253,9 @@ namespace EulerianFluidSimulator
 			//How many segments per streamline?
 			int numSegs = 15;
 
-			List<Vector2> streamlineCoordinates = new ();
+			List<Vector3> streamlineCoordinates = new ();
+
+			float z = 0.01f;
 
 			//Dont display a streamline from each cell because it makes it difficult to see
 			for (int i = 1; i < f.numX - 1; i += 5)
@@ -294,10 +295,13 @@ namespace EulerianFluidSimulator
 						}
 
 						//Add the next coordinate of the streamline
-						streamlineCoordinates.Add(scene.SimToWorld(x, y));
+						Vector2 pos2D = scene.SimToWorld(x, y);
+
+						streamlineCoordinates.Add(new Vector3(pos2D.x, pos2D.y, z));
 					}
-					
+
 					//Display the line
+					DisplayShapes.DrawLine(streamlineCoordinates, DisplayShapes.ColorOptions.Black);
 				}
 			}
 		}
