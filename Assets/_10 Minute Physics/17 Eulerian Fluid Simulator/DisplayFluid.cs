@@ -329,11 +329,7 @@ namespace EulerianFluidSimulator
 			val = (d == 0.0f) ? 0.5f : (val - minVal) / d;
 
 			//0.25 means 4 buckets 0->3
-			//Why 4? A walk on the edges of the RGB color cube:
-			//blue   (0,0,1) -> cyan   (0,1,1)
-			//cyan   (0,1,1) -> green  (0,1,0)
-			//green  (0,1,0) -> yellow (1,1,0)
-			//yellow (1,1,0) -> red    (1,0,0)
+			//Why 4? A walk on the edges of the RGB color cube: blue -> cyan -> green -> yellow -> red
 			float m = 0.25f;
 
 			int num = Mathf.FloorToInt(val / m);
@@ -348,10 +344,10 @@ namespace EulerianFluidSimulator
 			//blue -> green -> yellow -> red
 			switch (num)
 			{
-				case 0: r = 0f; g = s;      b = 1f;     break; //max blue, green increases
-				case 1: r = 0f; g = 1f;     b = 1f - s; break; //max green, blue decreases
-				case 2: r = s;  g = 1f;     b = 0f;     break; //max green, red increases
-				case 3: r = 1f; g = 1f - s; b = 0f;     break; //max red, green decreases 
+				case 0: r = 0f; g = s;      b = 1f;     break; //blue   (0,0,1) -> cyan   (0,1,1)
+				case 1: r = 0f; g = 1f;     b = 1f - s; break; //cyan   (0,1,1) -> green  (0,1,0)
+				case 2: r = s;  g = 1f;     b = 0f;     break; //green  (0,1,0) -> yellow (1,1,0)
+				case 3: r = 1f; g = 1f - s; b = 0f;     break; //yellow (1,1,0) -> red    (1,0,0)
 			}
 
 			Vector4 color = new ( 255 * r, 255 * g, 255 * b, 255);
