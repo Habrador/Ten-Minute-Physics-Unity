@@ -51,7 +51,7 @@ namespace EulerianFluidSimulator
 		public readonly float[] m;
 		private readonly float[] mNew;
 
-		private enum SampleArray
+		public enum SampleArray
 		{
 			uField, vField, smokeField
 		}
@@ -416,7 +416,7 @@ namespace EulerianFluidSimulator
 
 		//Get data (u, v, smoke density) from the simulation at coordinate x,y
 		//x,y are NOT cell indices but coordinates in simulation space
-		private float SampleField(float x, float y, SampleArray field)
+		public float SampleField(float x, float y, SampleArray field)
 		{
 			float h = this.h;
 

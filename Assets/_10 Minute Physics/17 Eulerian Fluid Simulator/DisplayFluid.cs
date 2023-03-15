@@ -189,6 +189,7 @@ namespace EulerianFluidSimulator
 
 
 		//Show the u and v velocities at each cell by drawing lines
+		//These are just straight lines
 		private void ShowVelocities(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
@@ -201,7 +202,7 @@ namespace EulerianFluidSimulator
 			//The length of the lines which will be scaled by the velocity in simulation space
 			float scale = 0.02f;
 
-			List<Vector2> linesToDisplay = new List<Vector2>();
+			List<Vector2> linesToDisplay = new ();
 
 			for (int i = 0; i < f.numX; i++)
 			{
@@ -240,45 +241,67 @@ namespace EulerianFluidSimulator
 			//Display the lines with some black color
 		}
 
-		/*
+		
+
+		//Show streamlines to easier visualize how the fluid flows
+		//Compared to the velocities, this will be a curve
 		private void ShowStreamlines(FluidScene scene)
 		{
-			var segLen = f.h * 0.2;
-			var numSegs = 15;
+			FluidSim f = scene.fluid;
 
-			c.strokeStyle = "#000000";
+			//The length of a single segment in simulation space
+			//float segLen = f.h * 0.2f;
+			//How many segments per streamline?
+			int numSegs = 15;
+
+			List<Vector2> streamlineCoordinates = new ();
 
 			//Dont display a streamline from each cell because it makes it difficult to see
-			for (var i = 1; i < f.numX - 1; i += 5)
+			for (int i = 1; i < f.numX - 1; i += 5)
 			{
-				for (var j = 1; j < f.numY - 1; j += 5)
+				for (int j = 1; j < f.numY - 1; j += 5)
 				{
+					//Reset
+					streamlineCoordinates.Clear();
 
-					var x = (i + 0.5) * f.h;
-					var y = (j + 0.5) * f.h;
+					//Center of the cell in simulation space
+					float x = (i + 0.5f) * f.h;
+					float y = (j + 0.5f) * f.h;
 
-					c.beginPath();
-					c.moveTo(cX(x), cY(y));
+					//Simulation space to global
+					streamlineCoordinates.Add(scene.SimToWorld(x, y));
 
-					for (var n = 0; n < numSegs; n++)
+					//Build the line
+					for (int n = 0; n < numSegs; n++)
 					{
-						var u = f.sampleField(x, y, U_FIELD);
-						var v = f.sampleField(x, y, V_FIELD);
-						l = Math.sqrt(u * u + v * v);
+						//The velocity at the current coordinate
+						float u = f.SampleField(x, y, FluidSim.SampleArray.uField);
+						float v = f.SampleField(x, y, FluidSim.SampleArray.vField);
+						
+						//float l = Mathf.Sqrt(u * u + v * v);
+						
 						// x += u/l * segLen;
 						// y += v/l * segLen;
-						x += u * 0.01;
-						y += v * 0.01;
-						if (x > f.numX * f.h)
-							break;
+						
+						//Move in the direction of the velocity
+						x += u * 0.01f;
+						y += v * 0.01f;
 
-						c.lineTo(cX(x), cY(y));
+						//Stop the line if we are outside of the simulation area
+						if (x > f.numX * f.h)
+						{
+							break;
+						}
+
+						//Add the next coordinate of the streamline
+						streamlineCoordinates.Add(scene.SimToWorld(x, y));
 					}
-					c.stroke();
+					
+					//Display the line
 				}
 			}
 		}
-		*/
+		
 
 
 		//Show the circle obstacle
