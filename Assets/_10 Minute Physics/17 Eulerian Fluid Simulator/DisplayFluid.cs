@@ -185,66 +185,63 @@ namespace EulerianFluidSimulator
 
 			fluidTexture.Apply();
 		}
-
-	
-
-		//From local to global space
-		//The local coordinate system starts at bottom-left of the plane
-		//The size depends on the number of cells, and the cell width
-		//The simulation area can be 200 m while the plane size is 0.5 m
-		private float cX(float x)
-		{
-			//return x * cScale;
-			return x;
-		}
-
-		private float cY(float y)
-		{
-			//return canvas.height - y * cScale;
-			return y;
-		}
 	
 
 
-		/*
-		private void ShowVelocities()
+		//Show the u and v velocities at each cell by drawing lines
+		private void ShowVelocities(FluidScene scene)
 		{
-			c.strokeStyle = "#000000";
-			scale = 0.02;
+			FluidSim f = scene.fluid;
 
-			for (var i = 0; i < f.numX; i++)
+			//To convert from 2d to 1d array
+			int n = f.numY;
+
+			float h = f.h;
+
+			//The length of the lines which will be scaled by the velocity
+			float scale = 0.02f;
+
+			List<Vector2> linesToDisplay = new List<Vector2>();
+
+			for (int i = 0; i < f.numX; i++)
 			{
-				for (var j = 0; j < f.numY; j++)
+				for (int j = 0; j < f.numY; j++)
 				{
+					float u = f.u[i * n + j];
+					float v = f.v[i * n + j];
 
-					var u = f.u[i * n + j];
-					var v = f.v[i * n + j];
+					//u velocity
+					float x0 = i * h;
+					float x1 = i * h + u * scale;
+					float y = (j + 0.5f) * h;
 
-					c.beginPath();
+					Vector2 uStart = scene.SimToWorld(x0, y);
+					
+					Vector2 uEnd = scene.SimToWorld(x1, y);
 
-					x0 = cX(i * h);
-					x1 = cX(i * h + u * scale);
-					y = cY((j + 0.5) * h);
+					//v velocity
+					float x = (i + 0.5f) * h;
+					float y0 = j * h;
+					float y1 = j * h + v * scale;
 
-					c.moveTo(x0, y);
-					c.lineTo(x1, y);
-					c.stroke();
+					//x, y0
+					Vector2 vStart = scene.SimToWorld(x, y0);
+					//x, y1
+					Vector2 vEnd = scene.SimToWorld(x, y1);
 
-					x = cX((i + 0.5) * h);
-					y0 = cY(j * h);
-					y1 = cY(j * h + v * scale)
 
-						c.beginPath();
-					c.moveTo(x, y0);
-					c.lineTo(x, y1);
-					c.stroke();
-
+					linesToDisplay.Add(uStart);
+					linesToDisplay.Add(uEnd);
+					linesToDisplay.Add(vStart);
+					linesToDisplay.Add(vEnd);
 				}
 			}
+
+			//Display the lines with some black color
 		}
-		*/
+
 		/*
-		private void ShowStreamlines()
+		private void ShowStreamlines(FluidScene scene)
 		{
 			var segLen = f.h * 0.2;
 			var numSegs = 15;
@@ -282,7 +279,7 @@ namespace EulerianFluidSimulator
 		}
 		*/
 
-	
+
 		private void ShowObstacle(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
