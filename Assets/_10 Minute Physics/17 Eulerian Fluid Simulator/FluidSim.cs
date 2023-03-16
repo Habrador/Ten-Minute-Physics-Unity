@@ -106,16 +106,18 @@ namespace EulerianFluidSimulator
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
 			//Modify velocity values (add exteral forces like gravity or a fan blowing)
+			//This is the F term in Navier-Stokes
 			Integrate(dt, gravity);
 
-			//Make the fluid incompressible (projection)
-			//Here we also calculate pressure
+			//Make the fluid incompressible (projection) - the conservation of mass term in Navier-Stokes
+			//Here we also calculate pressure - the pressure term in Navier-Stokes
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities 
 			Extrapolate();
 
 			//Move the velocity field along itself (self-advection)
+			//This is the convection term in Navier-Stokes and has to do with the conservation of momentum
 			//The cells are static while a real fluid has particles that move around, so we have to move the velocity values in the grid
 			//Advection should be done in a divergence-free velocity field, which also satisfies the required boundary conditions -> so advect has to come after project or you may get odd artifacts
 			//This will introduce viscosity which can be reduced with vorticity confinement
@@ -126,7 +128,8 @@ namespace EulerianFluidSimulator
 			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term (we are using averages) causes it to diffuse anyway
 			AdvectSmoke(dt);
 
-			//Diffusion. Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
+			//Diffusion - the viscosity term in Navier-Stokes
+			//Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
 		}
 
 
@@ -165,11 +168,11 @@ namespace EulerianFluidSimulator
 			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally,  summing up the total pressure needed to make the fluid incompressible 
 			//p = p + (d/s) * ((rho * h) / dt)
 			//Where
-			//d - divergence
+			//d - divergence [m/s]
 			//s - number of surrounding cells that are not obstacles
-			//rho - density
-			//h - cell size
-			//dt - time step
+			//rho - density [kg/m^3]
+			//h - cell size [m]
+			//dt - time step [s]
 
 			//To optimize the pressure calculations -> p = p + (d/s) * cp
 			float cp = density * h / dt;
