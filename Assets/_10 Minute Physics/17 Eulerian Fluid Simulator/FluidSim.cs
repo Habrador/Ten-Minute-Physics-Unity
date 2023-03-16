@@ -7,11 +7,13 @@ using UnityEngine;
 //The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
 //The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" are also similar
 //The report "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
+//Also the paper "Fluid flow for the rest of us" is good (it has the same pressure equation)
 //Improvements:
 // - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
 // - In advection, instead of using forward Euler use at least a second order Runge-Kutta. See "Real time simulation and control of Newtonian fluids..." for alternatives such as MacCormack
 // - numIters doesnt have to be a constant. The loop can stop when all cells have a divergence less than 0.0001
+// - AdvectSmoke() is not affecting the fluid physics so we could maybe do it in Update() for performance reasons?
 namespace EulerianFluidSimulator
 {
 	public class FluidSim
@@ -114,6 +116,7 @@ namespace EulerianFluidSimulator
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities 
+			//See "Fluid flow for the rest of us"
 			Extrapolate();
 
 			//Move the velocity field along itself (self-advection)
@@ -166,6 +169,7 @@ namespace EulerianFluidSimulator
 			//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
 			//Particles in higher pressure regions are pushed towards lower pressure regions
 			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally,  summing up the total pressure needed to make the fluid incompressible 
+			//This is equation 14 in the paper "Fluid flow for the rest of us"
 			//p = p + (d/s) * ((rho * h) / dt)
 			//Where
 			//d - divergence [m/s]
