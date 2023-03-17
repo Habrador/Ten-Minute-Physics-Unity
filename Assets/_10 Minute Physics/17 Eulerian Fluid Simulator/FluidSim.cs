@@ -120,7 +120,7 @@ namespace EulerianFluidSimulator
 			Extrapolate();
 
 			//Move the velocity field along itself (self-advection)
-			//This is the convection term in Navier-Stokes and has to do with the conservation of momentum
+			//This is the convection term (u nabla)u in Navier-Stokes and has to do with the conservation of momentum. The momentum of the fluid must be moved (convected) through space along with the fluid itself (The source "Fluid flow for the rest of us" is most likely confusing advection and convection)
 			//The cells are static while a real fluid has particles that move around, so we have to move the velocity values in the grid
 			//Advection should be done in a divergence-free velocity field, which also satisfies the required boundary conditions -> so advect has to come after project or you may get odd artifacts
 			//This will introduce viscosity which can be reduced with vorticity confinement
