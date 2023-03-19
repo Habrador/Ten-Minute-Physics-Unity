@@ -221,7 +221,9 @@ namespace EulerianFluidSimulator
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
 						//Why the minus sign?
-						//A positive divergence represents an influx of fluid and would correspond to an increase in cell pressure and subsequent increase in fluid outflow from the cell 
+						//From "Realistic Animation of Liquids:"
+						//- A positive divergence represents an influx of fluid and would correspond to an increase in cell pressure and subsequent increase in fluid outflow from the cell.
+						//- A negative divergence lowers internal pressure and increases inflow from neighboring cells. 
 						float divergence_Over_sTot = -divergence / sTot;
 
 						divergence_Over_sTot *= overRelaxation;
