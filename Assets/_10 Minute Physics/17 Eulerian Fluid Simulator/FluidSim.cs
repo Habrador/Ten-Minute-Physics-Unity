@@ -248,6 +248,8 @@ namespace EulerianFluidSimulator
 
 
 		//Fix the border velocities by copying neighbor values or set them to zero
+		//We will here use "slip" boundary condition - nothing can enter or leave through the wall, but water can flow along the wall. The is the most common boundary condition
+		//The "no-slip" is more realistic but slows down the fluid making it boring
 		private void Extrapolate()
 		{
 			//For each column
