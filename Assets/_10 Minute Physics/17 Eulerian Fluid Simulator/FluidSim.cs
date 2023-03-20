@@ -102,16 +102,17 @@ namespace EulerianFluidSimulator
 
 		//Simulation loop for the fluid
 		//People are mixing convection, advection, and diffusion, but according to: https://physics.stackexchange.com/questions/168218/what-is-the-exact-difference-between-diffusion-convection-and-advection, this is the difference:
-		//	- Convection is the collective motion of particles in a fluid and actually encompasses both diffusion and advection.
-		//	- Advection is the motion of particles along the bulk flow (Larger scale)
-		//  - Diffusion is the net movement of particles from high concentration to low concentration (Smaller scale)
+		//	- Convection is the collective motion of particles in a fluid and encompasses both diffusion and advection.
+		//	- Advection is the motion of particles along the bulk flow
+		//  - Diffusion is the net movement of particles from high concentration to low concentration
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
 			//Modify velocity values (add exteral forces like gravity or a fan blowing)
 			//This is the F term in Navier-Stokes
 			Integrate(dt, gravity);
 
-			//Make the fluid incompressible (projection) - the conservation of mass term in Navier-Stokes
+			//Make the fluid incompressible (projection)
+			//This is the conservation of mass term in Navier-Stokes: nabla u = 0
 			//Here we also calculate pressure - the pressure term in Navier-Stokes
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
@@ -120,18 +121,17 @@ namespace EulerianFluidSimulator
 			Extrapolate();
 
 			//Move the velocity field along itself (self-advection)
-			//This is the convection term (u nabla)u in Navier-Stokes and has to do with the conservation of momentum. The momentum of the fluid must be moved (convected) through space along with the fluid itself (The source "Fluid flow for the rest of us" is most likely confusing advection and convection)
-			//The cells are static while a real fluid has particles that move around, so we have to move the velocity values in the grid
 			//Advection should be done in a divergence-free velocity field, which also satisfies the required boundary conditions -> so advect has to come after project or you may get odd artifacts
-			//This will introduce viscosity which can be reduced with vorticity confinement
+			//This will introduce viscosity because of numerical error in the advection term (we are using averages) which can be reduced with vorticity confinement
 			AdvectVel(dt);
 
 			//Move the smoke along the velocity field
+			//Perfume propagates both because it's carried along with the fluidlike air and because it diffuses. But we don't need to add diffusion to the smoke because numerical error in the advection term (we are using averages) causes it to diffuse anyway. 
 			//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell. 
-			//...one can also add diffusion to make the densities spread across the cells (tea bag in water effect). This is not always needed because numerical error in the advection term (we are using averages) causes it to diffuse anyway
 			AdvectSmoke(dt);
 
 			//Diffusion - the viscosity term in Navier-Stokes
+			//Diffusion for temperatures and perfume particles tend to redistribute their properties over time. It's the same with the fluid's velocity. 
 			//Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
 		}
 
