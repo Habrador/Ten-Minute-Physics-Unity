@@ -59,11 +59,10 @@ namespace EulerianFluidSimulator
 		}
 
 		//Convert between 2d and 1d array
-		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them floor-by-floor after each other in the flat array. Otherwise we get them column by column which is maybe how js prefers them when displaying...
+		//The conversion can cause great confusion, so we better do it in one place throughout all code
+		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them floor-by-floor after each other in the flat array
+		//Otherwise we get them column by column which is maybe how js prefers them when displaying...
 		//https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
-		//public int To1D(int i, int j) => To1D(i, j, numX);
-
-		//The conversion between 2d->1d can cause a lot of confusion and it's annoying to replace them all, so we better do it in one place
 		public static int To1D(int i, int j) => i + (numX * j);
 
 		//These are not the same as the height we set at start because of the two border cells

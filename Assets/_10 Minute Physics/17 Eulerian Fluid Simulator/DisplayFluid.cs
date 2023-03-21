@@ -110,7 +110,7 @@ namespace EulerianFluidSimulator
 			Color32[] textureColors = new Color32[FluidSim.numX * f.numY];
 
 			//To convert from 2d to 1d array
-			int n = f.numY;
+			//int n = f.numY;
 
 			//Find min and max pressure
 			MinMax minMaxP = f.GetMinMaxPressure();
@@ -191,7 +191,7 @@ namespace EulerianFluidSimulator
 			FluidSim f = scene.fluid;
 
 			//To convert from 2d to 1d array
-			int n = f.numY;
+			//int n = f.numY;
 
 			float h = f.h;
 
