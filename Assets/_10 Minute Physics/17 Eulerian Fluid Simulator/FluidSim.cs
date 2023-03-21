@@ -9,7 +9,7 @@ using UnityEngine;
 //The report "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
 //Also the paper "Fluid flow for the rest of us" is good (it has the same pressure equation)
 //Improvements:
-// - Conjugate gradient solver which has better convergence properties instead of Gauss-Seidel relaxation. Or a Jacobi solver which are easier to parallelize
+// - Conjugate gradient solver which has better convergence properties instead of Gauss-Seidel relaxation. Or a solver which is easier to parallelize: Jacobi or red-black Gauss-Seidel
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
 // - In advection, instead of using forward Euler use at least a second order Runge-Kutta. See "Real time simulation and control of Newtonian fluids..." for alternatives such as MacCormack
 // - numIters doesnt have to be a constant. The loop can stop when all cells have a divergence less than 0.0001
@@ -60,7 +60,7 @@ namespace EulerianFluidSimulator
 
 		//Convert between 2d and 1d array
 		//The conversion can cause great confusion, so we better do it in one place throughout all code
-		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them floor-by-floor after each other in the flat array
+		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
 		//Otherwise we get them column by column which is maybe how js prefers them when displaying...
 		//https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
 		public static int To1D(int i, int j) => i + (numX * j);
