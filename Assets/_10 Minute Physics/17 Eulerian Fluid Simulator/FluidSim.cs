@@ -9,7 +9,7 @@ using UnityEngine;
 //The report "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
 //Also the paper "Fluid flow for the rest of us" is good (it has the same pressure equation)
 //Improvements:
-// - Conjugate gradient solver which has better convergence propertied instead of Gauss-Seidel relaxation
+// - Conjugate gradient solver which has better convergence properties instead of Gauss-Seidel relaxation. Or a Jacobi solver which are easier to parallelize
 // - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
 // - In advection, instead of using forward Euler use at least a second order Runge-Kutta. See "Real time simulation and control of Newtonian fluids..." for alternatives such as MacCormack
 // - numIters doesnt have to be a constant. The loop can stop when all cells have a divergence less than 0.0001
@@ -23,7 +23,7 @@ namespace EulerianFluidSimulator
 	
 
 		//Simulation grid settings
-		public int numX;
+		public static int numX;
 		public int numY;
 		public int numCells;
 		//Cell height
@@ -59,7 +59,12 @@ namespace EulerianFluidSimulator
 		}
 
 		//Convert between 2d and 1d array
-		public int To1D(int i, int j) => (i * numY) + j;
+		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them floor-by-floor after each other in the flat array. Otherwise we get them column by column which is maybe how js prefers them when displaying...
+		//https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
+		//public int To1D(int i, int j) => To1D(i, j, numX);
+
+		//The conversion between 2d->1d can cause a lot of confusion and it's annoying to replace them all, so we better do it in one place
+		public static int To1D(int i, int j) => i + (numX * j);
 
 		//These are not the same as the height we set at start because of the two border cells
 		public float GetWidth() => numX * h;
@@ -75,9 +80,9 @@ namespace EulerianFluidSimulator
 			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
 			//He says border cells in the video
 			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
-			this.numX = numX + 2; 
+			numX = numX + 2; 
 			this.numY = numY + 2;
-			this.numCells = this.numX * this.numY;
+			this.numCells = numX * this.numY;
 			this.h = h;
 		
 			this.u = new float[this.numCells];
@@ -235,7 +240,7 @@ namespace EulerianFluidSimulator
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
 						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
-						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step
+						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step. This make it more difficult to parallelize. If you need to parallelize use Jacobi
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
@@ -295,7 +300,7 @@ namespace EulerianFluidSimulator
 			//The position of the velocity components are in the middle of the border of the cells
 			float h2 = 0.5f * h;
 
-			for (int i = 1; i < this.numX; i++)
+			for (int i = 1; i < numX; i++)
 			{
 				for (int j = 1; j < this.numY; j++)
 				{
@@ -327,7 +332,7 @@ namespace EulerianFluidSimulator
 					}
 					//Update v component
 					//If this cell and the cell below is not an obstacle
-					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i, j - 1)] != 0f && i < this.numX - 1)
+					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i, j - 1)] != 0f && i < numX - 1)
 					{
 						//The pos of the v velocity in simulation space
 						float x = i * h + h2;
@@ -369,7 +374,7 @@ namespace EulerianFluidSimulator
 			float h2 = 0.5f * h;
 
 			//For all cells except the border
-			for (int i = 1; i < this.numX - 1; i++)
+			for (int i = 1; i < numX - 1; i++)
 			{
 				for (int j = 1; j < this.numY - 1; j++)
 				{
@@ -433,7 +438,7 @@ namespace EulerianFluidSimulator
 
 			//Make sure x and y are within the simulation space 
 			//Why is minimum h and not 0.5 * h? Because later we do x - (0.5 * h) to calculate which cell we are in, so x has to be at least h or we end up to the left of the velocity to the left we want to interpolate from (if we interpolate v at least) 
-			x = Mathf.Max(Mathf.Min(x, this.numX * h), h); //this.numX * h = total width
+			x = Mathf.Max(Mathf.Min(x, numX * h), h); //this.numX * h = total width
 			y = Mathf.Max(Mathf.Min(y, this.numY * h), h); //this.numY * h = total height
 
 			float dx = 0f;
@@ -464,8 +469,8 @@ namespace EulerianFluidSimulator
 
 			//To go from coordinate to cell we do: FloorToInt(pos / cellSize) 
 			//We've already made sure the cell index can't go below 0
-			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), this.numX - 1);
-			int x1 = Mathf.Min(x0 + 1, this.numX - 1);
+			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), numX - 1);
+			int x1 = Mathf.Min(x0 + 1, numX - 1);
 
 			int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * h1), this.numY - 1);
 			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
