@@ -67,6 +67,18 @@ namespace EulerianFluidSimulator
         public float simPlaneWidth;
         public float simPlaneHeight;
 
+        //On which we display the fluid
+        public Material fluidMaterial;
+
+        public Texture2D fluidTexture;
+
+
+
+        public FluidScene(Material fluidMaterial)
+        {
+            this.fluidMaterial = fluidMaterial;
+        }
+
 
 
         //Convert from world space to simulation space

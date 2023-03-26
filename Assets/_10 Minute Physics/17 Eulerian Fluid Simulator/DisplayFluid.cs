@@ -5,34 +5,21 @@ using UnityEngine;
 //Display the fluid simulation on a texture
 namespace EulerianFluidSimulator
 {
-	public class DisplayFluid
+	public static class DisplayFluid
 	{
-		private readonly Material fluidMaterial;
-
-		private Texture2D fluidTexture;
-
-
-
-		public DisplayFluid(Material fluidMaterial)
-		{
-			this.fluidMaterial = fluidMaterial;
-		}
-
-
-
 		//For testing
-		public void TestDraw()
+		public static void TestDraw(FluidScene scene)
 		{
-			if (fluidTexture == null)
+			if (scene.fluidTexture == null)
 			{
-				fluidTexture = new(4, 2);
+				scene.fluidTexture = new(4, 2);
 
 				//So the pixels dont blend
-				fluidTexture.filterMode = FilterMode.Point;
+				scene.fluidTexture.filterMode = FilterMode.Point;
 
-				fluidTexture.wrapMode = TextureWrapMode.Clamp;
+				scene.fluidTexture.wrapMode = TextureWrapMode.Clamp;
 
-				this.fluidMaterial.mainTexture = fluidTexture;
+				scene.fluidMaterial.mainTexture = scene.fluidTexture;
 			}
 	
 			//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top (i.e. row after row)
@@ -52,16 +39,16 @@ namespace EulerianFluidSimulator
 			colors[6] = Color.white;
 			colors[7] = Color.green; //TR
 
-			fluidTexture.SetPixels32(colors);
+			scene.fluidTexture.SetPixels32(colors);
 
-			fluidTexture.Apply();
+			scene.fluidTexture.Apply();
 
 			//Debug.Log(colors[4]); //RGBA(255, 0, 0, 255)
 		}
 
 
 
-		public void Draw(FluidScene scene)
+		public static void Draw(FluidScene scene)
 		{
 			UpdateTexture(scene);
 
@@ -86,25 +73,27 @@ namespace EulerianFluidSimulator
 
 
 		//Paint the fluid, not obstacles
-		private void UpdateTexture(FluidScene scene)
+		private static void UpdateTexture(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 
+			Texture2D fluidTexture = scene.fluidTexture;
+
 			//Generate a new texture if none exists or if we have changed resolution
-			if (this.fluidTexture == null || this.fluidTexture.width != f.numX || this.fluidTexture.height != f.numY)
+			if (fluidTexture == null || fluidTexture.width != f.numX || fluidTexture.height != f.numY)
 			{
-				this.fluidTexture = new(f.numX, f.numY);
+				fluidTexture = new(f.numX, f.numY);
 
 				//So the pixels dont blend
 				//fluidTexture.filterMode = FilterMode.Point;
 
 				//Blend the pixels 
-				this.fluidTexture.filterMode = FilterMode.Bilinear;
+				fluidTexture.filterMode = FilterMode.Bilinear;
 
 				//So the borders dont wrap with the border on the other side
-				this.fluidTexture.wrapMode = TextureWrapMode.Clamp;
+				fluidTexture.wrapMode = TextureWrapMode.Clamp;
 
-				this.fluidMaterial.mainTexture = fluidTexture;
+				scene.fluidMaterial.mainTexture = fluidTexture;
 			}
 
 			Color32[] textureColors = new Color32[f.numX * f.numY];
@@ -186,7 +175,7 @@ namespace EulerianFluidSimulator
 
 		//Show the u and v velocities at each cell by drawing lines
 		//These are just straight lines
-		private void ShowVelocities(FluidScene scene)
+		private static void ShowVelocities(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 
@@ -244,7 +233,7 @@ namespace EulerianFluidSimulator
 
 		//Show streamlines to easier visualize how the fluid flows
 		//Compared to the velocities, this will be a curve
-		private void ShowStreamlines(FluidScene scene)
+		private static void ShowStreamlines(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 
@@ -309,7 +298,7 @@ namespace EulerianFluidSimulator
 
 
 		//Show the circle obstacle
-		private void ShowObstacle(FluidScene scene)
+		private static void ShowObstacle(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
 
@@ -344,7 +333,7 @@ namespace EulerianFluidSimulator
 		//Rainbow is a linear interpolation between (0,0,255) and (255,0,0) in RGB color space (ignoring the purple part which would loop the circle like in HSV)
 		//Blue means low pressure and red is high pressure
 		//https://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale
-		private Vector4 GetSciColor(float val, float minVal, float maxVal)
+		private static Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{
 			//Clamp val to be within the range
 			//val has to be less than maxVal or "int num = Mathf.FloorToInt(val / m);" wont work

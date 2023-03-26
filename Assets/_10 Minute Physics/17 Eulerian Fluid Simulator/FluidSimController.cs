@@ -22,17 +22,13 @@ public class FluidSimController : MonoBehaviour
     //Private
     private FluidScene scene;
 
-    private DisplayFluid displayFluid;
-
     private FluidUI fluidUI;
 
 
 
     private void Start()
     {    
-        scene = new FluidScene();
-
-        displayFluid = new DisplayFluid(fluidMaterial);
+        scene = new FluidScene(fluidMaterial);
 
         fluidUI = new FluidUI(this);
 
@@ -57,7 +53,7 @@ public class FluidSimController : MonoBehaviour
     private void Update()
     {    
         //Display the fluid
-        displayFluid.TestDraw();
+        DisplayFluid.TestDraw(scene);
     }
 
 
