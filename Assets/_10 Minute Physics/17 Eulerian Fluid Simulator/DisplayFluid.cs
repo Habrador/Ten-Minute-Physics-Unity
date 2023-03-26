@@ -91,9 +91,9 @@ namespace EulerianFluidSimulator
 			FluidSim f = scene.fluid;
 
 			//Generate a new texture if none exists or if we have changed resolution
-			if (this.fluidTexture == null || this.fluidTexture.width != FluidSim.numX || this.fluidTexture.height != f.numY)
+			if (this.fluidTexture == null || this.fluidTexture.width != f.numX || this.fluidTexture.height != f.numY)
 			{
-				this.fluidTexture = new(FluidSim.numX, f.numY);
+				this.fluidTexture = new(f.numX, f.numY);
 
 				//So the pixels dont blend
 				//fluidTexture.filterMode = FilterMode.Point;
@@ -107,7 +107,7 @@ namespace EulerianFluidSimulator
 				this.fluidMaterial.mainTexture = fluidTexture;
 			}
 
-			Color32[] textureColors = new Color32[FluidSim.numX * f.numY];
+			Color32[] textureColors = new Color32[f.numX * f.numY];
 
 			//To convert from 2d to 1d array
 			//int n = f.numY;
@@ -120,13 +120,13 @@ namespace EulerianFluidSimulator
 			//And it also matches the original code better
 			Vector4 color = new (255, 255, 255, 255); 
 
-			for (int i = 0; i < FluidSim.numX; i++)
+			for (int i = 0; i < f.numX; i++)
 			{
 				for (int j = 0; j < f.numY; j++)
 				{
 					if (scene.showPressure)
 					{
-						float p = f.p[FluidSim.To1D(i, j)];
+						float p = f.p[f.To1D(i, j)];
 
 						color = GetSciColor(p, minMaxP.min, minMaxP.max);
 
@@ -136,7 +136,7 @@ namespace EulerianFluidSimulator
 						{
 							//Smoke, which is confusing because s is solid in FluidSim
 							//s = 0 means max smoke
-							float s = f.m[FluidSim.To1D(i, j)];
+							float s = f.m[f.To1D(i, j)];
 
 							color[0] = Mathf.Max(0f, color[0] - 255 * s);
 							color[1] = Mathf.Max(0f, color[1] - 255 * s);
@@ -146,7 +146,7 @@ namespace EulerianFluidSimulator
 					else if (scene.showSmoke)
 					{
 						//Not sure why hes using s in stead of m because s means obstacle in the simulation part
-						float s = f.m[FluidSim.To1D(i, j)];
+						float s = f.m[f.To1D(i, j)];
 
 						//s = 0 means max smoke, and 255 * 0 = 0 -> black 
 						color[0] = 255 * s;
@@ -161,7 +161,7 @@ namespace EulerianFluidSimulator
 					}
 					//If both pressure and smoke are deactivated, then paint everything black
 					//The obstacle itself will be painted later
-					else if (f.s[FluidSim.To1D(i, j)] == 0f)
+					else if (f.s[f.To1D(i, j)] == 0f)
 					{
 						color[0] = 0;
 						color[1] = 0;
@@ -172,7 +172,7 @@ namespace EulerianFluidSimulator
 					//Color32 is 0-255
 					Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
 
-					textureColors[FluidSim.To1D(i, j)] = pixelColor;
+					textureColors[f.To1D(i, j)] = pixelColor;
 				}
 			}
 
@@ -202,12 +202,12 @@ namespace EulerianFluidSimulator
 
 			float z = 0.01f;
 
-			for (int i = 0; i < FluidSim.numX; i++)
+			for (int i = 0; i < f.numX; i++)
 			{
 				for (int j = 0; j < f.numY; j++)
 				{
-					float u = f.u[FluidSim.To1D(i, j)];
-					float v = f.v[FluidSim.To1D(i, j)];
+					float u = f.u[f.To1D(i, j)];
+					float v = f.v[f.To1D(i, j)];
 
 					//u velocity
 					float x0 = i * h;
@@ -258,7 +258,7 @@ namespace EulerianFluidSimulator
 			float z = 0.01f;
 
 			//Dont display a streamline from each cell because it makes it difficult to see
-			for (int i = 1; i < FluidSim.numX - 1; i += 5)
+			for (int i = 1; i < f.numX - 1; i += 5)
 			{
 				for (int j = 1; j < f.numY - 1; j += 5)
 				{
@@ -289,7 +289,7 @@ namespace EulerianFluidSimulator
 						y += v * 0.01f;
 
 						//Stop the line if we are outside of the simulation area
-						if (x > FluidSim.numX * f.h)
+						if (x > f.numX * f.h)
 						{
 							break;
 						}

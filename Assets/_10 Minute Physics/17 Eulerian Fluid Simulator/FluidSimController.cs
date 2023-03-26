@@ -166,7 +166,7 @@ public class FluidSimController : MonoBehaviour
         //int n = f.numY;
 
         //Add a solid border
-        for (int i = 0; i < FluidSim.numX; i++)
+        for (int i = 0; i < f.numX; i++)
         {
             for (int j = 0; j < f.numY; j++)
             {
@@ -177,13 +177,13 @@ public class FluidSimController : MonoBehaviour
                 //j == 0 (bottom wall)
                 //i == f.numX - 1 (right wall)
                 //Why no top wall???
-                if (i == 0 || i == FluidSim.numX - 1 || j == 0)
+                if (i == 0 || i == f.numX - 1 || j == 0)
                 {
                     //Solid
                     s = 0f;
                 }
 
-                f.s[FluidSim.To1D(i, j)] = s;
+                f.s[f.To1D(i, j)] = s;
             }
         }
 
@@ -203,7 +203,7 @@ public class FluidSimController : MonoBehaviour
         //Wind velocity
         float inVel = 2f;
 
-        for (int i = 0; i < FluidSim.numX; i++)
+        for (int i = 0; i < f.numX; i++)
         {
             for (int j = 0; j < f.numY; j++)
             {
@@ -219,14 +219,14 @@ public class FluidSimController : MonoBehaviour
                     s = 0f;
                 }
 
-                f.s[FluidSim.To1D(i, j)] = s;
+                f.s[f.To1D(i, j)] = s;
 
                 //Add right velocity to the fluid in the second column
                 //Don't we need a velocity on the right border as well?
                 //Wont disappear after first update because there's a wall to the left?
                 if (i == 1)
                 {
-                    f.u[FluidSim.To1D(i, j)] = inVel;
+                    f.u[f.To1D(i, j)] = inVel;
                 }
             }
         }
@@ -245,7 +245,7 @@ public class FluidSimController : MonoBehaviour
 
             int i = 0;
 
-            f.m[FluidSim.To1D(i, j)] = 0f;
+            f.m[f.To1D(i, j)] = 0f;
         }
 
 
@@ -311,12 +311,12 @@ public class FluidSimController : MonoBehaviour
         //float cd = Mathf.Sqrt(2f) * f.h;
 
         //Ignore border
-        for (int i = 1; i < FluidSim.numX - 2; i++)
+        for (int i = 1; i < f.numX - 2; i++)
         {
             for (int j = 1; j < f.numY - 2; j++)
             {
                 //Start by setting all cells to fluids (= 1)
-                f.s[FluidSim.To1D(i, j)] = 1f;
+                f.s[f.To1D(i, j)] = 1f;
 
                 //Distance from circle center to cell center
                 float dx = (i + 0.5f) * f.h - x;
@@ -327,25 +327,25 @@ public class FluidSimController : MonoBehaviour
                 if (dx * dx + dy * dy < r * r)
                 {
                     //0 means obstacle 
-                    f.s[FluidSim.To1D(i, j)] = 0f;
+                    f.s[f.To1D(i, j)] = 0f;
 
                     if (scene.sceneNr == FluidScene.SceneNr.Paint)
                     {
                         //Add/remove smoke because of the sinus this loops 0 -> 1 -> 0
-                        f.m[FluidSim.To1D(i, j)] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);
+                        f.m[f.To1D(i, j)] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);
                     }
                     else
                     {
                         //1 means no smoke
-                        f.m[FluidSim.To1D(i, j)] = 1f;
+                        f.m[f.To1D(i, j)] = 1f;
                     }
 
                     //Give the fluid a velocity if we have moved it
                     //These are the 4 velocities belonging to this cell
-                    f.u[FluidSim.To1D(i, j)] = vx; //Left
-                    f.u[FluidSim.To1D(i + 1, j)] = vx; //Right
-                    f.v[FluidSim.To1D(i, j)] = vy; //Bottom
-                    f.v[FluidSim.To1D(i, j + 1)] = vy; //Top
+                    f.u[f.To1D(i, j)] = vx; //Left
+                    f.u[f.To1D(i + 1, j)] = vx; //Right
+                    f.v[f.To1D(i, j)] = vy; //Bottom
+                    f.v[f.To1D(i, j + 1)] = vy; //Top
                 }
             }
         }

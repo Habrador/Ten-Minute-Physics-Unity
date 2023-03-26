@@ -23,7 +23,7 @@ namespace EulerianFluidSimulator
 	
 
 		//Simulation grid settings
-		public static int numX;
+		public int numX;
 		public int numY;
 		public int numCells;
 		//Cell height
@@ -63,7 +63,7 @@ namespace EulerianFluidSimulator
 		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
 		//Otherwise we get them column by column which is maybe how js prefers them when displaying...
 		//https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
-		public static int To1D(int i, int j) => i + (numX * j);
+		public int To1D(int i, int j) => i + (numX * j);
 
 		//These are not the same as the height we set at start because of the two border cells
 		public float GetWidth() => numX * h;
