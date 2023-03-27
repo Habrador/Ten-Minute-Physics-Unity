@@ -4,16 +4,11 @@ using UnityEngine;
 
 //Fluid Simulation in 200 lines of code (excluding comments)
 //The state of a fluid at a given instant of time is modeled as a velocity vector field. The Navier-Stokes equations describe the evolution of this velocity field over time.  
-//The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
-//The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU" are also similar
-//The report "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
-//Also the paper "Fluid flow for the rest of us" is good (it has the same pressure equation)
-//Improvements:
-// - Conjugate gradient solver which has better convergence properties instead of Gauss-Seidel relaxation. Or a solver which is easier to parallelize: Jacobi or red-black Gauss-Seidel
-// - Vorticity confinement - improves the fact that the simulated fluids dampen faster than they should IRL (numerical dissipation). Read "Visual simulation of smoke" by Jos Stam
-// - In advection, instead of using forward Euler use at least a second order Runge-Kutta. See "Real time simulation and control of Newtonian fluids..." for alternatives such as MacCormack
-// - numIters doesnt have to be a constant. The loop can stop when all cells have a divergence less than 0.0001
-// - AdvectSmoke() is not affecting the fluid physics so we could maybe do it in Update() for performance reasons?
+//To figure out what's going on I used the following sources:
+//- The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
+//- The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU"
+//- The paper "Realistic Animation of Liquids" by Foster and Metaxas is also similar to what's going on here, especially the projection step
+//- The paper "Fluid flow for the rest of us" is good (it has the same pressure equation)
 namespace EulerianFluidSimulator
 {
 	public class FluidSim
