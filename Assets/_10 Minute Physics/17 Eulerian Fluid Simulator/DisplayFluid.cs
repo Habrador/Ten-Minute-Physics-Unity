@@ -85,10 +85,10 @@ namespace EulerianFluidSimulator
 				fluidTexture = new(f.numX, f.numY);
 
 				//So the pixels dont blend
-				//fluidTexture.filterMode = FilterMode.Point;
+				fluidTexture.filterMode = FilterMode.Point;
 
 				//Blend the pixels 
-				fluidTexture.filterMode = FilterMode.Bilinear;
+				//fluidTexture.filterMode = FilterMode.Bilinear;
 
 				//So the borders dont wrap with the border on the other side
 				fluidTexture.wrapMode = TextureWrapMode.Clamp;
@@ -335,12 +335,22 @@ namespace EulerianFluidSimulator
 		//https://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale
 		private static Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{
+			//For debugging
+			//float originalVal = val;
+
 			//Clamp val to be within the range
 			//val has to be less than maxVal or "int num = Mathf.FloorToInt(val / m);" wont work
-			val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
+			//Was 0.0001 in the tutorial but we need it to be larger because we use floats
+			val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.001f);
 
-			//Convert to 0->1 range
-			float d = maxVal - minVal;
+            //For debugging
+            //if (val >= maxVal)
+            //{
+            //    Debug.Log($"Color out of range: {(float)val}, {(float)maxVal}");
+            //}
+
+            //Convert to 0->1 range
+            float d = maxVal - minVal;
 		
 			//If min and max are the same, set val to be in the middle or we get a division by zero
 			val = (d == 0.0f) ? 0.5f : (val - minVal) / d;
@@ -367,7 +377,15 @@ namespace EulerianFluidSimulator
 				case 3: r = 1f; g = 1f - s; b = 0f;     break; //yellow (1,1,0) -> red    (1,0,0)
 			}
 
+			//For debugging
+			//if (num != 0 && num != 1 && num != 2 && num != 3)
+			//{
+			//	Debug.Log($"Color out of range: {originalVal}, {minVal}, {maxVal}");
+		    //}
+
 			Vector4 color = new ( 255 * r, 255 * g, 255 * b, 255);
+
+			//Vector4 color = new(255, 0, 0, 255);
 
 			return color;
 		}

@@ -71,8 +71,6 @@ public class FluidSimController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //return;
-
         Simulate();
     }
 
@@ -178,7 +176,7 @@ public class FluidSimController : MonoBehaviour
                 //Why no top wall???
                 if (i == 0 || i == f.numX - 1 || j == 0)
                 {
-                    //Solid
+                    //0 means solid
                     s = 0f;
                 }
 
@@ -214,7 +212,7 @@ public class FluidSimController : MonoBehaviour
                 //The smoke seems to disappear when it reaches the right border
                 if (i == 0 || j == 0 || j == f.numY - 1)
                 {
-                    //Solid
+                    //0 means solid
                     s = 0f;
                 }
 
