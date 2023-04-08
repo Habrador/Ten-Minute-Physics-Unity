@@ -314,11 +314,13 @@ namespace EulerianFluidSimulator
 		//Show the circle obstacle
 		private static void ShowObstacle(FluidScene scene)
 		{
+			//Debug.Log("Hi");
+		
 			FluidSim f = scene.fluid;
 
 			//Make it slightly bigger to avoid jagged edges?
 			float r = scene.obstacleRadius + f.h;
-
+			
 			DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
 
 			//Black like the bg 
@@ -330,13 +332,82 @@ namespace EulerianFluidSimulator
 			//Circle center in global space
 			Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
 
-			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, 0.1f);
+			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, -0.1f);
+
+			//Debug.Log(r);
 
 			//Display a circle mesh
-			DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
-		
-		
+			Mesh circleMesh = GenerateCircleMesh(circleCenter, r, 50);
+
+			//Debug.Log(circleMesh.vertices[0]);
+			//Debug.Log(circleMesh.vertices[1]);
+
+			Material material = DisplayShapes.GetMaterial(color);
+
+			Graphics.DrawMesh(circleMesh, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
+
+			//DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
+
+
 			//The guy is also giving the circle a black border...
+		}
+
+
+
+		//Generate a circular mesh 
+		private static Mesh GenerateCircleMesh(Vector3 circleCenter, float radius, int segments)
+		{
+			//Generate the vertices
+			List<Vector3> vertices = GetCircleSegments_XY(circleCenter, radius, segments);
+
+			//Add the center to make it easier to trianglulate
+			vertices.Insert(0, circleCenter);
+
+
+			//Generate the triangles
+			List<int> triangles = new();
+
+			for (int i = 2; i < vertices.Count; i++)
+			{
+				triangles.Add(0);
+				triangles.Add(i);
+				triangles.Add(i - 1);
+			}
+
+			//Generate the mesh
+			Mesh m = new();
+
+			m.SetVertices(vertices);
+			m.SetTriangles(triangles, 0);
+
+			m.RecalculateNormals();
+
+			return m;
+		}
+
+
+
+		private  static List<Vector3> GetCircleSegments_XY(Vector3 circleCenter, float radius, int segments)
+		{
+			List<Vector3> vertices = new();
+
+			float angleStep = 360f / (float)segments;
+
+			float angle = 0f;
+
+			for (int i = 0; i < segments + 1; i++)
+			{
+				float x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+				float y = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+
+				Vector3 vertex = new Vector3(x, y, 0f) + circleCenter;
+
+				vertices.Add(vertex);
+
+				angle += angleStep;
+			}
+
+			return vertices;
 		}
 
 
