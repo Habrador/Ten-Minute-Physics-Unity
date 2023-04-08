@@ -36,9 +36,10 @@ public class FluidSimController : MonoBehaviour
         scene.simPlaneWidth = 2f;
         scene.simPlaneHeight = 1f;
 
-        //SetupScene(Scene.SceneNr.WindTunnel);
+        //SetupScene(FluidScene.SceneNr.WindTunnel);
 
-        //SetupScene(Scene.SceneNr.Tank);
+        SetupScene(FluidScene.SceneNr.Tank);
+
 
         //Test converting between spaces
         //Vector2 test = scene.WorldToSim(-1f, 7f);
@@ -51,9 +52,11 @@ public class FluidSimController : MonoBehaviour
 
 
     private void Update()
-    {    
+    {
         //Display the fluid
-        DisplayFluid.TestDraw(scene);
+        //DisplayFluid.TestDraw(scene);
+
+        DisplayFluid.Draw(scene);
     }
 
 
@@ -68,7 +71,7 @@ public class FluidSimController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        return;
+        //return;
 
         Simulate();
     }

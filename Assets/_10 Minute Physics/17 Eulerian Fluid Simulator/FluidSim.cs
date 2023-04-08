@@ -74,9 +74,9 @@ namespace EulerianFluidSimulator
 			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
 			//He says border cells in the video
 			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
-			numX = numX + 2; 
+			this.numX = numX + 2; 
 			this.numY = numY + 2;
-			this.numCells = numX * this.numY;
+			this.numCells = this.numX * this.numY;
 			this.h = h;
 		
 			this.u = new float[this.numCells];
