@@ -37,10 +37,9 @@ namespace EulerianFluidSimulator
         //Here we will use over-relaxation in the range [1, 2]
         public float overRelaxation = 1.9f;
 
-        //The time step. Default is 1/120=0.008 in the source code while Unity default is 1/50=0.02
-        //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
-        //It's important that the dt is small enough so that the maximum motion of the velocity field is less than the width of a grid cell: dt < h/u_max. But dt can sometimes be larger if theres a buffer around the cells, so you should use a constant you can experiment with: dt = k * (h/u_max)
-        public float dt = Time.fixedDeltaTime;
+        //Get the time step
+        //Set this in a specific method because if we changed dt we also have to change Time.fixedDeltaTime
+        public float dt { get; private set; }
 
         //Need several íterations each update to make the fluid incompressible
         public int numIters = 100;
@@ -77,8 +76,20 @@ namespace EulerianFluidSimulator
         public FluidScene(Material fluidMaterial)
         {
             this.fluidMaterial = fluidMaterial;
+
+            this.dt = 1f/120f;
         }
 
+
+        //Set the time step
+        //Default is 1/120=0.008 in the source code while Unity default is 1/50=0.02
+        //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
+        //It's important that the dt is small enough so that the maximum motion of the velocity field is less than the width of a grid cell: dt < h/u_max. But dt can sometimes be larger if theres a buffer around the cells, so you should use a constant you can experiment with: dt = k * (h/u_max)
+        public void SetTime(float timeStep)
+        {
+            this.dt = timeStep;
+            Time.fixedDeltaTime = timeStep;
+        }
 
 
         //Convert from world space to simulation space

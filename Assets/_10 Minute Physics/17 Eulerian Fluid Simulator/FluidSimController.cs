@@ -108,7 +108,7 @@ public class FluidSimController : MonoBehaviour
         scene.obstacleRadius = 0.15f;
         scene.overRelaxation = 1.9f;
 
-        scene.dt = Time.fixedDeltaTime; // 1/60
+        scene.SetTime(1f / 60f);
         scene.numIters = 40;
 
         //How detailed the simulation is in height (y) direction
@@ -262,8 +262,7 @@ public class FluidSimController : MonoBehaviour
 
         if (sceneNr == FluidScene.SceneNr.HighResWindTunnel)
         {
-            //Can run Simulate() multiple times to make a smaller time step
-            //scene.dt = 1.0 / 120.0;
+            scene.SetTime(1f / 120f);
             scene.numIters = 100;
             scene.showPressure = true;
         }
