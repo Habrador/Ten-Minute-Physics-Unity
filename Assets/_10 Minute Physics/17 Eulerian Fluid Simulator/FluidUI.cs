@@ -10,6 +10,7 @@ namespace EulerianFluidSimulator
 
         private bool mouseDown = false;
 
+        private Vector2 mousePos;
 
 
         public FluidUI(FluidSimController controller)
@@ -112,14 +113,9 @@ namespace EulerianFluidSimulator
 
         //Has to be called from OnGUI because we use Event???
         public void Interaction(FluidScene scene)
-        {
-            mouseDown = false;
-
-            /*
-            Event mouseEvent = Event.current;
-
-            if (mouseEvent.type == EventType.MouseDown)
-            //if (Input.GetMouseButtonDown(0))
+        {            
+            //Click with left mouse
+            if (Input.GetMouseButtonDown(0))
             {
                 //Fire a ray against a plane to get the position of the mouse in world space
                 Plane plane = new (-Vector3.forward, Vector3.zero);
@@ -130,28 +126,23 @@ namespace EulerianFluidSimulator
                 if (plane.Raycast(ray, out float enter))
                 {
                     //Get the point that is clicked in world space
-                    Vector3 mousePos = ray.GetPoint(enter);
+                    Vector3 mousePos3D = ray.GetPoint(enter);
 
                     //Debug.Log(mousePos);
 
                     //From world space to simulation space
-                    Vector2 coordinates = scene.WorldToSim(mousePos.x, mousePos.y);
+                    Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
 
                     StartDrag(coordinates.x, coordinates.y);
+
+                    this.mousePos = coordinates;
                 }
             }
 
 
 
-            if (mouseEvent.type == EventType.MouseUp)
-            //if (Input.GetMouseButtonUp(0))
-            {
-                EndDrag();
-            }
-
-
-
-            if (mouseEvent.type == EventType.MouseDrag)
+            //Drag if we hold down left mouse
+            if (mouseDown)
             {
                 //Fire a ray against a plane to get the position of the mouse in world space
                 Plane plane = new(-Vector3.forward, Vector3.zero);
@@ -162,24 +153,37 @@ namespace EulerianFluidSimulator
                 if (plane.Raycast(ray, out float enter))
                 {
                     //Get the point that is clicked in world space
-                    Vector3 mousePos = ray.GetPoint(enter);
+                    Vector3 mousePos3D = ray.GetPoint(enter);
 
                     //Debug.Log(mousePos);
 
                     //From world space to simulation space
-                    Vector2 coordinates = scene.WorldToSim(mousePos.x, mousePos.y);
+                    Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
 
-                    Drag(coordinates.x, coordinates.y);
+                    //Have we moved the mouse since we clicked it, meaning we are dragging the mouse
+                    if (coordinates.x != mousePos3D.x || coordinates.y != mousePos3D.y)
+                    {
+                        Drag(coordinates.x, coordinates.y);
+                    }
+
+                    this.mousePos = coordinates;
                 }
             }
-               */
 
 
+
+            //Release left mouse
+            if (Input.GetMouseButtonUp(0))
+            {
+                EndDrag();
+            }
+
+
+            
+            //Pause the simulation
             if (Input.GetKeyDown(KeyCode.P))
             {
                 scene.isPaused = !scene.isPaused;
-
-                Debug.Log("Hello");
             }
             //Move the simulation one step forward
             else if (Input.GetKeyDown(KeyCode.M))
