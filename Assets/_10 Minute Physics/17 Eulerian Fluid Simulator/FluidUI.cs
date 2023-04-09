@@ -115,6 +115,7 @@ namespace EulerianFluidSimulator
         {
             mouseDown = false;
 
+            /*
             Event mouseEvent = Event.current;
 
             if (mouseEvent.type == EventType.MouseDown)
@@ -171,14 +172,16 @@ namespace EulerianFluidSimulator
                     Drag(coordinates.x, coordinates.y);
                 }
             }
-               
+               */
 
 
             if (Input.GetKeyDown(KeyCode.P))
             {
                 scene.isPaused = !scene.isPaused;
+
+                Debug.Log("Hello");
             }
-            //Move the simulation in steps
+            //Move the simulation one step forward
             else if (Input.GetKeyDown(KeyCode.M))
             {
                 scene.isPaused = false;

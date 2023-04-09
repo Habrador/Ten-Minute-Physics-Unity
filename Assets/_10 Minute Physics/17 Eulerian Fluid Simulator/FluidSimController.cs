@@ -63,8 +63,8 @@ public class FluidSimController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //Interactions such as moving obstacles with mouse
-        //fluidUI.Interaction(scene);
+        //Interactions such as moving obstacles with mouse and pause
+        fluidUI.Interaction(scene);
     }
 
 
@@ -78,15 +78,13 @@ public class FluidSimController : MonoBehaviour
 
     private void OnGUI()
     {
-        //fluidUI.DisplayUI(scene);
-
-        //fluidUI.Interaction(scene);
+        fluidUI.DisplayUI(scene);
     }
 
 
 
     //Simulate the fluid
-    //Needs to be accessed from the UI so we can simulate step by step
+    //Needs to be accessed from the UI so we can simulate step by step by pressing a key
     public void Simulate()
     {
         if (!scene.isPaused)
