@@ -13,6 +13,7 @@ namespace EulerianFluidSimulator
         private Vector2 mousePos;
 
 
+
         public FluidUI(FluidSimController controller)
         {
             this.controller = controller;
@@ -74,17 +75,8 @@ namespace EulerianFluidSimulator
 
             GUILayout.EndHorizontal();
 
-            /* 
-            //This was in Draw() but should be here, we just have to calculate min/max pressure twice or cache it somewhere  
-            if (scene.showPressure)
-            {
-                var s = "pressure: " + minP.toFixed(0) + " - " + maxP.toFixed(0) + " N/m";
-                c.fillStyle = "#000000";
-                c.font = "16px Arial";
-                c.fillText(s, 10, 35);
-            }
-            */
-
+            
+            //Show the min ad max pressure as text
             if (scene.showPressure)
             {
                 if (scene.fluid == null)
@@ -161,7 +153,7 @@ namespace EulerianFluidSimulator
                     Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
 
                     //Have we moved the mouse since we clicked it, meaning we are dragging the mouse
-                    if (coordinates.x != mousePos3D.x || coordinates.y != mousePos3D.y)
+                    if (coordinates.x != this.mousePos.x || coordinates.y != this.mousePos.y)
                     {
                         Drag(coordinates.x, coordinates.y);
                     }
