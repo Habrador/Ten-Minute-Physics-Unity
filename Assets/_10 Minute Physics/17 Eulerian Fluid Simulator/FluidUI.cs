@@ -125,9 +125,13 @@ namespace EulerianFluidSimulator
                     //From world space to simulation space
                     Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
 
-                    StartDrag(coordinates.x, coordinates.y);
+                    //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
+                    if (scene.fluid.IsWithinArea(coordinates.x, coordinates.y))
+                    {
+                        StartDrag(coordinates.x, coordinates.y);
 
-                    this.mousePos = coordinates;
+                        this.mousePos = coordinates;
+                    }
                 }
             }
 
@@ -152,13 +156,17 @@ namespace EulerianFluidSimulator
                     //From world space to simulation space
                     Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
 
-                    //Have we moved the mouse since we clicked it, meaning we are dragging the mouse
-                    if (coordinates.x != this.mousePos.x || coordinates.y != this.mousePos.y)
+                    //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
+                    if (scene.fluid.IsWithinArea(coordinates.x, coordinates.y))
                     {
-                        Drag(coordinates.x, coordinates.y);
-                    }
+                        //Have we moved the mouse since we clicked it, meaning we are dragging the mouse
+                        if (coordinates.x != this.mousePos.x || coordinates.y != this.mousePos.y)
+                        {
+                            Drag(coordinates.x, coordinates.y);
+                        }
 
-                    this.mousePos = coordinates;
+                        this.mousePos = coordinates;
+                    }
                 }
             }
 

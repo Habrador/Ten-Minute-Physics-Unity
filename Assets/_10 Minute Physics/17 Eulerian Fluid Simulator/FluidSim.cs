@@ -62,7 +62,10 @@ namespace EulerianFluidSimulator
 
 		//These are not the same as the height we set at start because of the two border cells
 		public float GetWidth() => numX * h;
-		public float GetHeight() => numY * h; 
+		public float GetHeight() => numY * h;
+
+		//Is a coordinate within the simulation area?
+		public bool IsWithinArea(float x, float y) => (x > 0 && x < GetWidth() && y > 0 && y < GetHeight());
 
 
 
