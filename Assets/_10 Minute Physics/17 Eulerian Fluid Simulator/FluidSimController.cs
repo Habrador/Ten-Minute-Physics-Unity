@@ -78,9 +78,9 @@ public class FluidSimController : MonoBehaviour
 
     private void OnGUI()
     {
-        fluidUI.DisplayUI(scene);
+        //fluidUI.DisplayUI(scene);
 
-        fluidUI.Interaction(scene);
+        //fluidUI.Interaction(scene);
     }
 
 
@@ -106,11 +106,12 @@ public class FluidSimController : MonoBehaviour
         scene.obstacleRadius = 0.15f;
         scene.overRelaxation = 1.9f;
 
-        scene.SetTime(1f / 60f);
+        scene.SetTimeStep(1f / 60f);
         scene.numIters = 40;
 
         //How detailed the simulation is in height (y) direction
-        int res = 100;
+        //Default was 100 in the tutorial but it's slow as molasses in Unity
+        int res = 50;
 
         if (sceneNr == FluidScene.SceneNr.Tank)
         {
@@ -260,7 +261,7 @@ public class FluidSimController : MonoBehaviour
 
         if (sceneNr == FluidScene.SceneNr.HighResWindTunnel)
         {
-            scene.SetTime(1f / 120f);
+            scene.SetTimeStep(1f / 120f);
             scene.numIters = 100;
             scene.showPressure = true;
         }

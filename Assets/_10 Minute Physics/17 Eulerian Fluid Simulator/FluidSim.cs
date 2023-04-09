@@ -95,15 +95,7 @@ namespace EulerianFluidSimulator
 
 
 
-		//
-		// Simulation
-		//
-
 		//Simulation loop for the fluid
-		//People are mixing convection, advection, and diffusion, but according to: https://physics.stackexchange.com/questions/168218/what-is-the-exact-difference-between-diffusion-convection-and-advection, this is the difference:
-		//	- Convection is the collective motion of particles in a fluid and encompasses both diffusion and advection.
-		//	- Advection is the motion of particles along the bulk flow
-		//  - Diffusion is the net movement of particles from high concentration to low concentration
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
 			//Modify velocity values (add exteral forces like gravity or a fan blowing)
@@ -113,11 +105,15 @@ namespace EulerianFluidSimulator
 			//Make the fluid incompressible (projection)
 			//This is the conservation of mass term in Navier-Stokes: nabla u = 0
 			//Here we also calculate pressure - the pressure term in Navier-Stokes
+			//This one is the bottleneck
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities 
 			//See "Fluid flow for the rest of us"
 			Extrapolate();
+
+			//Advection
+			//Advection is the motion of particles along the bulk flow
 
 			//Move the velocity field along itself (self-advection)
 			//Advection should be done in a divergence-free velocity field, which also satisfies the required boundary conditions -> so advect has to come after project or you may get odd artifacts
@@ -190,6 +186,7 @@ namespace EulerianFluidSimulator
 					{
 						//Ignore this cell if its an obstacle
 						if (s[To1D(i, j)] == 0f)
+						//if (s[i + numX * j] == 0f)
 						{
 							continue;
 						}
@@ -199,6 +196,12 @@ namespace EulerianFluidSimulator
 						float sx1 = s[To1D(i + 1, j)]; //Right
 						float sy0 = s[To1D(i, j - 1)]; //Bottom
 						float sy1 = s[To1D(i, j + 1)]; //Top
+
+						//Experiment to see if To1D is slowing down the calculations, but they are not
+						//float sx0 = s[(i-1) + numX * j]; //Left
+						//float sx1 = s[(i+1) + numX * j]; //Right
+						//float sy0 = s[i + numX * (j-1)]; //Bottom
+						//float sy1 = s[i + numX * (j+1)]; //Top
 
 						float sTot = sx0 + sx1 + sy0 + sy1;
 
@@ -218,6 +221,7 @@ namespace EulerianFluidSimulator
 						//Same idea applies to v-direction
 						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
+						//float divergence = u[(i + 1) + numX * j] - u[i + numX * j] + v[i + numX * (j+1)] - v[i + numX * j];
 
 						//Why the minus sign?
 						//From "Realistic Animation of Liquids:"
@@ -229,6 +233,7 @@ namespace EulerianFluidSimulator
 
 						//Calculate the pressure
 						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
+						//p[i + numX * j] += cp * divergence_Over_sTot;
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
@@ -239,6 +244,11 @@ namespace EulerianFluidSimulator
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
 						v[To1D(i, j + 1)] += sy1 * divergence_Over_sTot;
+						
+						//u[i + numX * j] -= sx0 * divergence_Over_sTot;
+						//u[(i + 1) + numX * j] += sx1 * divergence_Over_sTot;
+						//v[i + numX * j] -= sy0 * divergence_Over_sTot;
+						//v[i + numX * (j + 1)] += sy1 * divergence_Over_sTot;
 					}
 				}
 			}

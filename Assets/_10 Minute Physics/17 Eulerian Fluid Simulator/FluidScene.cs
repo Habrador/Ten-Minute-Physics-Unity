@@ -42,6 +42,7 @@ namespace EulerianFluidSimulator
         public float dt { get; private set; }
 
         //Need several íterations each update to make the fluid incompressible
+        //Default is 40 and we set it in SetupScene
         public int numIters = 100;
 
         //Is sometimes 0 for some reason...
@@ -85,7 +86,7 @@ namespace EulerianFluidSimulator
         //Default is 1/120=0.008 in the source code while Unity default is 1/50=0.02
         //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
         //It's important that the dt is small enough so that the maximum motion of the velocity field is less than the width of a grid cell: dt < h/u_max. But dt can sometimes be larger if theres a buffer around the cells, so you should use a constant you can experiment with: dt = k * (h/u_max)
-        public void SetTime(float timeStep)
+        public void SetTimeStep(float timeStep)
         {
             this.dt = timeStep;
             Time.fixedDeltaTime = timeStep;

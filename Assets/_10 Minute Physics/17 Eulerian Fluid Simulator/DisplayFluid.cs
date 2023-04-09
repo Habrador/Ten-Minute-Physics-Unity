@@ -85,10 +85,10 @@ namespace EulerianFluidSimulator
 				fluidTexture = new(f.numX, f.numY);
 
 				//So the pixels dont blend
-				fluidTexture.filterMode = FilterMode.Point;
+				//fluidTexture.filterMode = FilterMode.Point;
 
 				//Blend the pixels 
-				//fluidTexture.filterMode = FilterMode.Bilinear;
+				fluidTexture.filterMode = FilterMode.Bilinear;
 
 				//So the borders dont wrap with the border on the other side
 				fluidTexture.wrapMode = TextureWrapMode.Clamp;
