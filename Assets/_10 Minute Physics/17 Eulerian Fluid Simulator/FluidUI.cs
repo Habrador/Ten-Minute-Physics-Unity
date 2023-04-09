@@ -27,7 +27,7 @@ namespace EulerianFluidSimulator
 
             int fontSize = 20;
 
-            RectOffset offset = new(10, 10, 10, 10);
+            RectOffset offset = new(5, 5, 5, 5);
 
             //Buttons
             GUIStyle buttonStyle = new(GUI.skin.button);
