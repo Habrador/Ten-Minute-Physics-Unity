@@ -36,9 +36,9 @@ public class FluidSimController : MonoBehaviour
         scene.simPlaneWidth = 2f;
         scene.simPlaneHeight = 1f;
 
-        SetupScene(FluidScene.SceneNr.WindTunnel);
+        //SetupScene(FluidScene.SceneNr.WindTunnel);
 
-        //SetupScene(FluidScene.SceneNr.Tank);
+        SetupScene(FluidScene.SceneNr.Tank);
 
 
         //Test converting between spaces

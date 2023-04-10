@@ -420,33 +420,32 @@ namespace EulerianFluidSimulator
 		//https://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale
 		private static Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{
-			//For debugging
-			//float originalVal = val;
-
 			//Clamp val to be within the range
 			//val has to be less than maxVal or "int num = Mathf.FloorToInt(val / m);" wont work
-			//Was 0.0001 in the tutorial but we need it to be larger because we use floats
-			val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.001f);
-
-            //For debugging
-            //if (val >= maxVal)
-            //{
-            //    Debug.Log($"Color out of range: {(float)val}, {(float)maxVal}");
-            //}
+			//This will not always work because of floating point precision issues, so we have to fix it later
+			val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
 
             //Convert to 0->1 range
             float d = maxVal - minVal;
 		
 			//If min and max are the same, set val to be in the middle or we get a division by zero
-			val = (d == 0.0f) ? 0.5f : (val - minVal) / d;
+			val = (d == 0f) ? 0.5f : (val - minVal) / d;
 
 			//0.25 means 4 buckets 0->3
 			//Why 4? A walk on the edges of the RGB color cube: blue -> cyan -> green -> yellow -> red
 			float m = 0.25f;
 
 			int num = Mathf.FloorToInt(val / m);
-		
-			//s is strength?
+
+			//Because of floating point precission issues we have to clamp num
+			//If val = maxVal, we will end up in bucket 4
+			//And we can't make val smaller because of floating point precision issues
+			if (num > 3)
+			{
+				num = 3;
+            }
+
+			//s is strength
 			float s = (val - num * m) / m;
 
 			float r = 0f;
@@ -461,12 +460,6 @@ namespace EulerianFluidSimulator
 				case 2: r = s;  g = 1f;     b = 0f;     break; //green  (0,1,0) -> yellow (1,1,0)
 				case 3: r = 1f; g = 1f - s; b = 0f;     break; //yellow (1,1,0) -> red    (1,0,0)
 			}
-
-			//For debugging
-			//if (num != 0 && num != 1 && num != 2 && num != 3)
-			//{
-			//	Debug.Log($"Color out of range: {originalVal}, {minVal}, {maxVal}");
-		    //}
 
 			Vector4 color = new ( 255 * r, 255 * g, 255 * b, 255);
 
