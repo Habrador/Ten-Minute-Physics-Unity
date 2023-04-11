@@ -183,9 +183,7 @@ namespace EulerianFluidSimulator
 		{
 			FluidSim f = scene.fluid;
 
-			//To convert from 2d to 1d array
-			//int n = f.numY;
-
+			//Cell width
 			float h = f.h;
 
 			//The length of the lines which will be scaled by the velocity in simulation space
@@ -202,28 +200,27 @@ namespace EulerianFluidSimulator
 					float u = f.u[f.To1D(i, j)];
 					float v = f.v[f.To1D(i, j)];
 
+
 					//u velocity
 					float x0 = i * h;
 					float x1 = i * h + u * scale;
-					float y = (j + 0.5f) * h;
+					float y = (j + 0.5f) * h; //the u vel is in the middle of the cell in y direction, thus the 0.5
 
 					Vector2 uStart = scene.SimToWorld(x0, y);
-					
 					Vector2 uEnd = scene.SimToWorld(x1, y);
+
+					linesToDisplay.Add(new Vector3(uStart.x, uStart.y, z));
+					linesToDisplay.Add(new Vector3(uEnd.x, uEnd.y, z));
+
 
 					//v velocity
 					float x = (i + 0.5f) * h;
 					float y0 = j * h;
 					float y1 = j * h + v * scale;
 
-					//x, y0
 					Vector2 vStart = scene.SimToWorld(x, y0);
-					//x, y1
 					Vector2 vEnd = scene.SimToWorld(x, y1);
 
-
-					linesToDisplay.Add(new Vector3(uStart.x, uStart.y, z));
-					linesToDisplay.Add(new Vector3(uEnd.x, uEnd.y, z));
 					linesToDisplay.Add(new Vector3(vStart.x, vStart.y, z));
 					linesToDisplay.Add(new Vector3(vEnd.x, vEnd.y, z));
 				}
@@ -236,7 +233,7 @@ namespace EulerianFluidSimulator
 		
 
 		//
-		// Show streamlines to easier visualize how the fluid flows
+		// Show streamlines that follows the velocity to easier visualize how the fluid flows
 		//
 		private static void ShowStreamlines(FluidScene scene)
 		{		
