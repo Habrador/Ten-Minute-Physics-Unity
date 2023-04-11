@@ -12,6 +12,7 @@ using EulerianFluidSimulator;
 // - Figure out the wall situation during the different simulations. Why do we need walls in the tank? Why is the top wall breaking the simulation? Why no right wall in the wind tunnel?
 // - Figure out how wind is added in the wind tunnel. If we add wind next to a wall, then its never added because there's a wall to the left... A book also said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible. The source also say that viscosity takes cares of no outflow
 // - Why Integrate() is not ignoring the last column in x
+// - Wont the solid wall in the wind tunnel be removed if we move the obstacle across it because how the move obstacle method works? 
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -174,7 +175,7 @@ public class FluidSimController : MonoBehaviour
                 //i == 0 (left wall)
                 //j == 0 (bottom wall)
                 //i == f.numX - 1 (right wall)
-                //No top wall, so it's actually a tub! Adding a top wall would break the simulation
+                //No top wall, so it's actually a tub! Adding a top wall will break the simulation
                 if (i == 0 || i == f.numX - 1 || j == 0)
                 {
                     //0 means solid
@@ -211,6 +212,10 @@ public class FluidSimController : MonoBehaviour
 
                 //Left wall, bottom wall, top wall
                 if (i == 0 || j == 0 || j == f.numY - 1)
+                //Adding right wall will make the fluid bounce
+                //if (i == 0 || j == 0 || j == f.numY - 1 || i == f.numX - 1)
+                //Removing left wall stops the smoke velocity after first iteration
+                //if (j == 0 || j == f.numY - 1)
                 {
                     //0 means solid
                     s = 0f;
