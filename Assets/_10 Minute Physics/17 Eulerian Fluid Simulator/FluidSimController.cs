@@ -9,7 +9,6 @@ using EulerianFluidSimulator;
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
-// - Figure out the wall situation during the different simulations. Why do we need walls in the tank? Why is the top wall breaking the simulation? Why no right wall in the wind tunnel? The velocity from a wall/obstacle is zero unless we add wind from a turbine or move the wall. The velocity from a border cell is copied from the neighbor next to it
 // - Why Integrate() is not ignoring the last column in x
 // - Wont the solid wall in the wind tunnel be removed if we move the obstacle across it because how the move obstacle method works? 
 public class FluidSimController : MonoBehaviour
