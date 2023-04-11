@@ -353,7 +353,6 @@ namespace EulerianFluidSimulator
 			//Add the center to make it easier to trianglulate
 			vertices.Insert(0, circleCenter);
 
-
 			//Generate the triangles
 			List<int> triangles = new();
 

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using EulerianFluidSimulator;
 
-//Most basic fluid simulator
+//2D Fluid Simulator
 //Based on: "How to write an Eulerian Fluid Simulator with 200 lines of code" https://matthias-research.github.io/pages/tenMinutePhysics/
-//Eulerian means we simulate the fluid in a grid - not by using particles (Lagrangian). One can also use a combination of both methods
-//Can simulate both liquids and gas
+//Eulerian means we simulate the fluid in a grid - not by using particles (Lagrangian)
+//Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
-// - Why no gravity in the wind tunnel simulation? Because we use water density and simulate air because air pressure is negligible when the height of the simulation is 1m? So why are we using water density then???
 // - Figure out the wall situation during the different simulations. In the wind tunnel, figure out how wind is added. If we add wind next to a wall, then its never added because there's a wall to the left... A book also said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible. The source also say that viscosity takes cares of no outflow
 // - Why Integrate() is not ignoring the last column in x
 public class FluidSimController : MonoBehaviour
@@ -250,7 +249,7 @@ public class FluidSimController : MonoBehaviour
         SetObstacle(0.4f, 0.5f, true);
 
 
-        scene.gravity = 0f; //Why no gravity???
+        scene.gravity = 0f; //Adding gravity will break the smoke
         scene.showPressure = false;
         scene.showSmoke = true;
         scene.showStreamlines = false;
@@ -279,33 +278,34 @@ public class FluidSimController : MonoBehaviour
 
 
 
-    //Position an obstacle in the fluid and make it interact with the fluid if it has a velocity
+    //
+    // Position an obstacle in the fluid and make it interact with the fluid if it has a velocity
+    //
+    
     //x,y are in simulation space - NOT world space
     public void SetObstacle(float x, float y, bool reset)
     {
-        //To give the fluid a velocity by moving around the obstacle
+        //Give the fluid a velocity if we have dragged the obstacle
         float vx = 0f;
         float vy = 0f;
 
         if (!reset)
         {
-            //Calculate the velocity this obstacle has
-            //Should be Time.deltaTime and not scene.dt because we moved the object in LateUpdate
+            //Calculate the velocity the obstacle has
+            //Should be Time.deltaTime and not scene.dt because we move the object in LateUpdate()
             vx = (x - scene.obstacleX) / Time.deltaTime;
             vy = (y - scene.obstacleY) / Time.deltaTime;
         }
 
+        //Save the position of the obsstacle so we can later display it
         scene.obstacleX = x;
         scene.obstacleY = y;
 
+        //Mark which cells are covered by the obstacle
         float r = scene.obstacleRadius;
-        
+
         FluidSim f = scene.fluid;
         
-        //int n = f.numY;
-        
-        //float cd = Mathf.Sqrt(2f) * f.h;
-
         //Ignore border
         for (int i = 1; i < f.numX - 2; i++)
         {
@@ -325,14 +325,17 @@ public class FluidSimController : MonoBehaviour
                     //Mark this cell as obstacle 
                     f.s[f.To1D(i, j)] = 0f;
 
+                    //Add smoke
                     if (scene.sceneNr == FluidScene.SceneNr.Paint)
                     {
-                        //Generate smoke with different colors because of the sinus this loops 0 -> 1 -> 0
+                        //Generate smoke with different colors.
+                        //Because of the sinus this loops 0 -> 1 -> 0
                         //In paint mode we are displaying the smoke by using the scientific color scheme
                         f.m[f.To1D(i, j)] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);
                         //This works but generates just blue smoke
                         //f.m[f.To1D(i, j)] = 0f;
                     }
+                    //Remove smoke
                     else
                     {
                         //1 means no smoke
