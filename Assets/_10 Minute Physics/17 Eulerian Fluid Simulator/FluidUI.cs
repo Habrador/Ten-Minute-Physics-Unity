@@ -111,62 +111,33 @@ namespace EulerianFluidSimulator
         
         public void Interaction(FluidScene scene)
         {            
-            //Click with left mouse
+            //Teleport obstacle if we click with left mouse
             if (Input.GetMouseButtonDown(0))
             {
-                //Fire a ray against a plane to get the position of the mouse in world space
-                Plane plane = new (-Vector3.forward, Vector3.zero);
+                Vector2 mousePos = GetMousePos(scene);
 
-                //Create a ray from the mouse click position
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                if (plane.Raycast(ray, out float enter))
+                //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
+                if (scene.fluid.IsWithinArea(mousePos.x, mousePos.y))
                 {
-                    //Get the point that is clicked in world space
-                    Vector3 mousePos3D = ray.GetPoint(enter);
+                    controller.SetObstacle(mousePos.x, mousePos.y, true);
 
-                    //Debug.Log(mousePos);
-
-                    //From world space to simulation space
-                    Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
-
-                    //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
-                    if (scene.fluid.IsWithinArea(coordinates.x, coordinates.y))
-                    {
-                        StartDrag(coordinates.x, coordinates.y);
-
-                        this.lastMousePos = coordinates;
-                    }
+                    this.lastMousePos = mousePos;
                 }
             }
-            //Drag if we hold down left mouse
+            //Drag obstacle if we hold down left mouse
             else if (Input.GetMouseButton(0))
             {
-                //Fire a ray against a plane to get the position of the mouse in world space
-                Plane plane = new(-Vector3.forward, Vector3.zero);
+                Vector2 mousePos = GetMousePos(scene);
 
-                //Create a ray from the mouse click position
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                if (plane.Raycast(ray, out float enter))
+                //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
+                if (scene.fluid.IsWithinArea(mousePos.x, mousePos.y))
                 {
-                    //Get the point that is clicked in world space
-                    Vector3 mousePos3D = ray.GetPoint(enter);
-
-                    //Debug.Log(mousePos);
-
-                    //From world space to simulation space
-                    Vector2 coordinates = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
-
-                    //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
-                    if (scene.fluid.IsWithinArea(coordinates.x, coordinates.y))
+                    //Has the mouse positioned changed = we are dragging?
+                    if (mousePos.x != this.lastMousePos.x && mousePos.y != this.lastMousePos.y)
                     {
-                        if (coordinates.x != this.lastMousePos.x && coordinates.y != this.lastMousePos.y)
-                        {
-                            Drag(coordinates.x, coordinates.y);
+                        controller.SetObstacle(mousePos.x, mousePos.y, false);
 
-                            this.lastMousePos = coordinates;
-                        }
+                        this.lastMousePos = mousePos;
                     }
                 }
             }
@@ -191,18 +162,30 @@ namespace EulerianFluidSimulator
 
 
 
-        //x,y are in simulation space
-        private void StartDrag(float x, float y)
+        //Get the mouse coordinates in simulation space
+        private Vector2 GetMousePos(FluidScene scene)
         {
-            controller.SetObstacle(x, y, true);
-        }
+            //Default if raycasting doesnt work - which it always should
+            Vector2 mousePos = Vector2.zero;
+        
+            //Fire a ray against a plane to get the position of the mouse in world space
+            Plane plane = new(-Vector3.forward, Vector3.zero);
 
+            //Create a ray from the mouse click position
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
+            if (plane.Raycast(ray, out float enter))
+            {
+                //Get the point that is clicked in world space
+                Vector3 mousePos3D = ray.GetPoint(enter);
 
-        //x,y are in simulation space
-        private void Drag(float x, float y)
-        {
-            controller.SetObstacle(x, y, false);
+                //Debug.Log(mousePos);
+
+                //From world space to simulation space
+                mousePos = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
+            }
+
+            return mousePos;
         }
     }
 }
