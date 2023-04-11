@@ -239,9 +239,7 @@ namespace EulerianFluidSimulator
 		// Show streamlines to easier visualize how the fluid flows
 		//
 		private static void ShowStreamlines(FluidScene scene)
-		{
-			//Debug.Log("Hi");
-		
+		{		
 			FluidSim f = scene.fluid;
 
 			//The length of a single segment in simulation space
@@ -251,9 +249,10 @@ namespace EulerianFluidSimulator
 
 			List<Vector3> streamlineCoordinates = new ();
 
+			//To display the line infront of the plane
 			float z = -0.01f;
 
-			//Dont display a streamline from each cell because it makes it difficult to see
+			//Dont display a streamline from each cell because it makes it difficult to see, so every 5 cell
 			for (int i = 1; i < f.numX - 1; i += 5)
 			{
 				for (int j = 1; j < f.numY - 1; j += 5)
@@ -289,24 +288,17 @@ namespace EulerianFluidSimulator
 						y += v * 0.01f;
 
 						//Stop the line if we are outside of the simulation area
-						if (x > f.numX * f.h)
+						//The guy in the video is only checking x > f.GetWidth() for some reason...
+						if (x > f.GetWidth() || x < 0f || y > f.GetHeight() || y < 0f)
 						{
 							break;
 						}
 
 						//Add the next coordinate of the streamline
-						Vector2 pos2D = scene.SimToWorld(x, y);
+						Vector2 nextPos2D = scene.SimToWorld(x, y);
 
-						streamlineCoordinates.Add(new Vector3(pos2D.x, pos2D.y, z));
+						streamlineCoordinates.Add(new Vector3(nextPos2D.x, nextPos2D.y, z));
 					}
-
-					//if (i == 6 && j == 6)
-					//{
-					//	Debug.Log(streamlineCoordinates[0]);
-					//	Debug.Log(streamlineCoordinates[1]);
-					//	Debug.Log(streamlineCoordinates[2]);
-					//	Debug.Log("");
-					//}
 
 					//Display the line
 					DisplayShapes.DrawLine(streamlineCoordinates, DisplayShapes.ColorOptions.Black);
