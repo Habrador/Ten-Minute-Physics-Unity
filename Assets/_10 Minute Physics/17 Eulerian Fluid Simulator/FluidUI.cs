@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
 namespace EulerianFluidSimulator
 {
     //User interactions with the fluid
@@ -108,7 +110,6 @@ namespace EulerianFluidSimulator
 
 
 
-        
         public void Interaction(FluidScene scene)
         {            
             //Teleport obstacle if we click with left mouse

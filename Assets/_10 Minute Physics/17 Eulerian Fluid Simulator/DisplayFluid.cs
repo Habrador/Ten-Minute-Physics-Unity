@@ -5,6 +5,9 @@ using UnityEngine;
 //Display the fluid simulation on a texture
 namespace EulerianFluidSimulator
 {
+	//Display the fluid simulation on a texture
+	//Display streamlines and velocities with lines
+	//Display obstacles as mesh
 	public static class DisplayFluid
 	{
 		//For testing
@@ -67,12 +70,12 @@ namespace EulerianFluidSimulator
 				ShowObstacle(scene);
 			}
 
-			//Moved the display of min and max pressure as text to the UI method
+			//Moved the display of min and max pressure as text to the UI class
 		}
 
 
 
-		//Paint the fluid, not obstacles
+		//Show the fluid simulation on a texture
 		private static void UpdateTexture(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
@@ -173,8 +176,9 @@ namespace EulerianFluidSimulator
 	
 
 
-		//Show the u and v velocities at each cell by drawing lines
-		//These are just straight lines
+		//
+		// Show the u and v velocities at each cell by drawing lines
+		//
 		private static void ShowVelocities(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
@@ -231,8 +235,9 @@ namespace EulerianFluidSimulator
 
 		
 
-		//Show streamlines to easier visualize how the fluid flows
-		//Compared to the velocities, this will be a curve
+		//
+		// Show streamlines to easier visualize how the fluid flows
+		//
 		private static void ShowStreamlines(FluidScene scene)
 		{
 			//Debug.Log("Hi");
@@ -311,14 +316,14 @@ namespace EulerianFluidSimulator
 		
 
 
-		//Show the circle obstacle
+		//
+		// Show the circle obstacle
+		//
 		private static void ShowObstacle(FluidScene scene)
-		{
-			//Debug.Log("Hi");
-		
+		{		
 			FluidSim f = scene.fluid;
 
-			//Make it slightly bigger to avoid jagged edges?
+			//Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
 			float r = scene.obstacleRadius + f.h;
 			
 			DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
@@ -332,29 +337,24 @@ namespace EulerianFluidSimulator
 			//Circle center in global space
 			Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
 
+			//3d space infront of the texture
 			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, -0.1f);
 
-			//Debug.Log(r);
-
-			//Display a circle mesh
+			//Generate the circle mesh
 			Mesh circleMesh = GenerateCircleMesh(circleCenter, r, 50);
 
-			//Debug.Log(circleMesh.vertices[0]);
-			//Debug.Log(circleMesh.vertices[1]);
-
+			//Display the circle mesh
 			Material material = DisplayShapes.GetMaterial(color);
 
 			Graphics.DrawMesh(circleMesh, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
 
-			//DisplayShapes.DrawCircle(circleCenter, r, color, DisplayShapes.Space2D.XY);
 
-
-			//The guy is also giving the circle a black border...
+			//The guy is also giving the circle a black border, which we could replicate by drawing a smaller circle but it doesn't matter! 
 		}
 
 
 
-		//Generate a circular mesh 
+		//Generate a circle mesh 
 		private static Mesh GenerateCircleMesh(Vector3 circleCenter, float radius, int segments)
 		{
 			//Generate the vertices
@@ -369,7 +369,7 @@ namespace EulerianFluidSimulator
 
 			for (int i = 2; i < vertices.Count; i++)
 			{
-				triangles.Add(0);
+				triangles.Add(0); //0 because the center vertex was added at position 0
 				triangles.Add(i);
 				triangles.Add(i - 1);
 			}
@@ -387,7 +387,8 @@ namespace EulerianFluidSimulator
 
 
 
-		private  static List<Vector3> GetCircleSegments_XY(Vector3 circleCenter, float radius, int segments)
+		//Generate vertices on the circle circumference in xy space
+		private static List<Vector3> GetCircleSegments_XY(Vector3 circleCenter, float radius, int segments)
 		{
 			List<Vector3> vertices = new();
 
@@ -411,6 +412,10 @@ namespace EulerianFluidSimulator
 		}
 
 
+
+		//
+		// The scientific color scheme
+		//
 
 		//Get a color from a color gradient which is colored according to the scientific color scheme
 		//The color scheme is also called rainbow (jet) or hot-to-cold
@@ -437,7 +442,7 @@ namespace EulerianFluidSimulator
 
 			int num = Mathf.FloorToInt(val / m);
 
-			//Because of floating point precission issues we have to clamp num
+			//Clamp num
 			//If val = maxVal, we will end up in bucket 4
 			//And we can't make val smaller because of floating point precision issues
 			if (num > 3)
