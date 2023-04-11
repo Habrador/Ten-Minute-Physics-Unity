@@ -9,7 +9,8 @@ using EulerianFluidSimulator;
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
-// - Figure out the wall situation during the different simulations. In the wind tunnel, figure out how wind is added. If we add wind next to a wall, then its never added because there's a wall to the left... A book also said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible. The source also say that viscosity takes cares of no outflow
+// - Figure out the wall situation during the different simulations. Why do we need walls in the tank? Why is the top wall breaking the simulation? Why no right wall in the wind tunnel?
+// - Figure out how wind is added in the wind tunnel. If we add wind next to a wall, then its never added because there's a wall to the left... A book also said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible. The source also say that viscosity takes cares of no outflow
 // - Why Integrate() is not ignoring the last column in x
 public class FluidSimController : MonoBehaviour
 {
@@ -131,7 +132,7 @@ public class FluidSimController : MonoBehaviour
         //How many cells do we have
         //y is up
         int numY = res;
-        //The texture we use here is twice as wide as high
+        //The plane we use here is twice as wide as high
         int numX = 2 * numY;
 
         //Density of the fluid (water)
@@ -205,12 +206,10 @@ public class FluidSimController : MonoBehaviour
         {
             for (int j = 0; j < f.numY; j++)
             {
-                //Fluid
+                //1 means fluid
                 float s = 1f;
 
                 //Left wall, bottom wall, top wall
-                //Why no right wall, but left wall???
-                //The smoke seems to disappear when it reaches the right border
                 if (i == 0 || j == 0 || j == f.numY - 1)
                 {
                     //0 means solid
@@ -220,8 +219,7 @@ public class FluidSimController : MonoBehaviour
                 f.s[f.To1D(i, j)] = s;
 
                 //Add right velocity to the fluid in the second column
-                //Don't we need a velocity on the right border as well?
-                //Wont disappear after first update because there's a wall to the left?
+                //We now have a velocity from the wall
                 if (i == 1)
                 {
                     f.u[f.To1D(i, j)] = inVel;
@@ -238,11 +236,10 @@ public class FluidSimController : MonoBehaviour
 
         for (int j = minJ; j < maxJ; j++)
         {
-            //0 means max smoke in the first column (i = 0): f.m[0 * n + j] = f.m[j]
-            //f.m[j] = 0f;
-
+            //Add the smoke in the center of the first column
             int i = 0;
 
+            //0 means max smoke
             f.m[f.To1D(i, j)] = 0f;
         }
 
