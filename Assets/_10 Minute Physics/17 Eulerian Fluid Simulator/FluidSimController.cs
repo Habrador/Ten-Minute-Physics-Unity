@@ -11,6 +11,8 @@ using EulerianFluidSimulator;
 //To figure out:
 // - Why Integrate() is not ignoring the last column in x
 // - Wont the solid wall in the wind tunnel be removed if we move the obstacle across it because how the move obstacle method works? 
+// - In extrapolate we should detect if it's an obstacle
+// - Figure out why the "paint" is not reaching within 2 cells on the right and top side
 public class FluidSimController : MonoBehaviour
 {
     //Public

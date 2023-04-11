@@ -113,7 +113,7 @@ namespace EulerianFluidSimulator
 			//This one is the bottleneck
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
-			//Fix border velocities 
+			//Fix border velocities
 			//See "Fluid flow for the rest of us"
 			Extrapolate();
 
@@ -146,7 +146,7 @@ namespace EulerianFluidSimulator
 		private void Integrate(float dt, float gravity)
 		{
 			//TODO: Ignore the border except for x on right side??? Might be a bug and should be numX - 1
-			for (int i = 1; i < numX; i++)
+			for (int i = 1; i < numX - 1; i++)
 			{
 				for (int j = 1; j < numY - 1; j++)
 				{
