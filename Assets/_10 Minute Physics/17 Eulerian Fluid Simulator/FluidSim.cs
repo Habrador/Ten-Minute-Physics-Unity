@@ -114,7 +114,6 @@ namespace EulerianFluidSimulator
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
 			//Fix border velocities
-			//See "Fluid flow for the rest of us"
 			Extrapolate();
 
 			//Advection
@@ -196,7 +195,6 @@ namespace EulerianFluidSimulator
 					{
 						//Ignore this cell if its an obstacle
 						if (s[To1D(i, j)] == 0f)
-						//if (s[i + numX * j] == 0f)
 						{
 							continue;
 						}
@@ -206,12 +204,6 @@ namespace EulerianFluidSimulator
 						float sx1 = s[To1D(i + 1, j)]; //Right
 						float sy0 = s[To1D(i, j - 1)]; //Bottom
 						float sy1 = s[To1D(i, j + 1)]; //Top
-
-						//Experiment to see if To1D is slowing down the calculations, but they are not
-						//float sx0 = s[(i-1) + numX * j]; //Left
-						//float sx1 = s[(i+1) + numX * j]; //Right
-						//float sy0 = s[i + numX * (j-1)]; //Bottom
-						//float sy1 = s[i + numX * (j+1)]; //Top
 
 						float sTot = sx0 + sx1 + sy0 + sy1;
 
@@ -231,7 +223,6 @@ namespace EulerianFluidSimulator
 						//Same idea applies to v-direction
 						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
-						//float divergence = u[(i + 1) + numX * j] - u[i + numX * j] + v[i + numX * (j+1)] - v[i + numX * j];
 
 						//Why the minus sign?
 						//From "Realistic Animation of Liquids:"
@@ -243,7 +234,6 @@ namespace EulerianFluidSimulator
 
 						//Calculate the pressure
 						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
-						//p[i + numX * j] += cp * divergence_Over_sTot;
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
@@ -254,11 +244,6 @@ namespace EulerianFluidSimulator
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
 						v[To1D(i, j + 1)] += sy1 * divergence_Over_sTot;
-						
-						//u[i + numX * j] -= sx0 * divergence_Over_sTot;
-						//u[(i + 1) + numX * j] += sx1 * divergence_Over_sTot;
-						//v[i + numX * j] -= sy0 * divergence_Over_sTot;
-						//v[i + numX * (j + 1)] += sy1 * divergence_Over_sTot;
 					}
 				}
 			}
@@ -268,6 +253,7 @@ namespace EulerianFluidSimulator
 
 		//Fix the border velocities by copying neighbor values in the tangential direction
 		//The velocities in the normal direction become whatever they need to be to make the fluid incompressible
+		//Theres a bug in the original code where we don't check for wall, so we are currently setting a velocity in the wall, but it makes no difference but can be confusing when we sample the cell 
 		private void Extrapolate()
 		{
 			//For each column

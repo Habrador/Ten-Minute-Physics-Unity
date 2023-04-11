@@ -13,6 +13,8 @@ using EulerianFluidSimulator;
 // - The solid wall in the wind tunnel is removed if we move the obstacle across it because how the move obstacle method works. The smoke also stops
 // - In extrapolate we should detect if it's an obstacle
 // - In "paint" is not reaching within 2 cells on the right and top side. It't like that in the demo as well
+//To figure out:
+// - Why is there a solid wall in "paint" when we dont add a wall during setup?
 public class FluidSimController : MonoBehaviour
 {
     //Public
