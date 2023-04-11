@@ -75,7 +75,9 @@ namespace EulerianFluidSimulator
 
 
 
-		//Show the fluid simulation on a texture
+		//
+		// Show the fluid simulation on a texture
+		//
 		private static void UpdateTexture(FluidScene scene)
 		{
 			FluidSim f = scene.fluid;
@@ -101,8 +103,6 @@ namespace EulerianFluidSimulator
 
 			Color32[] textureColors = new Color32[f.numX * f.numY];
 
-			//To convert from 2d to 1d array
-			//int n = f.numY;
 
 			//Find min and max pressure
 			MinMax minMaxP = f.GetMinMaxPressure();
@@ -124,6 +124,7 @@ namespace EulerianFluidSimulator
 
 						//Color the smoke according to the scientific color scheme 
 						//Everything that's not smoke becomes black
+						//Everything that's smoke shows the pressure field
 						if (scene.showSmoke)
 						{
 							//Smoke, which is confusing because s is solid in FluidSim
