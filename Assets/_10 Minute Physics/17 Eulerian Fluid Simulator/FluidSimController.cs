@@ -77,7 +77,7 @@ public class FluidSimController : MonoBehaviour
 
     private void OnGUI()
     {
-        fluidUI.DisplayUI(scene);
+        fluidUI.MyOnGUI(scene);
     }
 
 
@@ -328,6 +328,7 @@ public class FluidSimController : MonoBehaviour
                     if (scene.sceneNr == FluidScene.SceneNr.Paint)
                     {
                         //Generate smoke with different colors because of the sinus this loops 0 -> 1 -> 0
+                        //In paint mode we are displaying the smoke by using the scientific color scheme
                         f.m[f.To1D(i, j)] = 0.5f + 0.5f * Mathf.Sin(0.1f * scene.frameNr);
                         //This works but generates just blue smoke
                         //f.m[f.To1D(i, j)] = 0f;

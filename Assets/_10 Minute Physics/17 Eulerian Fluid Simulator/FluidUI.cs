@@ -4,13 +4,16 @@ using UnityEngine;
 
 namespace EulerianFluidSimulator
 {
+    //User interactions with the fluid
+    //Buttons and checkboxes
+    //Position the obstacle with the mouse
+    //Pause simulation (P) and step forward the simulation (M)
     public class FluidUI
     {
         private readonly FluidSimController controller;
 
-        private bool mouseDown = false;
-
-        private Vector2 mousePos;
+        //For mouse drag
+        private Vector2 lastMousePos;
 
 
 
@@ -21,7 +24,8 @@ namespace EulerianFluidSimulator
 
 
 
-        public void DisplayUI(FluidScene scene)
+        //Buttons, checkboxes, show min/max pressure
+        public void MyOnGUI(FluidScene scene)
         {
             GUILayout.BeginHorizontal("box");
 
@@ -29,13 +33,13 @@ namespace EulerianFluidSimulator
 
             RectOffset offset = new(5, 5, 5, 5);
 
+
             //Buttons
             GUIStyle buttonStyle = new(GUI.skin.button);
 
             //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
 
             buttonStyle.fontSize = fontSize;
-
             buttonStyle.margin = offset;
 
             if (GUILayout.Button($"Wind Tunnel", buttonStyle))
@@ -54,6 +58,7 @@ namespace EulerianFluidSimulator
             {
                 controller.SetupScene(FluidScene.SceneNr.Paint);
             }
+
 
             //Checkboxes
             GUIStyle toggleStyle = GUI.skin.GetStyle("Toggle");
@@ -76,7 +81,7 @@ namespace EulerianFluidSimulator
             GUILayout.EndHorizontal();
 
             
-            //Show the min ad max pressure as text
+            //Show the min and max pressure as text
             if (scene.showPressure)
             {
                 if (scene.fluid == null)
@@ -103,7 +108,7 @@ namespace EulerianFluidSimulator
 
 
 
-        //Has to be called from OnGUI because we use Event???
+        
         public void Interaction(FluidScene scene)
         {            
             //Click with left mouse
@@ -130,15 +135,12 @@ namespace EulerianFluidSimulator
                     {
                         StartDrag(coordinates.x, coordinates.y);
 
-                        this.mousePos = coordinates;
+                        this.lastMousePos = coordinates;
                     }
                 }
             }
-
-
-
             //Drag if we hold down left mouse
-            if (mouseDown)
+            else if (Input.GetMouseButton(0))
             {
                 //Fire a ray against a plane to get the position of the mouse in world space
                 Plane plane = new(-Vector3.forward, Vector3.zero);
@@ -159,23 +161,14 @@ namespace EulerianFluidSimulator
                     //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
                     if (scene.fluid.IsWithinArea(coordinates.x, coordinates.y))
                     {
-                        //Have we moved the mouse since we clicked it, meaning we are dragging the mouse
-                        if (coordinates.x != this.mousePos.x || coordinates.y != this.mousePos.y)
+                        if (coordinates.x != this.lastMousePos.x && coordinates.y != this.lastMousePos.y)
                         {
                             Drag(coordinates.x, coordinates.y);
-                        }
 
-                        this.mousePos = coordinates;
+                            this.lastMousePos = coordinates;
+                        }
                     }
                 }
-            }
-
-
-
-            //Release left mouse
-            if (Input.GetMouseButtonUp(0))
-            {
-                EndDrag();
             }
 
 
@@ -201,10 +194,6 @@ namespace EulerianFluidSimulator
         //x,y are in simulation space
         private void StartDrag(float x, float y)
         {
-            mouseDown = true;
-
-            //Debug.Log(x + " " + y);
-
             controller.SetObstacle(x, y, true);
         }
 
@@ -213,17 +202,7 @@ namespace EulerianFluidSimulator
         //x,y are in simulation space
         private void Drag(float x, float y)
         {
-            if (mouseDown)
-            {
-                controller.SetObstacle(x, y, false);
-            }
-        }
-
-
-
-        private void EndDrag()
-        {
-            mouseDown = false;
+            controller.SetObstacle(x, y, false);
         }
     }
 }
