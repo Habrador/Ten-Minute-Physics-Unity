@@ -252,6 +252,7 @@ namespace EulerianFluidSimulator
 
 
 		//Fix the border velocities by copying neighbor values in the tangential direction
+		//In the normal direction we have an outflow boundary condition, so fluid can leave, which is useful when we have an inflow in wind tunnel 
 		//The velocities in the normal direction become whatever they need to be to make the fluid incompressible
 		//Theres a bug in the original code where we don't check for wall, so we are currently setting a velocity in the wall, but it makes no difference but can be confusing when we sample the cell 
 		private void Extrapolate()
