@@ -95,7 +95,9 @@ public class FluidSimController : MonoBehaviour
 
 
 
-    //Init the simulation after a button has been pressed
+    //
+    // Init a specific fluid simulation
+    //
     public void SetupScene(FluidScene.SceneNr sceneNr = FluidScene.SceneNr.Tank)
     {
         scene.sceneNr = sceneNr;
@@ -155,11 +157,12 @@ public class FluidSimController : MonoBehaviour
 
 
 
+    //
+    // Tank fluid simulation 
+    //
     private void SetupTank(FluidSim f)
     {
-        //int n = f.numY;
-
-        //Add a solid border
+        //Add a solid tank sides
         for (int i = 0; i < f.numX; i++)
         {
             for (int j = 0; j < f.numY; j++)
@@ -170,7 +173,7 @@ public class FluidSimController : MonoBehaviour
                 //i == 0 (left wall)
                 //j == 0 (bottom wall)
                 //i == f.numX - 1 (right wall)
-                //Why no top wall???
+                //No top wall, so it's actually a tub! Adding a top wall would break the simulation
                 if (i == 0 || i == f.numX - 1 || j == 0)
                 {
                     //0 means solid
@@ -190,10 +193,11 @@ public class FluidSimController : MonoBehaviour
 
 
 
+    //
+    // Wind tunnel fluid simulation
+    //
     private void SetupWindTunnel(FluidSim f, FluidScene.SceneNr sceneNr)
     {
-        //int n = f.numY;
-
         //Wind velocity
         float inVel = 2f;
 
@@ -265,6 +269,9 @@ public class FluidSimController : MonoBehaviour
 
 
 
+    //
+    // Paint the fluid by draggin the obstacle simulation
+    //
     private void SetupPaint()
     {
         scene.gravity = 0f;
