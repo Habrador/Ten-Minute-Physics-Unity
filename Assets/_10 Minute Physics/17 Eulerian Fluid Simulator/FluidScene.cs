@@ -156,5 +156,20 @@ namespace EulerianFluidSimulator
 
             return worldSpaceCoordinates;
         }
+
+
+
+        //Convert from simulation space to cell space
+        public Vector2Int SimToCell(float x, float y)
+        {
+            float cellSize = fluid.h;
+        
+            int cellX = Mathf.FloorToInt(x / cellSize);
+            int cellY = Mathf.FloorToInt(y / cellSize);
+
+            Vector2Int cellPos = new (cellX, cellY);
+
+            return cellPos;
+        }
     }
 }

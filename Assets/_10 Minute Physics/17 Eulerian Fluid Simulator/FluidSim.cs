@@ -4,6 +4,8 @@ using UnityEngine;
 
 //Fluid Simulation in 200 lines of code (excluding comments)
 //The state of a fluid at a given instant of time is modeled as a velocity vector field. The Navier-Stokes equations describe the evolution of this velocity field over time.  
+// - Walls - The velocity from a wall/obstacle is zero unless we add wind from a turbine or move the wall/obstacle
+// - Border cell - The velocities in border cells are treated as if they are connected to some infinite big fluid in the normal direction
 //To figure out what's going on I used the following sources:
 //- The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
 //- The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU"
@@ -131,6 +133,11 @@ namespace EulerianFluidSimulator
 			//Diffusion - the viscosity term in Navier-Stokes
 			//Diffusion for temperatures and perfume particles tend to redistribute their properties over time. It's the same with the fluid's velocity. 
 			//Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
+
+			//for (int j = 0; j < numY; j++)
+			//{
+			//	Debug.Log(u[To1D(numX - 1, j)]);
+   //         }
 		}
 
 
@@ -241,7 +248,7 @@ namespace EulerianFluidSimulator
 
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
-						//If sx0 = 0 it means theres an obstacle to the left of this cell, so no fluid can leave or enter this cell from that cell
+						//If sx0 = 0 it means theres an obstacle to the left of this cell, meaning the velocity from that wall is fixed (can be 0, can have a velocity from a wind turbine, or can have a velocity from a moving obstacle) and we can't update it to fix the divergence. This means we can only modify the three other velocities  
 						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step. This make it more difficult to parallelize. If you need to parallelize use Jacobi
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
@@ -259,9 +266,8 @@ namespace EulerianFluidSimulator
 
 
 
-		//Fix the border velocities by copying neighbor values or set them to zero
-		//We will here use "slip" boundary condition - nothing can enter or leave through the wall, but water can flow along the wall. The is the most common boundary condition
-		//The "no-slip" is more realistic but slows down the fluid making it boring
+		//Fix the border velocities by copying neighbor values in the tangential direction
+		//The velocities in the normal direction become whatever they need to be to make the fluid incompressible
 		private void Extrapolate()
 		{
 			//For each column
@@ -272,8 +278,6 @@ namespace EulerianFluidSimulator
 
 				//Top border row gets the same velocity in u direction as the row below
 				u[To1D(i, numY - 1)] = u[To1D(i, numY - 2)];
-
-				//The v velocities are already zero
 			}
 
 			//For each row
@@ -284,8 +288,6 @@ namespace EulerianFluidSimulator
 
 				//Right border column gets the same velocity in v direction as the column to the left 
 				v[To1D(numX - 1, j)] = v[To1D(numX - 2, j)];
-
-				//The u velocities are already zero
 			}
 		}
 

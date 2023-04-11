@@ -159,6 +159,38 @@ namespace EulerianFluidSimulator
 
                 scene.isPaused = true;
             }
+
+
+
+            SampleWithMouse(scene);
+        }
+
+
+
+        //Sample the field with the mouse position
+        private void SampleWithMouse(FluidScene scene)
+        {
+            Vector2 mousePos = GetMousePos(scene);
+
+            Vector2Int cellPos = scene.SimToCell(mousePos.x, mousePos.y);
+
+            //Debug.Log(cellPos);
+
+            FluidSim f = scene.fluid;
+
+            int x = cellPos.x;
+            int y = cellPos.y;
+
+            if (x >= 0 && x < f.numX && y >= 0 && y < f.numY)
+            {
+                float velU = f.u[f.To1D(x, y)]; //velocity in u direction
+                float velV = f.v[f.To1D(x, y)]; //velocity in v direction
+                float p = f.p[f.To1D(x, y)]; //pressure
+                float s = f.s[f.To1D(x, y)]; //solid (0) or fluid (1)
+                float m = f.m[f.To1D(x, y)]; //smoke density
+
+                Debug.Log($"u: {velU}, v: {velV}, p: {p}, s: {s}, m: {m}");
+            }
         }
 
 

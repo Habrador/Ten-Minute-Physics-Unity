@@ -9,8 +9,7 @@ using EulerianFluidSimulator;
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //To figure out:
-// - Figure out the wall situation during the different simulations. Why do we need walls in the tank? Why is the top wall breaking the simulation? Why no right wall in the wind tunnel?
-// - Figure out how wind is added in the wind tunnel. If we add wind next to a wall, then its never added because there's a wall to the left... A book also said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible. The source also say that viscosity takes cares of no outflow
+// - Figure out the wall situation during the different simulations. Why do we need walls in the tank? Why is the top wall breaking the simulation? Why no right wall in the wind tunnel? The velocity from a wall/obstacle is zero unless we add wind from a turbine or move the wall. The velocity from a border cell is copied from the neighbor next to it
 // - Why Integrate() is not ignoring the last column in x
 // - Wont the solid wall in the wind tunnel be removed if we move the obstacle across it because how the move obstacle method works? 
 public class FluidSimController : MonoBehaviour
@@ -175,7 +174,7 @@ public class FluidSimController : MonoBehaviour
                 //i == 0 (left wall)
                 //j == 0 (bottom wall)
                 //i == f.numX - 1 (right wall)
-                //No top wall, so it's actually a tub! Adding a top wall will break the simulation
+                //No top wall, so it's actually a tub! Adding a top wall will break the simulation because we need inflow
                 if (i == 0 || i == f.numX - 1 || j == 0)
                 {
                     //0 means solid
@@ -211,11 +210,8 @@ public class FluidSimController : MonoBehaviour
                 float s = 1f;
 
                 //Left wall, bottom wall, top wall
+                //No right wall because we need some outflow
                 if (i == 0 || j == 0 || j == f.numY - 1)
-                //Adding right wall will make the fluid bounce
-                //if (i == 0 || j == 0 || j == f.numY - 1 || i == f.numX - 1)
-                //Removing left wall stops the smoke velocity after first iteration
-                //if (j == 0 || j == f.numY - 1)
                 {
                     //0 means solid
                     s = 0f;
@@ -224,7 +220,8 @@ public class FluidSimController : MonoBehaviour
                 f.s[f.To1D(i, j)] = s;
 
                 //Add right velocity to the fluid in the second column
-                //We now have a velocity from the wall
+                //We now have a velocity from the wall, which is added in the divergence step
+                //A book said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible, but we have an outflow on the right side
                 if (i == 1)
                 {
                     f.u[f.To1D(i, j)] = inVel;
