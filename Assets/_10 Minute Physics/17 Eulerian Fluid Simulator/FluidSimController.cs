@@ -5,6 +5,7 @@ using EulerianFluidSimulator;
 
 //2D Fluid Simulator
 //Based on: "How to write an Eulerian Fluid Simulator with 200 lines of code" https://matthias-research.github.io/pages/tenMinutePhysics/
+//You can pause the simulation with P and when paused you can move the simulation in steps with M
 //Eulerian means we simulate the fluid in a grid - not by using particles (Lagrangian)
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
@@ -64,7 +65,7 @@ public class FluidSimController : MonoBehaviour
 
     private void LateUpdate()
     {
-        //Interactions such as moving obstacles with mouse and pause
+        //Interactions such as moving obstacles with mouse and pause the simulation
         fluidUI.Interaction(scene);
     }
 
@@ -111,7 +112,7 @@ public class FluidSimController : MonoBehaviour
         scene.numIters = 40;
 
         //How detailed the simulation is in height (y) direction
-        //Default was 100 in the tutorial but it's slow as molasses in Unity
+        //Default was 100 in the source corde but it's slow as molasses in Unity
         int res = 50;
 
         if (sceneNr == FluidScene.SceneNr.Tank)
@@ -165,7 +166,7 @@ public class FluidSimController : MonoBehaviour
     //
     private void SetupTank(FluidSim f)
     {
-        //Add a solid tank sides
+        //Set which cells are fluid or wall (default is wall = 0)
         for (int i = 0; i < f.numX; i++)
         {
             for (int j = 0; j < f.numY; j++)
@@ -204,6 +205,8 @@ public class FluidSimController : MonoBehaviour
         //Wind velocity
         float inVel = 2f;
 
+        //Set which cells are fluid or wall (default is wall = 0)
+        //Also add the velocity
         for (int i = 0; i < f.numX; i++)
         {
             for (int j = 0; j < f.numY; j++)
@@ -213,7 +216,7 @@ public class FluidSimController : MonoBehaviour
 
                 //Left wall, bottom wall, top wall
                 if (i == 0 || j == 0 || j == f.numY - 1)
-                //No right wall because we need some outflow
+                //No right wall because we need outflow from the wind tunnel
                 //if (i == 0 || j == 0 || j == f.numY - 1 || i == f.numX - 1)
                 //Left wall
                 //if (i == 0)
@@ -225,8 +228,8 @@ public class FluidSimController : MonoBehaviour
                 f.s[f.To1D(i, j)] = s;
 
                 //Add right velocity to the fluid in the second column
-                //We now have a velocity from the wall, which is added in the divergence step
-                //A book said that if we add inflow, we also have to add outflow, or it will be difficult to make the fluid incompressible, but we have an outflow on the right side
+                //We now have a velocity from the wall
+                //Velocities from walls can't be modified in the simulation
                 if (i == 1)
                 {
                     f.u[f.To1D(i, j)] = inVel;
@@ -237,7 +240,7 @@ public class FluidSimController : MonoBehaviour
         //Add smoke
         float pipeH = 0.1f * f.numY;
 
-        //In the middle of the simulation
+        //In the middle of the simulation height in y direction
         int minJ = Mathf.FloorToInt(0.5f * f.numY - 0.5f * pipeH);
         int maxJ = Mathf.FloorToInt(0.5f * f.numY + 0.5f * pipeH);
 
@@ -274,11 +277,11 @@ public class FluidSimController : MonoBehaviour
 
 
     //
-    // Paint the fluid by draggin the obstacle simulation
+    // Paint the fluid by dragging the obstacle simulation
     //
     private void SetupPaint()
     {
-        //We don't need do add a wall border because it will be automatically generated in SetObstacle() when we drag the obstacle
+        //We don't need do add a wall border because it will be automatically generated in SetObstacle() when we change the position of the obstacle
 
         scene.gravity = 0f;
         scene.overRelaxation = 1f;
