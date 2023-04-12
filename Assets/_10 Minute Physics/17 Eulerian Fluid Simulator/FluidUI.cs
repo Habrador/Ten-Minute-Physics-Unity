@@ -10,6 +10,7 @@ namespace EulerianFluidSimulator
     //Buttons and checkboxes
     //Position the obstacle with the mouse
     //Pause simulation (P) and step forward the simulation (M)
+    //Sample cells with mouse position
     public class FluidUI
     {
         private readonly FluidSimController controller;
@@ -162,13 +163,14 @@ namespace EulerianFluidSimulator
 
 
 
-            SampleWithMouse(scene);
+            SampleCellWithMouse(scene);
         }
 
 
 
-        //Sample the field with the mouse position
-        private void SampleWithMouse(FluidScene scene)
+        //Sample the cells with the mouse position
+        //Wasnt included in the tutorial but makes it easier to understand what's going on
+        private void SampleCellWithMouse(FluidScene scene)
         {
             Vector2 mousePos = GetMousePos(scene);
 
