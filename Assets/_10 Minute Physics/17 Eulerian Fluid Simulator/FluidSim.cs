@@ -363,12 +363,10 @@ namespace EulerianFluidSimulator
 		//Find the particles that over a single time step ended up exactly at the cell's center
 		private void AdvectSmoke(float dt)
 		{
-			//Copy all values from m to newM, we cant just swap because of obstacles and border???
-			this.m.CopyTo(mNew, 0);
-
-			float h = this.h;
+			//Copy all values from m to newM
+			this.m.CopyTo(this.mNew, 0);
 			
-			float h2 = 0.5f * h;
+			float h2 = 0.5f * this.h;
 
 			//For all cells except the border
 			for (int i = 1; i < this.numX - 1; i++)
@@ -378,7 +376,7 @@ namespace EulerianFluidSimulator
 					//If this cell is not an obstacle
 					if (this.s[To1D(i, j)] != 0f)
 					{
-						//The velocity in the middle of the cell is the average of the velocities on the border
+						//The velocity in the middle of the cell is the average of the velocities on the cell border
 						float u = (this.u[To1D(i, j)] + this.u[To1D(i + 1, j)]) * 0.5f;
 						float v = (this.v[To1D(i, j)] + this.v[To1D(i, j + 1)]) * 0.5f;
 
@@ -396,6 +394,7 @@ namespace EulerianFluidSimulator
 				}
 			}
 
+			//Copy all values from newM to m
 			this.mNew.CopyTo(this.m, 0);
 		}
 

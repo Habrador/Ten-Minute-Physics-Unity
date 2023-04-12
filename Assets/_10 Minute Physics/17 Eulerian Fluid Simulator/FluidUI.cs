@@ -131,16 +131,18 @@ namespace EulerianFluidSimulator
             {
                 Vector2 mousePos = GetMousePos(scene);
 
+                //Has the mouse positioned not changed = we are not dragging?
+                if (!(mousePos.x != this.lastMousePos.x && mousePos.y != this.lastMousePos.y))
+                {
+                    return;
+                }
+
                 //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
                 if (scene.fluid.IsWithinArea(mousePos.x, mousePos.y))
                 {
-                    //Has the mouse positioned changed = we are dragging?
-                    if (mousePos.x != this.lastMousePos.x && mousePos.y != this.lastMousePos.y)
-                    {
-                        controller.SetObstacle(mousePos.x, mousePos.y, false);
+                    controller.SetObstacle(mousePos.x, mousePos.y, false);
 
-                        this.lastMousePos = mousePos;
-                    }
+                    this.lastMousePos = mousePos;
                 }
             }
 
