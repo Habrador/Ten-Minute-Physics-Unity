@@ -280,6 +280,7 @@ namespace EulerianFluidSimulator
 		//1. Calculate (u, v_average) at the u component
 		//2. The previous pos x_prev = x - dt * v if we assume the particle moved in a straight line
 		//3. Interpolate the velocity at x_prev
+		//Will introduce viscocity but can be improved by using a more complicated integration method than Euler Forward
 		private void AdvectVel(float dt)
 		{
 			//Copy current velocities to the new velocities because some cells are not being processed, such as obstacles
@@ -294,12 +295,9 @@ namespace EulerianFluidSimulator
 			{
 				for (int j = 1; j < this.numY; j++)
 				{
-					//Is just set to 0 at the start and is just accumulated here...
-					//cnt++;
-
 					//Update u component
-					//If this cell and the cell left of it is not an obstacle
-					//Why j < this.numY - 1 and not in the for loop? Then u < this.numX - 1 wouldn't have been included either
+					//u is on the border between 2 cells, so neither of them can be an obstacle, because those velocities are constant and not allowed to be updated
+					//Why j < this.numY - 1 here and not in the for loop? Then i < this.numX - 1 wouldn't have been included either
 					//Using j < this.numY would have resulted in an error becuase we need the surrounding vs to this u 
 					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i - 1, j)] != 0f && j < this.numY - 1)
 					{
@@ -321,7 +319,7 @@ namespace EulerianFluidSimulator
 						this.uNew[To1D(i, j)] = u;
 					}
 					//Update v component
-					//If this cell and the cell below is not an obstacle
+					//v is on the border between 2 cells, so neither of them can be an obstacle
 					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i, j - 1)] != 0f && i < numX - 1)
 					{
 						//The pos of the v velocity in simulation space
@@ -353,7 +351,7 @@ namespace EulerianFluidSimulator
 		//Move the smoke field
 		//Same as advecting velocity
 		//Use the velocity at the center of the cell and walk back in a straight line 
-		//Find the particles that over a single time step ended up exactly at the cell's center
+		//Find the density of smoke that over a single time step ended up exactly at the cell's center
 		private void AdvectSmoke(float dt)
 		{
 			//Copy all values from m to newM
@@ -407,6 +405,8 @@ namespace EulerianFluidSimulator
 			return uAverage;
 		}
 
+
+
 		//Average v around u[To1D(i, j)] 
 		private float AverageV(int i, int j)
 		{
@@ -420,7 +420,7 @@ namespace EulerianFluidSimulator
 
 
 		//Get data (u, v, smoke density) from the simulation at coordinate x,y
-		//x,y are NOT cell indices but coordinates in simulation space
+		//x,y are coordinates in simulation space - NOT cell indices
 		public float SampleField(float x, float y, SampleArray field)
 		{
 			float h = this.h;
@@ -434,7 +434,6 @@ namespace EulerianFluidSimulator
 			float dy = 0f;
 
 			//Which array do we want to sample
-			//Using f is confusing because its whats being used for FluidSim elsewhere... 
 			float[] f = null;
 
 			float h2 = 0.5f * h;
