@@ -165,7 +165,7 @@ namespace EulerianFluidSimulator
 
 
 
-            SampleCellWithMouse(scene);
+            //SampleCellWithMouse(scene);
         }
 
 

@@ -125,6 +125,7 @@ namespace EulerianFluidSimulator
 					{
 						float p = f.p[f.To1D(i, j)];
 
+						//Blue means low pressure and red is high pressure
 						color = GetSciColor(p, minMaxP.min, minMaxP.max);
 
 						//Color the smoke according to the scientific color scheme 
@@ -305,7 +306,7 @@ namespace EulerianFluidSimulator
 
 
 		//
-		// Show the circle obstacle
+		// Display the circle obstacle
 		//
 		private static void ShowObstacle(FluidScene scene)
 		{		
@@ -409,7 +410,6 @@ namespace EulerianFluidSimulator
 		//This color scheme is also called rainbow (jet) or hot-to-cold
 		//Similar to HSV color mode where we change the hue (except the purple part)
 		//Rainbow is a linear interpolation between (0,0,255) and (255,0,0) in RGB color space (ignoring the purple part which would loop the circle like in HSV)
-		//Blue means low pressure and red is high pressure
 		//https://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale
 		private static Vector4 GetSciColor(float val, float minVal, float maxVal)
 		{

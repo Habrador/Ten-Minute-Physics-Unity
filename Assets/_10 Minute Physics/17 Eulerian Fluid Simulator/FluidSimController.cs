@@ -8,12 +8,12 @@ using EulerianFluidSimulator;
 //Eulerian means we simulate the fluid in a grid - not by using particles (Lagrangian)
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
-//Known bugs from the original code:
-// - Integrate() is ignoring the last column in x
+//Known bugs from the original code (some have been fixed):
+// - Integrate() is ignoring the last column in x direction
 // - The wind tunnel in-velocities are set to zero if we move the obstacle across the first columns because how the move obstacle method works
-// - In extrapolate we should detect if it's an obstacle
-// - In "paint" is not reaching within 2 cells on the right and top side
-// - When we deactivate both pressure and smoke, we want to display the obstacles/walls as black and the fluid as white. In the source code there was a bug where everything turned black even though (at least I think based on the source code) that only the walls should be black
+// - In Extrapolate() we should detect if it's an obstacle, so now we copy velocities into obstacles. The result is the same but can be confusing
+// - In "paint" the smoke is not reaching within 2 cells on the right and top side
+// - When we deactivate both pressure and smoke, we want to display the obstacles/walls as black and the fluid as white. In the source code there was a bug where everything turned black even though (at least I think so based on the source code) that only the walls should be black
 public class FluidSimController : MonoBehaviour
 {
     //Public
