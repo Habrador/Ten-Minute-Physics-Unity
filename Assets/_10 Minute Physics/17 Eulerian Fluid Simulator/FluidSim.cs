@@ -4,8 +4,8 @@ using UnityEngine;
 
 //Fluid Simulation in 200 lines of code (excluding comments)
 //The state of a fluid at a given instant of time is modeled as a velocity vector field. The Navier-Stokes equations describe the evolution of this velocity field over time.  
-// - Walls - The velocity from a wall/obstacle is zero unless we add wind from a turbine or move the wall/obstacle
-// - Border cell - The velocities in border cells are treated as if they are connected to some infinite big fluid in the normal direction
+// - Walls - The velocity from a wall/obstacle is zero unless we add wind from a turbine or drag the obstacle with mouse
+// - Border cell - The velocities in border cells are treated as if they are connected to some infinite big fluid in the normal direction. In the tangential direction, the velocity is copied from the closest cell
 //To figure out what's going on I used the following sources:
 //- The book "Fluid Simulation for Computer Graphics" by Robert Bridson is explaining good what's going on
 //- The fluid simulations by Jos Stam: "Real-Time Fluid Dynamics for Games" and "GPU Gems: Fast Fluid Dynamics Simulation on the GPU"
@@ -22,8 +22,7 @@ namespace EulerianFluidSimulator
 		//Simulation grid settings
 		public int numX;
 		public int numY;
-		public int numCells;
-		//Cell height
+		//Cell height and width
 		public float h;
 
 		//Simulation data structures
@@ -81,21 +80,23 @@ namespace EulerianFluidSimulator
 			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
 			this.numX = numX + 2; 
 			this.numY = numY + 2;
-			this.numCells = this.numX * this.numY;
 			this.h = h;
-		
-			this.u = new float[this.numCells];
-			this.v = new float[this.numCells];
-			this.uNew = new float[this.numCells];
-			this.vNew = new float[this.numCells];
 
-			this.p = new float[this.numCells];
+			int numCells = this.numX * this.numY;
+
+			this.u = new float[numCells];
+			this.v = new float[numCells];
+			this.uNew = new float[numCells];
+			this.vNew = new float[numCells];
+
+			this.p = new float[numCells];
 			//Will init all cells as walls (0)
-			this.s = new float[this.numCells];
+			this.s = new float[numCells];
 
-			this.m = new float[this.numCells];
-			this.mNew = new float[this.numCells];
+			this.m = new float[numCells];
+			this.mNew = new float[numCells];
 
+			//Init all smoke densities as 0 = no smoke
 			System.Array.Fill(this.m, 1f);
 		}
 
@@ -506,7 +507,7 @@ namespace EulerianFluidSimulator
 			float minP = p[0];
 			float maxP = p[0];
 
-			for (int i = 0; i < numCells; i++)
+			for (int i = 0; i < p.Length; i++)
 			{
 				minP = Mathf.Min(minP, p[i]);
 				maxP = Mathf.Max(maxP, p[i]);
