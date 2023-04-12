@@ -90,6 +90,7 @@ namespace EulerianFluidSimulator
 			this.vNew = new float[this.numCells];
 
 			this.p = new float[this.numCells];
+			//Will init all cells as walls (0)
 			this.s = new float[this.numCells];
 
 			this.m = new float[this.numCells];

@@ -9,12 +9,10 @@ using EulerianFluidSimulator;
 //Can simulate both liquids and gas. But we will always use water density because we only measure the pressure distribution in the water tank. Density is only affecting the pressure calculations - not the velocity field, so it doesn't matter
 //Assume incompressible fluid with zero viscosity (inviscid) which are good approximations for water and gas
 //Known bugs from the original code:
-// - Why Integrate() is ignoring the last column in x
-// - The solid wall in the wind tunnel is removed if we move the obstacle across it because how the move obstacle method works. The smoke also stops
+// - Integrate() is ignoring the last column in x
+// - The wind tunnel in-velocities are set to zero if we move the obstacle across the first columns because how the move obstacle method works
 // - In extrapolate we should detect if it's an obstacle
-// - In "paint" is not reaching within 2 cells on the right and top side. It't like that in the demo as well
-//To figure out:
-// - Why is there a solid wall in "paint" when we dont add a wall during setup?
+// - In "paint" is not reaching within 2 cells on the right and top side
 public class FluidSimController : MonoBehaviour
 {
     //Public
@@ -213,8 +211,11 @@ public class FluidSimController : MonoBehaviour
                 float s = 1f;
 
                 //Left wall, bottom wall, top wall
-                //No right wall because we need some outflow
                 if (i == 0 || j == 0 || j == f.numY - 1)
+                //No right wall because we need some outflow
+                //if (i == 0 || j == 0 || j == f.numY - 1 || i == f.numX - 1)
+                //Left wall
+                //if (i == 0)
                 {
                     //0 means solid
                     s = 0f;
@@ -276,6 +277,8 @@ public class FluidSimController : MonoBehaviour
     //
     private void SetupPaint()
     {
+        //We don't need do add a wall border because it will be automatically generated in SetObstacle() when we drag the obstacle
+
         scene.gravity = 0f;
         scene.overRelaxation = 1f;
         scene.showPressure = false;
@@ -316,6 +319,9 @@ public class FluidSimController : MonoBehaviour
         FluidSim f = scene.fluid;
         
         //Ignore border
+        // - Will automatically create a solid border in the "paint" scene
+        // - Will keep the three solid borders and one open border in the "wind tunnel" and "tank" scenes
+        // - But it will override the wind tunnel in-velocities if we place the obstacle on the border where those in-velocities are added 
         for (int i = 1; i < f.numX - 2; i++)
         {
             for (int j = 1; j < f.numY - 2; j++)
