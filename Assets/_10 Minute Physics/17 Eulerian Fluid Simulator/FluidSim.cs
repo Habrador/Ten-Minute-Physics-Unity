@@ -146,9 +146,9 @@ namespace EulerianFluidSimulator
 		private void Integrate(float dt, float gravity)
 		{
 			//TODO: Ignore the border except for x on right side??? Might be a bug and should be numX - 1
-			for (int i = 1; i < numX - 1; i++)
+			for (int i = 1; i < this.numX - 1; i++)
 			{
-				for (int j = 1; j < numY - 1; j++)
+				for (int j = 1; j < this.numY - 1; j++)
 				{
 					//If this cell is not an obstacle and cell below is not an obstacle
 					if (s[To1D(i, j)] != 0f && s[To1D(i, j - 1)] != 0f)
@@ -190,9 +190,9 @@ namespace EulerianFluidSimulator
 			for (int iter = 0; iter < numIters; iter++)
 			{
 				//For each cell except the border
-				for (int i = 1; i < numX - 1; i++)
+				for (int i = 1; i < this.numX - 1; i++)
 				{
-					for (int j = 1; j < numY - 1; j++)
+					for (int j = 1; j < this.numY - 1; j++)
 					{
 						//Ignore this cell if its an obstacle
 						if (s[To1D(i, j)] == 0f)
@@ -297,7 +297,7 @@ namespace EulerianFluidSimulator
 			//The position of the velocity components are in the middle of the border of the cells
 			float h2 = 0.5f * h;
 
-			for (int i = 1; i < numX; i++)
+			for (int i = 1; i < this.numX; i++)
 			{
 				for (int j = 1; j < this.numY; j++)
 				{
@@ -371,7 +371,7 @@ namespace EulerianFluidSimulator
 			float h2 = 0.5f * h;
 
 			//For all cells except the border
-			for (int i = 1; i < numX - 1; i++)
+			for (int i = 1; i < this.numX - 1; i++)
 			{
 				for (int j = 1; j < this.numY - 1; j++)
 				{

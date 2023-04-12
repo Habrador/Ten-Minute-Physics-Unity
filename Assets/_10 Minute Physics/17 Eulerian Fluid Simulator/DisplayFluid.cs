@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//Display the fluid simulation on a texture
+
+
 namespace EulerianFluidSimulator
 {
-	//Display the fluid simulation on a texture
+	//Display the fluid simulation data on a texture
 	//Display streamlines and velocities with lines
 	//Display obstacles as mesh
 	public static class DisplayFluid
@@ -25,8 +26,7 @@ namespace EulerianFluidSimulator
 				scene.fluidMaterial.mainTexture = scene.fluidTexture;
 			}
 	
-			//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top (i.e. row after row)
-			//which fits how the fluid simulation arrays are set up
+			//The colors array is a flattened 2D array, where pixels are laid out left to right, bottom to top, which fits how the fluid simulation arrays are set up
 			//Color32 is 0->255 (byte)
 			//Color is 0->1 (float)
 			Color32[] colors = new Color32[8];
@@ -51,6 +51,7 @@ namespace EulerianFluidSimulator
 
 
 
+		//Called every Update
 		public static void Draw(FluidScene scene)
 		{
 			UpdateTexture(scene);
@@ -76,7 +77,7 @@ namespace EulerianFluidSimulator
 
 
 		//
-		// Show the fluid simulation on a texture
+		// Show the fluid simulation data on a texture
 		//
 		private static void UpdateTexture(FluidScene scene)
 		{
@@ -89,13 +90,13 @@ namespace EulerianFluidSimulator
 			{
 				fluidTexture = new(f.numX, f.numY);
 
-				//So the pixels dont blend
-				fluidTexture.filterMode = FilterMode.Point;
+				//Dont blend the pixels
+				//fluidTexture.filterMode = FilterMode.Point;
 
 				//Blend the pixels 
-				//fluidTexture.filterMode = FilterMode.Bilinear;
+				fluidTexture.filterMode = FilterMode.Bilinear;
 
-				//So the borders dont wrap with the border on the other side
+				//Don't wrap the border with the border on the opposite side of the texture
 				fluidTexture.wrapMode = TextureWrapMode.Clamp;
 
 				scene.fluidMaterial.mainTexture = fluidTexture;
