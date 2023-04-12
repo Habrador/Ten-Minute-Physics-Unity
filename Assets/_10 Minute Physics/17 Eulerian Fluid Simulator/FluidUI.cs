@@ -189,7 +189,16 @@ namespace EulerianFluidSimulator
                 float s = f.s[f.To1D(x, y)]; //solid (0) or fluid (1)
                 float m = f.m[f.To1D(x, y)]; //smoke density
 
-                Debug.Log($"u: {velU}, v: {velV}, p: {p}, s: {s}, m: {m}");
+                int decimals = 3;
+
+                velU = (float)System.Math.Round((decimal)velU, decimals);
+                velV = (float)System.Math.Round((decimal)velV, decimals);
+                p = (float)System.Math.Round((decimal)p, decimals);
+                m = (float)System.Math.Round((decimal)m, decimals);
+
+                bool isSolid = (s == 0f);
+
+                Debug.Log($"u: {velU}, v: {velV}, p: {p}, s: {isSolid}, m: {m}");
             }
         }
 
