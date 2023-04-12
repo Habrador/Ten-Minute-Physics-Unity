@@ -76,7 +76,6 @@ namespace EulerianFluidSimulator
 			//Add 2 extra cells because we need a border, or are we adding two u's on each side???
 			//Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
 			//He says border cells in the video
-			//Why are we adding 2 cells anyway, it makes it confusing because the height of the simulation changes...
 			this.numX = numX + 2; 
 			this.numY = numY + 2;
 			this.h = h;
@@ -89,13 +88,13 @@ namespace EulerianFluidSimulator
 			this.vNew = new float[numCells];
 
 			this.p = new float[numCells];
-			//Will init all cells as walls (0)
+			//Will init all cells to walls (0)
 			this.s = new float[numCells];
 
 			this.m = new float[numCells];
 			this.mNew = new float[numCells];
 
-			//Init all smoke densities as 0 = no smoke
+			//Init all smoke densities to 0 = no smoke
 			System.Array.Fill(this.m, 1f);
 		}
 
@@ -104,13 +103,14 @@ namespace EulerianFluidSimulator
 		//Simulation loop for the fluid
 		public void Simulate(float dt, float gravity, int numIters, float overRelaxation)
 		{
-			//Modify velocity values (add exteral forces like gravity or a fan blowing)
+			//Modify velocity values
+			//Add external forces like gravity or a fan blowing. But we will only add gravity (if needed) and we will add the fan in the wind tunnel by adding a velocity to a wall
 			//This is the F term in Navier-Stokes
 			Integrate(dt, gravity);
 
 			//Make the fluid incompressible (projection)
-			//This is the conservation of mass term in Navier-Stokes: nabla u = 0
-			//Here we also calculate pressure - the pressure term in Navier-Stokes
+			//This is the conservation of mass term in Navier-Stokes
+			//Here we also calculate pressure - the pressure term in Navier-Stokes - because the pressure is whatever pressure was needed to make the fluid incompressible
 			//This one is the bottleneck
 			SolveIncompressibility(numIters, dt, overRelaxation);
 
@@ -126,18 +126,11 @@ namespace EulerianFluidSimulator
 			AdvectVel(dt);
 
 			//Move the smoke along the velocity field
-			//Perfume propagates both because it's carried along with the fluidlike air and because it diffuses. But we don't need to add diffusion to the smoke because numerical error in the advection term (we are using averages) causes it to diffuse anyway. 
-			//Light objects, like smoke particles, are just carried along with the velocity field. But moving particles is expensive, so they are replaced with a smoke density at each cell. 
+			//Smoke propagates both because it's carried along with the fluid and because it diffuses. The smoke diffuses anyway because numerical error in the advection term (we are using averages)
 			AdvectSmoke(dt);
 
-			//Diffusion - the viscosity term in Navier-Stokes
-			//Diffusion for temperatures and perfume particles tend to redistribute their properties over time. It's the same with the fluid's velocity. 
-			//Is not needed here because we dont take viscocity into account (yet). Higher viscocity means the fluid will come to rest faster (honey). Viscocity is a how resistive a fluid is to flow = an internal friction from layers of fluids interacting with each other. The resistance results in diffusion of momentum which becomes distributed throughout the fluid. The velocity is dissipated = slowed down.
-
-			//for (int j = 0; j < numY; j++)
-			//{
-			//	Debug.Log(u[To1D(numX - 1, j)]);
-   //         }
+			//Diffusion - the viscosity term in Navier-Stokes 
+			//We dont take viscocity into account (yet). But it's not a big problem because the water/air we simulate has low viscocity - and not honey. Also the fluid diffuses anyway because numerical error in the advection term (we are using averages)
 		}
 
 
