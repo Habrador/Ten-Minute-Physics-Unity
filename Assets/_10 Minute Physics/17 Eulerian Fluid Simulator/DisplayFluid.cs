@@ -61,6 +61,8 @@ namespace EulerianFluidSimulator
 				ShowVelocities(scene);
 			}
 
+			//scene.showStreamlines = true;
+
 			if (scene.showStreamlines)
 			{
 				ShowStreamlines(scene);

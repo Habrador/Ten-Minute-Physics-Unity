@@ -77,6 +77,13 @@ Basic cloth simulation.
 <img src="/_media/14-cloth-simulation.gif" width="400">
 
 
+## 17. Write an Eulerian Fluid Simulator with 200 lines of code
+
+Spoiler: It's just the simulation part that's 200 lines of code. You need a few more lines of code to set it up, display it on screen, etc.
+
+<img src="/_media/10-fluid.gif">
+
+
 # Bonus
 
 Bonus implementations related to the code above.

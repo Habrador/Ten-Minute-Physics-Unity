@@ -80,7 +80,7 @@ public class FluidSimController : MonoBehaviour
 
     private void OnGUI()
     {
-        fluidUI.MyOnGUI(scene);
+        //fluidUI.MyOnGUI(scene);
     }
 
 
@@ -261,8 +261,8 @@ public class FluidSimController : MonoBehaviour
 
 
         scene.gravity = 0f; //Adding gravity will break the smoke
-        scene.showPressure = false;
-        scene.showSmoke = true;
+        scene.showPressure = true;
+        scene.showSmoke = false;
         scene.showStreamlines = false;
         scene.showVelocities = false;
 
