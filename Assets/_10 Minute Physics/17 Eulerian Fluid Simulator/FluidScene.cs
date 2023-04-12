@@ -13,7 +13,6 @@ namespace EulerianFluidSimulator
 
         //The tutorial is using an int: tank (0), wind tunnel (1), paint (2), highres wind tunnel (3)
         //public int sceneNr = 0;
-
         //...but an enum is less confusing!
         public enum SceneNr
         {
@@ -29,26 +28,26 @@ namespace EulerianFluidSimulator
         public bool showSmoke = true;
 
         //Simulation settings
-        //Is not in the tutorial but needs to be there to make Unity's toggles work
+        //Is not in the tutorial but needs to be there to make Unity's toggle work
         public bool useOverRelaxation = true;
 
         //Relaxation
         //https://www.sanfoundry.com/computational-fluid-dynamics-questions-answers-under-relaxation/
-        //Increase the convergence of the solution by changing the values of the variables during the iterative process.
-        //When the relaxation factor (coefficient) is > 1, the process is called over-relaxation. This will lead to a higher rate of convergence and leads to faster convergence. But the disadvantage is that stability will be decreased.
-        //If < 1 the stability will increase, but convergence will be slower   
+        //Use a relaxation factor (coefficient) to increase the convergence of the solution by changing the values of the variables during the iterative process.
+        // - Over-relaxation (coefficient > 1). Will lead to a higher rate of convergence and to a faster convergence. The disadvantage is that stability will decrease.
+        // - Under-relaxation (coefficient < 1). The stability will increase, but convergence will be slower   
         //Here we will use a coefficient in the range [1, 2]
         public float overRelaxation = 1.9f;
 
         //Get the time step
-        //Set this in a specific method because if we changed dt we also have to change Time.fixedDeltaTime
+        //Set this in a specific method because if we change dt we also have to change Time.fixedDeltaTime
         public float dt { get; private set; }
 
         //Need several iterations each update to make the fluid incompressible
         //Default is 40 and we set it in SetupScene
         public int numIters = 100;
 
-        //Is sometimes 0
+        //Is sometimes 0 
         public float gravity = -9.81f;
 
         //Is used in the "paint" scene to add smoke in some sinus curve, so we can paint with different colors
@@ -71,9 +70,10 @@ namespace EulerianFluidSimulator
         public float simPlaneWidth;
         public float simPlaneHeight;
 
-        //On which we display the fluid
+        //To which we attach the texture
         public Material fluidMaterial;
 
+        //The texture used to display fluid data 
         public Texture2D fluidTexture;
 
 
@@ -86,6 +86,7 @@ namespace EulerianFluidSimulator
         }
 
 
+
         //Set the time step
         //Default is 1/120=0.008 in the source code while Unity default is 1/50=0.02
         //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
@@ -95,6 +96,7 @@ namespace EulerianFluidSimulator
             this.dt = timeStep;
             Time.fixedDeltaTime = timeStep;
         }
+
 
 
         //Convert from world space to simulation space
@@ -159,7 +161,7 @@ namespace EulerianFluidSimulator
 
 
 
-        //Convert from simulation space to cell space
+        //Convert from simulation space to cell space = in which cell is a certain coordinate
         public Vector2Int SimToCell(float x, float y)
         {
             float cellSize = fluid.h;
