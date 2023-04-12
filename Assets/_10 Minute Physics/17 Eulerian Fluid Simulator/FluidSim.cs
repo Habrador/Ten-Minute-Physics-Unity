@@ -138,7 +138,7 @@ namespace EulerianFluidSimulator
 		//Modify velocity values from external forces like gravity
 		private void Integrate(float dt, float gravity)
 		{
-			//TODO: Ignore the border except for x on right side??? Might be a bug and should be numX - 1
+			//The source code ignored the border except for x on right side. Might be a bug and should be numX - 1 - not just numX
 			for (int i = 1; i < this.numX - 1; i++)
 			{
 				for (int j = 1; j < this.numY - 1; j++)
@@ -157,8 +157,7 @@ namespace EulerianFluidSimulator
 
 
 		//Make the fluid incompressible (fluid in = fluid out) by modifying the velocity values 
-		//Will also calculate pressure as a bonus
-		//When the method is done the fluid should be incompressible and we have the pressure that was needed to make the fluid incompressible
+		//Will also calculate pressure as a bonus because the pressure is the pressure that was needed to make the fluid incompressible
 		private void SolveIncompressibility(int numIters, float dt, float overRelaxation)
 		{
 			//Reset pressure
@@ -166,7 +165,7 @@ namespace EulerianFluidSimulator
 
 			//Pressure is whatever it takes to make the fluid incompressible and enforce the solid wall boundary conditions
 			//Particles in higher pressure regions are pushed towards lower pressure regions
-			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally,  summing up the total pressure needed to make the fluid incompressible 
+			//To calculate the total pressure needed to make the fluid incompressible we update it incrementally, summing up the total pressure needed to make the fluid incompressible 
 			//This is equation 14 in the paper "Fluid flow for the rest of us"
 			//p = p + (d/s) * ((rho * h) / dt)
 			//Where
@@ -176,7 +175,7 @@ namespace EulerianFluidSimulator
 			//h - cell size [m]
 			//dt - time step [s]
 
-			//To optimize the pressure calculations -> p = p + (d/s) * cp
+			//To optimize the pressure calculations -> p = p + (d/s) * cp we only need to calculate this once
 			float cp = density * h / dt;
 
 			//Gauss-Seidel relaxation
@@ -207,15 +206,14 @@ namespace EulerianFluidSimulator
 							continue;
 						}
 
-						//Divergence = total amount of fluid the leaves the cell 
+						//Divergence = total amount of fluid velocity the leaves the cell 
 						//- If it's positive we have too much outflow
 						//- If it's negative we have too much inflow
-						//- If it's zero the fluid is incompressible
+						//- If it's zero the fluid is incompressible = what we want
 						//if u[To1D(i + 1, j)] > 0 fluid leaves the cell
 						//if u[To1D(i, j)] > 0 fluid enters the cell, so should be negative because we calculate total outflow
 						//So total outflow flow in u-direction is u[To1D(i + 1, j)] - u[To1D(i, j)]
-						//Same idea applies to v-direction
-						//So if u[To1D(i, j)] = 2 and the rest is 0, then divergence = -2, meaning too much inflow 
+						//Same idea applies to v-direction 
 						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
 
 						//Why the minus sign?
@@ -224,16 +222,17 @@ namespace EulerianFluidSimulator
 						//- A negative divergence lowers internal pressure and increases inflow from neighboring cells. 
 						float divergence_Over_sTot = -divergence / sTot;
 
+						//Multiply by the overrelaxation coefficient to speed up the convergence of Gauss-Seidel relaxation 
 						divergence_Over_sTot *= overRelaxation;
 
 						//Calculate the pressure
-						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
+						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence by pretending that the divergence is greater than it actually is. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
 						p[To1D(i, j)] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
-						//If sx0 = 0 it means theres an obstacle to the left of this cell, meaning the velocity from that wall is fixed (can be 0, can have a velocity from a wind turbine, or can have a velocity from a moving obstacle) and we can't update it to fix the divergence. This means we can only modify the three other velocities  
-						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step. This make it more difficult to parallelize. If you need to parallelize use Jacobi
+						//If sx0 = 0 theres an obstacle to the left of this cell, meaning the velocity from that wall is a constant (can be 0, can have a velocity from a wind turbine, or can have a velocity from a moving obstacle) and we can't modify it to fix the divergence. This means we can only modify the three other velocities  
+						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step. This makes it more difficult to parallelize. If you need to parallelize use Jacobi
 						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
 						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
 						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
@@ -245,9 +244,10 @@ namespace EulerianFluidSimulator
 
 
 
-		//Fix the border velocities by copying neighbor values in the tangential direction
-		//In the normal direction we have an outflow boundary condition, so fluid can leave, which is useful when we have an inflow in wind tunnel 
-		//The velocities in the normal direction become whatever they need to be to make the fluid incompressible
+		//Fix the border velocities
+		//Copy neighbor values in the tangential direction
+		//In the normal direction we have an outflow boundary condition, so fluid can leave or enter, which is useful when we have an outflow from the wind tunnel 
+		//The velocities in the normal direction become whatever they need to be to make the fluid incompressible, so we don't touch them here
 		//Theres a bug in the original code where we don't check for wall, so we are currently setting a velocity in the wall, but it makes no difference but can be confusing when we sample the cell 
 		private void Extrapolate()
 		{
