@@ -286,7 +286,7 @@ namespace EulerianFluidSimulator
 
 						//Stop the line if we are outside of the simulation area
 						//The guy in the video is only checking x > f.GetWidth() for some reason...
-						if (x > f.GetWidth() || x < 0f || y > f.GetHeight() || y < 0f)
+						if (x > f.SimWidth || x < 0f || y > f.SimHeight || y < 0f)
 						{
 							break;
 						}

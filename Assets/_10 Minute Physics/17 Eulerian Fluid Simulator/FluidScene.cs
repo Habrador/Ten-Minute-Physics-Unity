@@ -119,8 +119,8 @@ namespace EulerianFluidSimulator
             //float simHeight = cellsY * h;
 
             //For actual simulation
-            float simWidth = fluid.GetWidth();
-            float simHeight = fluid.GetHeight();
+            float simWidth = fluid.SimWidth;
+            float simHeight = fluid.SimHeight;
 
             x *= simWidth / simPlaneWidth;
             y *= simHeight / simPlaneHeight;
@@ -145,8 +145,8 @@ namespace EulerianFluidSimulator
             //float simHeight = cellsY * h;
 
             //For actual simulation
-            float simWidth = fluid.GetWidth();
-            float simHeight = fluid.GetHeight();
+            float simWidth = fluid.SimWidth;
+            float simHeight = fluid.SimHeight;
 
             x /= simWidth / simPlaneWidth;
             y /= simHeight / simPlaneHeight;

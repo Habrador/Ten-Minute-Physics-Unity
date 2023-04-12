@@ -33,7 +33,6 @@ namespace EulerianFluidSimulator
 		//A staggered grid is improving the numerical results with less artificial dissipation  
 		//u component stored in the middle of the left vertical line of each cell
 		//v component stored in the middle of the bottom horizontal line of each cell
-		//This means we can't have a velocity vector because u,v are at different locations
 		public readonly float[] u; 
 		public readonly float[] v;
 		private readonly float[] uNew;
@@ -44,7 +43,7 @@ namespace EulerianFluidSimulator
 		//Should use float instead of bool because it makes some calculations simpler
 		public float[] s;
 		//Smoke density [0,1]: 0 means max smoke
-		//m short for mass? He calls it density field in the video
+		//m short for mass? It's called density field in the video
 		//Makes sense when we multiply smoke density with 255 to get a color because 0 * 255 = 0 -> black color
 		public readonly float[] m;
 		private readonly float[] mNew;
@@ -57,16 +56,16 @@ namespace EulerianFluidSimulator
 		//Convert between 2d and 1d array
 		//The conversion can cause great confusion, so we better do it in one place throughout all code
 		//Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
-		//Otherwise we get them column by column which is maybe how js prefers them when displaying...
+		//Otherwise we get them column by column which is maybe how js prefers them when displaying???
 		//https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
 		public int To1D(int i, int j) => i + (numX * j);
 
 		//These are not the same as the height we set at start because of the two border cells
-		public float GetWidth() => numX * h;
-		public float GetHeight() => numY * h;
+		public float SimWidth => numX * h;
+		public float SimHeight => numY * h;
 
 		//Is a coordinate within the simulation area?
-		public bool IsWithinArea(float x, float y) => (x > 0 && x < GetWidth() && y > 0 && y < GetHeight());
+		public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
 
 
 
