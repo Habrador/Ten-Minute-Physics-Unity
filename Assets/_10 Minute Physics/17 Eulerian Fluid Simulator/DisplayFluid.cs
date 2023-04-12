@@ -132,29 +132,29 @@ namespace EulerianFluidSimulator
 						//Everything that's smoke shows the pressure field
 						if (scene.showSmoke)
 						{
-							//Smoke, which is confusing because s is solid in FluidSim
-							//s = 0 means max smoke
-							float s = f.m[f.To1D(i, j)];
+							//How much smoke in this cell?
+							float smoke = f.m[f.To1D(i, j)];
 
-							color[0] = Mathf.Max(0f, color[0] - 255 * s);
-							color[1] = Mathf.Max(0f, color[1] - 255 * s);
-							color[2] = Mathf.Max(0f, color[2] - 255 * s);
+							//smoke = 0 means max smoke, so will be 0 if no smoke in the cell (smoke = 1)
+							color[0] = Mathf.Max(0f, color[0] - 255 * smoke);
+							color[1] = Mathf.Max(0f, color[1] - 255 * smoke);
+							color[2] = Mathf.Max(0f, color[2] - 255 * smoke);
 						}
 					}
 					else if (scene.showSmoke)
 					{
-						//Smoke, which is confusing because s is solid in FluidSim
-						float s = f.m[f.To1D(i, j)];
+						//How much smoke in this cell?
+						float smoke = f.m[f.To1D(i, j)];
 
-						//s = 0 means max smoke, and 255 * 0 = 0 -> black 
-						color[0] = 255 * s;
-						color[1] = 255 * s;
-						color[2] = 255 * s;
+						//smoke = 0 means max smoke, and 255 * 0 = 0 -> black 
+						color[0] = 255 * smoke;
+						color[1] = 255 * smoke;
+						color[2] = 255 * smoke;
 
 						//In the paint scene we color the smoke according to the scientific color scheme
 						if (scene.sceneNr == FluidScene.SceneNr.Paint)
 						{
-							color = GetSciColor(s, 0f, 1f);
+							color = GetSciColor(smoke, 0f, 1f);
 						}
 					}
 					//If both pressure and smoke are deactivated, then display obstacles as black, the rest as white
@@ -177,6 +177,7 @@ namespace EulerianFluidSimulator
 			//Add all colors to the texture
 			fluidTexture.SetPixels32(textureColors);
 
+			//Copies changes you've made in a CPU texture to the GPU
 			fluidTexture.Apply();
 		}
 	
@@ -197,6 +198,7 @@ namespace EulerianFluidSimulator
 
 			List<Vector3> linesToDisplay = new ();
 
+			//So the lines are drawn infront of the simulation plane
 			float z = -0.01f;
 
 			for (int i = 0; i < f.numX; i++)
@@ -245,8 +247,6 @@ namespace EulerianFluidSimulator
 		{		
 			FluidSim f = scene.fluid;
 
-			//The length of a single segment in simulation space
-			//float segLen = f.h * 0.2f;
 			//How many segments per streamline?
 			int numSegs = 15;
 
@@ -278,15 +278,8 @@ namespace EulerianFluidSimulator
 						//The velocity at the current coordinate
 						float u = f.SampleField(x, y, FluidSim.SampleArray.uField);
 						float v = f.SampleField(x, y, FluidSim.SampleArray.vField);
-
-						//Debug.Log(u);
-
-						//float l = Mathf.Sqrt(u * u + v * v);
 						
-						// x += u/l * segLen;
-						// y += v/l * segLen;
-						
-						//Move in the direction of the velocity
+						//Move a small step in the direction of the velocity
 						x += u * 0.01f;
 						y += v * 0.01f;
 
@@ -321,9 +314,10 @@ namespace EulerianFluidSimulator
 			//Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
 			float r = scene.obstacleRadius + f.h;
 			
+			//The color of the circle
 			DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
 
-			//Black like the bg 
+			//Black like the bg to make it look nicer
 			if (scene.showPressure)
 			{
 				color = DisplayShapes.ColorOptions.Black;
@@ -412,7 +406,7 @@ namespace EulerianFluidSimulator
 		//
 
 		//Get a color from a color gradient which is colored according to the scientific color scheme
-		//The color scheme is also called rainbow (jet) or hot-to-cold
+		//This color scheme is also called rainbow (jet) or hot-to-cold
 		//Similar to HSV color mode where we change the hue (except the purple part)
 		//Rainbow is a linear interpolation between (0,0,255) and (255,0,0) in RGB color space (ignoring the purple part which would loop the circle like in HSV)
 		//Blue means low pressure and red is high pressure
