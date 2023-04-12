@@ -200,9 +200,9 @@ namespace EulerianFluidSimulator
                 p = (float)System.Math.Round((decimal)p, decimals);
                 m = (float)System.Math.Round((decimal)m, decimals);
 
-                bool isSolid = (s == 0f);
+                //bool isSolid = (s == 0f);
 
-                Debug.Log($"u: {velU}, v: {velV}, p: {p}, s: {isSolid}, m: {m}");
+                Debug.Log($"u: {velU}, v: {velV}, p: {p}, s: {s}, m: {m}");
             }
         }
 

@@ -102,21 +102,25 @@ namespace EulerianFluidSimulator
 				scene.fluidMaterial.mainTexture = fluidTexture;
 			}
 
-			Color32[] textureColors = new Color32[f.numX * f.numY];
 
+			//The texture colors
+			Color32[] textureColors = new Color32[f.numX * f.numY];
 
 			//Find min and max pressure
 			MinMax minMaxP = f.GetMinMaxPressure();
 
 			//Find the colors
-			//Better to use array instead of Color32 to avoid confusion when converting between float, byte, int, etc
-			//And it also matches the original code better
-			Vector4 color = new (255, 255, 255, 255); 
+			//This was an array in the source, but we can treat the Vector4 as an array to make the code match
+			//Vector4 color = new (255, 255, 255, 255);
 
 			for (int i = 0; i < f.numX; i++)
 			{
 				for (int j = 0; j < f.numY; j++)
 				{
+					//This was an array in the source, but we can treat the Vector4 as an array to make the code match
+					//Moved to here from before the loop so it resets every time so we can display the walls if we deactivate both pressure and smoke
+					Vector4 color = new(255, 255, 255, 255);
+
 					if (scene.showPressure)
 					{
 						float p = f.p[f.To1D(i, j)];
@@ -139,7 +143,7 @@ namespace EulerianFluidSimulator
 					}
 					else if (scene.showSmoke)
 					{
-						//Not sure why hes using s in stead of m because s means obstacle in the simulation part
+						//Smoke, which is confusing because s is solid in FluidSim
 						float s = f.m[f.To1D(i, j)];
 
 						//s = 0 means max smoke, and 255 * 0 = 0 -> black 
@@ -147,29 +151,29 @@ namespace EulerianFluidSimulator
 						color[1] = 255 * s;
 						color[2] = 255 * s;
 
-						//In the paint scene we color the smoke 
+						//In the paint scene we color the smoke according to the scientific color scheme
 						if (scene.sceneNr == FluidScene.SceneNr.Paint)
 						{
 							color = GetSciColor(s, 0f, 1f);
 						}
 					}
-					//If both pressure and smoke are deactivated, then paint everything black
-					//The obstacle itself will be painted later
+					//If both pressure and smoke are deactivated, then display obstacles as black, the rest as white
+					//There was a bug in the source code where everything turned back, but "f.s[f.To1D(i, j)] == 0f" should mean only walls should be black
 					else if (f.s[f.To1D(i, j)] == 0f)
-					{
-						color[0] = 0;
-						color[1] = 0;
+                    {
+                        color[0] = 0;
+                        color[1] = 0;
 						color[2] = 0;
-					}
+                    }
 
-					//Add the color to this pixel
-					//Color32 is 0-255
-					Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
+                    //Add the color to this pixel
+                    //Color32 is 0-255
+                    Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
 
 					textureColors[f.To1D(i, j)] = pixelColor;
 				}
 			}
-
+			
 			//Add all colors to the texture
 			fluidTexture.SetPixels32(textureColors);
 
