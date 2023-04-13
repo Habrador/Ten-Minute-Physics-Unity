@@ -200,10 +200,10 @@ namespace EulerianFluidSimulator
 							continue;
 						}
 
-						//Cache how many of the surrounding cells are obstacles 
+						//Cache how many of the surrounding cells are obstacles
+						float sBottom = s[indexBottom];
 						float sLeft = s[indexLeft];
 						float sRight = s[indexRight];
-						float sBottom = s[indexBottom];
 						float sTop = s[indexTop];
 
 						float sTot = sLeft + sRight + sBottom + sTop;
@@ -299,9 +299,9 @@ namespace EulerianFluidSimulator
 			//The position of the velocity components are in the middle of the border of the cells
 			float h2 = 0.5f * h;
 
-			for (int i = 1; i < this.numX; i++)
+			for (int j = 1; j < this.numY; j++)
 			{
-				for (int j = 1; j < this.numY; j++)
+				for (int i = 1; i < this.numX; i++)
 				{
 					//Update u component
 					//u is on the border between 2 cells, so neither of them can be an obstacle, because those velocities are constant and not allowed to be updated
@@ -368,9 +368,9 @@ namespace EulerianFluidSimulator
 			float h2 = 0.5f * this.h;
 
 			//For all cells except the border
-			for (int i = 1; i < this.numX - 1; i++)
+			for (int j = 1; j < this.numY - 1; j++)
 			{
-				for (int j = 1; j < this.numY - 1; j++)
+				for (int i = 1; i < this.numX - 1; i++)
 				{
 					//If this cell is not an obstacle
 					if (this.s[To1D(i, j)] != 0f)
