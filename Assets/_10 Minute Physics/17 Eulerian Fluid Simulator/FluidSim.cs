@@ -139,9 +139,9 @@ namespace EulerianFluidSimulator
 		private void Integrate(float dt, float gravity)
 		{
 			//The source code ignored the border except for x on right side. Might be a bug and should be numX - 1 - not just numX
-			for (int i = 1; i < this.numX - 1; i++)
+			for (int j = 1; j < this.numY - 1; j++)
 			{
-				for (int j = 1; j < this.numY - 1; j++)
+				for (int i = 1; i < this.numX - 1; i++)
 				{
 					//If this cell is not an obstacle and cell below is not an obstacle
 					if (s[To1D(i, j)] != 0f && s[To1D(i, j - 1)] != 0f)
@@ -194,15 +194,17 @@ namespace EulerianFluidSimulator
 						int indexBottom = To1D(i, j - 1);
 						int indexTop = To1D(i, j + 1);
 
+						//Cache how many of the surrounding cells are obstacles
+						float sBottom = s[indexBottom];
+						float sLeft = s[indexLeft];
+
 						//Ignore this cell if its an obstacle
+						//Having it here is best from a performance perspective
 						if (s[indexThis] == 0f)
 						{
 							continue;
 						}
 
-						//Cache how many of the surrounding cells are obstacles
-						float sBottom = s[indexBottom];
-						float sLeft = s[indexLeft];
 						float sRight = s[indexRight];
 						float sTop = s[indexTop];
 
