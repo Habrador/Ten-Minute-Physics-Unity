@@ -182,23 +182,31 @@ namespace EulerianFluidSimulator
 			for (int iter = 0; iter < numIters; iter++)
 			{
 				//For each cell except the border
-				for (int i = 1; i < this.numX - 1; i++)
+				//Looping j before i is faster
+				for (int j = 1; j < this.numY - 1; j++)
 				{
-					for (int j = 1; j < this.numY - 1; j++)
+					for (int i = 1; i < this.numX - 1; i++)
 					{
+						//Caching these is faster
+						int indexThis = To1D(i, j);
+						int indexLeft = To1D(i - 1, j);
+						int indexRight = To1D(i + 1, j);
+						int indexBottom = To1D(i, j - 1);
+						int indexTop = To1D(i, j + 1);
+
 						//Ignore this cell if its an obstacle
-						if (s[To1D(i, j)] == 0f)
+						if (s[indexThis] == 0f)
 						{
 							continue;
 						}
 
 						//Cache how many of the surrounding cells are obstacles 
-						float sx0 = s[To1D(i - 1, j)]; //Left
-						float sx1 = s[To1D(i + 1, j)]; //Right
-						float sy0 = s[To1D(i, j - 1)]; //Bottom
-						float sy1 = s[To1D(i, j + 1)]; //Top
+						float sLeft = s[indexLeft];
+						float sRight = s[indexRight];
+						float sBottom = s[indexBottom];
+						float sTop = s[indexTop];
 
-						float sTot = sx0 + sx1 + sy0 + sy1;
+						float sTot = sLeft + sRight + sBottom + sTop;
 
 						//Do nothing if all surrounding cells are obstacles
 						if (sTot == 0f)
@@ -214,7 +222,7 @@ namespace EulerianFluidSimulator
 						//if u[To1D(i, j)] > 0 fluid enters the cell, so should be negative because we calculate total outflow
 						//So total outflow flow in u-direction is u[To1D(i + 1, j)] - u[To1D(i, j)]
 						//Same idea applies to v-direction 
-						float divergence = u[To1D(i + 1, j)] - u[To1D(i, j)] + v[To1D(i, j + 1)] - v[To1D(i, j)];
+						float divergence = u[indexRight] - u[indexThis] + v[indexTop] - v[indexThis];
 
 						//Why the minus sign?
 						//From "Realistic Animation of Liquids:"
@@ -227,16 +235,16 @@ namespace EulerianFluidSimulator
 
 						//Calculate the pressure
 						//Should overRelaxation be included in the pressure calculations? Relaxation is used to speed up convergence by pretending that the divergence is greater than it actually is. Because we multiply relaxation with the divergence we get a larger divergence and thus larger pressure 
-						p[To1D(i, j)] += cp * divergence_Over_sTot;
+						p[indexThis] += cp * divergence_Over_sTot;
 
 						//Update velocities to ensure incompressibility
 						//Signs are flipped compared to video because of the -divergence
 						//If sx0 = 0 theres an obstacle to the left of this cell, meaning the velocity from that wall is a constant (can be 0, can have a velocity from a wind turbine, or can have a velocity from a moving obstacle) and we can't modify it to fix the divergence. This means we can only modify the three other velocities  
 						//Why are we using u,v instead of uNew and vNew? From "Real time simulation and control of Newtonian fluids...": The convergence rate of the iterations [when using Gauss-Seidel] can be improved by using the newly computed values directly in the same iteration instead of saving them to the next iteration step. This makes it more difficult to parallelize. If you need to parallelize use Jacobi
-						u[To1D(i, j)] -= sx0 * divergence_Over_sTot;
-						u[To1D(i + 1, j)] += sx1 * divergence_Over_sTot;
-						v[To1D(i, j)] -= sy0 * divergence_Over_sTot;
-						v[To1D(i, j + 1)] += sy1 * divergence_Over_sTot;
+						u[indexThis] -= sLeft * divergence_Over_sTot;
+						u[indexRight] += sRight * divergence_Over_sTot;
+						v[indexThis] -= sBottom * divergence_Over_sTot;
+						v[indexTop] += sTop * divergence_Over_sTot;
 					}
 				}
 			}
