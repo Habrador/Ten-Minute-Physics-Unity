@@ -81,7 +81,7 @@ Basic cloth simulation.
 
 Spoiler: It's just the simulation part that's 200 lines of code. You need a few more lines of code to set it up, display it on screen, etc.
 
-<img src="/_media/10-fluid.gif">
+[![Link to youtube video fluid simulation](https://img.youtube.com/vi/6Jw1CsTOkDg/0.jpg)](https://www.youtube.com/watch?v=6Jw1CsTOkDg)
 
 
 # Bonus
