@@ -102,6 +102,8 @@ namespace EulerianFluidSimulator
 				fluidTexture.wrapMode = TextureWrapMode.Clamp;
 
 				scene.fluidMaterial.mainTexture = fluidTexture;
+				
+				scene.fluidTexture = fluidTexture;
 			}
 
 
@@ -181,7 +183,7 @@ namespace EulerianFluidSimulator
 			fluidTexture.SetPixels32(textureColors);
 
 			//Copies changes you've made in a CPU texture to the GPU
-			fluidTexture.Apply();
+			fluidTexture.Apply(false);
 		}
 	
 
