@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.unity.ide.visualstudio": "2.0.17",
+    "com.unity.ide.visualstudio": "2.0.18",
     "com.unity.recorder": "3.0.3",
     "com.unity.render-pipelines.universal": "12.1.10",
     "com.unity.textmeshpro": "3.0.6",
