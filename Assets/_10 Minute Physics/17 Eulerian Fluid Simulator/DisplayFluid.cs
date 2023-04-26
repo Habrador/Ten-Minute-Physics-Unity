@@ -501,7 +501,7 @@ namespace EulerianFluidSimulator
 				b = 0f;
 			}
 
-			Vector4 color = new((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), 255);
+			Vector4 color = new(r * 255, g * 255, b * 255, 255);
 
 			return color;
 		}
