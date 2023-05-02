@@ -445,6 +445,7 @@ namespace EulerianFluidSimulator
 		// C: (x0, y1)
 		// D: (x1, y1)
 		// P: (xp, yp)
+		//
 		//We need to do 3 linear interpolations to find P:
 		// P_AB = (1 - tx) * A + tx * B
 		// P_CD = (1 - tx) * C + tx * D
@@ -455,12 +456,20 @@ namespace EulerianFluidSimulator
 		//Insert P_AB and P_CD into P and we get: 
 		// P = (1 - ty) * [(1 - tx) * A + tx * B] + ty * [(1 - tx) * C + tx * D] 
 		// P = (1 - tx) * (1 - ty) * A + tx * (1 - ty) * B + (1 - tx) * ty * C + tx * ty * D
+		//
 		// In the video, Matthias says that:
 		// w_01 = tx = x / h = deltaX / h
 		// w_11 = ty = y / h = deltaY / h
 		// w_00 = 1 - tx
 		// w_10 = 1 - ty
 		// P = w_00 * w_10 * A + w_01 * w_10 * B + w_00 * w_11 * C + w_01 * w_11 * D, which matches what we have above
+		//
+		//In simple code (which is slightly slower than the above because we do some calculations multiple times but easy to understand):
+		//float tx = math.unlerp(x0, x1, xp); //Similar to Mathf.InverseLerp()
+		//float ty = math.unlerp(y0, y1, yp);
+		//float P_AB = math.lerp(A, B, tx); //Similar to Mathf.Lerp()
+		//float P_CD = math.lerp(C, D, tx);
+		//float P = math.lerp(P_AB, P_CD, ty);
 
 		public float SampleField(float xp_pos, float yp_pos, SampleArray field)
 		{
