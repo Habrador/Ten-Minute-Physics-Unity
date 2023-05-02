@@ -14,7 +14,9 @@ using EulerianFluidSimulator;
 // - The wind tunnel in-velocities are set to zero if we move the obstacle across the first columns because how the move obstacle method works
 // - In Extrapolate() we should detect if it's an obstacle, so now we copy velocities into obstacles. The result is the same but can be confusing
 // - In "paint" the smoke is not reaching within 2 cells on the right and top side
-// - When we deactivate both pressure and smoke, we want to display the obstacles/walls as black and the fluid as white. In the source code there was a bug where everything turned black even though (at least I think so based on the source code) that only the walls should be black
+// - When we deactivate both pressure and smoke, we want to display the obstacles/walls as black and the fluid as white. In the source code there was a bug where everything turned black even though (at least I think so based on the source code) that only the walls should be black. This was fixed in my code
+// - The SampeField method has a bug in it where if we try to sample from the bottom row we interpolate from the from values. This was fixed in my code
+
 public class FluidSimController : MonoBehaviour
 {
     //Public

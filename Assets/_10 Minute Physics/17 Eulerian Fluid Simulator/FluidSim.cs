@@ -430,74 +430,132 @@ namespace EulerianFluidSimulator
 
 
 		//Get data (u, v, smoke density) from the simulation at coordinate x,y
-		//x,y are coordinates in simulation space - NOT cell indices
-		public float SampleField(float x, float y, SampleArray field)
+		//Input is coordinates in simulation space - NOT cell indices
+
+		//Derivation of how to find the linear interpolation of P by using A, B, C, D and their respective coordinates
+		//This is a square with side length h (I did my best)
+		// C-----D
+		// |     |
+		// |___P |
+		// |   | |
+		// A-----B
+		// The points have the coordinates
+		// A: (x0, y0)
+		// B: (x1, y0)
+		// C: (x0, y1)
+		// D: (x1, y1)
+		// P: (xp, yp)
+		//We need to do 3 linear interpolations to find P:
+		// P_AB = (1 - tx) * A + tx * B
+		// P_CD = (1 - tx) * C + tx * D
+		// P = (1 - ty) * P_AB + ty * P_CD
+		//t is a parameter in the range [0, 1]. If tx = 0 we get A or if tx = 1 we get B in the P_AB case
+		// tx = (xp - x0) / (x1 - x0) = (xp - x0) / h = deltaX / h
+		// ty = (yp - y0) / (y1 - y0) = (yp - y0) / h = deltaY / h
+		//Insert P_AB and P_CD into P and we get: 
+		// P = (1 - ty) * [(1 - tx) * A + tx * B] + ty * [(1 - tx) * C + tx * D] 
+		// P = (1 - tx) * (1 - ty) * A + tx * (1 - ty) * B + (1 - tx) * ty * C + tx * ty * D
+		// In the video, Matthias says that:
+		// w_01 = tx = x / h = deltaX / h
+		// w_11 = ty = y / h = deltaY / h
+		// w_00 = 1 - tx
+		// w_10 = 1 - ty
+		// P = w_00 * w_10 * A + w_01 * w_10 * B + w_00 * w_11 * C + w_01 * w_11 * D, which matches what we have above
+
+		public float SampleField(float xp_pos, float yp_pos, SampleArray field)
 		{
+			//Cellsize
 			float h = this.h;
+			//To simplify and speed up calculations
+			float halfH = 0.5f * h;
+			float oneOverH = 1f / h;
 
-			//Make sure x and y are within the simulation space 
-			//Why is minimum h and not 0.5 * h? Because later we do x - (0.5 * h) to calculate which cell we are in, so x has to be at least h or we end up to the left of the velocity to the left we want to interpolate from (if we interpolate v at least) 
-			x = Mathf.Max(Mathf.Min(x, numX * h), h); //this.numX * h = total width
-			y = Mathf.Max(Mathf.Min(y, this.numY * h), h); //this.numY * h = total height
 
-			float dx = 0f;
-			float dy = 0f;
+			//Make sure the sample point is within an area so we can interpolate between 4 points 
+			//- u is stored in the middle of the vertical cell lines
+			//- v is stored in the middle of the horizontal cell lines
+			//- smoke is stored in the center of each cell
+			float minXOffset, maxXOffset, minYOffset, maxYOffset;
 
-			//Which array do we want to sample
-			float[] f = null;
-
-			float h2 = 0.5f * h;
+			minXOffset = maxXOffset = minYOffset = maxYOffset = halfH;
 
 			switch (field)
 			{
-				case SampleArray.uField: f = this.u; dy = h2; break; //u is stored in the middle of the vertical cell lines
-				case SampleArray.vField: f = this.v; dx = h2; break; //v is stored in the middle of the horizontal cell lines
-				case SampleArray.smokeField: f = this.m; dx = h2; dy = h2; break; //Is stored in the center of each cell
+				case SampleArray.uField: minXOffset = 0f; maxXOffset = h; break;
+				case SampleArray.vField: minYOffset = 0f; maxYOffset = h; break;
 			}
 
-			if (f == null)
+			xp_pos = Mathf.Max(Mathf.Min(xp_pos, this.numX * h - maxXOffset), minXOffset);
+			yp_pos = Mathf.Max(Mathf.Min(yp_pos, this.numY * h - maxYOffset), minYOffset);
+
+
+
+			//Figure out which array indices to interpolate between
+			//To go from coordinate to cell we generally do: FloorToInt(pos / cellSize) on a non-staggered grid but here we have to compensate for the staggerness 
+			float dx = 0f;
+			float dy = 0f;
+
+			//Which array do we want to sample?
+			float[] f = null;
+
+			switch (field)
 			{
-				Debug.Log("Something is very wrong");
-
-				return -1f;
+				case SampleArray.uField: f = this.u; dy = halfH; break;
+				case SampleArray.vField: f = this.v; dx = halfH; break;
+				case SampleArray.smokeField: f = this.m; dx = halfH; dy = halfH; break;
 			}
 
-			//Which cell indices do we want to interpolate between?
-			float h1 = 1f / h;
+			int x0_index = Mathf.Min((int)Mathf.Floor((xp_pos - dx) * oneOverH), this.numX - 2);
+			int x1_index = x0_index + 1;
 
-			//To go from coordinate to cell we do: FloorToInt(pos / cellSize) 
-			//We've already made sure the cell index can't go below 0
-			int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), numX - 1);
-			int x1 = Mathf.Min(x0 + 1, numX - 1);
+			int y0_index = Mathf.Min((int)Mathf.Floor((yp_pos - dy) * oneOverH), this.numY - 2);
+			int y1_index = y0_index + 1;
 
-			int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * h1), this.numY - 1);
-			int y1 = Mathf.Min(y0 + 1, this.numY - 1);
 
-			//The weights used to interpolate between the 4 values
-			//This basically 3 lerps
-			//According to the video, the weights are:
-			//w_00 = 1 - x/h
-			//w_01 = x/h
-			//w_10 = 1 - y/h
-			//w_11 = y/h
-			float tx = ((x - dx) - x0 * h) * h1; //w_01
-			float ty = ((y - dy) - y0 * h) * h1; //w_11
+			//Calculate the deltas:
+			// C-----D
+			// |     |
+			// |___P |
+			// |   | |
+			// A-----B
+			//- delta x = the length of the horizontal line going to P
+			//- delta y = the length of the vertical line going to P
+			float x0_pos = x0_index * h + dx;
+			float y0_pos = y0_index * h + dy;
 
-			float sx = 1f - tx; //w_00
-			float sy = 1f - ty; //w_10
+			float deltaX = xp_pos - x0_pos;
+			float deltaY = yp_pos - y0_pos;
 
-			//v =
-			//	w_00 * w_10 * v_i,j +
-			//	w_01 * w_10 * v_i+1,j +
-			//	w_00 * w_11 * v_i,j+1 +
-			//	w_01 * w_11 * v_i+1,j+1
-			float val = 
-				sx * sy * f[To1D(x0, y0)] +
-				tx * sy * f[To1D(x1, y0)] +
-				tx * ty * f[To1D(x1, y1)] +
-				sx * ty * f[To1D(x0, y1)];
 
-			return val;
+			//The weights for the interpolation
+			float w_01 = deltaX * oneOverH;
+			float w_11 = deltaY * oneOverH;
+
+			float w_00 = 1f - w_01;
+			float w_10 = 1f - w_11;
+
+
+			//The values we want to interpolate from
+			// C-----D
+			// |     |
+			// |___P |
+			// |   | |
+			// A-----B
+			float A = f[To1D(x0_index, y0_index)];
+			float B = f[To1D(x1_index, y0_index)];
+			float C = f[To1D(x0_index, y1_index)];
+			float D = f[To1D(x1_index, y1_index)];
+
+
+			//The final interpolation
+			float interpolatedValue =
+				w_00 * w_10 * A +
+				w_01 * w_10 * B +
+				w_00 * w_11 * C +
+				w_01 * w_11 * D;
+
+
+			return interpolatedValue;
 		}
 
 
