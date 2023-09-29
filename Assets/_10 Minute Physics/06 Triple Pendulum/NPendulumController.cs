@@ -25,7 +25,7 @@ public class NPendulumController : MonoBehaviour
     private NPendulumSimulatorDouble pendulum;
 
     //How many pendulum sections?
-    private readonly int numberOfPendulumSections = 10;
+    private readonly int numberOfPendulumSections = 3;
 
     //The total length of the pendulum 
     private readonly float pendulumLength = 5.5f;
