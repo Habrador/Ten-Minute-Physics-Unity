@@ -7,7 +7,8 @@ using static UnityEditor.PlayerSettings;
 
 namespace HeightFieldWaterSim
 {
-    public class Ball
+    //Has to be called HFBall to avoid confusion 
+    public class HFBall
     {
         public Vector3 pos;
         public float radius;
@@ -21,7 +22,7 @@ namespace HeightFieldWaterSim
         private Transform visMesh;
 
 
-        public Ball(Vector3 pos, float radius, float density, UnityEngine.Color color)
+        public HFBall(Vector3 pos, float radius, float density, Material ballMaterial)
         {
             //Physics data 
 
@@ -44,7 +45,7 @@ namespace HeightFieldWaterSim
             */
         }
 
-        public void HandleCollision(Ball other)
+        public void HandleCollision(HFBall other)
         {
             Vector3 dir = other.pos - this.pos;
 
@@ -88,12 +89,12 @@ namespace HeightFieldWaterSim
             }
                
 
-            this.vel += PhysicsScene.gravity * PhysicsScene.dt;
+            this.vel += MyPhysicsScene.gravity * MyPhysicsScene.dt;
 
-            this.pos += this.vel * PhysicsScene.dt;
+            this.pos += this.vel * MyPhysicsScene.dt;
 
-            float wx = 0.5f * PhysicsScene.tankSize.x - this.radius - 0.5f * PhysicsScene.tankBorder;
-            float wz = 0.5f * PhysicsScene.tankSize.z - this.radius - 0.5f * PhysicsScene.tankBorder;
+            float wx = 0.5f * MyPhysicsScene.tankSize.x - this.radius - 0.5f * MyPhysicsScene.tankBorder;
+            float wz = 0.5f * MyPhysicsScene.tankSize.z - this.radius - 0.5f * MyPhysicsScene.tankBorder;
 
             if (this.pos.x < -wx)
             {
@@ -124,7 +125,7 @@ namespace HeightFieldWaterSim
 
         public void ApplyForce(float force)
         {
-            this.vel.y += PhysicsScene.dt * force / this.mass;
+            this.vel.y += MyPhysicsScene.dt * force / this.mass;
             
             this.vel *= 0.999f;
         }
@@ -138,13 +139,13 @@ namespace HeightFieldWaterSim
             this.visMesh.position = pos;
         }
 
-        public void moveGrabbed(Vector3 pos)
+        public void MoveGrabbed(Vector3 pos)
         {
             this.pos = pos;
             this.visMesh.position = pos;
         }
 
-        public void endGrab(Vector3 pos, Vector3 vel)
+        public void EndGrab(Vector3 pos, Vector3 vel)
         {
             this.grabbed = false;
             this.vel = vel;

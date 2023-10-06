@@ -183,6 +183,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abcfb6043180d624d981212e619825f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  waterMaterial: {fileID: 2100000, guid: ea3279109a6756d499d7ac9743d0cea0, type: 2}
+  ballMaterial: {fileID: 2100000, guid: d03af0d9045f5f34187db653928fb347, type: 2}
+  tankMaterial: {fileID: 2100000, guid: 3c5a25973ed6ad3418ed668f7b81d253, type: 2}
 --- !u!4 &399299983
 Transform:
   m_ObjectHideFlags: 0

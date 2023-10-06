@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace HeightFieldWaterSim
 {
-    public class Watersurface
+    public class WaterSurface
     {
         private float waveSpeed;
         private float posDamping;
@@ -26,8 +26,8 @@ namespace HeightFieldWaterSim
         private float[] velocities;
         
 
-
-        public Watersurface(float sizeX, float sizeZ, float depth, float spacing, Material visMaterial)
+        //visMaterial is the water material
+        public WaterSurface(float sizeX, float sizeZ, float depth, float spacing, Material visMaterial)
         {
             //Physics data
 
@@ -125,9 +125,9 @@ namespace HeightFieldWaterSim
             //Reset
             System.Array.Fill(this.bodyHeights, 0f);
 
-            for (int i = 0; i < PhysicsScene.objects.Length; i++)
+            for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
             {
-                Ball ball = PhysicsScene.objects[i];
+                HFBall ball = MyPhysicsScene.objects[i];
                 Vector3 pos = ball.pos;
                 float br = ball.radius;
                 float h2 = this.spacing * this.spacing;
@@ -159,7 +159,7 @@ namespace HeightFieldWaterSim
                             
                             if (bodyHeight > 0f)
                             {
-                                ball.ApplyForce(-bodyHeight * h2 * PhysicsScene.gravity.y);
+                                ball.ApplyForce(-bodyHeight * h2 * MyPhysicsScene.gravity.y);
                                 
                                 this.bodyHeights[xi * this.numZ + zi] += bodyHeight;
                             }
@@ -206,12 +206,12 @@ namespace HeightFieldWaterSim
 
         private void SimulateSurface()
         {
-            this.waveSpeed = Mathf.Min(this.waveSpeed, 0.5f * this.spacing / PhysicsScene.dt);
+            this.waveSpeed = Mathf.Min(this.waveSpeed, 0.5f * this.spacing / MyPhysicsScene.dt);
 
             float c = this.waveSpeed * this.waveSpeed / this.spacing / this.spacing;
 
-            float pd = Mathf.Min(this.posDamping * PhysicsScene.dt, 1f);
-            float vd = Mathf.Max(0f, 1f - this.velDamping * PhysicsScene.dt);
+            float pd = Mathf.Min(this.posDamping * MyPhysicsScene.dt, 1f);
+            float vd = Mathf.Max(0f, 1f - this.velDamping * MyPhysicsScene.dt);
 
             for (int i = 0; i < this.numX; i++)
             {
@@ -228,7 +228,7 @@ namespace HeightFieldWaterSim
                     sumH += j > 0 ? this.heights[id - 1] : h;
                     sumH += j < this.numZ - 1 ? this.heights[id + 1] : h;
 
-                    this.velocities[id] += PhysicsScene.dt * c * (sumH - 4f * h);
+                    this.velocities[id] += MyPhysicsScene.dt * c * (sumH - 4f * h);
 
                     //Positional damping
                     this.heights[id] += (0.25f * sumH - h) * pd;  
@@ -239,7 +239,7 @@ namespace HeightFieldWaterSim
             {
                 //Velocity damping
                 this.velocities[i] *= vd;       
-                this.heights[i] += this.velocities[i] * PhysicsScene.dt;
+                this.heights[i] += this.velocities[i] * MyPhysicsScene.dt;
             }
         }
 
@@ -247,7 +247,7 @@ namespace HeightFieldWaterSim
 
         public void Simulate()
         {
-            this.time += PhysicsScene.dt;
+            this.time += MyPhysicsScene.dt;
 
             SimulateCoupling();
 
