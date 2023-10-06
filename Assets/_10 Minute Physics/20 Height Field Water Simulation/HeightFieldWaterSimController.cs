@@ -13,7 +13,11 @@ public class HeightFieldWaterSimController : MonoBehaviour
     public Material ballMaterial;
     public Material tankMaterial;
 
+    //Parents to get a clean workspace
+    public Transform environmentParent;
+    public Transform ballsParent;
     
+
 
     private void Start()
     {
@@ -57,6 +61,11 @@ public class HeightFieldWaterSimController : MonoBehaviour
         GameObject wall3 = Instantiate(wall1);
         GameObject wall4 = Instantiate(wall1);
 
+        wall1.transform.parent = environmentParent;
+        wall2.transform.parent = environmentParent;
+        wall3.transform.parent = environmentParent;
+        wall4.transform.parent = environmentParent;
+
         Vector3 wallSide1Scale = new(b, wy, wz);
         Vector3 wallSide2Scale = new(wx, wy, b);
 
@@ -66,12 +75,13 @@ public class HeightFieldWaterSimController : MonoBehaviour
         wall3.transform.localScale = wallSide2Scale;
         wall4.transform.localScale = wallSide2Scale;
 
-        wall1.transform.position = new(-0.5f * wx, wy * 0.5f, 0.0f);
+        wall1.transform.position = new(-0.5f * wx, 0.5f * wy, 0.0f);
         wall2.transform.position = new(0.5f * wx, 0.5f * wy, 0.0f);
 
         wall3.transform.position = new(0.0f, 0.5f * wy, -wz * 0.5f);
         wall4.transform.position = new(0.0f, 0.5f * wy, wz * 0.5f);
 
+        //three.js is using the same coordinate system as Unity
         //var boxGeometry = new THREE.BoxGeometry(b, wy, wz);
         //      
         //box.position.set(-0.5 * wx, wy* 0.5, 0.0)      
@@ -88,7 +98,7 @@ public class HeightFieldWaterSimController : MonoBehaviour
         Vector3 b2_pos = new( 0.5f, 1.0f, -0.5f);
         Vector3 b3_pos = new( 0.5f, 1.0f,  0.5f);
 
-        Material b1_mat = new (ballMaterial);
+        Material b1_mat = new(ballMaterial);
         Material b2_mat = new(ballMaterial);
         Material b3_mat = new(ballMaterial);
 
@@ -96,9 +106,9 @@ public class HeightFieldWaterSimController : MonoBehaviour
         b2_mat.color = Color.blue;
         b3_mat.color = Color.red;
 
-        HFBall b1 = new(b1_pos, 0.20f, 2.0f, b1_mat);
-        HFBall b2 = new(b2_pos, 0.30f, 0.7f, b2_mat);
-        HFBall b3 = new(b3_pos, 0.25f, 0.2f, b3_mat);
+        HFBall b1 = new(b1_pos, 0.20f, 2.0f, b1_mat, ballsParent);
+        HFBall b2 = new(b2_pos, 0.30f, 0.7f, b2_mat, ballsParent);
+        HFBall b3 = new(b3_pos, 0.25f, 0.2f, b3_mat, ballsParent);
 
         MyPhysicsScene.objects.Add(b1);
         MyPhysicsScene.objects.Add(b2);

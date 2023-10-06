@@ -22,10 +22,10 @@ namespace HeightFieldWaterSim
         private Transform visMesh;
 
 
-        public HFBall(Vector3 pos, float radius, float density, Material ballMaterial)
+
+        public HFBall(Vector3 pos, float radius, float density, Material ballMaterial, Transform ballsParent)
         {
             //Physics data 
-
             this.pos = pos;
             this.radius = radius;
             this.mass = 4f * Mathf.PI / 3f * radius * radius * radius * density;
@@ -34,16 +34,20 @@ namespace HeightFieldWaterSim
             this.restitution = 0.1f;
 
             //Visual mesh
-            /*
-            let geometry = new THREE.SphereGeometry(radius, 32, 32);
-            let material = new THREE.MeshPhongMaterial({ color: color});
-            this.visMesh = new THREE.Mesh(geometry, material);
-		    this.visMesh.position.copy(pos);
-			this.visMesh.userData = this;		// for raycasting
-		    this.visMesh.layers.enable(1);
-            gThreeScene.add(this.visMesh);
-            */
+            GameObject newBall = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+
+            newBall.transform.parent = ballsParent;
+
+            newBall.transform.position = pos;
+
+            newBall.transform.localScale = Vector3.one * radius;
+
+            newBall.GetComponent<MeshRenderer>().material = ballMaterial;
+
+            this.visMesh = newBall.transform;
         }
+
+
 
         public void HandleCollision(HFBall other)
         {
