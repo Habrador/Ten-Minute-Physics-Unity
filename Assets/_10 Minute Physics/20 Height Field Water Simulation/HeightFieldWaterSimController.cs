@@ -7,6 +7,9 @@ using System.Linq.Expressions;
 
 
 //Simulate a swimming pool by using a height field water columns in a 2.5d grid
+//TODO
+//- The water mesh is currently intersecting with the wall
+//- The balls are not landing on the pool floor
 public class HeightFieldWaterSimController : MonoBehaviour
 {
     public Material waterMaterial;
@@ -38,6 +41,7 @@ public class HeightFieldWaterSimController : MonoBehaviour
     }
 
 
+
     private void Update()
     {
         if (MyPhysicsScene.isPaused)
@@ -59,7 +63,7 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
     private void InitScene()
     {
-        //Water surface
+        //Water surface which will also add the water mesh
         float wx = MyPhysicsScene.tankSize.x;
         float wy = MyPhysicsScene.tankSize.y;
         float wz = MyPhysicsScene.tankSize.z;
@@ -103,18 +107,7 @@ public class HeightFieldWaterSimController : MonoBehaviour
         wall2.transform.position = new(0.5f * wx, 0.5f * wy, 0.0f);
 
         wall3.transform.position = new(0.0f, 0.5f * wy, -wz * 0.5f);
-        wall4.transform.position = new(0.0f, 0.5f * wy, wz * 0.5f);
-
-        //three.js is using the same coordinate system as Unity
-        //var boxGeometry = new THREE.BoxGeometry(b, wy, wz);
-        //      
-        //box.position.set(-0.5 * wx, wy* 0.5, 0.0)      
-        //box.position.set(0.5 * wx, 0.5 * wy, 0.0)
-
-        //var boxGeometry = new THREE.BoxGeometry(wx, wy, b);
-        //     
-        //box.position.set(0.0, 0.5 * wy, - wz* 0.5)      
-        //box.position.set(0.0, 0.5 * wy, wz* 0.5)      
+        wall4.transform.position = new(0.0f, 0.5f * wy, wz * 0.5f);  
 
 
         //Balls
