@@ -9,8 +9,6 @@ namespace HeightFieldWaterSim
     {
 		public static Vector3 gravity = new(0f, -10f, 0f);
 
-        public static float dt = Time.fixedDeltaTime;
-
 		//Tank dimensions
         public static Vector3 tankSize = new(2.5f, 1.0f, 3.0f);
 		public static float tankBorder = 0.03f;

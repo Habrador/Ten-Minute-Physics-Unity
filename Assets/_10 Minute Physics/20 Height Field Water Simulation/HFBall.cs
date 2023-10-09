@@ -40,7 +40,8 @@ namespace HeightFieldWaterSim
 
             newBall.transform.position = pos;
 
-            newBall.transform.localScale = Vector3.one * radius;
+            //Unity scale is diameter
+            newBall.transform.localScale = 2f * radius * Vector3.one;
 
             newBall.GetComponent<MeshRenderer>().material = ballMaterial;
 
@@ -49,6 +50,7 @@ namespace HeightFieldWaterSim
 
 
 
+        //Collision with other balls
         public void HandleCollision(HFBall other)
         {
             Vector3 dir = other.pos - this.pos;
@@ -86,7 +88,7 @@ namespace HeightFieldWaterSim
 
 
 
-        public void Simulate()
+        public void Simulate(float dt)
         {
             if (this.grabbed)
             {
@@ -94,9 +96,9 @@ namespace HeightFieldWaterSim
             }
                
 
-            this.vel += MyPhysicsScene.gravity * MyPhysicsScene.dt;
+            this.vel += MyPhysicsScene.gravity * dt;
 
-            this.pos += this.vel * MyPhysicsScene.dt;
+            this.pos += this.vel * dt;
 
             float wx = 0.5f * MyPhysicsScene.tankSize.x - this.radius - 0.5f * MyPhysicsScene.tankBorder;
             float wz = 0.5f * MyPhysicsScene.tankSize.z - this.radius - 0.5f * MyPhysicsScene.tankBorder;
@@ -123,14 +125,13 @@ namespace HeightFieldWaterSim
             }
 
             this.visMesh.position = this.pos;
-            //this.visMesh.geometry.computeBoundingSphere();
         }
 
 
 
-        public void ApplyForce(float force)
+        public void ApplyForce(float force, float dt)
         {
-            this.vel.y += MyPhysicsScene.dt * force / this.mass;
+            this.vel.y += dt * force / this.mass;
             
             this.vel *= 0.999f;
         }

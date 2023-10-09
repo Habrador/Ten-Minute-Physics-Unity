@@ -9,7 +9,6 @@ using System.Linq.Expressions;
 //Simulate a swimming pool by using a height field water columns in a 2.5d grid
 //TODO
 //- The water mesh is currently intersecting with the wall
-//- The balls are not landing on the pool floor
 public class HeightFieldWaterSimController : MonoBehaviour
 {
     public Material waterMaterial;
@@ -24,11 +23,11 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
     private void Awake()
     {
-        float dt = Time.fixedDeltaTime;
+        //float dt = Time.fixedDeltaTime;
 
         //float dt = 1.0f / 30.0f;
 
-        MyPhysicsScene.dt = dt;    
+        //MyPhysicsScene.dt = dt;    
     }
 
 
@@ -148,13 +147,15 @@ public class HeightFieldWaterSimController : MonoBehaviour
             return;
         }
 
+        float dt = Time.fixedDeltaTime;
+
         //MyPhysicsScene.waterSurface.Simulate();
 
         for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
         {
             HFBall obj = MyPhysicsScene.objects[i];
 
-            obj.Simulate();
+            obj.Simulate(dt);
             
             for (int j = 0; j < i; j++)
             {

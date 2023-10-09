@@ -130,7 +130,7 @@ namespace HeightFieldWaterSim
 
 
 
-        private void SimulateCoupling()
+        private void SimulateCoupling(float dt)
         {
             //Center
             int cx = Mathf.FloorToInt(this.numX / 2f);
@@ -177,7 +177,7 @@ namespace HeightFieldWaterSim
                             
                             if (bodyHeight > 0f)
                             {
-                                ball.ApplyForce(-bodyHeight * h2 * MyPhysicsScene.gravity.y);
+                                ball.ApplyForce(-bodyHeight * h2 * MyPhysicsScene.gravity.y, dt);
                                 
                                 this.bodyHeights[xi * this.numZ + zi] += bodyHeight;
                             }
@@ -222,14 +222,14 @@ namespace HeightFieldWaterSim
 
 
 
-        private void SimulateSurface()
+        private void SimulateSurface(float dt)
         {
-            this.waveSpeed = Mathf.Min(this.waveSpeed, 0.5f * this.spacing / MyPhysicsScene.dt);
+            this.waveSpeed = Mathf.Min(this.waveSpeed, 0.5f * this.spacing / dt);
 
             float c = this.waveSpeed * this.waveSpeed / this.spacing / this.spacing;
 
-            float pd = Mathf.Min(this.posDamping * MyPhysicsScene.dt, 1f);
-            float vd = Mathf.Max(0f, 1f - this.velDamping * MyPhysicsScene.dt);
+            float pd = Mathf.Min(this.posDamping * dt, 1f);
+            float vd = Mathf.Max(0f, 1f - this.velDamping * dt);
 
             for (int i = 0; i < this.numX; i++)
             {
@@ -246,7 +246,7 @@ namespace HeightFieldWaterSim
                     sumH += j > 0 ? this.heights[id - 1] : h;
                     sumH += j < this.numZ - 1 ? this.heights[id + 1] : h;
 
-                    this.velocities[id] += MyPhysicsScene.dt * c * (sumH - 4f * h);
+                    this.velocities[id] += dt * c * (sumH - 4f * h);
 
                     //Positional damping
                     this.heights[id] += (0.25f * sumH - h) * pd;  
@@ -257,19 +257,19 @@ namespace HeightFieldWaterSim
             {
                 //Velocity damping
                 this.velocities[i] *= vd;       
-                this.heights[i] += this.velocities[i] * MyPhysicsScene.dt;
+                this.heights[i] += this.velocities[i] * dt;
             }
         }
 
 
 
-        public void Simulate()
+        public void Simulate(float dt)
         {
-            this.time += MyPhysicsScene.dt;
+            this.time += dt;
 
-            SimulateCoupling();
+            SimulateCoupling(dt);
 
-            SimulateSurface();
+            SimulateSurface(dt);
 
             //We dont need to do this in FixedUpdate
             //UpdateVisMesh();
