@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,22 +15,29 @@ namespace HeightFieldWaterSim
         private float alpha;
         private float time;
 
+        //Number of vertices = water columns
         private int numX;
         private int numZ;
-
-        private float spacing;
+        //numX * numZ
         private int numCells;
-
+        //The distance between each water columns
+        private float spacing;
+        
+        //The height of a water columns
         private float[] heights;
-        private float[] bodyHeights;
         private float[] prevHeights;
+        //The velocity of a water column
         private float[] velocities;
-
+        
+        private float[] bodyHeights;
+        
         //Water mesh to show the water surface
         private Mesh waterMesh;
+        //These are in the mesh we initialize in the start
+        //It should be faster to also have a separate array so we not each update first have to get the array, then update it, and then add it to the mesh?
         private Vector3[] waterVertices;
-        //private int[] waterTriangles;
         private Material waterMaterial;
+
 
 
         public WaterSurface(float sizeX, float sizeZ, float depth, float spacing, Material waterMaterial)
@@ -41,8 +49,7 @@ namespace HeightFieldWaterSim
             this.alpha = 0.5f;
             this.time = 0f;
 
-            //Where is the +1 coming from? 
-            //Are these vertices and not columns? 
+            //The water columns are not between 4 vertices, they are ON the vertices of the water mesh
             this.numX = Mathf.FloorToInt(sizeX / spacing) + 1;
             this.numZ = Mathf.FloorToInt(sizeZ / spacing) + 1;
 
@@ -132,10 +139,19 @@ namespace HeightFieldWaterSim
             this.waterMaterial = waterMaterial;
 
             UpdateVisMesh();
+
+
+
+            //Test that the water waves are working
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    heights[i + 40] = 0.2f;
+            //}
         }
 
 
 
+        //Water-ball interaction
         private void SimulateCoupling(float dt)
         {
             //Center
@@ -228,62 +244,89 @@ namespace HeightFieldWaterSim
 
 
 
+        //Water surface simulation
         private void SimulateSurface(float dt)
         {
+            //To get a stable simulation we have to make sure waves don't travel further than one grid cell
             this.waveSpeed = Mathf.Min(this.waveSpeed, 0.5f * this.spacing / dt);
 
-            float c = this.waveSpeed * this.waveSpeed / this.spacing / this.spacing;
+            //The constant of proportionality from the wave equation
+            //k = c^2 / s^2
+            float k = (this.waveSpeed * this.waveSpeed) / (this.spacing * this.spacing);
 
+            //Damping
             float pd = Mathf.Min(this.posDamping * dt, 1f);
             float vd = Mathf.Max(0f, 1f - this.velDamping * dt);
 
+
+            //Loop 1. Calculate new velocities
             for (int i = 0; i < this.numX; i++)
             {
                 for (int j = 0; j < this.numZ; j++)
                 {
+                    //2d to 1d array conversion
                     int id = i * this.numZ + j;
 
                     float h = this.heights[id];
                     
+                    //Calculate the surrounding columns heights
                     float sumH = 0f;
 
+                    //If we are on the border we say the surrounding height is the same as this column's height
+                    //The will make the waves reflect against the wall
                     sumH += i > 0 ? this.heights[id - this.numZ] : h;
                     sumH += i < this.numX - 1 ? this.heights[id + this.numZ] : h;
                     sumH += j > 0 ? this.heights[id - 1] : h;
                     sumH += j < this.numZ - 1 ? this.heights[id + 1] : h;
 
-                    this.velocities[id] += dt * c * (sumH - 4f * h);
+                    //The acceleration of a water column depends on the height of this water column and the 4 surrounding water columns
+                    //a_i = k * (h_i-1 + h_i+1 - 2*h_i) <- 2d 
+
+                    //k = c in the source code, but he uses k in the video
+                    float acc = k * (sumH - 4f * h);
+
+                    this.velocities[id] += dt * acc;
+
+                    //We calculate new height based on velocity later
 
                     //Positional damping
                     this.heights[id] += (0.25f * sumH - h) * pd;  
                 }
             }
 
+
+            //Loop 2. Calculate new heights
             for (int i = 0; i < this.numCells; i++)
             {
                 //Velocity damping
-                this.velocities[i] *= vd;       
+                this.velocities[i] *= vd;
+                
+                //Calculate new height based on the velocity
                 this.heights[i] += this.velocities[i] * dt;
             }
         }
 
 
 
+        //Is called from FixedUpdate
         public void Simulate(float dt)
         {
             this.time += dt;
 
-            SimulateCoupling(dt);
+            //SimulateCoupling(dt);
 
             SimulateSurface(dt);
 
             //We dont need to do this in FixedUpdate
             //UpdateVisMesh();
+
+            //Debug.Log("Hello");
         }
 
 
 
         //Update water surface mesh
+        //Is called from Update
         public void UpdateVisMesh()
         {
             //Update the height
@@ -292,19 +335,21 @@ namespace HeightFieldWaterSim
                 waterVertices[i].y = this.heights[i];
             }
 
+            //Update the mesh
             waterMesh.SetVertices(waterVertices);
 
             waterMesh.RecalculateNormals();
             waterMesh.RecalculateBounds();
 
+            //Display the mesh
             Graphics.DrawMesh(waterMesh, Vector3.zero, Quaternion.identity, waterMaterial, 0);
         }
 
 
 
-        public void SetVisible(bool visible)
-        {
-            //this.visMesh.visible = visible;
-        }
+        //public void SetVisible(bool visible)
+        //{
+        //    //this.visMesh.visible = visible;
+        //}
     }
 }

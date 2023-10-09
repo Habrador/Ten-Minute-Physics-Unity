@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 
 
 //Simulate a swimming pool by using a height field water columns in a 2.5d grid
+//Pros: Simple, fast, easy to extract the surface
+//Cons: No overturning waves or splashes
 //TODO
 //- The water mesh is currently intersecting with the wall
 public class HeightFieldWaterSimController : MonoBehaviour
@@ -138,8 +140,12 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
 
-        //MyPhysicsScene.waterSurface.Simulate();
 
+        //Simulate the water and ball-water interaction
+        MyPhysicsScene.waterSurface.Simulate(dt);
+
+
+        //Simulate balls
         for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
         {
             HFBall obj = MyPhysicsScene.objects[i];
