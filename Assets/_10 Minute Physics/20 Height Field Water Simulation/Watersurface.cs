@@ -24,19 +24,25 @@ namespace HeightFieldWaterSim
         private float[] bodyHeights;
         private float[] prevHeights;
         private float[] velocities;
-        
 
-        //visMaterial is the water material
-        public WaterSurface(float sizeX, float sizeZ, float depth, float spacing, Material visMaterial)
+        //Water mesh to show the water surface
+        private Mesh waterMesh;
+        private Vector3[] waterVertices;
+        //private int[] waterTriangles;
+        private Material waterMaterial;
+
+
+        public WaterSurface(float sizeX, float sizeZ, float depth, float spacing, Material waterMaterial)
         {
             //Physics data
-
             this.waveSpeed = 2f;
             this.posDamping = 1f;
             this.velDamping = 0.3f;
             this.alpha = 0.5f;
             this.time = 0f;
 
+            //Where is the +1 coming from? 
+            //Are these vertices and not columns? 
             this.numX = Mathf.FloorToInt(sizeX / spacing) + 1;
             this.numZ = Mathf.FloorToInt(sizeZ / spacing) + 1;
 
@@ -52,10 +58,10 @@ namespace HeightFieldWaterSim
             System.Array.Fill(this.velocities, 0f);
 
 
-            //Visual mesh
+            //Generate the visual mesh showing the water surface
 
-            float[] positions = new float[this.numCells * 3];
-            float[] uvs = new float[this.numCells * 2];
+            Vector3[] positions = new Vector3[this.numCells];
+            Vector2[] uvs = new Vector2[this.numCells];
 
             //Center of the mesh
             int cx = Mathf.FloorToInt(this.numX / 2f);
@@ -65,14 +71,20 @@ namespace HeightFieldWaterSim
             {
                 for (int j = 0; j < this.numZ; j++)
                 {
-                    positions[3 * (i * this.numZ + j)] = (i - cx) * spacing;
-                    positions[3 * (i * this.numZ + j) + 2] = (j - cz) * spacing;
+                    float posX = (i - cx) * spacing;
+                    float posY = 0f;
+                    float posZ = (j - cz) * spacing;
 
-                    uvs[2 * (i * this.numZ + j)] = i / this.numX;
-                    uvs[2 * (i * this.numZ + j) + 1] = j / this.numZ;
+                    positions[i * this.numZ + j] = new Vector3(posX, posY, posZ);
+
+                    float u = i / this.numX;
+                    float v = j / this.numZ;
+
+                    uvs[i * this.numZ + j] = new Vector2(u, v);
                 }
             }
 
+            //Triangles?
             int[] index = new int[(this.numX - 1) * (this.numZ - 1) * 2 * 3];
             
             int pos = 0;
@@ -97,17 +109,23 @@ namespace HeightFieldWaterSim
             }
 
 
-            //var geometry = new THREE.BufferGeometry();
-            
-            //geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            //geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            //Generate the mesh itself
 
-            //geometry.setIndex(new THREE.BufferAttribute(index, 1));
+            Mesh newMesh = new()
+            {
+                vertices = positions,
+                triangles = index,
+                uv = uvs
+            };
 
-            //this.visMesh = new THREE.Mesh(geometry, visMaterial);
+            //To make it faster to update the mesh often
+            newMesh.MarkDynamic();
 
-            //this.updateVisMesh();
-            //gThreeScene.add(this.visMesh);
+            this.waterMesh = newMesh;
+            this.waterVertices = positions;
+            this.waterMaterial = waterMaterial;
+
+            UpdateVisMesh();
         }
 
 
@@ -253,23 +271,27 @@ namespace HeightFieldWaterSim
 
             SimulateSurface();
 
-            UpdateVisMesh();
+            //We dont need to do this in FixedUpdate
+            //UpdateVisMesh();
         }
 
 
 
-        private void UpdateVisMesh()
+        //Update water surface mesh
+        public void UpdateVisMesh()
         {
-            /*
-            const positions = this.visMesh.geometry.attributes.position.array;
-            
-            for (let i = 0; i < this.numCells; i++)
-                positions[3 * i + 1] = this.heights[i];
-            
-            this.visMesh.geometry.attributes.position.needsUpdate = true;
-            this.visMesh.geometry.computeVertexNormals();
-            this.visMesh.geometry.computeBoundingSphere();
-            */
+            //Update the height
+            for (int i = 0; i < this.numCells; i++)
+            {
+                waterVertices[i].y = this.heights[i];
+            }
+
+            waterMesh.SetVertices(waterVertices);
+
+            waterMesh.RecalculateNormals();
+            waterMesh.RecalculateBounds();
+
+            Graphics.DrawMesh(waterMesh, Vector3.zero, Quaternion.identity, waterMaterial, 0);
         }
 
 

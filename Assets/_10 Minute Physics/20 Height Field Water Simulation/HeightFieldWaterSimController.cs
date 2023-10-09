@@ -16,19 +16,43 @@ public class HeightFieldWaterSimController : MonoBehaviour
     //Parents to get a clean workspace
     public Transform environmentParent;
     public Transform ballsParent;
-    
+
+
+
+    private void Awake()
+    {
+        float dt = Time.fixedDeltaTime;
+
+        //float dt = 1.0f / 30.0f;
+
+        MyPhysicsScene.dt = dt;    
+    }
+
 
 
     private void Start()
     {
         InitScene();
+
+        MyPhysicsScene.isPaused = false;
+    }
+
+
+    private void Update()
+    {
+        if (MyPhysicsScene.isPaused)
+        {
+            return;
+        }
+
+        MyPhysicsScene.waterSurface.UpdateVisMesh();
     }
 
 
 
     private void FixedUpdate()
     {
-        
+        Simulate();
     }
 
 
@@ -120,5 +144,29 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
         ground.transform.position = Vector3.zero;
         ground.transform.localScale = Vector3.one * 100f;
+    }
+
+
+
+    private void Simulate()
+    {
+        if (MyPhysicsScene.isPaused)
+        {
+            return;
+        }
+
+        //MyPhysicsScene.waterSurface.Simulate();
+
+        for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
+        {
+            HFBall obj = MyPhysicsScene.objects[i];
+
+            obj.Simulate();
+            
+            for (int j = 0; j < i; j++)
+            {
+                obj.HandleCollision(MyPhysicsScene.objects[j]);
+            }
+        }
     }
 }
