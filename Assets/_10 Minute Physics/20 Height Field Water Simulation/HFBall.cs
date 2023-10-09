@@ -10,7 +10,7 @@ namespace HeightFieldWaterSim
     //Has to be called HFBall to avoid confusion 
     //Will simulate the ball as if there had been no water
     //Handles collision with walls and other balls
-    public class HFBall
+    public class HFBall : IGrabbable
     {
         public Vector3 pos;
         public Vector3 vel;
@@ -19,6 +19,7 @@ namespace HeightFieldWaterSim
         public float mass;
         public float restitution;
 
+        //Has the user grabbed this ball with the mouse?
         public bool isGrabbed;
 
         private readonly Transform visMesh;
@@ -130,8 +131,12 @@ namespace HeightFieldWaterSim
             {
                 this.pos.y = this.radius; this.vel.y = -this.restitution * this.vel.y;
             }
+        }
 
 
+
+        public void MyUpdate()
+        {
             //Update the transform
             this.visMesh.position = this.pos;
         }
@@ -147,24 +152,45 @@ namespace HeightFieldWaterSim
 
 
 
+        //
+        // Methods related to user interaction with the ball
+        //
+
         public void StartGrab(Vector3 pos)
         {
             this.isGrabbed = true;
 
             this.pos = pos;
-            this.visMesh.position = pos;
         }
 
         public void MoveGrabbed(Vector3 pos)
         {
             this.pos = pos;
-            this.visMesh.position = pos;
         }
 
         public void EndGrab(Vector3 pos, Vector3 vel)
         {
             this.isGrabbed = false;
+
+            this.pos = pos;
             this.vel = vel;
+        }
+
+
+        public void IsRayHittingBody(Ray ray, out CustomHit hit)
+        {
+            hit = null;
+
+            if (Intersections.IsRayHittingSphere(ray, this.pos, this.radius, out float hitDistance))
+            {
+                hit = new CustomHit(hitDistance, Vector3.zero, Vector3.zero);
+            }
+        }
+
+
+        public Vector3 GetGrabbedPos()
+        {
+            return this.pos;
         }
     }
 }

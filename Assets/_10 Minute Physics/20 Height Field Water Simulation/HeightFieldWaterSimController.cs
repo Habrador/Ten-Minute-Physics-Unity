@@ -21,6 +21,12 @@ public class HeightFieldWaterSimController : MonoBehaviour
     public Transform environmentParent;
     public Transform ballsParent;
 
+    //So we can see the mouse cursor when recording videos
+    public Texture2D cursorTexture;
+
+    //What we use to grab the balls
+    private Grabber grabber;
+
 
 
     private void Start()
@@ -28,6 +34,14 @@ public class HeightFieldWaterSimController : MonoBehaviour
         InitScene();
 
         MyPhysicsScene.isPaused = false;
+
+        //Cursor
+        Cursor.visible = true;
+
+        Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.ForceSoftware);
+
+        //Init the grabber
+        grabber = new Grabber(Camera.main);
     }
 
 
@@ -40,6 +54,41 @@ public class HeightFieldWaterSimController : MonoBehaviour
         }
 
         MyPhysicsScene.waterSurface.UpdateVisMesh();
+
+        //Update the visual transform of the balls
+        List<HFBall> allBalls = MyPhysicsScene.objects;
+
+        foreach (HFBall ball in allBalls)
+        {
+            ball.MyUpdate();
+        }
+
+        grabber.MoveGrab();
+    }
+
+
+
+    //User interactions should be in LateUpdate
+    private void LateUpdate()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            List<IGrabbable> temp = new();
+
+            List<HFBall> allBalls = MyPhysicsScene.objects;
+
+            foreach (HFBall ball in allBalls)
+            {
+                temp.Add(ball);
+            }
+
+            grabber.StartGrab(temp);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            grabber.EndGrab();
+        }
     }
 
 

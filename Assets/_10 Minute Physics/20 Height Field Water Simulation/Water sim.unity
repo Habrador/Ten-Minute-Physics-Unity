@@ -188,6 +188,7 @@ MonoBehaviour:
   tankMaterial: {fileID: 2100000, guid: 3c5a25973ed6ad3418ed668f7b81d253, type: 2}
   environmentParent: {fileID: 798864412}
   ballsParent: {fileID: 339227390}
+  cursorTexture: {fileID: 2800000, guid: 9502229508e68b04da8f92de5b1bd292, type: 3}
 --- !u!4 &399299983
 Transform:
   m_ObjectHideFlags: 0
