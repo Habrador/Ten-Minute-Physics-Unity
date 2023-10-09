@@ -58,8 +58,11 @@ namespace HeightFieldWaterSim
             System.Array.Fill(this.velocities, 0f);
 
 
-            //Generate the visual mesh showing the water surface
+            //
+            // Generate the visual mesh showing the water surface
+            //
 
+            //Generate the mesh's vertices and uvs
             Vector3[] positions = new Vector3[this.numCells];
             Vector2[] uvs = new Vector2[this.numCells];
 
@@ -77,14 +80,18 @@ namespace HeightFieldWaterSim
 
                     positions[i * this.numZ + j] = new Vector3(posX, posY, posZ);
 
-                    float u = i / this.numX;
-                    float v = j / this.numZ;
+                    float u = i / (float)this.numX;
+                    float v = j / (float)this.numZ;
 
                     uvs[i * this.numZ + j] = new Vector2(u, v);
                 }
             }
 
-            //Triangles?
+
+            //Build triangles from the vertices
+            //If the grid is 3x3 cells (16 vertices) we need a total of 18 triangles
+            //-> 18*3 = 54 triangle indices are needed
+            //numX is vertices: (4-3)*(4-3)*2*3 = 54
             int[] index = new int[(this.numX - 1) * (this.numZ - 1) * 2 * 3];
             
             int pos = 0;
@@ -110,7 +117,6 @@ namespace HeightFieldWaterSim
 
 
             //Generate the mesh itself
-
             Mesh newMesh = new()
             {
                 vertices = positions,

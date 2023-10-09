@@ -8,6 +8,8 @@ using static UnityEditor.PlayerSettings;
 namespace HeightFieldWaterSim
 {
     //Has to be called HFBall to avoid confusion 
+    //Will simulate the ball as if there had been no water
+    //Handles collision with walls and other balls
     public class HFBall
     {
         public Vector3 pos;
@@ -129,6 +131,8 @@ namespace HeightFieldWaterSim
                 this.pos.y = this.radius; this.vel.y = -this.restitution * this.vel.y;
             }
 
+
+            //Update the transform
             this.visMesh.position = this.pos;
         }
 
