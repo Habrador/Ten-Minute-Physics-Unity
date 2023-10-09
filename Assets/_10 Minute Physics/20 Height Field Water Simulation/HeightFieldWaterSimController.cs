@@ -21,17 +21,6 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
 
 
-    private void Awake()
-    {
-        //float dt = Time.fixedDeltaTime;
-
-        //float dt = 1.0f / 30.0f;
-
-        //MyPhysicsScene.dt = dt;    
-    }
-
-
-
     private void Start()
     {
         InitScene();
@@ -62,7 +51,7 @@ public class HeightFieldWaterSimController : MonoBehaviour
 
     private void InitScene()
     {
-        //Water surface which will also add the water mesh
+        //Init the water simulation which will also add a water mesh
         float wx = MyPhysicsScene.tankSize.x;
         float wy = MyPhysicsScene.tankSize.y;
         float wz = MyPhysicsScene.tankSize.z;
