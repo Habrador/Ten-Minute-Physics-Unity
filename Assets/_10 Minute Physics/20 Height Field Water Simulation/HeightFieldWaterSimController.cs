@@ -113,5 +113,12 @@ public class HeightFieldWaterSimController : MonoBehaviour
         MyPhysicsScene.objects.Add(b1);
         MyPhysicsScene.objects.Add(b2);
         MyPhysicsScene.objects.Add(b3);
+
+
+        //Ground
+        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+
+        ground.transform.position = Vector3.zero;
+        ground.transform.localScale = Vector3.one * 100f;
     }
 }
