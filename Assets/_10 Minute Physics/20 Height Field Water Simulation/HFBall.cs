@@ -11,15 +11,15 @@ namespace HeightFieldWaterSim
     public class HFBall
     {
         public Vector3 pos;
-        public float radius;
-        public float mass;
         public Vector3 vel;
 
-        public bool grabbed;
-
+        public float radius;
+        public float mass;
         public float restitution;
 
-        private Transform visMesh;
+        public bool isGrabbed;
+
+        private readonly Transform visMesh;
 
 
 
@@ -28,12 +28,14 @@ namespace HeightFieldWaterSim
             //Physics data 
             this.pos = pos;
             this.radius = radius;
-            this.mass = 4f * Mathf.PI / 3f * radius * radius * radius * density;
+            //m = V * rho = 4/3 * pi * r^3 * rho
+            this.mass = (4f/3f) * Mathf.PI * radius * radius * radius * density;
             this.vel = Vector3.zero;
-            this.grabbed = false;
+            this.isGrabbed = false;
             this.restitution = 0.1f;
 
-            //Visual mesh
+
+            //Generate the visual mesh showing the ball
             GameObject newBall = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
             newBall.transform.parent = ballsParent;
@@ -90,16 +92,19 @@ namespace HeightFieldWaterSim
 
         public void Simulate(float dt)
         {
-            if (this.grabbed)
+            if (this.isGrabbed)
             {
                 return;
             }
                
 
+            //Simulate the ball
             this.vel += MyPhysicsScene.gravity * dt;
 
             this.pos += this.vel * dt;
 
+
+            //Handle collision with the environment (except water)
             float wx = 0.5f * MyPhysicsScene.tankSize.x - this.radius - 0.5f * MyPhysicsScene.tankBorder;
             float wz = 0.5f * MyPhysicsScene.tankSize.z - this.radius - 0.5f * MyPhysicsScene.tankBorder;
 
@@ -137,9 +142,10 @@ namespace HeightFieldWaterSim
         }
 
 
+
         public void StartGrab(Vector3 pos)
         {
-            this.grabbed = true;
+            this.isGrabbed = true;
 
             this.pos = pos;
             this.visMesh.position = pos;
@@ -153,7 +159,7 @@ namespace HeightFieldWaterSim
 
         public void EndGrab(Vector3 pos, Vector3 vel)
         {
-            this.grabbed = false;
+            this.isGrabbed = false;
             this.vel = vel;
         }
     }
