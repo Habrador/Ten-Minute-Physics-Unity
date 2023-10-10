@@ -9,11 +9,16 @@ namespace HeightFieldWaterSim
 {
     public class WaterSurface
     {
+        //The speed of the waves
+        //To get a stable simulation we have to make sure waves don't travel further than one grid cell
+        //So the speed is limited later in the simulation to make sure this is true
         private float waveSpeed;
+        //Damping coefficients used in the water simulation to damp the pos and vel
         private float posDamping;
         private float velDamping;
+        //Parameter that defines the intensity of what happens to the the water when objects interact with them [0, 1]
         private float alpha;
-        private float time;
+        //private float time;
 
         //Number of vertices = water columns
         private int numX;
@@ -22,15 +27,16 @@ namespace HeightFieldWaterSim
         private int numCells;
         //The distance between each water columns
         private float spacing;
-        
-        //The height of a water columns
+
+        //The height of the water columns in up direction
         private float[] heights;
-        private float[] prevHeights;
-        //The velocity of a water column
+        //The velocity of the water columns in up direction
         private float[] velocities;
-        
+        //The water columnheight covered by an object 
         private float[] bodyHeights;
-        
+        //Need previous because we are interested in the difference
+        private float[] prevBodyHeights;
+
         //Water mesh to show the water surface
         private Mesh waterMesh;
         //These are in the mesh we initialize in the start
@@ -47,7 +53,7 @@ namespace HeightFieldWaterSim
             this.posDamping = 1f;
             this.velDamping = 0.3f;
             this.alpha = 0.5f;
-            this.time = 0f;
+            //this.time = 0f;
 
             //The water columns are not between 4 vertices, they are ON the vertices of the water mesh
             this.numX = Mathf.FloorToInt(sizeX / spacing) + 1;
@@ -58,7 +64,7 @@ namespace HeightFieldWaterSim
 
             this.heights = new float[this.numCells];
             this.bodyHeights = new float[this.numCells];
-            this.prevHeights = new float[this.numCells];
+            this.prevBodyHeights = new float[this.numCells];
             this.velocities = new float[this.numCells];
 
             System.Array.Fill(this.heights, depth);
@@ -161,21 +167,24 @@ namespace HeightFieldWaterSim
             float h1 = 1f / this.spacing;
 
             //Swap buffers
-            (this.prevHeights, this.bodyHeights) = (this.bodyHeights, this.prevHeights);
+            (this.prevBodyHeights, this.bodyHeights) = (this.bodyHeights, this.prevBodyHeights);
             //Reset
             System.Array.Fill(this.bodyHeights, 0f);
 
+            //For each ball
             for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
             {
                 HFBall ball = MyPhysicsScene.objects[i];
-                Vector3 pos = ball.pos;
-                float br = ball.radius;
+
+                Vector3 ballPos = ball.pos;
+                float ballRadius = ball.radius;
+
                 float h2 = this.spacing * this.spacing;
 
-                int x0 = Mathf.Max(0, cx + Mathf.FloorToInt((pos.x - br) * h1));
-                int x1 = Mathf.Min(this.numX - 1, cx + Mathf.FloorToInt((pos.x + br) * h1));
-                int z0 = Mathf.Max(0, cz + Mathf.FloorToInt((pos.z - br) * h1));
-                int z1 = Mathf.Min(this.numZ - 1, cz + Mathf.FloorToInt((pos.z + br) * h1));
+                int x0 = Mathf.Max(0, cx + Mathf.FloorToInt((ballPos.x - ballRadius) * h1));
+                int x1 = Mathf.Min(this.numX - 1, cx + Mathf.FloorToInt((ballPos.x + ballRadius) * h1));
+                int z0 = Mathf.Max(0, cz + Mathf.FloorToInt((ballPos.z - ballRadius) * h1));
+                int z1 = Mathf.Min(this.numZ - 1, cz + Mathf.FloorToInt((ballPos.z + ballRadius) * h1));
 
                 for (int xi = x0; xi <= x1; xi++)
                 {
@@ -184,22 +193,28 @@ namespace HeightFieldWaterSim
                         float x = (xi - cx) * this.spacing;
                         float z = (zi - cz) * this.spacing;
                         
-                        float r2 = (pos.x - x) * (pos.x - x) + (pos.z - z) * (pos.z - z);
+                        float r2 = (ballPos.x - x) * (ballPos.x - x) + (ballPos.z - z) * (ballPos.z - z);
                         
-                        if (r2 < br * br)
+                        if (r2 < ballRadius * ballRadius)
                         {
-                            float bodyHalfHeight = Mathf.Sqrt(br * br - r2);
+                            float bodyHalfHeight = Mathf.Sqrt(ballRadius * ballRadius - r2);
                             
                             float waterHeight = this.heights[xi * this.numZ + zi];
 
-                            float bodyMin = Mathf.Max(pos.y - bodyHalfHeight, 0f);
-                            float bodyMax = Mathf.Min(pos.y + bodyHalfHeight, waterHeight);
+                            float bodyMin = Mathf.Max(ballPos.y - bodyHalfHeight, 0f);
+                            float bodyMax = Mathf.Min(ballPos.y + bodyHalfHeight, waterHeight);
                             
                             float bodyHeight = Mathf.Max(bodyMax - bodyMin, 0f);
                             
+                            //If this ball is submerged in water
                             if (bodyHeight > 0f)
                             {
-                                ball.ApplyForce(-bodyHeight * h2 * MyPhysicsScene.gravity.y, dt);
+                                //Add buoyancy force to the ball
+                                //The force acting on the object is proprtional to the water displaced by the object
+                                //F = mg = rho_water * volume * g
+                                float volume = bodyHeight * h2;
+
+                                ball.ApplyForce(-volume * MyPhysicsScene.gravity.y, dt);
                                 
                                 this.bodyHeights[xi * this.numZ + zi] += bodyHeight;
                             }
@@ -209,6 +224,7 @@ namespace HeightFieldWaterSim
             }
 
 
+            //Smooth the bodyHeights to prevent spikes and instabilities
             for (int iter = 0; iter < 2; iter++)
             {
                 for (int xi = 0; xi < this.numX; xi++)
@@ -235,9 +251,13 @@ namespace HeightFieldWaterSim
                 }
             }
 
+
+            //Update the water heights 
+            //h = h + alpha * (b - b_prev)
             for (int i = 0; i < this.numCells; i++)
             {
-                float bodyChange = this.bodyHeights[i] - this.prevHeights[i];
+                float bodyChange = this.bodyHeights[i] - this.prevBodyHeights[i];
+
                 this.heights[i] += this.alpha * bodyChange;
             }
         }
@@ -267,6 +287,9 @@ namespace HeightFieldWaterSim
                     //2d to 1d array conversion
                     int id = i * this.numZ + j;
 
+                    //The acceleration of a water column depends on the height of this water column and the 4 surrounding water columns
+                    //a_i = k * (h_i-1 + h_i+1 - 2*h_i) <- 2d 
+
                     float h = this.heights[id];
                     
                     //Calculate the surrounding columns heights
@@ -278,9 +301,6 @@ namespace HeightFieldWaterSim
                     sumH += i < this.numX - 1 ? this.heights[id + this.numZ] : h;
                     sumH += j > 0 ? this.heights[id - 1] : h;
                     sumH += j < this.numZ - 1 ? this.heights[id + 1] : h;
-
-                    //The acceleration of a water column depends on the height of this water column and the 4 surrounding water columns
-                    //a_i = k * (h_i-1 + h_i+1 - 2*h_i) <- 2d 
 
                     //k = c in the source code, but he uses k in the video
                     float acc = k * (sumH - 4f * h);
@@ -311,7 +331,7 @@ namespace HeightFieldWaterSim
         //Is called from FixedUpdate
         public void Simulate(float dt)
         {
-            this.time += dt;
+            //this.time += dt;
 
             //SimulateCoupling(dt);
 
