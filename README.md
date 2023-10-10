@@ -84,9 +84,11 @@ Spoiler: It's just the simulation part that's 200 lines of code. You need a few 
 [![Link to youtube video fluid simulation](https://img.youtube.com/vi/6Jw1CsTOkDg/0.jpg)](https://www.youtube.com/watch?v=6Jw1CsTOkDg)
 
 	
-## 20. How to write a height-field water simulation (TODO)
+## 20. How to write a height-field water simulation
 
 Simulate a swimming pool with balls. 
+
+<img src="/_media/20-heightfield.gif" width="400">
 
 
 # Bonus

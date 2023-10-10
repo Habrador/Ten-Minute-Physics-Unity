@@ -17,7 +17,7 @@ namespace HeightFieldWaterSim
 		//The water height 
 		public static float waterHeight = 0.8f;
 		//The size of each cell, width and depth
-		public static float waterSpacing = 0.02f;
+		public static float waterSpacing = 0.03f;
 		
 		public static bool isPaused = true;
 		
