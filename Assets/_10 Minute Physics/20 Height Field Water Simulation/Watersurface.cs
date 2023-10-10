@@ -160,16 +160,18 @@ namespace HeightFieldWaterSim
         //Water-ball interaction
         private void SimulateCoupling(float dt)
         {
+            //Swap buffers from last update
+            (this.prevBodyHeights, this.bodyHeights) = (this.bodyHeights, this.prevBodyHeights);
+            
+            //Reset
+            System.Array.Fill(this.bodyHeights, 0f);
+
             //Center
             int cx = Mathf.FloorToInt(this.numX / 2f);
             int cz = Mathf.FloorToInt(this.numZ / 2f);
             
-            float h1 = 1f / this.spacing;
-
-            //Swap buffers
-            (this.prevBodyHeights, this.bodyHeights) = (this.bodyHeights, this.prevBodyHeights);
-            //Reset
-            System.Array.Fill(this.bodyHeights, 0f);
+            float oneOverSpacing = 1f / this.spacing;
+            float hSquare = this.spacing * this.spacing;
 
             //For each ball
             for (int i = 0; i < MyPhysicsScene.objects.Count; i++)
@@ -179,40 +181,59 @@ namespace HeightFieldWaterSim
                 Vector3 ballPos = ball.pos;
                 float ballRadius = ball.radius;
 
-                float h2 = this.spacing * this.spacing;
+                //Find a bounding box to the ball so we dont have to loop thorugh all cells and do the radius test
+                //The map is centered around origo and because the balls are in global space we need to convert their position to cell space
+                //int cellX = Mathf.FloorToInt(pos.x / CELL_SIZE);
+                //But this assume the map starts at (0,0)
+                //Our map is centered around (0,0) so we have to shift it 
+                int xMin = Mathf.Max(0, cx + Mathf.FloorToInt((ballPos.x - ballRadius) * oneOverSpacing));
+                int xMax = Mathf.Min(this.numX - 1, cx + Mathf.FloorToInt((ballPos.x + ballRadius) * oneOverSpacing));
+                int zMin = Mathf.Max(0, cz + Mathf.FloorToInt((ballPos.z - ballRadius) * oneOverSpacing));
+                int zMax = Mathf.Min(this.numZ - 1, cz + Mathf.FloorToInt((ballPos.z + ballRadius) * oneOverSpacing));
 
-                int x0 = Mathf.Max(0, cx + Mathf.FloorToInt((ballPos.x - ballRadius) * h1));
-                int x1 = Mathf.Min(this.numX - 1, cx + Mathf.FloorToInt((ballPos.x + ballRadius) * h1));
-                int z0 = Mathf.Max(0, cz + Mathf.FloorToInt((ballPos.z - ballRadius) * h1));
-                int z1 = Mathf.Min(this.numZ - 1, cz + Mathf.FloorToInt((ballPos.z + ballRadius) * h1));
-
-                for (int xi = x0; xi <= x1; xi++)
+                for (int xi = xMin; xi <= xMax; xi++)
                 {
-                    for (int zi = z0; zi <= z1; zi++)
+                    for (int zi = zMin; zi <= zMax; zi++)
                     {
+                        //Convert from cell space to global space
                         float x = (xi - cx) * this.spacing;
                         float z = (zi - cz) * this.spacing;
                         
+                        //Distance square from the cell to the center of the ball in 2d space
                         float r2 = (ballPos.x - x) * (ballPos.x - x) + (ballPos.z - z) * (ballPos.z - z);
                         
+                        //If this distance square is less than the radius square, the cell is within the ball
                         if (r2 < ballRadius * ballRadius)
                         {
+                            //Pythagoras to get the half-height of the ball at this cell. Is difficult to draw a simple picture to show how it works so get a pen and paper
+                            //ballRadius * ballRadius is the hypotenuse
+                            //This height is independent of the y-coordinate
                             float bodyHalfHeight = Mathf.Sqrt(ballRadius * ballRadius - r2);
                             
                             float waterHeight = this.heights[xi * this.numZ + zi];
 
+                            //0 is ground
                             float bodyMin = Mathf.Max(ballPos.y - bodyHalfHeight, 0f);
+
+                            //If the ball sticks out from the water we have to clamp it to waterHeight 
                             float bodyMax = Mathf.Min(ballPos.y + bodyHalfHeight, waterHeight);
-                            
+
+                            //Ex. Entire ball outside of water
+                            //ballPos.y = 500
+                            //bodyHalfHeight = 10
+                            //waterHeight = 20
+                            //-> bodyMin = Max(500 - 10, 0) = 490
+                            //-> bodyMax = Min(500 + 10, 20) = 20
+                            //-> bodyHeight = Max (20 - 490, 0) = 0
                             float bodyHeight = Mathf.Max(bodyMax - bodyMin, 0f);
                             
-                            //If this ball is submerged in water
+                            //If this section of the ball is submerged in water
                             if (bodyHeight > 0f)
                             {
                                 //Add buoyancy force to the ball
                                 //The force acting on the object is proprtional to the water displaced by the object
                                 //F = mg = rho_water * volume * g
-                                float volume = bodyHeight * h2;
+                                float volume = bodyHeight * hSquare;
 
                                 ball.ApplyForce(-volume * MyPhysicsScene.gravity.y, dt);
                                 
@@ -310,6 +331,7 @@ namespace HeightFieldWaterSim
                     //We calculate new height based on velocity later
 
                     //Positional damping
+                    //This should be done after the loop is finished?
                     this.heights[id] += (0.25f * sumH - h) * pd;  
                 }
             }

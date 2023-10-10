@@ -145,7 +145,8 @@ namespace HeightFieldWaterSim
 
         public void ApplyForce(float force, float dt)
         {
-            this.vel.y += dt * force / this.mass;
+            //F = m * a -> a = F/m
+            this.vel.y += dt * (force / this.mass);
             
             this.vel *= 0.999f;
         }
