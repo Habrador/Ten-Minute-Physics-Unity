@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 //Pros: Simple, fast, easy to extract the surface
 //Cons: No overturning waves or splashes
 //TODO
-//- The water mesh is currently intersecting with the wall
+//- The water mesh is intersecting with the wall, but it's barely visible 
 public class HeightFieldWaterSimController : MonoBehaviour
 {
     public Material waterMaterial;

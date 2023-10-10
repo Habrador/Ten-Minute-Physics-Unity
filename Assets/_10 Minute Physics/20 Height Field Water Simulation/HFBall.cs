@@ -17,6 +17,7 @@ namespace HeightFieldWaterSim
 
         public float radius;
         public float mass;
+        //How the ball bounces against other balls
         public float restitution;
 
         //Has the user grabbed this ball with the mouse?

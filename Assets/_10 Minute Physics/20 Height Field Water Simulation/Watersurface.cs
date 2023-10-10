@@ -18,7 +18,6 @@ namespace HeightFieldWaterSim
         private float velDamping;
         //Parameter that defines the intensity of what happens to the the water when objects interact with them [0, 1]
         private float alpha;
-        //private float time;
 
         //Number of vertices = water columns
         private int numX;
@@ -53,7 +52,6 @@ namespace HeightFieldWaterSim
             this.posDamping = 1f;
             this.velDamping = 0.3f;
             this.alpha = 0.5f;
-            //this.time = 0f;
 
             //The water columns are not between 4 vertices, they are ON the vertices of the water mesh
             this.numX = Mathf.FloorToInt(sizeX / spacing) + 1;
@@ -357,16 +355,12 @@ namespace HeightFieldWaterSim
         //Is called from FixedUpdate
         public void Simulate(float dt)
         {
-            //this.time += dt;
-
             SimulateCoupling(dt);
 
             SimulateSurface(dt);
 
             //We dont need to do this in FixedUpdate
             //UpdateVisMesh();
-
-            //Debug.Log("Hello");
         }
 
 
@@ -390,12 +384,5 @@ namespace HeightFieldWaterSim
             //Display the mesh
             Graphics.DrawMesh(waterMesh, Vector3.zero, Quaternion.identity, waterMaterial, 0);
         }
-
-
-
-        //public void SetVisible(bool visible)
-        //{
-        //    //this.visMesh.visible = visible;
-        //}
     }
 }
