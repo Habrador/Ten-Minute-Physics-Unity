@@ -248,25 +248,29 @@ namespace HeightFieldWaterSim
             //Smooth the bodyHeights to prevent spikes and instabilities
             for (int iter = 0; iter < 2; iter++)
             {
-                for (int xi = 0; xi < this.numX; xi++)
+                //For each cell
+                for (int x = 0; x < this.numX; x++)
                 {
-                    for (int zi = 0; zi < this.numZ; zi++)
+                    for (int z = 0; z < this.numZ; z++)
                     {
-                        int id = xi * this.numZ + zi;
+                        //2d -> 1d array
+                        int id = x * this.numZ + z;
 
-                        int num = xi > 0 && xi < this.numX - 1 ? 2 : 1;
+                        //Smooth by taking the average of the surrounding cells
+                        int num = x > 0 && x < this.numX - 1 ? 2 : 1;
                         
-                        num += zi > 0 && zi < this.numZ - 1 ? 2 : 1;
+                        num += z > 0 && z < this.numZ - 1 ? 2 : 1;
                         
                         float avg = 0f;
                         
-                        if (xi > 0) avg += this.bodyHeights[id - this.numZ];
-                        if (xi < this.numX - 1) avg += this.bodyHeights[id + this.numZ];
-                        if (zi > 0) avg += this.bodyHeights[id - 1];
-                        if (zi < this.numZ - 1) avg += this.bodyHeights[id + 1];
+                        if (x > 0) avg += this.bodyHeights[id - this.numZ];
+                        if (x < this.numX - 1) avg += this.bodyHeights[id + this.numZ];
+                        if (z > 0) avg += this.bodyHeights[id - 1];
+                        if (z < this.numZ - 1) avg += this.bodyHeights[id + 1];
                         
                         avg /= num;
                         
+                        //Shouldnt we do this in another loop after this one because now the average will use the average...or maybe it makes no difference?
                         this.bodyHeights[id] = avg;
                     }
                 }
@@ -355,7 +359,7 @@ namespace HeightFieldWaterSim
         {
             //this.time += dt;
 
-            //SimulateCoupling(dt);
+            SimulateCoupling(dt);
 
             SimulateSurface(dt);
 
