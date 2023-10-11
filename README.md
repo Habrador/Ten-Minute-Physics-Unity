@@ -11,7 +11,7 @@ Simulate a bouncy cannon ball.
 
 ## 3. Billiard
 
-Simulate billiard balls with different size and mass. Watch these YouTube videos for examples: 
+Simulate billiard balls with different size and mass. Watch this YouTube video for examples: 
 
 [![Link to youtube video 1000 billiard balls](https://img.youtube.com/vi/ErsK2osLkQU/0.jpg)](https://www.youtube.com/watch?v=ErsK2osLkQU)
 
@@ -79,7 +79,7 @@ Basic cloth simulation.
 
 ## 17. Write an Eulerian Fluid Simulator with 200 lines of code
 
-Spoiler: It's just the simulation part that's 200 lines of code. You need a few more lines of code to set it up, display it on screen, etc.
+Spoiler: It's just the simulation part that's 200 lines of code. You need a few more lines of code to set it up, display it on screen, etc. Watch this YouTube video for examples: 
 
 [![Link to youtube video fluid simulation](https://img.youtube.com/vi/6Jw1CsTOkDg/0.jpg)](https://www.youtube.com/watch?v=6Jw1CsTOkDg)
 
@@ -98,6 +98,6 @@ Bonus implementations related to the code above.
 
 ## 3-Body Problem
 
-Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem).
+Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem). Watch this YouTube video for examples: 
 
 [![Link to youtube video 3-body problem](https://img.youtube.com/vi/o5HWPeP-JS4/0.jpg)](https://www.youtube.com/watch?v=o5HWPeP-JS4)
