@@ -84,7 +84,7 @@ Spoiler: It's just the simulation part that's 200 lines of code. You need a few 
 [![Link to youtube video fluid simulation](https://img.youtube.com/vi/6Jw1CsTOkDg/0.jpg)](https://www.youtube.com/watch?v=6Jw1CsTOkDg)
 
 
-##18. FLIP Water Simulator (todo)
+## 18. FLIP Water Simulator (todo)
 
 -
 
