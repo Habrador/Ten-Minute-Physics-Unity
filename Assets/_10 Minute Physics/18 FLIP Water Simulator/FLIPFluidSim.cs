@@ -31,7 +31,7 @@ namespace FLIPFluidSimulator
         //Decrease time step or increase iteration count = slow simulation
         //Better to push particles apart
         //...and compute particle density in each cell to reduce divergence in dense regions -> more outward push in dense regions
-        
+
 
         //Simulation parameters
         private readonly float density;
@@ -75,11 +75,11 @@ namespace FLIPFluidSimulator
 
         //Particles
         //How many particles?
-        private int numParticles;
+        public int numParticles;
         //How many particles allowed?
         private int maxParticles;
         //The pos of each particle (x,y) after each other
-        private readonly float[] particlePos;
+        public readonly float[] particlePos;
         //The color of each particle
         private readonly Color[] particleColor;
         //The vel of each particle (x,y) after each other
@@ -154,7 +154,7 @@ namespace FLIPFluidSimulator
             this.particleColor = new Color[this.maxParticles];
             //Init the color
             //for (var i = 0; i < this.maxParticles; i++)
-                //this.particleColor[3 * i + 2] = 1.0;
+            //this.particleColor[3 * i + 2] = 1.0;
 
             this.particleVel = new float[2 * this.maxParticles];
             this.particleDensity = new float[numCells];
@@ -168,14 +168,21 @@ namespace FLIPFluidSimulator
 
             this.pNumCells = this.pNumX * this.pNumY;
 
-            this.numCellParticles = new int[this.pNumCells]; 
-            this.firstCellParticle = new int[this.pNumCells + 1]; 
-            this.cellParticleIds = new int[maxParticles]; 
+            this.numCellParticles = new int[this.pNumCells];
+            this.firstCellParticle = new int[this.pNumCells + 1];
+            this.cellParticleIds = new int[maxParticles];
 
             this.numParticles = 0;
 
         }
 
+
+
+        //Simulation loop for the fluid
+        public void Simulate()
+        {
+            
+        }
     }
 
 }

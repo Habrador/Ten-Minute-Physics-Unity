@@ -13,8 +13,6 @@ namespace FLIPFluidSimulator
         public bool showGrid = false;
 
         //Simulation settings
-        //Is not in the tutorial but needs to be there to make Unity's toggle work
-        public bool useOverRelaxation = true;
 
         //Relaxation
         //https://www.sanfoundry.com/computational-fluid-dynamics-questions-answers-under-relaxation/
@@ -30,7 +28,7 @@ namespace FLIPFluidSimulator
 
         //Need several iterations each update to make the fluid incompressible
         //Default is 40 and we set it in SetupScene
-        public int numIters = 100;
+        public int numPressureIters = 100;
 
         //Is sometimes 0 
         public float gravity = -9.81f;
@@ -60,6 +58,13 @@ namespace FLIPFluidSimulator
 
         //The texture used to display fluid data 
         public Texture2D fluidTexture;
+
+        //FLIP specific
+        public float flipRatio = 0.9f;
+        public int numParticleIters = 2;
+        public bool showParticles = true;
+        public bool compensateDrift = true;
+        public bool separateParticles = true;
 
 
 
