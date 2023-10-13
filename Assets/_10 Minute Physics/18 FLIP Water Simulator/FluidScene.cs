@@ -46,6 +46,9 @@ namespace FLIPFluidSimulator
         public float obstacleX = 0f;
         public float obstacleY = 0f;
 
+        public float obstacleVelX;
+        public float obstacleVelY;
+
         public float obstacleRadius = 0.15f;
 
         //The plane we simulate the fluid on

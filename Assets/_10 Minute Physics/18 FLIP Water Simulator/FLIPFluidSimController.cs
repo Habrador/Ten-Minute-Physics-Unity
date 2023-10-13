@@ -110,6 +110,70 @@ public class FLIPFluidSimController : MonoBehaviour
 
 
         //Add the circle we move with mouse
-        //SetObstacle(3f, 2f, true);
+        SetObstacle(3f, 2f, true);
+    }
+
+
+
+    //
+    // Position an obstacle in the fluid and make it interact with the fluid if it has a velocity
+    //
+
+    //x,y are in simulation space - NOT world space
+    public void SetObstacle(float x, float y, bool reset)
+    {
+        //Give the fluid a velocity if we have dragged the obstacle
+        float vx = 0f;
+        float vy = 0f;
+
+        if (!reset)
+        {
+            //Calculate the velocity the obstacle has
+            //Should be Time.deltaTime and not scene.dt because we move the object in LateUpdate()
+            vx = (x - scene.obstacleX) / Time.deltaTime;
+            vy = (y - scene.obstacleY) / Time.deltaTime;
+        }
+
+        //Save the position of the obsstacle so we can later display it
+        scene.obstacleX = x;
+        scene.obstacleY = y;
+
+        //Mark which cells are covered by the obstacle
+        float r = scene.obstacleRadius;
+
+        FLIPFluidSim f = scene.fluid;
+
+        //Ignore border
+        for (int i = 1; i < f.numX - 2; i++)
+        {
+            for (int j = 1; j < f.numY - 2; j++)
+            {
+                //Start by setting all cells to fluids (= 1)
+                f.s[f.To1D(i, j)] = 1f;
+
+                //Distance from circle center to cell center
+                float dx = (i + 0.5f) * f.h - x;
+                float dy = (j + 0.5f) * f.h - y;
+
+                //Is the cell within the obstacle?
+                //Using the square is faster than actual Pythagoras Sqrt(dx * dx + dy * dy) < Sqrt(r^2) but gives the same result 
+                if (dx * dx + dy * dy < r * r)
+                {
+                    //Mark this cell as obstacle 
+                    f.s[f.To1D(i, j)] = 0f;
+
+                    //Give the fluid a velocity if we have moved it
+                    //These are the 4 velocities belonging to this cell
+                    f.u[f.To1D(i, j)] = vx; //Left
+                    f.u[f.To1D(i + 1, j)] = vx; //Right
+                    f.v[f.To1D(i, j)] = vy; //Bottom
+                    f.v[f.To1D(i, j + 1)] = vy; //Top
+                }
+            }
+        }
+
+        scene.showObstacle = true;
+        scene.obstacleVelX = vx;
+        scene.obstacleVelY = vy;
     }
 }
