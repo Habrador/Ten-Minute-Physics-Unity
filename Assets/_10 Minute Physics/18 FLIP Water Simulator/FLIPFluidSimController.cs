@@ -1,3 +1,4 @@
+using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,4 +12,9 @@ public class FLIPFluidSimController : MonoBehaviour
 {
     //Public
     public Material fluidMaterial;
+
+    //Private
+    private FluidScene scene;
+
+    private FluidUI fluidUI;
 }
