@@ -1,3 +1,4 @@
+using EulerianFluidSimulator;
 using FLIPFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,11 +15,61 @@ public class FLIPFluidSimController : MonoBehaviour
     public Material fluidMaterial;
 
     //Private
-    private FluidScene scene;
+    private FLIPFluidScene scene;
 
     //private FluidUI fluidUI;
 
 
+    private void Start()
+    {
+        scene = new FLIPFluidScene(fluidMaterial);
+
+        //fluidUI = new FluidUI(this);
+
+        //The size of the plane we run the simulation on so we can convert from world space to simulation space
+        scene.simPlaneWidth = 2f;
+        scene.simPlaneHeight = 1f;
+
+        SetupScene();
+    }
+
+
+
+    private void Update()
+    {
+        //Display the fluid
+        //DisplayFluid.TestDraw(scene);
+
+        DisplayFLIPFluid.Draw(scene);
+    }
+
+
+
+    private void LateUpdate()
+    {
+        //Interactions such as moving obstacles with mouse and pause the simulation
+        //fluidUI.Interaction(scene);
+    }
+
+
+
+    private void FixedUpdate()
+    {
+        //Simulate();
+    }
+
+
+
+    private void OnGUI()
+    {
+        //fluidUI.MyOnGUI(scene);
+    }
+
+
+
+    //
+    // Init the fluid sim
+    //
 
     private void SetupScene()
     {
@@ -55,7 +106,7 @@ public class FLIPFluidSimController : MonoBehaviour
         float relWaterWidth = 0.6f;
 
         //Particle radius wrt cell size
-        float r = 0.3f * h;    
+        float r = 0.3f * h;
         float dx = 2f * r;
         float dy = Mathf.Sqrt(3f) / 2f * dx;
 
@@ -64,7 +115,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
         int numParticlesX = Mathf.FloorToInt((relWaterWidth * tankWidth - 2f * h - 2f * r) / dx);
         int numParticlesY = Mathf.FloorToInt((relWaterHeight * tankHeight - 2f * h - 2f * r) / dy);
-        
+
         int maxParticles = numParticlesX * numParticlesY;
 
 
@@ -76,7 +127,7 @@ public class FLIPFluidSimController : MonoBehaviour
         f.numParticles = numParticlesX * numParticlesY;
 
         int p = 0;
-        
+
         for (int i = 0; i < numX; i++)
         {
             for (int j = 0; j < numY; j++)

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FLIPFluidSimulator
 {
     //Settings for the fluid simulation and a ref to the fluid simulation itself    
-    public class FluidScene
+    public class FLIPFluidScene
     {
         public FLIPFluidSim fluid = null;
 
@@ -71,7 +71,7 @@ namespace FLIPFluidSimulator
 
 
 
-        public FluidScene(Material fluidMaterial)
+        public FLIPFluidScene(Material fluidMaterial)
         {
             this.fluidMaterial = fluidMaterial;
 
