@@ -55,7 +55,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Simulate();
+        //Simulate();
     }
 
 

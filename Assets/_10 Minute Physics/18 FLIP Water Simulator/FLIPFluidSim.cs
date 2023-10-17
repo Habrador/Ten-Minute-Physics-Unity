@@ -89,7 +89,7 @@ namespace FLIPFluidSimulator
         //Rest
         private readonly float particleRestDensity;
         //Radius
-        private readonly float particleRadius;
+        public readonly float particleRadius;
         //To save computations: this.pInvSpacing = 1.0 / (2.2 * particleRadius);
         private readonly float pInvSpacing;
         //???
