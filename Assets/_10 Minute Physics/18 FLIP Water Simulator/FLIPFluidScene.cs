@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
 namespace FLIPFluidSimulator
@@ -50,6 +51,8 @@ namespace FLIPFluidSimulator
         public float obstacleVelY;
 
         public float obstacleRadius = 0.05f; //Was 0.15 but his simulation is bigger
+
+        public Material obstacleMaterial = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Red);
 
         //The plane we simulate the fluid on
         //The plane is assumed to be centered around world space origo

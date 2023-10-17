@@ -49,11 +49,6 @@ namespace FLIPFluidSimulator
             //Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
             float circleRadius = scene.obstacleRadius + f.h;
 
-            //Debug.Log(scene.obstacleRadius);
-
-            //The color of the circle
-            DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
-
             //Circle center in global space
             Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
 
@@ -67,9 +62,7 @@ namespace FLIPFluidSimulator
             }
 
             //Display the circle mesh
-            Material material = DisplayShapes.GetMaterial(color);
-
-            Graphics.DrawMesh(circleMesh, circleCenter, Quaternion.identity, material, 0, Camera.main, 0);
+            Graphics.DrawMesh(circleMesh, circleCenter, Quaternion.identity, scene.obstacleMaterial, 0, Camera.main, 0);
         }
     }
 }
