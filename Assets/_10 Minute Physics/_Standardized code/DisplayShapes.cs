@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 //Help class to display geometric shapes
 public static class DisplayShapes
@@ -284,12 +285,31 @@ public static class DisplayShapes
 
 
 
-    //Generate a circular mesh 
-    public static Mesh GenerateCircleMesh(Vector3 circleCenter, float radius, int segments)
+    //Generate a circular mesh in some 2d space
+    public static Mesh GenerateCircleMesh_XZ(Vector3 circleCenter, float radius, int segments)
     {
         //Generate the vertices
         List<Vector3> vertices = UsefulMethods.GetCircleSegments_XZ(circleCenter, radius, segments);
 
+        Mesh m = GenerateMeshFromCircle(vertices, circleCenter);
+
+        return m;
+    }
+
+    public static Mesh GenerateCircleMesh_XY(Vector3 circleCenter, float radius, int segments)
+    {
+        //Generate the vertices
+        List<Vector3> vertices = UsefulMethods.GetCircleSegments_XY(circleCenter, radius, segments);
+
+        Mesh m = GenerateMeshFromCircle(vertices, circleCenter);
+
+        return m;
+    }
+
+
+
+    private static Mesh GenerateMeshFromCircle(List<Vector3> vertices, Vector3 circleCenter)
+    {
         //Add the center to make it easier to trianglulate
         vertices.Insert(0, circleCenter);
 

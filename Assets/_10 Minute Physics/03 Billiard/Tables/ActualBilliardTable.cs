@@ -82,12 +82,12 @@ public class ActualBilliardTable : BilliardTable
         //Holes
         foreach (Transform child in bigHolesParent)
         {
-            holesMeshes.Add(DisplayShapes.GenerateCircleMesh(child.position, bigHoleRadius, 20));
+            holesMeshes.Add(DisplayShapes.GenerateCircleMesh_XZ(child.position, bigHoleRadius, 20));
         }
 
         foreach (Transform child in smallHolesParent)
         {
-            holesMeshes.Add(DisplayShapes.GenerateCircleMesh(child.position, smallHoleRadius, 20));
+            holesMeshes.Add(DisplayShapes.GenerateCircleMesh_XZ(child.position, smallHoleRadius, 20));
         }
     }
 

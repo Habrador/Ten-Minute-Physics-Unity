@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements.Experimental;
+using static UnityEngine.Rendering.HableCurve;
 
 //A collection of standardized methods
 public static class UsefulMethods
@@ -11,6 +13,8 @@ public static class UsefulMethods
     //But it's better to use our own so we can test different values
     public const float EPSILON = 0.00001f;
 
+    //Useful to define which space 2d is in 3d
+    public enum Space { XZ, XY }
 
 
     //
@@ -52,10 +56,25 @@ public static class UsefulMethods
     //Is adding the start position twice, so if segments is 10 you get 11 vertices
     public static List<Vector3> GetCircleSegments_XZ(Vector3 circleCenter, float radius, int segments)
     {
+        List<Vector3> vertices = GetCircleSegments(circleCenter, radius, segments, Space.XZ);
+
+        return vertices;
+    }
+
+    //Generate vertices on the circle circumference in xy space
+    public static List<Vector3> GetCircleSegments_XY(Vector3 circleCenter, float radius, int segments)
+    {
+        List<Vector3> vertices = GetCircleSegments(circleCenter, radius, segments, Space.XY);
+
+        return vertices;
+    }
+
+
+    private static List<Vector3> GetCircleSegments(Vector3 circleCenter, float radius, int segments, Space space_2d)
+    {
         List<Vector3> vertices = new();
 
         float angleStep = 360f / (float)segments;
-
         float angle = 0f;
 
         for (int i = 0; i < segments + 1; i++)
@@ -63,7 +82,16 @@ public static class UsefulMethods
             float x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
             float y = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
 
-            Vector3 vertex = new Vector3(x, 0f, y) + circleCenter;
+            Vector3 vertex = Vector3.zero;
+
+            if (space_2d == Space.XY)
+            {
+                vertex = new Vector3(x, y, 0f) + circleCenter;
+            }
+            else if (space_2d == Space.XZ)
+            {
+                vertex = new Vector3(x, 0f, y) + circleCenter;
+            }
 
             vertices.Add(vertex);
 

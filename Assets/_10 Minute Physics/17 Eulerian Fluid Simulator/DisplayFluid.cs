@@ -11,6 +11,11 @@ namespace EulerianFluidSimulator
 	//Display obstacles as mesh
 	public static class DisplayFluid
 	{
+		private static Mesh circleMesh;
+		private static float circleRadius = 0f;
+
+
+
 		//For testing
 		public static void TestDraw(FluidScene scene)
 		{
@@ -317,7 +322,7 @@ namespace EulerianFluidSimulator
 			FluidSim f = scene.fluid;
 
 			//Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
-			float r = scene.obstacleRadius + f.h;
+			float circleRadius = scene.obstacleRadius + f.h;
 			
 			//The color of the circle
 			DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
@@ -334,74 +339,21 @@ namespace EulerianFluidSimulator
 			//3d space infront of the texture
 			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, -0.1f);
 
-			//Generate the circle mesh
-			Mesh circleMesh = GenerateCircleMesh(circleCenter, r, 50);
+			//Generate a new circle mesh if we havent done so before or radius has changed 
+			if (circleMesh == null || DisplayFluid.circleRadius != circleRadius)
+			{
+                circleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, circleRadius, 50);
+
+				DisplayFluid.circleRadius = circleRadius;
+            }
 
 			//Display the circle mesh
 			Material material = DisplayShapes.GetMaterial(color);
 
-			Graphics.DrawMesh(circleMesh, Vector3.zero, Quaternion.identity, material, 0, Camera.main, 0);
+			Graphics.DrawMesh(circleMesh, circleCenter, Quaternion.identity, material, 0, Camera.main, 0);
 
 
 			//The guy is also giving the circle a black border, which we could replicate by drawing a smaller circle but it doesn't matter! 
-		}
-
-
-
-		//Generate a circle mesh 
-		private static Mesh GenerateCircleMesh(Vector3 circleCenter, float radius, int segments)
-		{
-			//Generate the vertices
-			List<Vector3> vertices = GetCircleSegments_XY(circleCenter, radius, segments);
-
-			//Add the center to make it easier to trianglulate
-			vertices.Insert(0, circleCenter);
-
-			//Generate the triangles
-			List<int> triangles = new();
-
-			for (int i = 2; i < vertices.Count; i++)
-			{
-				triangles.Add(0); //0 because the center vertex was added at position 0
-				triangles.Add(i);
-				triangles.Add(i - 1);
-			}
-
-			//Generate the mesh
-			Mesh m = new();
-
-			m.SetVertices(vertices);
-			m.SetTriangles(triangles, 0);
-
-			m.RecalculateNormals();
-
-			return m;
-		}
-
-
-
-		//Generate vertices on the circle circumference in xy space
-		private static List<Vector3> GetCircleSegments_XY(Vector3 circleCenter, float radius, int segments)
-		{
-			List<Vector3> vertices = new();
-
-			float angleStep = 360f / (float)segments;
-
-			float angle = 0f;
-
-			for (int i = 0; i < segments + 1; i++)
-			{
-				float x = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
-				float y = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
-
-				Vector3 vertex = new Vector3(x, y, 0f) + circleCenter;
-
-				vertices.Add(vertex);
-
-				angle += angleStep;
-			}
-
-			return vertices;
 		}
 
 

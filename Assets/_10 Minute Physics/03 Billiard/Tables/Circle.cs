@@ -15,7 +15,7 @@ public class Circle : BilliardTable
     {
         MeshFilter mf = this.gameObject.GetComponent<MeshFilter>();
 
-        mf.sharedMesh = DisplayShapes.GenerateCircleMesh(transform.position, radius, segments);
+        mf.sharedMesh = DisplayShapes.GenerateCircleMesh_XZ(transform.position, radius, segments);
     }
 
 
