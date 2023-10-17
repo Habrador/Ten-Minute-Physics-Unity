@@ -73,16 +73,15 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private void SetupScene()
     {
-        //scene.sceneNr = sceneNr;
-        scene.obstacleRadius = 0.15f;
+        scene.obstacleRadius = 0.05f; //Was 0.15 but his simulation is 3x bigger in world space
         scene.overRelaxation = 1.9f;
 
         scene.SetTimeStep(1f / 60f);
         scene.numPressureIters = 40;
+        scene.numParticleIters = 2;
 
         //How detailed the simulation is in height (y) direction
-        //Default was 100 in the source code but it's slow as molasses in Unity
-        int res = 50;
+        int res = 100;
 
         //The height of the simulation (the plane might be smaller but it doesnt matter because we can pretend its 3m and no one knows)
         float simHeight = 3f;

@@ -9,7 +9,8 @@ namespace FLIPFluidSimulator
     public class DisplayFLIPFluid : MonoBehaviour
     {
         private static Mesh circleMesh;
-        private static float circleRadius = 0f;
+        
+
 
         //Called every Update
         public static void Draw(FLIPFluidScene scene)
@@ -48,6 +49,8 @@ namespace FLIPFluidSimulator
             //Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
             float circleRadius = scene.obstacleRadius + f.h;
 
+            //Debug.Log(scene.obstacleRadius);
+
             //The color of the circle
             DisplayShapes.ColorOptions color = DisplayShapes.ColorOptions.Gray;
 
@@ -57,21 +60,16 @@ namespace FLIPFluidSimulator
             //3d space infront of the texture
             Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, -0.1f);
 
-            //Generate a new circle mesh if we havent done so before or radius has changed 
-            if (circleMesh == null || DisplayFLIPFluid.circleRadius != circleRadius)
+            //Generate a new circle mesh if we havent done so
+            if (circleMesh == null)
             {
                 circleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, circleRadius, 50);
-
-                DisplayFLIPFluid.circleRadius = circleRadius;
             }
 
             //Display the circle mesh
             Material material = DisplayShapes.GetMaterial(color);
 
             Graphics.DrawMesh(circleMesh, circleCenter, Quaternion.identity, material, 0, Camera.main, 0);
-
-
-            //The guy is also giving the circle a black border, which we could replicate by drawing a smaller circle but it doesn't matter! 
         }
     }
 }

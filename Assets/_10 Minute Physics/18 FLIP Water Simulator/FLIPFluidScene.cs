@@ -49,7 +49,7 @@ namespace FLIPFluidSimulator
         public float obstacleVelX;
         public float obstacleVelY;
 
-        public float obstacleRadius = 0.15f;
+        public float obstacleRadius = 0.05f; //Was 0.15 but his simulation is bigger
 
         //The plane we simulate the fluid on
         //The plane is assumed to be centered around world space origo
