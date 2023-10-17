@@ -14,10 +14,14 @@ public class FLIPFluidSimController : MonoBehaviour
     //Public
     public Material fluidMaterial;
 
+    public GameObject particlePrefabGO;
+
+
     //Private
     private FLIPFluidScene scene;
 
     private FLIPFluidUI fluidUI;
+
 
 
     private void Start()
@@ -40,7 +44,7 @@ public class FLIPFluidSimController : MonoBehaviour
         //Display the fluid
         //DisplayFluid.TestDraw(scene);
 
-        DisplayFLIPFluid.Draw(scene);
+        DisplayFLIPFluid.Draw(scene, particlePrefabGO);
     }
 
 

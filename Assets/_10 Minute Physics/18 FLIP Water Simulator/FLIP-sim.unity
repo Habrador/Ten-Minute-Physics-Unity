@@ -168,6 +168,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fluidMaterial: {fileID: 2100000, guid: 260223ed652cf634e817a132e78ee5ce, type: 2}
+  particlePrefabGO: {fileID: 7769444453698954439, guid: 4fa7ad6658693a8408b1eca62d831c3a,
+    type: 3}
 --- !u!1 &148191697
 GameObject:
   m_ObjectHideFlags: 0
