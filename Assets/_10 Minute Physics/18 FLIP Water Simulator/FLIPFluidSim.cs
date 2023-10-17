@@ -179,9 +179,46 @@ namespace FLIPFluidSimulator
 
 
         //Simulation loop for the fluid
-        public void Simulate()
+        public void Simulate(
+            float dt, 
+            float gravity, 
+            float flipRatio, 
+            int numPressureIters, 
+            int numParticleIters, 
+            float overRelaxation, 
+            bool compensateDrift, 
+            bool separateParticles, 
+            float obstacleX, 
+            float abstacleY, 
+            float obstacleRadius)
         {
+            int numSubSteps = 1;
+
+            float sdt = dt / (float)numSubSteps;
+
+            for (int step = 0; step < numSubSteps; step++)
+            {
+                //IntegrateParticles(sdt, gravity);
+                
+                if (separateParticles)
+                {
+                    //PushParticlesApart(numParticleIters);
+                }
+                
+                //HandleParticleCollisions(obstacleX, abstacleY, obstacleRadius)
+
+                //TransferVelocities(true);
+                
+                //UpdateParticleDensity();
+                
+                //SolveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
+                
+                //TransferVelocities(false, flipRatio);
+            }
+
+            //UpdateParticleColors();
             
+            //UpdateCellColors();
         }
     }
 
