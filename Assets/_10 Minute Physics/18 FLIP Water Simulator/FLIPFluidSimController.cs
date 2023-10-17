@@ -17,14 +17,14 @@ public class FLIPFluidSimController : MonoBehaviour
     //Private
     private FLIPFluidScene scene;
 
-    //private FluidUI fluidUI;
+    private FLIPFluidUI fluidUI;
 
 
     private void Start()
     {
         scene = new FLIPFluidScene(fluidMaterial);
 
-        //fluidUI = new FluidUI(this);
+        fluidUI = new FLIPFluidUI(this);
 
         //The size of the plane we run the simulation on so we can convert from world space to simulation space
         scene.simPlaneWidth = 2f;
@@ -48,7 +48,7 @@ public class FLIPFluidSimController : MonoBehaviour
     private void LateUpdate()
     {
         //Interactions such as moving obstacles with mouse and pause the simulation
-        //fluidUI.Interaction(scene);
+        fluidUI.Interaction(scene);
     }
 
 
