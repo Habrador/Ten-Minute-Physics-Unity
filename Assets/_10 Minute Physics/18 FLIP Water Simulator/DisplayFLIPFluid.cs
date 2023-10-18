@@ -117,11 +117,11 @@ namespace FLIPFluidSimulator
 
 
             //Draw the particles as a point cloud
-            //List<Vector3> verts = new(particleGlobalPositions);
+            List<Vector3> verts = new(particleGlobalPositions);
 
-            //Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
+            Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
 
-            //DisplayShapes.DrawVertices(verts, mat);
+            DisplayShapes.DrawVertices(verts, mat);
 
             /*
             //Draw the particles as meshes
@@ -160,7 +160,7 @@ namespace FLIPFluidSimulator
             //    particleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, particleRadius, 8);
             //}
 
-
+            /*
             //Better to let Unity handling the batching for now
             //That means we have to create a gameobject for each particle
             if (particleTransforms == null)
@@ -201,6 +201,7 @@ namespace FLIPFluidSimulator
             {
                 particleTransforms[i].position = particleGlobalPositions[i];
             }
+            */
         }
     }
 }

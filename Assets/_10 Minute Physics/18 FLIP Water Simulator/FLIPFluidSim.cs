@@ -10,28 +10,6 @@ namespace FLIPFluidSimulator
         //- Treat air as nothing because has much smaller density than water. Dont process or access velocities between air cells
         //- Use particles with position and velocity. A water cell is a cell with particles in it -> PIC (Particle in Cell)
 
-        //PIC:
-        //Simulate Particles
-        //Velocity transfer: Particles -> Grid
-        //Make the grid velocities incompressible
-        //Velocity transfer: Grid -> Particles
-        //(Particles carry velocity so no grid advection step is needed!!!)
-        //Introduces viscocity
-
-        //FLIP:
-        //Simulate Particles
-        //Velocity transfer: Particles -> Grid and make a copy of the grid velocities
-        //Make the grid velocities incompressible
-        //Velocity transfer: Add velcity changes to the particles: incompressible vel - copy of the grid velocities
-        //Introduces noise
-
-        //Combine PIC with FLIP to minimize viscocity and noise: 90% FLIP + 10% PIC = success!
-
-        //Make the solver aware of drift (fluid sinks to the bottom disappearing)
-        //Decrease time step or increase iteration count = slow simulation
-        //Better to push particles apart
-        //...and compute particle density in each cell to reduce divergence in dense regions -> more outward push in dense regions
-
 
         //Simulation parameters
         private readonly float density;
@@ -178,7 +156,31 @@ namespace FLIPFluidSimulator
 
 
 
-        //Simulation loop for the fluid
+        //
+        // Simulation loop for the fluid
+        //
+
+        //PIC:
+        //Simulate Particles
+        //Velocity transfer: Particles -> Grid
+        //Make the grid velocities incompressible
+        //Velocity transfer: Grid -> Particles
+        //(Particles carry velocity so no grid advection step is needed!!!)
+        //Introduces viscocity
+
+        //FLIP:
+        //Simulate Particles
+        //Velocity transfer: Particles -> Grid and make a copy of the grid velocities
+        //Make the grid velocities incompressible
+        //Velocity transfer: Add velcity changes to the particles: incompressible vel - copy of the grid velocities
+        //Introduces noise
+
+        //Combine PIC with FLIP to minimize viscocity and noise: 90% FLIP + 10% PIC = success!
+
+        //Make the solver aware of drift (fluid sinks to the bottom disappearing)
+        //Decrease time step or increase iteration count = slow simulation
+        //Better to push particles apart
+        //...and compute particle density in each cell to reduce divergence in dense regions -> more outward push in dense regions
         public void Simulate(
             float dt, 
             float gravity, 
@@ -198,27 +200,60 @@ namespace FLIPFluidSimulator
 
             for (int step = 0; step < numSubSteps; step++)
             {
+                //Simulate particles
+            
                 //IntegrateParticles(sdt, gravity);
                 
                 if (separateParticles)
                 {
                     //PushParticlesApart(numParticleIters);
                 }
-                
+
                 //HandleParticleCollisions(obstacleX, abstacleY, obstacleRadius)
 
+
+                //Velocity transfer
                 //TransferVelocities(true);
-                
+
+
                 //UpdateParticleDensity();
-                
+
+
+                //Make the grid velocities incompressible
                 //SolveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
-                
+
+
+                //Velocity transfer: Grid -> Particles
                 //TransferVelocities(false, flipRatio);
             }
 
             //UpdateParticleColors();
-            
+
             //UpdateCellColors();
+        }
+
+
+
+        //
+        // Simulate particles
+        //
+
+        //Move particles
+        private void IntegrateParticles(float dt, float gravity)
+        {
+            //For each particle
+            for (int i = 0; i < this.numParticles; i++)
+            {
+                //Update vel: v = v + a * dt
+                //y dir with gravity
+                this.particleVel[2 * i + 1] += dt * gravity;
+
+                //Update pos: s = s + v * dt
+                //x dir
+                this.particlePos[2 * i] += this.particleVel[2 * i] * dt;
+                //y dir
+                this.particlePos[2 * i + 1] += this.particleVel[2 * i + 1] * dt;
+            }
         }
     }
 

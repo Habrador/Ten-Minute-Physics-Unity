@@ -31,7 +31,7 @@ namespace FLIPFluidSimulator
         //Default is 40 and we set it in SetupScene
         public int numPressureIters = 100;
 
-        //Is sometimes 0 
+        //Gravity in y dir
         public float gravity = -9.81f;
 
         //Is used in the "paint" scene to add smoke in some sinus curve, so we can paint with different colors
