@@ -68,14 +68,19 @@ namespace FLIPFluidSimulator
         private readonly float particleRestDensity;
         //Radius
         public readonly float particleRadius;
+        //Same as 1/h - not sure why hes using it... Theres an invSpacing above...
         //To save computations: this.pInvSpacing = 1.0 / (2.2 * particleRadius);
+        //We use it because we might use some other cell structure to handle particle-particle collision more efficient
+        //To handle particle-particle collision we check the cell the particle is in and surrounding cells. To make sure that works, we may use another spacing... 
         private readonly float pInvSpacing;
-        //???
+        //See above why these may differ from numX and numCells, etc
         private readonly int pNumX;
         private readonly int pNumY;
         private readonly int pNumCells;
-        //???
+        //For particle-particle collision
+        //How many particles are in each cell?
         private readonly int[] numCellParticles;
+        //Partial sums, store the cummulative number of particles in each cell
         private readonly int[] firstCellParticle;
         private readonly int[] cellParticleIds;
 
@@ -147,11 +152,11 @@ namespace FLIPFluidSimulator
             this.pNumCells = this.pNumX * this.pNumY;
 
             this.numCellParticles = new int[this.pNumCells];
+            //Should be one bigger to be on the safe side
             this.firstCellParticle = new int[this.pNumCells + 1];
             this.cellParticleIds = new int[maxParticles];
 
             this.numParticles = 0;
-
         }
 
 
@@ -334,6 +339,167 @@ namespace FLIPFluidSimulator
                 //Update position
                 this.particlePos[2 * i] = x;
                 this.particlePos[2 * i + 1] = y;
+            }
+        }
+
+
+        //Handle particle-particle collision
+        //Same idea as in tutorial 11 "Finding overlaps among thousands of objects blazing fast"
+        private void PushParticlesApart(int numIters)
+        {
+            float colorDiffusionCoeff = 0.001f;
+
+            //Count particles per cell
+            System.Array.Fill(this.numCellParticles, 0);
+            //this.numCellParticles.fill(0);
+
+            //For each particle
+            for (int i = 0; i < this.numParticles; i++)
+            {
+                float x = this.particlePos[2 * i];
+                float y = this.particlePos[2 * i + 1];
+
+                //Which cell is this particle in?  
+                int xi = Mathf.Clamp(Mathf.FloorToInt(x * this.pInvSpacing), 0, this.pNumX - 1);
+                int yi = Mathf.Clamp(Mathf.FloorToInt(y * this.pInvSpacing), 0, this.pNumY - 1);
+                
+                //2d array to 1d
+                int cellNr = xi * this.pNumY + yi;
+                
+                //Add 1 to this cell because a particle is in it
+                this.numCellParticles[cellNr]++;
+            }
+
+            
+            //Partial sums
+            int first = 0;
+
+            //For each cell
+            for (int i = 0; i < this.pNumCells; i++)
+            {
+                first += this.numCellParticles[i];
+
+                this.firstCellParticle[i] = first;
+            }
+
+            //Guard
+            this.firstCellParticle[this.pNumCells] = first;
+
+
+            //Fill particles into cells
+            for (int i = 0; i < this.numParticles; i++)
+            {
+                float x = this.particlePos[2 * i];
+                float y = this.particlePos[2 * i + 1];
+
+                //Which cell is this particle in?  
+                int xi = Mathf.Clamp(Mathf.FloorToInt(x * this.pInvSpacing), 0, this.pNumX - 1);
+                int yi = Mathf.Clamp(Mathf.FloorToInt(y * this.pInvSpacing), 0, this.pNumY - 1);
+
+                //2d array to 1d
+                int cellNr = xi * this.pNumY + yi;
+                
+                this.firstCellParticle[cellNr]--;
+                
+                this.cellParticleIds[this.firstCellParticle[cellNr]] = i;
+            }
+
+
+            //Push particles apart
+
+            float minDist = 2f * this.particleRadius;
+            float minDist2 = minDist * minDist;
+
+            //The more iterations the fewer the particles are still colliding with each other
+            for (int iter = 0; iter < numIters; iter++)
+            {
+                //For each particle
+                for (int i = 0; i < this.numParticles; i++)
+                {
+                    float px = this.particlePos[2 * i];
+                    float py = this.particlePos[2 * i + 1];
+
+                    //Which cell is this particle in?
+                    int pxi = Mathf.FloorToInt(px * this.pInvSpacing);
+                    int pyi = Mathf.FloorToInt(py * this.pInvSpacing);
+
+                    //Check this cell and surrounding cells for particles that can collide
+                    int x0 = Mathf.Max(pxi - 1, 0);
+                    int y0 = Mathf.Max(pyi - 1, 0);
+
+                    int x1 = Mathf.Min(pxi + 1, this.pNumX - 1);
+                    int y1 = Mathf.Min(pyi + 1, this.pNumY - 1);
+
+                    for (int xi = x0; xi <= x1; xi++)
+                    {
+                        for (int yi = y0; yi <= y1; yi++)
+                        {
+                            //2d array to 1d 
+                            int cellNr = xi * this.pNumY + yi;
+
+                            int firstIndex = this.firstCellParticle[cellNr];
+                            int lastIndex = this.firstCellParticle[cellNr + 1];
+                            
+                            for (int j = firstIndex; j < lastIndex; j++)
+                            {
+                                int id = this.cellParticleIds[j];
+
+                                //Dont check the particle itself
+                                if (id == i)
+                                {
+                                    continue;
+                                }
+                                
+                                //The pos of the other particle we want to check collision against
+                                float qx = this.particlePos[2 * id];
+                                float qy = this.particlePos[2 * id + 1];
+
+                                //The distance square to this other particle
+                                float dx = qx - px;
+                                float dy = qy - py;
+
+                                float d2 = dx * dx + dy * dy;
+
+                                //If outside or exactly at the same position
+                                if (d2 > minDist2 || d2 == 0f)
+                                {
+                                    continue;
+                                }
+
+                                //The actual distance to the other particle
+                                float d = Mathf.Sqrt(d2);
+
+                                //Push each particle half the distance needed to make them no longer collide
+                                float s = 0.5f * (minDist - d) / d;
+                                
+                                dx *= s;
+                                dy *= s;
+                                
+                                //Update their positions
+                                this.particlePos[2 * i] -= dx;
+                                this.particlePos[2 * i + 1] -= dy;
+
+                                this.particlePos[2 * id] += dx;
+                                this.particlePos[2 * id + 1] += dy;
+
+                                //Diffuse colors
+                                //Why are we updating colors here??? 
+                                /*
+                                for (int k = 0; k < 3; k++)
+                                {
+                                    Color color0 = this.particleColor[3 * i + k];
+                                    Color color1 = this.particleColor[3 * id + k];
+                                    
+                                    Color color = (color0 + color1) * 0.5;
+
+                                    this.particleColor[3 * i + k] = color0 + (color - color0) * colorDiffusionCoeff;
+                                    this.particleColor[3 * id + k] = color1 + (color - color1) * colorDiffusionCoeff;
+                                }
+                                */
+                            }
+                        }
+                    }
+                }
             }
         }
     }

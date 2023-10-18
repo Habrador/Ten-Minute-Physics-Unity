@@ -9,7 +9,6 @@ using UnityEngine;
 //Based on: "How to write a FLIP Water Simulator" https://matthias-research.github.io/pages/tenMinutePhysics/
 //TODO:
 //- What is drift?
-//- What is the point of float h = 1f / this.invSpacing; in HandleParticleCollisions, why not use just h?
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public
