@@ -202,7 +202,7 @@ namespace FLIPFluidSimulator
             {
                 //Simulate particles
             
-                //IntegrateParticles(sdt, gravity);
+                IntegrateParticles(sdt, gravity);
                 
                 if (separateParticles)
                 {

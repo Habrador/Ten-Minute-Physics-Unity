@@ -38,7 +38,7 @@ namespace FLIPFluidSimulator
         public int frameNr = 0;
 
         //Is the simulation paused?
-        public bool isPaused = false;
+        public bool isPaused = true;
 
         //Obstacles
         public bool showObstacle = false;

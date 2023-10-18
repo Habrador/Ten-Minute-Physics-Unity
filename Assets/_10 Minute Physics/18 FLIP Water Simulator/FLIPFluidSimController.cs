@@ -59,7 +59,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //Simulate();
+        Simulate();
     }
 
 
@@ -75,23 +75,25 @@ public class FLIPFluidSimController : MonoBehaviour
     //Needs to be accessed from the UI so we can simulate step by step by pressing a key
     public void Simulate()
     {
-        if (!scene.isPaused)
+        if (scene.isPaused)
         {
-            scene.fluid.Simulate(
-                scene.dt, 
-                scene.gravity, 
-                scene.flipRatio, 
-                scene.numPressureIters, 
+            return;
+        }
+
+        scene.fluid.Simulate(
+                scene.dt,
+                scene.gravity,
+                scene.flipRatio,
+                scene.numPressureIters,
                 scene.numParticleIters,
-                scene.overRelaxation, 
-                scene.compensateDrift, 
+                scene.overRelaxation,
+                scene.compensateDrift,
                 scene.separateParticles,
-                scene.obstacleX, 
-                scene.obstacleY, 
+                scene.obstacleX,
+                scene.obstacleY,
                 scene.obstacleRadius);
 
-            scene.frameNr++;
-        }
+        scene.frameNr++;
     }
 
 

@@ -54,6 +54,8 @@ namespace FLIPFluidSimulator
 
                     this.lastMousePos = mousePos;
                 }
+
+                scene.isPaused = false;
             }
 
 
