@@ -191,8 +191,10 @@ namespace FLIPFluidSimulator
             bool compensateDrift, 
             bool separateParticles, 
             float obstacleX, 
-            float abstacleY, 
-            float obstacleRadius)
+            float obstacleY, 
+            float obstacleRadius, 
+            float obstacleVelX, 
+            float obstacleVelY)
         {
             int numSubSteps = 1;
 
@@ -202,6 +204,7 @@ namespace FLIPFluidSimulator
             {
                 //Simulate particles
             
+                //Update particle vel and pos by adding gravity
                 IntegrateParticles(sdt, gravity);
                 
                 if (separateParticles)
@@ -209,7 +212,8 @@ namespace FLIPFluidSimulator
                     //PushParticlesApart(numParticleIters);
                 }
 
-                //HandleParticleCollisions(obstacleX, abstacleY, obstacleRadius)
+                //Handle particle-world collisions
+                HandleParticleCollisions(obstacleX, obstacleY, obstacleRadius, obstacleVelX, obstacleVelY);
 
 
                 //Velocity transfer
@@ -253,6 +257,80 @@ namespace FLIPFluidSimulator
                 this.particlePos[2 * i] += this.particleVel[2 * i] * dt;
                 //y dir
                 this.particlePos[2 * i + 1] += this.particleVel[2 * i + 1] * dt;
+            }
+        }
+
+
+        //Handle particle-world collisions
+        private void HandleParticleCollisions(float obstacleX, float obstacleY, float obstacleRadius, float obstacleVelX, float obstacleVelY)
+        {
+            //this.pInvSpacing = 1.0 / (2.2 * particleRadius);
+            //-> h = 2.2 * particleRadius  
+            //Why are we just not using this.h???
+            float h = 1f / this.invSpacing;
+            //float r = this.particleRadius;
+
+            //For collision with moving cirlce obtacle
+            //The minimum distance allowed between a particle and the obstacle 
+            float minDist = obstacleRadius + this.particleRadius;
+            float minDistSquare = minDist * minDist;
+
+            //For collision with walls
+            //First cell has width h
+            float minX = h + this.particleRadius;
+            float maxX = (this.numX - 1) * h - this.particleRadius;
+            float minY = h + this.particleRadius;
+            float maxY = (this.numY - 1) * h - this.particleRadius;
+
+            //For each particle
+            for (int i = 0; i < this.numParticles; i++)
+            {
+                float x = this.particlePos[2 * i];
+                float y = this.particlePos[2 * i + 1];
+
+
+                //Obstacle collision
+                //The distance square between the particle and the obstacle
+                float dx = x - obstacleX;
+                float dy = y - obstacleY;
+                float distSquare = dx * dx + dy * dy;
+
+                //If a particle is colliding with the moving obstalcle, set their velocity to the velocity of the obstacle
+                if (distSquare < minDistSquare)
+                {
+                    this.particleVel[2 * i] = obstacleVelX;
+                    this.particleVel[2 * i + 1] = obstacleVelY;
+                }
+
+
+                //Wall collisions
+                //If a particle is outside, move it in again and set its velocity to zero
+                //x
+                if (x < minX)
+                {
+                    x = minX;
+                    this.particleVel[2 * i] = 0f;
+                }
+                if (x > maxX)
+                {
+                    x = maxX;
+                    this.particleVel[2 * i] = 0f;
+                }
+                //y
+                if (y < minY)
+                {
+                    y = minY;
+                    this.particleVel[2 * i + 1] = 0f;
+                }
+                if (y > maxY)
+                {
+                    y = maxY;
+                    this.particleVel[2 * i + 1] = 0f;
+                }
+
+                //Update position
+                this.particlePos[2 * i] = x;
+                this.particlePos[2 * i + 1] = y;
             }
         }
     }
