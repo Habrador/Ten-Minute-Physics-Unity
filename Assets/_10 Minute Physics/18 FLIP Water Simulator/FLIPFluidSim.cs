@@ -266,9 +266,12 @@ namespace FLIPFluidSimulator
         {
             //this.pInvSpacing = 1.0 / (2.2 * particleRadius);
             //-> h = 2.2 * particleRadius  
-            //Why are we just not using this.h???
+            //Why are we just not using this.h??? They seem to have the same value...
             float h = 1f / this.invSpacing;
             //float r = this.particleRadius;
+
+            //Debug.Log(h);
+            //Debug.Log(this.h);
 
             //For collision with moving cirlce obtacle
             //The minimum distance allowed between a particle and the obstacle 
