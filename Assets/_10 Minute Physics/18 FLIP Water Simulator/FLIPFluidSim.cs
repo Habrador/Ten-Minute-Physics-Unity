@@ -214,7 +214,7 @@ namespace FLIPFluidSimulator
                 
                 if (separateParticles)
                 {
-                    //PushParticlesApart(numParticleIters);
+                    PushParticlesApart(numParticleIters);
                 }
 
                 //Handle particle-world collisions
@@ -351,7 +351,6 @@ namespace FLIPFluidSimulator
 
             //Count particles per cell
             System.Array.Fill(this.numCellParticles, 0);
-            //this.numCellParticles.fill(0);
 
             //For each particle
             for (int i = 0; i < this.numParticles; i++)
@@ -369,7 +368,7 @@ namespace FLIPFluidSimulator
                 //Add 1 to this cell because a particle is in it
                 this.numCellParticles[cellNr]++;
             }
-
+            
             
             //Partial sums
             int first = 0;
@@ -384,7 +383,7 @@ namespace FLIPFluidSimulator
 
             //Guard
             this.firstCellParticle[this.pNumCells] = first;
-
+            
 
             //Fill particles into cells
             for (int i = 0; i < this.numParticles; i++)
@@ -403,12 +402,12 @@ namespace FLIPFluidSimulator
                 
                 this.cellParticleIds[this.firstCellParticle[cellNr]] = i;
             }
-
+            
 
             //Push particles apart
 
             float minDist = 2f * this.particleRadius;
-            float minDist2 = minDist * minDist;
+            float minDistSquare = minDist * minDist;
 
             //The more iterations the fewer the particles are still colliding with each other
             for (int iter = 0; iter < numIters; iter++)
@@ -429,7 +428,7 @@ namespace FLIPFluidSimulator
 
                     int x1 = Mathf.Min(pxi + 1, this.pNumX - 1);
                     int y1 = Mathf.Min(pyi + 1, this.pNumY - 1);
-
+                    
                     for (int xi = x0; xi <= x1; xi++)
                     {
                         for (int yi = y0; yi <= y1; yi++)
@@ -458,17 +457,17 @@ namespace FLIPFluidSimulator
                                 float dx = qx - px;
                                 float dy = qy - py;
 
-                                float d2 = dx * dx + dy * dy;
-
+                                float dSquare = dx * dx + dy * dy;
+                               
                                 //If outside or exactly at the same position
-                                if (d2 > minDist2 || d2 == 0f)
+                                if (dSquare > minDistSquare || dSquare == 0f)
                                 {
                                     continue;
                                 }
 
                                 //The actual distance to the other particle
-                                float d = Mathf.Sqrt(d2);
-
+                                float d = Mathf.Sqrt(dSquare);
+                                
                                 //Push each particle half the distance needed to make them no longer collide
                                 float s = 0.5f * (minDist - d) / d;
                                 
