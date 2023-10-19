@@ -139,7 +139,7 @@ public class FLIPFluidSimController : MonoBehaviour
         //Particles
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
-        float relWaterHeight = 0.4f;
+        float relWaterHeight = 0.2f;
         float relWaterWidth = 0.3f;
 
         //Particle radius wrt cell size
@@ -164,6 +164,7 @@ public class FLIPFluidSimController : MonoBehaviour
         int maxParticles = numParticlesX * numParticlesY;
 
         //default is 28860 particles which is slow as molasses
+        //3000 particles is going relatively fast
         //Debug.Log(maxParticles);
 
         //Create a new fluid simulator
