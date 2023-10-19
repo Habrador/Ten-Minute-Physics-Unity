@@ -529,10 +529,9 @@ namespace FLIPFluidSimulator
             //Reset pressure 
             System.Array.Fill(p, 0f);
 
-            //Swap buffers
-            //Why do we swap these buffers here???
-            (this.uPrev, this.u) = (this.u, this.uPrev);
-            (this.vPrev, this.v) = (this.v, this.vPrev);
+            //Fill previous velocities arrays before we update velocities
+            System.Array.Copy(u, uPrev, u.Length);
+            System.Array.Copy(v, vPrev, v.Length);
 
             int n = this.numY;
 
