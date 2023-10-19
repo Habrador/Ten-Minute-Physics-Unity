@@ -214,7 +214,7 @@ namespace FLIPFluidSimulator
                 
                 if (separateParticles)
                 {
-                    //PushParticlesApart(numParticleIters);
+                    PushParticlesApart(numParticleIters);
                 }
 
                 //Handle particle-world collisions

@@ -113,6 +113,8 @@ public class FLIPFluidSimController : MonoBehaviour
         scene.numPressureIters = 40;
         scene.numParticleIters = 2;
 
+        //scene.isPaused = false;
+
         //How detailed the simulation is in height (y) direction
         int res = 100;
 
@@ -139,17 +141,28 @@ public class FLIPFluidSimController : MonoBehaviour
 
         //Particle radius wrt cell size
         float r = 0.3f * h;
+        //We want to init the particles not like a chessboard but like this:
+        //o o o o
+        // o o o
+        //o o o o
         float dx = 2f * r;
         float dy = Mathf.Sqrt(3f) / 2f * dx;
 
         float tankWidth = numX * h;
         float tankHeight = numY * h;
 
-        int numParticlesX = Mathf.FloorToInt((relWaterWidth * tankWidth - 2f * h - 2f * r) / dx);
-        int numParticlesY = Mathf.FloorToInt((relWaterHeight * tankHeight - 2f * h - 2f * r) / dy);
+        //Debug.Log((tankHeight * relWaterHeight)/dy);
+
+        //Have to compensate for the border and 0.5 particle on each side to make sure they fit
+        float borderAndOneParticleCompensation = 2f * h + 2f * r;
+
+        //And then we divide the allowed distance with the distance between each particle to figure out how many particles fit
+        int numParticlesX = Mathf.FloorToInt((relWaterWidth * tankWidth - borderAndOneParticleCompensation) / dx);
+        int numParticlesY = Mathf.FloorToInt((relWaterHeight * tankHeight - borderAndOneParticleCompensation) / dy);
 
         int maxParticles = numParticlesX * numParticlesY;
 
+        //Debug.Log(maxParticles);
 
         //Create a new fluid simulator
         FLIPFluidSim f = scene.fluid = new FLIPFluidSim(density, numX, numY, h, r, maxParticles);
@@ -160,12 +173,19 @@ public class FLIPFluidSimController : MonoBehaviour
 
         int p = 0;
 
-        for (int i = 0; i < numX; i++)
+        for (int i = 0; i < numParticlesX; i++)
         {
-            for (int j = 0; j < numY; j++)
+            for (int j = 0; j < numParticlesY; j++)
             {
-                //(x,y)
-                f.particlePos[p++] = h + r + dx * i + (j % 2 == 0 ? 0f : r);
+                //o o o o
+                // o o o
+                //o o o o
+                //To get every other particle to offset a little in x dir:
+                float xOffset = j % 2 == 0 ? 0f : r;
+
+                //x
+                f.particlePos[p++] = h + r + dx * i + xOffset;
+                //y
                 f.particlePos[p++] = h + r + dy * j;
             }
         }

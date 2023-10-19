@@ -68,10 +68,14 @@ namespace FLIPFluidSimulator
 
         //FLIP specific
         public float flipRatio = 0.9f;
-        public int numParticleIters = 2;
-        public bool showParticles = true;
-        public bool compensateDrift = true;
+        //Do we want to separate the particles so they are not intersecting?
         public bool separateParticles = true;
+        //How many loops over all particles to make sure they are not intersecting?
+        public int numParticleIters = 2;
+        //Display particles in the scene?
+        public bool showParticles = true;
+        //
+        public bool compensateDrift = true;
 
 
 
