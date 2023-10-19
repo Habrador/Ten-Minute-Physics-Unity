@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,8 +16,10 @@ namespace FLIPFluidSimulator
         private readonly float density;
 
         //Simulation grid settings
+        //These are called fNumX (f = fluid) to make them differ from pNumX (p = particle)
         public int numX;
         public int numY;
+        private int numCells;
         //Cell height and width
         public float h;
         //1/h
@@ -26,14 +29,15 @@ namespace FLIPFluidSimulator
         //Orientation of the grid:
         // i + 1 means right, j + 1 means up
         // (0,0) is bottom-left
+
         //Velocity field (u, v, w) 
         //A staggered grid is improving the numerical results with less artificial dissipation  
         //u component stored in the middle of the left vertical line of each cell
         //v component stored in the middle of the bottom horizontal line of each cell
-        public readonly float[] u;
-        public readonly float[] v;
-        private readonly float[] uNew;
-        private readonly float[] vNew;
+        public float[] u;
+        public float[] v;
+        private float[] uPrev;
+        private float[] vPrev;
         private readonly float[] du;
         private readonly float[] dv;
         //Pressure field
@@ -110,15 +114,19 @@ namespace FLIPFluidSimulator
             //He says border cells in the video
             this.numX = numX + 2;
             this.numY = numY + 2;
+
+            //Cellspacing
             this.h = h;
             this.invSpacing = 1f / this.h;
 
             int numCells = this.numX * this.numY;
 
+            this.numCells = numCells;
+
             this.u = new float[numCells];
             this.v = new float[numCells];
-            this.uNew = new float[numCells];
-            this.vNew = new float[numCells];
+            this.uPrev = new float[numCells];
+            this.vPrev = new float[numCells];
             this.du = new float[numCells];
             this.dv = new float[numCells];
 
@@ -144,6 +152,9 @@ namespace FLIPFluidSimulator
             this.particleRestDensity = 0f;
 
             this.particleRadius = particleRadius;
+
+            //To optimize particle-particle collision
+            //Which is why we need another grid than the fluid grid
             this.pInvSpacing = 1f / (2.2f * particleRadius);
 
             this.pNumX = Mathf.FloorToInt(SimWidth * this.pInvSpacing) + 1;
@@ -501,6 +512,110 @@ namespace FLIPFluidSimulator
                 }
             }
         }
+
+
+
+        //
+        // Transfer velocities to the grid from particles or from the particles to the grid
+        //
+
+
+        //
+        // Make the fluid incompressible and calculate the pressure at the same time
+        //
+
+        private void SolveIncompressibility(int numIters, float dt, float overRelaxation, bool compensateDrift = true)
+        {
+            //Reset pressure 
+            System.Array.Fill(p, 0f);
+
+            //Swap buffers
+            //Why do we swap these buffers here???
+            (this.uPrev, this.u) = (this.u, this.uPrev);
+            (this.vPrev, this.v) = (this.v, this.vPrev);
+
+            int n = this.numY;
+
+            float cp = this.density * this.h / dt;
+
+            /*
+            //???
+            for (var i = 0; i < this.numCells; i++)
+            {
+                float u = this.u[i];
+                float v = this.v[i];
+            }
+            */
+
+            //Make the fluid incompressible by looping the cells multiple times
+            for (int iter = 0; iter < numIters; iter++)
+            {
+                //For each cell except the border
+                for (var i = 1; i < this.numX - 1; i++)
+                {
+                    for (var j = 1; j < this.numY - 1; j++)
+                    {
+                        //If this cell is not a fluid, meaning its air or obbstacle
+                        if (this.cellType[i * n + j] != FLUID_CELL)
+                        {
+                            continue;
+                        }   
+                            
+
+                        int center = i * n + j;
+                        int left = (i - 1) * n + j;
+                        int right = (i + 1) * n + j;
+                        int bottom = i * n + j - 1;
+                        int top = i * n + j + 1;
+
+                        //Cache how many of the surrounding cells are obstacles
+                        float s = this.s[center];
+                        float sx0 = this.s[left];
+                        float sx1 = this.s[right];
+                        float sy0 = this.s[bottom];
+                        float sy1 = this.s[top];
+
+                        float sTot = sx0 + sx1 + sy0 + sy1;
+                        
+                        if (s == 0f || sTot == 0f)
+                        {
+                            continue;
+                        }
+
+                        //Divergence = total amount of fluid velocity the leaves the cell 
+                        float div = this.u[right] - this.u[center] + this.v[top] - this.v[center];
+
+                        //???
+                        if (this.particleRestDensity > 0f && compensateDrift)
+                        {
+                            float k = 1f;
+
+                            float compression = this.particleDensity[i * n + j] - this.particleRestDensity;
+
+                            if (compression > 0f)
+                            {
+                                div -= k * compression;
+                            }
+                        }
+
+                        float p = -div / s;
+
+                        p *= overRelaxation;
+
+                        //Calculate pressure
+                        this.p[center] += cp * p;
+
+                        //Update velocities to ensure incompressibility
+                        this.u[center] -= sx0 * p;
+                        this.u[right] += sx1 * p;
+                        this.v[center] -= sy0 * p;
+                        this.v[top] += sy1 * p;
+                    }
+                }
+            }
+        }
+
+
     }
 
 }

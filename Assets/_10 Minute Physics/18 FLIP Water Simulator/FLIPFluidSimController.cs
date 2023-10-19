@@ -9,6 +9,7 @@ using UnityEngine;
 //Based on: "How to write a FLIP Water Simulator" https://matthias-research.github.io/pages/tenMinutePhysics/
 //TODO:
 //- What is drift?
+//- Optimize particle-particle intersection
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public
@@ -139,6 +140,8 @@ public class FLIPFluidSimController : MonoBehaviour
         //Particles
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
+        //This will generate 28860 particles which is slow as molasses
+        //3000 particles is going relatively fast
         float relWaterHeight = 0.2f;
         float relWaterWidth = 0.3f;
 
@@ -163,9 +166,8 @@ public class FLIPFluidSimController : MonoBehaviour
 
         int maxParticles = numParticlesX * numParticlesY;
 
-        //default is 28860 particles which is slow as molasses
-        //3000 particles is going relatively fast
         //Debug.Log(maxParticles);
+
 
         //Create a new fluid simulator
         FLIPFluidSim f = scene.fluid = new FLIPFluidSim(density, numX, numY, h, r, maxParticles);
