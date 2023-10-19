@@ -83,13 +83,13 @@ namespace FLIPFluidSimulator
         {
             this.fluidMaterial = fluidMaterial;
 
-            SetTimeStep(1f / 120f);
+            SetTimeStep(1f / 60f);
         }
 
 
 
         //Set the time step
-        //Default is 1/120=0.008 in the source code while Unity default is 1/50=0.02
+        //Default is 1/60 in the source code while Unity default is 1/50=0.02
         //We could run the Simulate() method multiple times to get a smaller time step or update Time.fixedDeltaTime
         //It's important that the dt is small enough so that the maximum motion of the velocity field is less than the width of a grid cell: dt < h/u_max. But dt can sometimes be larger if theres a buffer around the cells, so you should use a constant you can experiment with: dt = k * (h/u_max)
         public void SetTimeStep(float timeStep)

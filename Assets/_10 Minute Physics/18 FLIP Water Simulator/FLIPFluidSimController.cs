@@ -109,9 +109,12 @@ public class FLIPFluidSimController : MonoBehaviour
         scene.obstacleRadius = 0.05f; //Was 0.15 but his simulation is 3x bigger in world space
         scene.overRelaxation = 1.9f;
 
+        //float
+
         scene.SetTimeStep(1f / 60f);
         scene.numPressureIters = 40;
         scene.numParticleIters = 2;
+        scene.isPaused = false;
 
         //scene.isPaused = false;
 
@@ -136,8 +139,8 @@ public class FLIPFluidSimController : MonoBehaviour
         //Particles
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
-        float relWaterHeight = 0.8f;
-        float relWaterWidth = 0.6f;
+        float relWaterHeight = 0.4f;
+        float relWaterWidth = 0.3f;
 
         //Particle radius wrt cell size
         float r = 0.3f * h;
@@ -151,8 +154,6 @@ public class FLIPFluidSimController : MonoBehaviour
         float tankWidth = numX * h;
         float tankHeight = numY * h;
 
-        //Debug.Log((tankHeight * relWaterHeight)/dy);
-
         //Have to compensate for the border and 0.5 particle on each side to make sure they fit
         float borderAndOneParticleCompensation = 2f * h + 2f * r;
 
@@ -162,6 +163,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
         int maxParticles = numParticlesX * numParticlesY;
 
+        //default is 28860 particles which is slow as molasses
         //Debug.Log(maxParticles);
 
         //Create a new fluid simulator
