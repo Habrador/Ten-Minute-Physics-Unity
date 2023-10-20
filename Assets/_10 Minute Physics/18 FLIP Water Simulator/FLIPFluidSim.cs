@@ -17,13 +17,13 @@ namespace FLIPFluidSimulator
 
         //Simulation grid settings
         //These are called fNumX (f = fluid) to make them differ from pNumX (p = particle)
-        public int numX;
-        public int numY;
-        private int numCells;
+        public int fNumX;
+        public int fNumY;
+        private int fNumCells;
         //Cell height and width
         public float h;
         //1/h
-        private float invSpacing;
+        private float fInvSpacing;
 
         //Simulation data structures
         //Orientation of the grid:
@@ -47,9 +47,9 @@ namespace FLIPFluidSimulator
         public float[] s;
 
         //In this simulation a cell can also be air
-        private int FLUID_CELL = 0;
-        private int AIR_CELL = 1;
-        private int SOLID_CELL = 2;
+        private readonly int FLUID_CELL = 0;
+        private readonly int AIR_CELL = 1;
+        private readonly int SOLID_CELL = 2;
 
         private readonly int[] cellType;
 
@@ -94,11 +94,11 @@ namespace FLIPFluidSimulator
         //Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
         //Otherwise we get them column by column which is maybe how js prefers them when displaying???
         //https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
-        public int To1D(int i, int j) => i + (numX * j);
+        public int To1D(int i, int j) => i + (fNumX * j);
 
         //These are not the same as the height we set at start because of the two border cells
-        public float SimWidth => numX * h;
-        public float SimHeight => numY * h;
+        public float SimWidth => fNumX * h;
+        public float SimHeight => fNumY * h;
 
         //Is a coordinate in local space within the simulation area?
         public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
@@ -112,16 +112,16 @@ namespace FLIPFluidSimulator
             //Add 2 extra cells because we need a border, or are we adding two u's on each side???
             //Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
             //He says border cells in the video
-            this.numX = numX + 2;
-            this.numY = numY + 2;
+            this.fNumX = numX + 2;
+            this.fNumY = numY + 2;
 
             //Cellspacing
             this.h = h;
-            this.invSpacing = 1f / this.h;
+            this.fInvSpacing = 1f / this.h;
 
-            int numCells = this.numX * this.numY;
+            int numCells = this.fNumX * this.fNumY;
 
-            this.numCells = numCells;
+            this.fNumCells = numCells;
 
             this.u = new float[numCells];
             this.v = new float[numCells];
@@ -225,6 +225,7 @@ namespace FLIPFluidSimulator
                 
                 if (separateParticles)
                 {
+                    //Handle particle-particle collisions
                     PushParticlesApart(numParticleIters);
                 }
 
@@ -232,7 +233,7 @@ namespace FLIPFluidSimulator
                 HandleParticleCollisions(obstacleX, obstacleY, obstacleRadius, obstacleVelX, obstacleVelY);
 
 
-                //Velocity transfer
+                //Velocity transfer: Particles -> Grid
                 //TransferVelocities(true);
 
 
@@ -283,7 +284,7 @@ namespace FLIPFluidSimulator
             //this.pInvSpacing = 1.0 / (2.2 * particleRadius);
             //-> h = 2.2 * particleRadius  
             //Why are we just not using this.h??? They seem to have the same value...
-            float h = 1f / this.invSpacing;
+            float h = 1f / this.fInvSpacing;
             //float r = this.particleRadius;
 
             //Debug.Log(h);
@@ -297,9 +298,9 @@ namespace FLIPFluidSimulator
             //For collision with walls
             //First cell has width h
             float minX = h + this.particleRadius;
-            float maxX = (this.numX - 1) * h - this.particleRadius;
+            float maxX = (this.fNumX - 1) * h - this.particleRadius;
             float minY = h + this.particleRadius;
-            float maxY = (this.numY - 1) * h - this.particleRadius;
+            float maxY = (this.fNumY - 1) * h - this.particleRadius;
 
             //For each particle
             for (int i = 0; i < this.numParticles; i++)
@@ -519,6 +520,187 @@ namespace FLIPFluidSimulator
         // Transfer velocities to the grid from particles or from the particles to the grid
         //
 
+        private void TransferVelocities(bool toGrid, float flipRatio)
+        {
+            int n = this.fNumY;
+            
+            float h = this.h;
+            float h1 = this.fInvSpacing;
+            float h2 = 0.5f * h;
+
+            if (toGrid)
+            {
+                //Fill previous velocities arrays before we update velocities
+                //u -> uPrev
+                System.Array.Copy(u, uPrev, u.Length);
+                //v -> vPrev
+                System.Array.Copy(v, vPrev, v.Length);
+
+                //Original code which is u -> uPrev???
+                //this.prevU.set(this.u);
+                //this.prevV.set(this.v);
+
+                //Here we reset u, so above should be correct
+                System.Array.Fill(du, 0f);
+                System.Array.Fill(dv, 0f);
+
+                System.Array.Fill(u, 0f);
+                System.Array.Fill(v, 0f);
+                
+
+                //Set cell types
+
+                //First set all celltypes to solid or air depending on if a cell is an obstacle
+                //So ignore water for now...
+                //For each cell in the simulation
+                for (int i = 0; i < this.fNumCells; i++)
+                {
+                    this.cellType[i] = this.s[i] == 0f ? SOLID_CELL : AIR_CELL;
+                }
+                    
+                //Check if an air cell is filled with water
+                //For each particle
+                for (int i = 0; i < this.numParticles; i++)
+                {
+                    //Position of the particle
+                    float x = this.particlePos[2 * i];
+                    float y = this.particlePos[2 * i + 1];
+
+                    //The cell the particle is in
+                    int xi = Mathf.Clamp(Mathf.FloorToInt(x * h1), 0, this.fNumX - 1);
+                    int yi = Mathf.Clamp(Mathf.FloorToInt(y * h1), 0, this.fNumY - 1);
+                    
+                    //2d to 1d
+                    int cellNr = xi * n + yi;
+
+                    //If the particle is in an air cell, then make it a fluid cell
+                    if (this.cellType[cellNr] == AIR_CELL)
+                    {
+                        this.cellType[cellNr] = FLUID_CELL;
+                    }
+                }
+            }
+
+            //This loop will run twice
+            //First we update u velocities, then we update v velocities 
+            for (int component = 0; component < 2; component++)
+            {
+                //Staggered grid...
+                float dx = component == 0 ? 0f : h2;
+                float dy = component == 0 ? h2 : 0f;
+
+                //Do we modify u or v velocities?
+                float[] f = component == 0 ? this.u : this.v;
+                float[] prevF = component == 0 ? this.uPrev : this.vPrev;
+                float[] d = component == 0 ? this.du : this.dv;
+
+                //For each particle
+                for (int i = 0; i < this.numParticles; i++)
+                {
+                    float x = this.particlePos[2 * i];
+                    float y = this.particlePos[2 * i + 1];
+
+                    //Make sure the position is within the grid
+                    x = Mathf.Clamp(x, h, (this.fNumX - 1) * h);
+                    y = Mathf.Clamp(y, h, (this.fNumY - 1) * h);
+
+                    //Which cells are we interpolating from
+                    int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * h1), this.fNumX - 2);
+                    float tx = ((x - dx) - x0 * h) * h1;
+                    int x1 = Mathf.Min(x0 + 1, this.fNumX - 2);
+
+                    int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * h1), this.fNumY - 2);
+                    float ty = ((y - dy) - y0 * h) * h1;
+                    int y1 = Mathf.Min(y0 + 1, this.fNumY - 2);
+
+
+                    float sx = 1f - tx;
+                    float sy = 1f - ty;
+
+                    float d0 = sx * sy;
+                    float d1 = tx * sy;
+                    float d2 = tx * ty;
+                    float d3 = sx * ty;
+
+                    //2d array to 1d array 
+                    int nr0 = x0 * n + y0;
+                    int nr1 = x1 * n + y0;
+                    int nr2 = x1 * n + y1;
+                    int nr3 = x0 * n + y1;
+
+                    //Transfer this particle's velocity to the grid
+                    if (toGrid)
+                    {
+                        float pv = this.particleVel[2 * i + component];
+
+                        f[nr0] += pv * d0; d[nr0] += d0;
+                        f[nr1] += pv * d1; d[nr1] += d1;
+                        f[nr2] += pv * d2; d[nr2] += d2;
+                        f[nr3] += pv * d3; d[nr3] += d3;
+                    }
+                    //Transfer velocities from the grid to the particle
+                    else
+                    {
+                        int offset = component == 0 ? n : 1;
+                        
+                        float valid0 = this.cellType[nr0] != AIR_CELL || this.cellType[nr0 - offset] != AIR_CELL ? 1f : 0f;
+                        float valid1 = this.cellType[nr1] != AIR_CELL || this.cellType[nr1 - offset] != AIR_CELL ? 1f : 0f;
+                        float valid2 = this.cellType[nr2] != AIR_CELL || this.cellType[nr2 - offset] != AIR_CELL ? 1f : 0f;
+                        float valid3 = this.cellType[nr3] != AIR_CELL || this.cellType[nr3 - offset] != AIR_CELL ? 1f : 0f;
+
+                        float v = this.particleVel[2 * i + component];
+
+                        //The source code calls this d, but we also say that d = du or dv array above
+                        float this_d = valid0 * d0 + valid1 * d1 + valid2 * d2 + valid3 * d3;
+
+                        if (this_d > 0f)
+                        {
+                            float picV = (valid0 * d0 * f[nr0] + valid1 * d1 * f[nr1] + valid2 * d2 * f[nr2] + valid3 * d3 * f[nr3]) / this_d;
+                            
+                            float corr = (valid0 * d0 * (f[nr0] - prevF[nr0]) + valid1 * d1 * (f[nr1] - prevF[nr1])
+                                + valid2 * d2 * (f[nr2] - prevF[nr2]) + valid3 * d3 * (f[nr3] - prevF[nr3])) / this_d;
+                            
+                            float flipV = v + corr;
+
+                            this.particleVel[2 * i + component] = (1f - flipRatio) * picV + flipRatio * flipV;
+                        }
+                    }
+                }
+
+
+                if (toGrid)
+                {
+                    for (var i = 0; i < f.Length; i++)
+                    {
+                        if (d[i] > 0f)
+                        {
+                            f[i] /= d[i];
+                        }
+                    }
+
+                    //Restore solid cells
+                    for (int i = 0; i < this.fNumX; i++)
+                    {
+                        for (int j = 0; j < this.fNumY; j++)
+                        {
+                            bool solid = this.cellType[i * n + j] == SOLID_CELL;
+                            
+                            if (solid || (i > 0 && this.cellType[(i - 1) * n + j] == SOLID_CELL))
+                            {
+                                this.u[i * n + j] = this.uPrev[i * n + j];
+                            }
+                                
+                            if (solid || (j > 0 && this.cellType[i * n + j - 1] == SOLID_CELL))
+                            {
+                                this.v[i * n + j] = this.vPrev[i * n + j];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
 
         //
         // Make the fluid incompressible and calculate the pressure at the same time
@@ -530,15 +712,22 @@ namespace FLIPFluidSimulator
             System.Array.Fill(p, 0f);
 
             //Fill previous velocities arrays before we update velocities
+            //u -> uPrev
             System.Array.Copy(u, uPrev, u.Length);
+            //v -> vPrev
             System.Array.Copy(v, vPrev, v.Length);
 
-            int n = this.numY;
+            //Original code which is u -> uPrev which is confirmed in TransferVelocities()
+            //this.prevU.set(this.u);
+            //this.prevV.set(this.v);
+
+
+            int n = this.fNumY;
 
             float cp = this.density * this.h / dt;
 
             /*
-            //???
+            //What is this piece of code doing???
             for (var i = 0; i < this.numCells; i++)
             {
                 float u = this.u[i];
@@ -550,9 +739,9 @@ namespace FLIPFluidSimulator
             for (int iter = 0; iter < numIters; iter++)
             {
                 //For each cell except the border
-                for (var i = 1; i < this.numX - 1; i++)
+                for (var i = 1; i < this.fNumX - 1; i++)
                 {
-                    for (var j = 1; j < this.numY - 1; j++)
+                    for (var j = 1; j < this.fNumY - 1; j++)
                     {
                         //If this cell is not a fluid, meaning its air or obbstacle
                         if (this.cellType[i * n + j] != FLUID_CELL)
