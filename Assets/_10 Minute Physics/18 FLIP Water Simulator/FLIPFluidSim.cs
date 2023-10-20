@@ -36,8 +36,8 @@ namespace FLIPFluidSimulator
         //v component stored in the middle of the bottom horizontal line of each cell
         public float[] u;
         public float[] v;
-        private float[] uPrev;
-        private float[] vPrev;
+        private readonly float[] uPrev;
+        private readonly float[] vPrev;
         private readonly float[] du;
         private readonly float[] dv;
         //Pressure field
@@ -46,6 +46,7 @@ namespace FLIPFluidSimulator
         //Should use float instead of bool because it makes some calculations simpler
         public float[] s;
 
+        //The different cell types we can have
         //In this simulation a cell can also be air
         private readonly int FLUID_CELL = 0;
         private readonly int AIR_CELL = 1;
@@ -53,7 +54,8 @@ namespace FLIPFluidSimulator
 
         private readonly int[] cellType;
 
-        private readonly Color[] cellColor;
+        //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
+        private readonly float[] cellColor;
 
         //Particles
         //How many particles?
@@ -62,8 +64,8 @@ namespace FLIPFluidSimulator
         private int maxParticles;
         //The pos of each particle (x,y) after each other
         public readonly float[] particlePos;
-        //The color of each particle
-        private readonly Color[] particleColor;
+        //The color of each particle (r,g,b) after each other. Color values are in the rannge [0,1]
+        private readonly float[] particleColor;
         //The vel of each particle (x,y) after each other
         private readonly float[] particleVel;
         //The density of particles in a cell
@@ -135,17 +137,28 @@ namespace FLIPFluidSimulator
             this.s = new float[numCells];
 
             this.cellType = new int[numCells];
-            this.cellColor = new Color[numCells];
+
+            //(r,g,b) after each other so all cells are 0 = black
+            this.cellColor = new float[numCells * 3];
 
 
             //Particles
             this.maxParticles = maxParticles;
 
             this.particlePos = new float[2 * this.maxParticles];
-            this.particleColor = new Color[this.maxParticles];
-            //Init the color
-            //for (var i = 0; i < this.maxParticles; i++)
-            //this.particleColor[3 * i + 2] = 1.0;
+            
+            this.particleColor = new float[this.maxParticles * 3];
+            
+            //Init the colors to blue
+            for (int i = 0; i < this.maxParticles; i++)
+            {
+                //r = 0
+                //g = 0
+                //b = 1
+                //(r,g,b) after each other so index 2 = blue 
+                this.particleColor[3 * i + 2] = 1f;
+            }
+                
 
             this.particleVel = new float[2 * this.maxParticles];
             this.particleDensity = new float[numCells];
@@ -281,14 +294,8 @@ namespace FLIPFluidSimulator
         //Handle particle-world collisions
         private void HandleParticleCollisions(float obstacleX, float obstacleY, float obstacleRadius, float obstacleVelX, float obstacleVelY)
         {
-            //this.pInvSpacing = 1.0 / (2.2 * particleRadius);
-            //-> h = 2.2 * particleRadius  
-            //Why are we just not using this.h??? They seem to have the same value...
+            //Why are we using 1f / this.fInvSpacing and not just h?
             float h = 1f / this.fInvSpacing;
-            //float r = this.particleRadius;
-
-            //Debug.Log(h);
-            //Debug.Log(this.h);
 
             //For collision with moving cirlce obtacle
             //The minimum distance allowed between a particle and the obstacle 
@@ -493,20 +500,19 @@ namespace FLIPFluidSimulator
                                 this.particlePos[2 * id] += dx;
                                 this.particlePos[2 * id + 1] += dy;
 
-                                //Diffuse colors
-                                //Why are we updating colors here??? 
-                                /*
+                                //Diffuse colors of colliding particles
+                                //r, g, b 
                                 for (int k = 0; k < 3; k++)
                                 {
-                                    Color color0 = this.particleColor[3 * i + k];
-                                    Color color1 = this.particleColor[3 * id + k];
-                                    
-                                    Color color = (color0 + color1) * 0.5;
+                                    float color0 = this.particleColor[3 * i + k];
+                                    float color1 = this.particleColor[3 * id + k];
+
+                                    float color = (color0 + color1) * 0.5f;
 
                                     this.particleColor[3 * i + k] = color0 + (color - color0) * colorDiffusionCoeff;
                                     this.particleColor[3 * id + k] = color1 + (color - color1) * colorDiffusionCoeff;
                                 }
-                                */
+
                             }
                         }
                     }
@@ -735,7 +741,7 @@ namespace FLIPFluidSimulator
 
                 if (toGrid)
                 {
-                    for (var i = 0; i < f.Length; i++)
+                    for (int i = 0; i < f.Length; i++)
                     {
                         if (d[i] > 0f)
                         {
@@ -869,6 +875,91 @@ namespace FLIPFluidSimulator
         }
 
 
+
+        //
+        // Coloring
+        // 
+
+        //private void UpdateParticleColors()
+        //{
+        //    float h1 = this.fInvSpacing;
+
+        //    //For each particle
+        //    for (int i = 0; i < this.numParticles; i++)
+        //    {
+        //        float s = 0.01f;
+
+        //        this.particleColor[3 * i] = clamp(this.particleColor[3 * i] - s, 0.0, 1.0);
+        //        this.particleColor[3 * i + 1] = clamp(this.particleColor[3 * i + 1] - s, 0.0, 1.0);
+        //        this.particleColor[3 * i + 2] = clamp(this.particleColor[3 * i + 2] + s, 0.0, 1.0);
+
+        //        var x = this.particlePos[2 * i];
+        //        var y = this.particlePos[2 * i + 1];
+        //        var xi = clamp(Math.floor(x * h1), 1, this.fNumX - 1);
+        //        var yi = clamp(Math.floor(y * h1), 1, this.fNumY - 1);
+        //        var cellNr = xi * this.fNumY + yi;
+
+        //        var d0 = this.particleRestDensity;
+
+        //        if (d0 > 0.0)
+        //        {
+        //            var relDensity = this.particleDensity[cellNr] / d0;
+        //            if (relDensity < 0.7)
+        //            {
+        //                var s = 0.8;
+        //                this.particleColor[3 * i] = s;
+        //                this.particleColor[3 * i + 1] = s;
+        //                this.particleColor[3 * i + 2] = 1.0;
+        //            }
+        //        }
+        //    }
+        //}
+
+        //setSciColor(cellNr, val, minVal, maxVal)
+        //{
+        //    val = Math.min(Math.max(val, minVal), maxVal - 0.0001);
+        //    var d = maxVal - minVal;
+        //    val = d == 0.0 ? 0.5 : (val - minVal) / d;
+        //    var m = 0.25;
+        //    var num = Math.floor(val / m);
+        //    var s = (val - num * m) / m;
+        //    var r, g, b;
+
+        //    switch (num)
+        //    {
+        //        case 0: r = 0.0; g = s; b = 1.0; break;
+        //        case 1: r = 0.0; g = 1.0; b = 1.0 - s; break;
+        //        case 2: r = s; g = 1.0; b = 0.0; break;
+        //        case 3: r = 1.0; g = 1.0 - s; b = 0.0; break;
+        //    }
+
+        //    this.cellColor[3 * cellNr] = r;
+        //    this.cellColor[3 * cellNr + 1] = g;
+        //    this.cellColor[3 * cellNr + 2] = b;
+        //}
+
+        //updateCellColors()
+        //{
+        //    this.cellColor.fill(0.0);
+
+        //    for (var i = 0; i < this.fNumCells; i++)
+        //    {
+
+        //        if (this.cellType[i] == SOLID_CELL)
+        //        {
+        //            this.cellColor[3 * i] = 0.5;
+        //            this.cellColor[3 * i + 1] = 0.5;
+        //            this.cellColor[3 * i + 2] = 0.5;
+        //        }
+        //        else if (this.cellType[i] == FLUID_CELL)
+        //        {
+        //            var d = this.particleDensity[i];
+        //            if (this.particleRestDensity > 0.0)
+        //                d /= this.particleRestDensity;
+        //            this.setSciColor(i, d, 0.0, 2.0);
+        //        }
+        //    }
+        //}
     }
 
 }
