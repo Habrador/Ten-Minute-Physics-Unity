@@ -21,6 +21,37 @@ namespace FLIPFluidSimulator
 
 
 
+        //Buttons, checkboxes, show min/max pressure
+        public void MyOnGUI(FLIPFluidScene scene)
+        {
+            GUILayout.BeginHorizontal("box");
+
+            int fontSize = 20;
+
+            RectOffset offset = new(5, 5, 5, 5);
+
+
+            //Checkboxes
+            GUIStyle toggleStyle = GUI.skin.GetStyle("Toggle");
+
+            toggleStyle.fontSize = fontSize;
+            toggleStyle.margin = offset;
+
+            scene.showParticles = GUILayout.Toggle(scene.showParticles, "Show particles", toggleStyle);
+
+            scene.showGrid = GUILayout.Toggle(scene.showGrid, "Show cells");
+
+            scene.compensateDrift = GUILayout.Toggle(scene.compensateDrift, "Compensate drift");
+
+            scene.separateParticles = GUILayout.Toggle(scene.separateParticles, "Separate particles");
+
+
+            GUILayout.EndHorizontal();
+        }
+
+
+
+        //Move obstacle with mouse, pause, step simulation forward
         public void Interaction(FLIPFluidScene scene)
         {
             //Teleport obstacle if we click with left mouse
@@ -60,20 +91,20 @@ namespace FLIPFluidSimulator
 
 
 
-            ////Pause the simulation
-            //if (Input.GetKeyDown(KeyCode.P))
-            //{
-            //    scene.isPaused = !scene.isPaused;
-            //}
-            ////Move the simulation one step forward
-            //else if (Input.GetKeyDown(KeyCode.M))
-            //{
-            //    scene.isPaused = false;
+            //Pause the simulation
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                scene.isPaused = !scene.isPaused;
+            }
+            //Move the simulation one step forward
+            else if (Input.GetKeyDown(KeyCode.M))
+            {
+                scene.isPaused = false;
 
-            //    controller.Simulate();
+                controller.Simulate();
 
-            //    scene.isPaused = true;
-            //}
+                scene.isPaused = true;
+            }
 
 
 

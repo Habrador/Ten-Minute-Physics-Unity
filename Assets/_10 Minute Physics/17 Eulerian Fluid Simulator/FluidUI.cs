@@ -38,12 +38,13 @@ namespace EulerianFluidSimulator
 
 
             //Buttons
-            GUIStyle buttonStyle = new(GUI.skin.button);
+            GUIStyle buttonStyle = new(GUI.skin.button)
+            {
+                //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
 
-            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
-
-            buttonStyle.fontSize = fontSize;
-            buttonStyle.margin = offset;
+                fontSize = fontSize,
+                margin = offset
+            };
 
             if (GUILayout.Button($"Wind Tunnel", buttonStyle))
             {

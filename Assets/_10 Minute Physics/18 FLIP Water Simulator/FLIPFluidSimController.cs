@@ -60,6 +60,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //Simulate the fluid
         Simulate();
     }
 
@@ -67,7 +68,8 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private void OnGUI()
     {
-        //fluidUI.MyOnGUI(scene);
+        //Display the UI
+        fluidUI.MyOnGUI(scene);
     }
 
 
