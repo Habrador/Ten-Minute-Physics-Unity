@@ -251,33 +251,38 @@ public class FLIPFluidSimController : MonoBehaviour
         //Mark which cells are covered by the obstacle
         float r = scene.obstacleRadius;
 
+        float rSquare = r * r;
+
         FLIPFluidSim f = scene.fluid;
 
         //Ignore border
-        for (int i = 1; i < f.fNumX - 2; i++)
+        for (int cellX = 1; cellX < f.fNumX - 2; cellX++)
         {
-            for (int j = 1; j < f.fNumY - 2; j++)
+            for (int cellY = 1; cellY < f.fNumY - 2; cellY++)
             {
                 //Start by setting all cells to fluids (= 1)
-                f.s[f.To1D(i, j)] = 1f;
+                //Cant do an System.Array.Fill because then the border will also be fluid
+                f.s[f.To1D(cellX, cellY)] = 1f;
 
                 //Distance from circle center to cell center
-                float dx = (i + 0.5f) * f.h - x;
-                float dy = (j + 0.5f) * f.h - y;
+                float dx = (cellX + 0.5f) * f.h - x;
+                float dy = (cellY + 0.5f) * f.h - y;
 
                 //Is the cell within the obstacle?
-                //Using the square is faster than actual Pythagoras Sqrt(dx * dx + dy * dy) < Sqrt(r^2) but gives the same result 
-                if (dx * dx + dy * dy < r * r)
+                //Using the square is faster than actual distance but gives the same result 
+                float distSqr = dx * dx + dy * dy;
+
+                if (distSqr < rSquare)
                 {
                     //Mark this cell as obstacle 
-                    f.s[f.To1D(i, j)] = 0f;
+                    f.s[f.To1D(cellX, cellY)] = 0f;
 
                     //Give the fluid a velocity if we have moved it
                     //These are the 4 velocities belonging to this cell
-                    f.u[f.To1D(i, j)] = vx; //Left
-                    f.u[f.To1D(i + 1, j)] = vx; //Right
-                    f.v[f.To1D(i, j)] = vy; //Bottom
-                    f.v[f.To1D(i, j + 1)] = vy; //Top
+                    f.u[f.To1D(cellX, cellY)] = vx; //Left
+                    f.u[f.To1D(cellX + 1, cellY)] = vx; //Right
+                    f.v[f.To1D(cellX, cellY)] = vy; //Bottom
+                    f.v[f.To1D(cellX, cellY + 1)] = vy; //Top
                 }
             }
         }
