@@ -194,42 +194,30 @@ namespace FLIPFluidSimulator
             float obstacleVelX, 
             float obstacleVelY)
         {
-            int numSubSteps = 1;
+            //Update particle vel and pos by adding gravity
+            IntegrateParticles(dt, gravity);
 
-            float sdt = dt / (float)numSubSteps;
-
-            for (int step = 0; step < numSubSteps; step++)
+            if (separateParticles)
             {
-                //Update particle vel and pos by adding gravity
-                IntegrateParticles(sdt, gravity);
-                
-                if (separateParticles)
-                {
-                    //Handle particle-particle collisions
-                    //PushParticlesApart(numParticleIters);
-                    pushParticlesApart.Push(numParticleIters, this.numParticles, this.particlePos, this.particleColor);
-                }
-
-                //Handle particle-world collisions
-                HandleParticleCollisions(obstacleX, obstacleY, obstacleRadius, obstacleVelX, obstacleVelY);
-
-                //Velocity transfer: Particles -> Grid
-                //TransferVelocities(true);
-
-                //
-                //UpdateParticleDensity();
-
-                //Make the grid velocities incompressible
-                //SolveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
-
-                //Velocity transfer: Grid -> Particles
-                //TransferVelocities(false, flipRatio);
+                //Handle particle-particle collisions
+                //PushParticlesApart(numParticleIters);
+                pushParticlesApart.Push(numParticleIters, this.numParticles, this.particlePos, this.particleColor);
             }
 
-            //Moved these so they are in Update and not FixedUpdate which should be faster
-            //UpdateParticleColors();
+            //Handle particle-world collisions
+            HandleParticleCollisions(obstacleX, obstacleY, obstacleRadius, obstacleVelX, obstacleVelY);
 
-            //UpdateCellColors();
+            //Velocity transfer: Particles -> Grid
+            //TransferVelocities(true);
+
+            //
+            //UpdateParticleDensity();
+
+            //Make the grid velocities incompressible
+            //SolveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
+
+            //Velocity transfer: Grid -> Particles
+            //TransferVelocities(false, flipRatio);
         }
 
 

@@ -7,6 +7,9 @@ using UnityEngine;
 
 //Simulate a fluid where we also include air by using the FLIP method
 //Based on: "How to write a FLIP Water Simulator" https://matthias-research.github.io/pages/tenMinutePhysics/
+//The Eulerian fluid simulation had problem with numerical viscosity because of the advection step. This could sort-of be solved by using cubic interpolation, but a better way is to replace velocity advection with particle advection. We are still using a grid with fluid, so we combine grid simulation and particle simulation: PIC (Particle In Cell)
+//A problem with PIC is that when we transfer velocities from the grid to the particles (and vice versa), the velocities are smoothed. To solve this, people came up with FLIP (Fluid Implicit Particle) where we interpolate the change in velocity from the grid to the particles, and then we increment the velocity of the particles based on this change. This means FLIP will be free of numerical diffusion!
+//BUT the problem with FLIP is that it may develop noise. PIC doesnt have this problem so lets combine PIC and FLIP. 
 //TODO:
 //- What is drift?
 //- Optimize particle-particle intersection
