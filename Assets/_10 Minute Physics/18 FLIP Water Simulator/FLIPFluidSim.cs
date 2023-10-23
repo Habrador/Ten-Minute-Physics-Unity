@@ -23,7 +23,7 @@ namespace FLIPFluidSimulator
         //Cell height and width
         public float h;
         //1/h
-        private float fInvSpacing;
+        private readonly float fInvSpacing;
 
         //Simulation data structures
         //Orientation of the grid:
@@ -48,11 +48,11 @@ namespace FLIPFluidSimulator
 
         //The different cell types we can have
         //In this simulation a cell can also be air
-        private readonly int FLUID_CELL = 0;
-        private readonly int AIR_CELL = 1;
-        private readonly int SOLID_CELL = 2;
+        public readonly int FLUID_CELL = 0;
+        public readonly int AIR_CELL = 1;
+        public readonly int SOLID_CELL = 2;
 
-        private readonly int[] cellType;
+        public readonly int[] cellType;
 
         //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
         private readonly float[] cellColor;
@@ -65,13 +65,13 @@ namespace FLIPFluidSimulator
         //The pos of each particle (x,y) after each other
         public readonly float[] particlePos;
         //The color of each particle (r,g,b) after each other. Color values are in the rannge [0,1]
-        private readonly float[] particleColor;
+        public readonly float[] particleColor;
         //The vel of each particle (x,y) after each other
         private readonly float[] particleVel;
         //The density of particles in a cell
-        private readonly float[] particleDensity;
+        public readonly float[] particleDensity;
         //Rest
-        private float particleRestDensity;
+        public float particleRestDensity;
         //Particle radius
         public readonly float particleRadius;
         //Same as 1/h - not sure why hes using it... Theres an invSpacing above...
@@ -872,123 +872,6 @@ namespace FLIPFluidSimulator
                     }
                 }
             }
-        }
-
-
-
-        //
-        // Coloring
-        // 
-
-        private void UpdateParticleColors()
-        {
-            float one_over_h = this.fInvSpacing;
-
-            //For each particle
-            for (int i = 0; i < this.numParticles; i++)
-            {
-                float s = 0.01f;
-
-                this.particleColor[3 * i + 0] = Mathf.Clamp(this.particleColor[3 * i + 0] - s, 0f, 1f);
-                this.particleColor[3 * i + 1] = Mathf.Clamp(this.particleColor[3 * i + 1] - s, 0f, 1f);
-                this.particleColor[3 * i + 2] = Mathf.Clamp(this.particleColor[3 * i + 2] + s, 0f, 1f);
-
-                //Particle pos
-                float x = this.particlePos[2 * i + 0];
-                float y = this.particlePos[2 * i + 1];
-
-                //The cell the particle is in
-                int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 1, this.fNumX - 1);
-                int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 1, this.fNumY - 1);
-
-                //2d to 1d array
-                int cellNr = xi * this.fNumY + yi;
-
-                float d0 = this.particleRestDensity;
-
-                if (d0 > 0f)
-                {
-                    float relDensity = this.particleDensity[cellNr] / d0;
-                    
-                    if (relDensity < 0.7f)
-                    {
-                        //Theres another s abover so this is s2
-                        float s2 = 0.8f;
-
-                        this.particleColor[3 * i + 0] = s2;
-                        this.particleColor[3 * i + 1] = s2;
-                        this.particleColor[3 * i + 2] = 1f;
-                    }
-                }
-            }
-        }
-
-
-
-        private void UpdateCellColors()
-        {
-            //Reset
-            System.Array.Fill(this.cellColor, 0f);
-
-            //For each cell
-            for (int i = 0; i < this.fNumCells; i++)
-            {
-                //Solid
-                if (this.cellType[i] == SOLID_CELL)
-                {
-                    //Gray
-                    this.cellColor[3 * i + 0] = 0.5f;
-                    this.cellColor[3 * i + 1] = 0.5f;
-                    this.cellColor[3 * i + 2] = 0.5f;
-                }
-                //Fluid
-                else if (this.cellType[i] == FLUID_CELL)
-                {
-                    float d = this.particleDensity[i];
-                    
-                    if (this.particleRestDensity > 0f)
-                    {
-                        d /= this.particleRestDensity;
-                    }
-                        
-                    SetSciColor(i, d, 0f, 2f);
-                }
-                //Air
-                //Becomes black because we reset colors to 0 at the start
-            }
-        }
-
-
-
-        private void SetSciColor(int cellNr, float val, float minVal, float maxVal)
-        {
-            val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
-
-            float d = maxVal - minVal;
-
-            val = (d == 0f) ? 0.5f : (val - minVal) / d;
-            
-            float m = 0.25f;
-            
-            var num = Mathf.Floor(val / m);
-
-            var s = (val - num * m) / m;
-
-            float r = 0f;
-            float g = 0f; 
-            float b = 0f;
-
-            switch (num)
-            {
-                case 0: r = 0.0f; g = s; b = 1.0f; break;
-                case 1: r = 0.0f; g = 1.0f; b = 1.0f - s; break;
-                case 2: r = s; g = 1.0f; b = 0.0f; break;
-                case 3: r = 1.0f; g = 1.0f - s; b = 0.0f; break;
-            }
-
-            this.cellColor[3 * cellNr] = r;
-            this.cellColor[3 * cellNr + 1] = g;
-            this.cellColor[3 * cellNr + 2] = b;
         }
     }
 

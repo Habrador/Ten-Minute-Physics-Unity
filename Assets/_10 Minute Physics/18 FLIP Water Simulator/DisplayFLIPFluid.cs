@@ -22,19 +22,7 @@ namespace FLIPFluidSimulator
         //Called every Update
         public static void Draw(FLIPFluidScene scene, GameObject particlePrefabGO)
         {
-            //UpdateTexture(scene);
-
-            //if (scene.showVelocities)
-            //{
-            //    ShowVelocities(scene);
-            //}
-
-            ////scene.showStreamlines = true;
-
-            //if (scene.showStreamlines)
-            //{
-            //    ShowStreamlines(scene);
-            //}
+            UpdateTexture(scene);
 
             if (scene.showObstacle)
             {
@@ -45,8 +33,105 @@ namespace FLIPFluidSimulator
             {
                 ShowParticles(scene, particlePrefabGO);
             }
+        }
 
-            //Moved the display of min and max pressure as text to the UI class
+
+
+        //
+        // Show the fluid simulation data on a texture
+        //
+        private static void UpdateTexture(FLIPFluidScene scene)
+        {
+            FLIPFluidSim f = scene.fluid;
+
+            Texture2D fluidTexture = scene.fluidTexture;
+
+            //Generate a new texture if none exists or if we have changed resolution
+            if (fluidTexture == null || fluidTexture.width != f.fNumX || fluidTexture.height != f.fNumY)
+            {
+                fluidTexture = new(f.fNumX, f.fNumY);
+
+                //Dont blend the pixels
+                fluidTexture.filterMode = FilterMode.Point;
+
+                //Blend the pixels 
+                //fluidTexture.filterMode = FilterMode.Bilinear;
+
+                //Don't wrap the border with the border on the opposite side of the texture
+                fluidTexture.wrapMode = TextureWrapMode.Clamp;
+
+                scene.fluidMaterial.mainTexture = fluidTexture;
+
+                scene.fluidTexture = fluidTexture;
+            }
+
+
+            //The texture colors
+            Color32[] textureColors = new Color32[f.fNumX * f.fNumY];
+
+            //Find min and max pressure
+            //MinMax minMaxP = f.GetMinMaxPressure();
+
+            //Find the colors
+            //This was an array in the source, but we can treat the Vector4 as an array to make the code match
+            //Vector4 color = new (255, 255, 255, 255);
+
+            for (int x = 0; x < f.fNumX; x++)
+            {
+                for (int y = 0; y < f.fNumY; y++)
+                {
+                    //This was an array in the source, but we can treat the Vector4 as an array to make the code match
+                    //Moved to here from before the loop so it resets every time so we can display the walls if we deactivate both pressure and smoke
+                    Vector4 color = new(255, 255, 255, 255);
+
+                    int index = f.To1D(x, y);
+
+                    if (scene.showGrid)
+                    {
+                        //Solid
+                        if (f.cellType[index] == f.SOLID_CELL)
+                        {
+                            //Gray
+                            color[0] = 0.5f;
+                            color[1] = 0.5f;
+                            color[2] = 0.5f;
+                        }
+                        //Fluid
+                        else if (f.cellType[index] == f.FLUID_CELL)
+                        {
+                            float d = f.particleDensity[index];
+
+                            if (f.particleRestDensity > 0f)
+                            {
+                                d /= f.particleRestDensity;
+                            }
+
+                            color = UsefulMethods.GetSciColor(d, 0f, 2f);
+                        }
+                        //Air
+                        //Becomes black because we reset colors to 0 at the start
+                    }
+                    //If we dont want to show the grid, then make everything black
+                    else
+                    {
+                        color[0] = 0;
+                        color[1] = 0;
+                        color[2] = 0;
+                    }
+
+                    //Add the color to this pixel
+                    //Color32 is 0-255
+                    Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
+
+                    textureColors[f.To1D(x, y)] = pixelColor;
+                }
+            }
+
+            //Add all colors to the texture
+            fluidTexture.SetPixels32(textureColors);
+
+            //Copies changes you've made in a CPU texture to the GPU
+            fluidTexture.Apply(false);
         }
 
 
@@ -82,8 +167,57 @@ namespace FLIPFluidSimulator
         //
         // Display the fluid particles
         //
+        private static void UpdateParticleColors(FLIPFluidScene scene)
+        {
+            FLIPFluidSim f = scene.fluid;
+
+            float one_over_h = 1f / f.h;
+
+            //For each particle
+            for (int i = 0; i < f.numParticles; i++)
+            {
+                float s = 0.01f;
+
+                f.particleColor[3 * i + 0] = Mathf.Clamp(f.particleColor[3 * i + 0] - s, 0f, 1f);
+                f.particleColor[3 * i + 1] = Mathf.Clamp(f.particleColor[3 * i + 1] - s, 0f, 1f);
+                f.particleColor[3 * i + 2] = Mathf.Clamp(f.particleColor[3 * i + 2] + s, 0f, 1f);
+
+                //Particle pos
+                float x = f.particlePos[2 * i + 0];
+                float y = f.particlePos[2 * i + 1];
+
+                //The cell the particle is in
+                int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 1, f.fNumX - 1);
+                int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 1, f.fNumY - 1);
+
+                //2d to 1d array
+                int cellNr = xi * f.fNumY + yi;
+
+                float d0 = f.particleRestDensity;
+
+                if (d0 > 0f)
+                {
+                    float relDensity = f.particleDensity[cellNr] / d0;
+
+                    if (relDensity < 0.7f)
+                    {
+                        //Theres another s abover so this is s2
+                        float s2 = 0.8f;
+
+                        f.particleColor[3 * i + 0] = s2;
+                        f.particleColor[3 * i + 1] = s2;
+                        f.particleColor[3 * i + 2] = 1f;
+                    }
+                }
+            }
+        }
+
         private static void ShowParticles(FLIPFluidScene scene, GameObject particlePrefabGO)
         {
+            //First update their colors
+            UpdateParticleColors(scene);
+
+
             FLIPFluidSim f = scene.fluid;
 
             //
