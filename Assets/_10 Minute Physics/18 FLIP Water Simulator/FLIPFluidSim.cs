@@ -880,86 +880,116 @@ namespace FLIPFluidSimulator
         // Coloring
         // 
 
-        //private void UpdateParticleColors()
-        //{
-        //    float h1 = this.fInvSpacing;
+        private void UpdateParticleColors()
+        {
+            float one_over_h = this.fInvSpacing;
 
-        //    //For each particle
-        //    for (int i = 0; i < this.numParticles; i++)
-        //    {
-        //        float s = 0.01f;
+            //For each particle
+            for (int i = 0; i < this.numParticles; i++)
+            {
+                float s = 0.01f;
 
-        //        this.particleColor[3 * i] = clamp(this.particleColor[3 * i] - s, 0.0, 1.0);
-        //        this.particleColor[3 * i + 1] = clamp(this.particleColor[3 * i + 1] - s, 0.0, 1.0);
-        //        this.particleColor[3 * i + 2] = clamp(this.particleColor[3 * i + 2] + s, 0.0, 1.0);
+                this.particleColor[3 * i + 0] = Mathf.Clamp(this.particleColor[3 * i + 0] - s, 0f, 1f);
+                this.particleColor[3 * i + 1] = Mathf.Clamp(this.particleColor[3 * i + 1] - s, 0f, 1f);
+                this.particleColor[3 * i + 2] = Mathf.Clamp(this.particleColor[3 * i + 2] + s, 0f, 1f);
 
-        //        var x = this.particlePos[2 * i];
-        //        var y = this.particlePos[2 * i + 1];
-        //        var xi = clamp(Math.floor(x * h1), 1, this.fNumX - 1);
-        //        var yi = clamp(Math.floor(y * h1), 1, this.fNumY - 1);
-        //        var cellNr = xi * this.fNumY + yi;
+                //Particle pos
+                float x = this.particlePos[2 * i + 0];
+                float y = this.particlePos[2 * i + 1];
 
-        //        var d0 = this.particleRestDensity;
+                //The cell the particle is in
+                int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 1, this.fNumX - 1);
+                int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 1, this.fNumY - 1);
 
-        //        if (d0 > 0.0)
-        //        {
-        //            var relDensity = this.particleDensity[cellNr] / d0;
-        //            if (relDensity < 0.7)
-        //            {
-        //                var s = 0.8;
-        //                this.particleColor[3 * i] = s;
-        //                this.particleColor[3 * i + 1] = s;
-        //                this.particleColor[3 * i + 2] = 1.0;
-        //            }
-        //        }
-        //    }
-        //}
+                //2d to 1d array
+                int cellNr = xi * this.fNumY + yi;
 
-        //setSciColor(cellNr, val, minVal, maxVal)
-        //{
-        //    val = Math.min(Math.max(val, minVal), maxVal - 0.0001);
-        //    var d = maxVal - minVal;
-        //    val = d == 0.0 ? 0.5 : (val - minVal) / d;
-        //    var m = 0.25;
-        //    var num = Math.floor(val / m);
-        //    var s = (val - num * m) / m;
-        //    var r, g, b;
+                float d0 = this.particleRestDensity;
 
-        //    switch (num)
-        //    {
-        //        case 0: r = 0.0; g = s; b = 1.0; break;
-        //        case 1: r = 0.0; g = 1.0; b = 1.0 - s; break;
-        //        case 2: r = s; g = 1.0; b = 0.0; break;
-        //        case 3: r = 1.0; g = 1.0 - s; b = 0.0; break;
-        //    }
+                if (d0 > 0f)
+                {
+                    float relDensity = this.particleDensity[cellNr] / d0;
+                    
+                    if (relDensity < 0.7f)
+                    {
+                        //Theres another s abover so this is s2
+                        float s2 = 0.8f;
 
-        //    this.cellColor[3 * cellNr] = r;
-        //    this.cellColor[3 * cellNr + 1] = g;
-        //    this.cellColor[3 * cellNr + 2] = b;
-        //}
+                        this.particleColor[3 * i + 0] = s2;
+                        this.particleColor[3 * i + 1] = s2;
+                        this.particleColor[3 * i + 2] = 1f;
+                    }
+                }
+            }
+        }
 
-        //updateCellColors()
-        //{
-        //    this.cellColor.fill(0.0);
 
-        //    for (var i = 0; i < this.fNumCells; i++)
-        //    {
 
-        //        if (this.cellType[i] == SOLID_CELL)
-        //        {
-        //            this.cellColor[3 * i] = 0.5;
-        //            this.cellColor[3 * i + 1] = 0.5;
-        //            this.cellColor[3 * i + 2] = 0.5;
-        //        }
-        //        else if (this.cellType[i] == FLUID_CELL)
-        //        {
-        //            var d = this.particleDensity[i];
-        //            if (this.particleRestDensity > 0.0)
-        //                d /= this.particleRestDensity;
-        //            this.setSciColor(i, d, 0.0, 2.0);
-        //        }
-        //    }
-        //}
+        private void UpdateCellColors()
+        {
+            //Reset
+            System.Array.Fill(this.cellColor, 0f);
+
+            //For each cell
+            for (int i = 0; i < this.fNumCells; i++)
+            {
+                //Solid
+                if (this.cellType[i] == SOLID_CELL)
+                {
+                    //Gray
+                    this.cellColor[3 * i + 0] = 0.5f;
+                    this.cellColor[3 * i + 1] = 0.5f;
+                    this.cellColor[3 * i + 2] = 0.5f;
+                }
+                //Fluid
+                else if (this.cellType[i] == FLUID_CELL)
+                {
+                    float d = this.particleDensity[i];
+                    
+                    if (this.particleRestDensity > 0f)
+                    {
+                        d /= this.particleRestDensity;
+                    }
+                        
+                    SetSciColor(i, d, 0f, 2f);
+                }
+                //Air
+                //Becomes black because we reset colors to 0 at the start
+            }
+        }
+
+
+
+        private void SetSciColor(int cellNr, float val, float minVal, float maxVal)
+        {
+            val = Mathf.Min(Mathf.Max(val, minVal), maxVal - 0.0001f);
+
+            float d = maxVal - minVal;
+
+            val = (d == 0f) ? 0.5f : (val - minVal) / d;
+            
+            float m = 0.25f;
+            
+            var num = Mathf.Floor(val / m);
+
+            var s = (val - num * m) / m;
+
+            float r = 0f;
+            float g = 0f; 
+            float b = 0f;
+
+            switch (num)
+            {
+                case 0: r = 0.0f; g = s; b = 1.0f; break;
+                case 1: r = 0.0f; g = 1.0f; b = 1.0f - s; break;
+                case 2: r = s; g = 1.0f; b = 0.0f; break;
+                case 3: r = 1.0f; g = 1.0f - s; b = 0.0f; break;
+            }
+
+            this.cellColor[3 * cellNr] = r;
+            this.cellColor[3 * cellNr + 1] = g;
+            this.cellColor[3 * cellNr + 2] = b;
+        }
     }
 
 }
