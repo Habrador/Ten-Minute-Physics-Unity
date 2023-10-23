@@ -54,9 +54,6 @@ namespace FLIPFluidSimulator
 
         public readonly int[] cellType;
 
-        //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
-        private readonly float[] cellColor;
-
         //Particles
         //How many particles?
         public int numParticles;
@@ -124,9 +121,6 @@ namespace FLIPFluidSimulator
             this.s = new float[numCells];
 
             this.cellType = new int[numCells];
-
-            //(r,g,b) after each other so all cells are 0 = black
-            this.cellColor = new float[numCells * 3];
 
 
             //Particles

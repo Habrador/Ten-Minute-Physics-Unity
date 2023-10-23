@@ -67,10 +67,10 @@ namespace FLIPFluidSimulator
 
 
             //The texture colors
+            //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
+            //private readonly float[] cellColor;
+            //This is cellColor in the tutorial
             Color32[] textureColors = new Color32[f.fNumX * f.fNumY];
-
-            //Find min and max pressure
-            //MinMax minMaxP = f.GetMinMaxPressure();
 
             //Find the colors
             //This was an array in the source, but we can treat the Vector4 as an array to make the code match
