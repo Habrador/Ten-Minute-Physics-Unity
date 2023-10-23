@@ -46,6 +46,31 @@ namespace FLIPFluidSimulator
             scene.separateParticles = GUILayout.Toggle(scene.separateParticles, "Separate particles");
 
 
+            //PIC-FLIP Slider
+
+            //Text
+            GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+            textStyle.fontSize = fontSize;
+            textStyle.margin = offset;
+
+            GUILayout.Label("PIC", textStyle);
+
+            //Slider
+            GUIStyle sliderStyle = GUI.skin.GetStyle("horizontalSlider");
+
+            sliderStyle.fontSize = fontSize;
+            sliderStyle.margin = new(5, 5, 15, 5);
+
+            //This one is not doing anything but is still needed as parameter
+            GUIStyle sliderStyleThumb = GUI.skin.GetStyle("horizontalSliderThumb");
+
+            scene.flipRatio = GUILayout.HorizontalSlider(scene.flipRatio, 0f, 1f, sliderStyle, sliderStyleThumb, GUILayout.Width(150));
+
+            //Text
+            GUILayout.Label("FLIP", textStyle);
+
+
             GUILayout.EndHorizontal();
         }
 
