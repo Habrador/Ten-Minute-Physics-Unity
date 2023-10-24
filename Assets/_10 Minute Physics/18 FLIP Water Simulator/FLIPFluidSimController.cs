@@ -202,17 +202,17 @@ public class FLIPFluidSimController : MonoBehaviour
 
 
         //Setup grid cells for tank
-        int n = f.fNumY;
+        int n = f.numY;
 
-        for (int i = 0; i < f.fNumX; i++)
+        for (int i = 0; i < f.numX; i++)
         {
-            for (int j = 0; j < f.fNumY; j++)
+            for (int j = 0; j < f.numY; j++)
             {
                 //Fluid
                 float s = 1f;
 
                 //Solid walls at left-right-bottom border
-                if (i == 0 || i == f.fNumX - 1 || j == 0)
+                if (i == 0 || i == f.numX - 1 || j == 0)
                 {
                     s = 0f;
                 }
@@ -259,9 +259,9 @@ public class FLIPFluidSimController : MonoBehaviour
         FLIPFluidSim f = scene.fluid;
 
         //Ignore border
-        for (int cellX = 1; cellX < f.fNumX - 2; cellX++)
+        for (int cellX = 1; cellX < f.numX - 2; cellX++)
         {
-            for (int cellY = 1; cellY < f.fNumY - 2; cellY++)
+            for (int cellY = 1; cellY < f.numY - 2; cellY++)
             {
                 //Start by setting all cells to fluids (= 1)
                 //Cant do an System.Array.Fill because then the border will also be fluid

@@ -16,14 +16,13 @@ namespace FLIPFluidSimulator
         private readonly float density;
 
         //Simulation grid settings
-        //These are called fNumX (f = fluid) to make them differ from pNumX (p = particle)
-        public int fNumX;
-        public int fNumY;
-        private int fNumCells;
+        public int numX;
+        public int numY;
+        private int numCells;
         //Cell height and width
         public float h;
         //1/h
-        private readonly float fInvSpacing;
+        private readonly float one_over_h;
 
         //Simulation data structures
         //Orientation of the grid:
@@ -61,18 +60,19 @@ namespace FLIPFluidSimulator
         private int maxParticles;
         //The pos of each particle (x,y) after each other
         public readonly float[] particlePos;
-        //The color of each particle (r,g,b) after each other. Color values are in the rannge [0,1]
+        //The color of each particle (r,g,b) after each other. Color values are in the range [0,1]
+        //We have to update this color array in FixedUpdate because we do it when we push particles apart
         public readonly float[] particleColor;
         //The vel of each particle (x,y) after each other
         private readonly float[] particleVel;
         //The density of particles in a cell
         public readonly float[] particleDensity;
-        //Rest
+        //The average density of water cells before the simulation starts
         public float particleRestDensity;
         //Particle radius
         public readonly float particleRadius;
         //To push them apart so they are not intersecting
-        private PushParticlesApart pushParticlesApart;
+        private readonly PushParticlesApart pushParticlesApart;
 
 
         //Convert between 2d and 1d array
@@ -80,11 +80,11 @@ namespace FLIPFluidSimulator
         //Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
         //Otherwise we get them column by column which is maybe how js prefers them when displaying???
         //https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
-        public int To1D(int i, int j) => i + (fNumX * j);
+        public int To1D(int i, int j) => i + (numX * j);
 
         //These are not the same as the height we set at start because of the two border cells
-        public float SimWidth => fNumX * h;
-        public float SimHeight => fNumY * h;
+        public float SimWidth => numX * h;
+        public float SimHeight => numY * h;
 
         //Is a coordinate in local space within the simulation area?
         public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
@@ -98,16 +98,16 @@ namespace FLIPFluidSimulator
             //Add 2 extra cells because we need a border, or are we adding two u's on each side???
             //Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
             //He says border cells in the video
-            this.fNumX = numX + 2;
-            this.fNumY = numY + 2;
+            this.numX = numX + 2;
+            this.numY = numY + 2;
 
             //Cellspacing
             this.h = h;
-            this.fInvSpacing = 1f / this.h;
+            this.one_over_h = 1f / this.h;
 
-            int numCells = this.fNumX * this.fNumY;
+            int numCells = this.numX * this.numY;
 
-            this.fNumCells = numCells;
+            this.numCells = numCells;
 
             this.u = new float[numCells];
             this.v = new float[numCells];
@@ -238,7 +238,7 @@ namespace FLIPFluidSimulator
 
                 //Update pos: s = s + v * dt
                 //x dir
-                this.particlePos[2 * i + 0] += this.particleVel[2 * i + 0] * dt;
+                this.particlePos[2 * i    ] += this.particleVel[2 * i    ] * dt;
                 //y dir
                 this.particlePos[2 * i + 1] += this.particleVel[2 * i + 1] * dt;
             }
@@ -249,7 +249,7 @@ namespace FLIPFluidSimulator
         private void HandleParticleCollisions(float obstacleX, float obstacleY, float obstacleRadius, float obstacleVelX, float obstacleVelY)
         {
             //Why are we using 1f / this.fInvSpacing and not just h?
-            float h = 1f / this.fInvSpacing;
+            float h = 1f / this.one_over_h;
 
             //For collision with moving cirlce obtacle
             //The minimum distance allowed between a particle and the obstacle 
@@ -259,9 +259,9 @@ namespace FLIPFluidSimulator
             //For collision with walls
             //First cell has width h
             float minX = h + this.particleRadius;
-            float maxX = (this.fNumX - 1) * h - this.particleRadius;
+            float maxX = (this.numX - 1) * h - this.particleRadius;
             float minY = h + this.particleRadius;
-            float maxY = (this.fNumY - 1) * h - this.particleRadius;
+            float maxY = (this.numY - 1) * h - this.particleRadius;
 
             //For each particle
             for (int i = 0; i < this.numParticles; i++)
@@ -321,10 +321,10 @@ namespace FLIPFluidSimulator
 
         private void UpdateParticleDensity()
         {
-            int n = this.fNumY;
+            int n = this.numY;
             
             float h = this.h;
-            float one_over_h = this.fInvSpacing;
+            float one_over_h = this.one_over_h;
             float half_h = 0.5f * h;
 
             float[] d = particleDensity;
@@ -340,25 +340,25 @@ namespace FLIPFluidSimulator
                 float y = this.particlePos[2 * i + 1];
 
                 //Make sure the particle is within the grid
-                x = Mathf.Clamp(x, h, (this.fNumX - 1) * h);
-                y = Mathf.Clamp(y, h, (this.fNumY - 1) * h);
+                x = Mathf.Clamp(x, h, (this.numX - 1) * h);
+                y = Mathf.Clamp(y, h, (this.numY - 1) * h);
 
                 //The cells to interpolate between
                 int x0 = Mathf.FloorToInt((x - half_h) * one_over_h);
                 float tx = ((x - half_h) - x0 * h) * one_over_h;
-                int x1 = Mathf.Min(x0 + 1, this.fNumX - 2);
+                int x1 = Mathf.Min(x0 + 1, this.numX - 2);
 
                 int y0 = Mathf.FloorToInt((y - half_h) * one_over_h);
                 float ty = ((y - half_h) - y0 * h) * one_over_h;
-                int y1 = Math.Min(y0 + 1, this.fNumY - 2);
+                int y1 = Math.Min(y0 + 1, this.numY - 2);
 
                 float sx = 1f - tx;
                 float sy = 1f - ty;
 
-                if (x0 < this.fNumX && y0 < this.fNumY) d[x0 * n + y0] += sx * sy;
-                if (x1 < this.fNumX && y0 < this.fNumY) d[x1 * n + y0] += tx * sy;
-                if (x1 < this.fNumX && y1 < this.fNumY) d[x1 * n + y1] += tx * ty;
-                if (x0 < this.fNumX && y1 < this.fNumY) d[x0 * n + y1] += sx * ty;
+                if (x0 < this.numX && y0 < this.numY) d[x0 * n + y0] += sx * sy;
+                if (x1 < this.numX && y0 < this.numY) d[x1 * n + y0] += tx * sy;
+                if (x1 < this.numX && y1 < this.numY) d[x1 * n + y1] += tx * ty;
+                if (x0 < this.numX && y1 < this.numY) d[x0 * n + y1] += sx * ty;
             }
 
             if (this.particleRestDensity == 0f)
@@ -367,7 +367,7 @@ namespace FLIPFluidSimulator
                 
                 int numFluidCells = 0;
 
-                for (int i = 0; i < this.fNumCells; i++)
+                for (int i = 0; i < this.numCells; i++)
                 {
                     if (this.cellType[i] == FLUID_CELL)
                     {
@@ -391,10 +391,10 @@ namespace FLIPFluidSimulator
 
         private void TransferVelocities(bool toGrid, float flipRatio = 0.8f)
         {
-            int n = this.fNumY;
+            int n = this.numY;
             
             float h = this.h;
-            float one_over_h = this.fInvSpacing;
+            float one_over_h = this.one_over_h;
             float half_h = 0.5f * h;
 
             if (toGrid)
@@ -422,7 +422,7 @@ namespace FLIPFluidSimulator
                 //First set all celltypes to solid or air depending on if a cell is an obstacle
                 //So ignore water for now...
                 //For each cell in the simulation
-                for (int i = 0; i < this.fNumCells; i++)
+                for (int i = 0; i < this.numCells; i++)
                 {
                     this.cellType[i] = this.s[i] == 0f ? SOLID_CELL : AIR_CELL;
                 }
@@ -436,8 +436,8 @@ namespace FLIPFluidSimulator
                     float y = this.particlePos[2 * i + 1];
 
                     //The cell the particle is in
-                    int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 0, this.fNumX - 1);
-                    int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 0, this.fNumY - 1);
+                    int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 0, this.numX - 1);
+                    int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 0, this.numY - 1);
                     
                     //2d to 1d
                     int cellNr = xi * n + yi;
@@ -470,17 +470,17 @@ namespace FLIPFluidSimulator
                     float y = this.particlePos[2 * i + 1];
 
                     //Make sure the position is within the grid
-                    x = Mathf.Clamp(x, h, (this.fNumX - 1) * h);
-                    y = Mathf.Clamp(y, h, (this.fNumY - 1) * h);
+                    x = Mathf.Clamp(x, h, (this.numX - 1) * h);
+                    y = Mathf.Clamp(y, h, (this.numY - 1) * h);
 
                     //Which cells are we interpolating from
-                    int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * one_over_h), this.fNumX - 2);
+                    int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * one_over_h), this.numX - 2);
                     float tx = ((x - dx) - x0 * h) * one_over_h;
-                    int x1 = Mathf.Min(x0 + 1, this.fNumX - 2);
+                    int x1 = Mathf.Min(x0 + 1, this.numX - 2);
 
-                    int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * one_over_h), this.fNumY - 2);
+                    int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * one_over_h), this.numY - 2);
                     float ty = ((y - dy) - y0 * h) * one_over_h;
-                    int y1 = Mathf.Min(y0 + 1, this.fNumY - 2);
+                    int y1 = Mathf.Min(y0 + 1, this.numY - 2);
 
 
                     float sx = 1f - tx;
@@ -548,9 +548,9 @@ namespace FLIPFluidSimulator
                     }
 
                     //Restore solid cells
-                    for (int i = 0; i < this.fNumX; i++)
+                    for (int i = 0; i < this.numX; i++)
                     {
-                        for (int j = 0; j < this.fNumY; j++)
+                        for (int j = 0; j < this.numY; j++)
                         {
                             bool solid = this.cellType[i * n + j] == SOLID_CELL;
                             
@@ -591,7 +591,7 @@ namespace FLIPFluidSimulator
             //this.prevV.set(this.v);
 
 
-            int n = this.fNumY;
+            int n = this.numY;
 
             float cp = this.density * this.h / dt;
 
@@ -608,9 +608,9 @@ namespace FLIPFluidSimulator
             for (int iter = 0; iter < numIters; iter++)
             {
                 //For each cell except the border
-                for (int i = 1; i < this.fNumX - 1; i++)
+                for (int i = 1; i < this.numX - 1; i++)
                 {
-                    for (int j = 1; j < this.fNumY - 1; j++)
+                    for (int j = 1; j < this.numY - 1; j++)
                     {
                         //If this cell is not a fluid, meaning its air or obbstacle
                         if (this.cellType[i * n + j] != FLUID_CELL)
