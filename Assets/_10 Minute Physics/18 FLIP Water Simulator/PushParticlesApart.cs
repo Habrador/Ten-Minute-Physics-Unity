@@ -25,22 +25,27 @@ namespace FLIPFluidSimulator
         private readonly int[] cellParticleIds;
 
         //Convert between 2d and 1d array
-        public int To1D(int i, int j) => i + (numX * j);
+        public int To1D(int xi, int yi) => xi + (numX * yi);
 
 
 
         public PushParticlesApart(float particleRadius, float simWidth, float simHeight, int maxParticles)
         {
             this.particleRadius = particleRadius;
-        
+
             //To optimize particle-particle collision
             //Which is why we need another grid than the fluid grid
-            this.invSpacing = 1f / (2.2f * particleRadius);
+            //So a cell width is 20% bigger than the diameter of the particle
+            float spacing = 2.2f * particleRadius;
+
+            this.invSpacing = 1f / spacing;
 
             this.numX = Mathf.FloorToInt(simWidth * this.invSpacing) + 1;
             this.numY = Mathf.FloorToInt(simHeight * this.invSpacing) + 1;
 
             this.numCells = this.numX * this.numY;
+
+            //Debug.Log(this.numCells); //47585
 
             this.numCellParticles = new int[this.numCells];
             //Should be one bigger to be on the safe side
@@ -88,6 +93,7 @@ namespace FLIPFluidSimulator
             }
 
             //Guard
+            //The array has size numCells + 1
             this.firstCellParticle[this.numCells] = first;
 
 

@@ -12,11 +12,15 @@ public class SpatialHashing
 
     //We can use any size of the array, but tableSize = #particles often works well according to the video
     private readonly int tableSize = 10;
-    //From this array we can figure out how many particles are in a cell and it references the particles array
-    public readonly int[] tableArray;
+    //From this array we can figure out how many particles are in a cell and it references the sortedParticles array
+    public readonly int[] table;
     //Same length as #particles in the simulation
     //Particles in the same cell are next to each other in this array
-    public readonly int[] allParticles;
+    //The items in this array are indices in the particlePositions array
+    //To figure out which particles are in a cell:
+    //Step 1. Use the hash to find the index in the table array and figure out which index in the sortedParticles array the first particle in this cell has and how many particles are in this cell
+    //Step 2. If we know the first index of a particle in the sortedParticles array and how many particles we have, we can figure out which positions these particles have by iterating over the particles in this cell 
+    public readonly int[] sortedParticles;
     //For debugging
     private readonly int[] isParticleInCell;
 
@@ -41,8 +45,8 @@ public class SpatialHashing
         this.cellSize = cellSize;
 
         //+1 because we need a guard
-        this.tableArray = new int[tableSize + 1];
-        this.allParticles = new int[numberOfParticles];
+        this.table = new int[tableSize + 1];
+        this.sortedParticles = new int[numberOfParticles];
         this.isParticleInCell = new int[tableSize + 1];
     }
 
@@ -105,16 +109,12 @@ public class SpatialHashing
     // Update the data structure when particles have moved
     //
 
-    public void AddParticlesToGrid(List<Vector3> particlePositions)
+    public void AddParticlesToGrid(Vector3[] particlePositions)
     {
         //Reset
         //[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-        for (int i = 0; i < tableArray.Length; i++)
-        {
-            tableArray[i] = 0;
-
-            isParticleInCell[i] = 0; 
-        }
+        System.Array.Fill(table, 0);
+        System.Array.Fill(isParticleInCell, 0);
 
 
         //Add particles
@@ -125,7 +125,7 @@ public class SpatialHashing
 
             int index = Get1DArrayIndex(cellPos);
 
-            tableArray[index] += 1;
+            table[index] += 1;
 
             isParticleInCell[index] = 1;
         }
@@ -135,19 +135,23 @@ public class SpatialHashing
 
         //Partial sums
         //[0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5 5]
-        for (int i = 1; i < tableArray.Length; i++)
+        for (int i = 1; i < table.Length; i++)
         {
-            tableArray[i] += tableArray[i - 1];
+            table[i] += table[i - 1];
         }
 
         //[0 0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5]
-        //[5 1 4 2 3]
-        //Particle 5 1 are in cell with index 5
-        //When the hashing function returns 5 we know that the first particle in this cell has index 0 in the particle array
+        //[5 1 2 4 3] <- particle numbers and NOT positions in the array
+        //[4 0 1 3 2] <- sortedParticles array which references indices in the particlePositions array
+        //Particle 5,1 are in cell with 1d-index 5 in the tableArray 
+        //Particle 2,4 are in cell with 1d-index 11
+        //Particle 3 is in cell with 1d-index 13
+        //When the hashing function returns index 5 we look in the tableArray and see that the first particle in this cell has index 0 in the particle array
         //How many particles are in the cell? First look at the index after: 2, then subtract the 0, so 2 - 0 = 2 particles
+        //What's the positions of these particles? They have indices 4 and 0 in the particlePositions array
         //How many in the cell with index 11? 4 - 2 = 2
         //index 13? 5 - 4 = 1
-        for (int i = 0; i < particlePositions.Count; i++)
+        for (int i = 0; i < particlePositions.Length; i++)
         {
             Vector3 thisParticlePos = particlePositions[i];
         
@@ -155,9 +159,17 @@ public class SpatialHashing
 
             int index = Get1DArrayIndex(cellPos);
 
-            tableArray[index] -= 1;
+            //Decrease
+            table[index] -= 1;
 
-            allParticles[tableArray[index]] = i;
+            //Place the particle at this index
+            //After adding particle 1:
+            //[0 0 0 0 0 1 2 2 2 2 2 4 4 5 5 5 5 5 5 5 5] //The 1 is the index in allParticles where this particle should be added
+            //[- 0 - - -] Particle #1 has been added to index 1 in the allParticles array. It has index 0 in the particlePostions array
+            //After adding particle 2:
+            //[0 0 0 0 0 0 2 2 2 2 2 3 4 5 5 5 5 5 5 5 5] //The 3 is the index in allParticles where this particle should be added
+            //[- 0 - 1 -] Particle #2 has been added to index 3 in the allParticles array. It has index 1 in the particlePositions array
+            sortedParticles[table[index]] = i;
         }
     }
 
@@ -171,7 +183,7 @@ public class SpatialHashing
     {
         string displayString = "";
 
-        foreach (int integer in tableArray)
+        foreach (int integer in table)
         {
             displayString += integer + "";
         }
@@ -191,7 +203,7 @@ public class SpatialHashing
 
         displayString = "";
 
-        foreach (int integer in allParticles)
+        foreach (int integer in sortedParticles)
         {
             displayString += integer + "";
         }

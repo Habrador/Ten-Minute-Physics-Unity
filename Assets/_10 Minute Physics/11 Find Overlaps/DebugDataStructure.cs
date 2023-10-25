@@ -56,11 +56,11 @@ public class DebugDataStructure : MonoBehaviour
             allBalls.Add(new BilliardBall(Vector3.zero, t));
         }
 
-        List<Vector3> ballPositions = new ();
+        Vector3[] ballPositions = new Vector3[allBalls.Count];
 
         for (int i = 0; i < allBalls.Count; i++)
         {
-            ballPositions.Add(allBalls[i].pos);
+            ballPositions[i] = allBalls[i].pos;
         }
 
         spatialHashing.AddParticlesToGrid(ballPositions);
@@ -90,10 +90,10 @@ public class DebugDataStructure : MonoBehaviour
 
                 ///Debug.Log(ballArrayPos + " " + arrayIndex);
 
-                int particlePos = spatialHashing.tableArray[arrayIndex];
+                int particlePos = spatialHashing.table[arrayIndex];
 
                 //How many balls in this cell?
-                int numberOfParticles = spatialHashing.tableArray[arrayIndex + 1] - particlePos;
+                int numberOfParticles = spatialHashing.table[arrayIndex + 1] - particlePos;
 
                 //if (arrayIndex == 7)
                 //{
@@ -103,7 +103,7 @@ public class DebugDataStructure : MonoBehaviour
 
                 for (int j = particlePos; j < particlePos + numberOfParticles; j++)
                 {
-                    Ball otherBall = allBalls[spatialHashing.allParticles[j]];
+                    Ball otherBall = allBalls[spatialHashing.sortedParticles[j]];
 
                     float dist = (thisBall.pos - otherBall.pos).magnitude;
 
