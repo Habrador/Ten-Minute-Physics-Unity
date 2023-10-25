@@ -20,8 +20,9 @@ namespace FLIPFluidSimulator
         //For particle-particle collision
         //How many particles are in each cell?
         private readonly int[] numCellParticles;
-        //Partial sums, store the cummulative number of particles in each cell
+        //Tells us the cellParticleIds index of the first particle in this cell
         private readonly int[] firstCellParticle;
+        //Sorts all particles so all particles are after each other in this array. What's stored in the array is indices in the array of particle positions
         private readonly int[] cellParticleIds;
 
         //Convert between 2d and 1d array
@@ -57,6 +58,7 @@ namespace FLIPFluidSimulator
 
         //Handle particle-particle collision
         //Same idea as in tutorial 11 "Finding overlaps among thousands of objects blazing fast"
+        //But we are not using the hash function
         public void Push(int numIters, int numParticles, float[] particlePos, float[] particleColor)
         {
             //Count particles per cell
@@ -135,6 +137,7 @@ namespace FLIPFluidSimulator
         //The colliding particles will also move
         private void MoveParticleApart(int particleIndex, float[] particlePos, float[] particleColor)
         {
+            //Particle position
             float px = particlePos[2 * particleIndex];
             float py = particlePos[2 * particleIndex + 1];
 
@@ -156,8 +159,10 @@ namespace FLIPFluidSimulator
                     //2d array to 1d 
                     int cellNr = xi * this.numY + yi;
 
+                    //This one tells use the cellParticleIds index of the first particle in this cell, the rest if the particles come after it
                     int firstIndex = this.firstCellParticle[cellNr];
-                    int lastIndex = this.firstCellParticle[cellNr + 1];
+                    //lastIndex - firstIndex tells us how many particles we have
+                    int lastIndex = this.firstCellParticle[cellNr + 1]; 
 
                     for (int j = firstIndex; j < lastIndex; j++)
                     {
@@ -169,7 +174,7 @@ namespace FLIPFluidSimulator
                             continue;
                         }
 
-                        //The pos of the other particle we want to check collision against
+                        //The position of the other particle we want to check collision against
                         float qx = particlePos[2 * particleIndexOther];
                         float qy = particlePos[2 * particleIndexOther + 1];
 

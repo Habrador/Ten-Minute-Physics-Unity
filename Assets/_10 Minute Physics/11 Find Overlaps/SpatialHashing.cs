@@ -140,6 +140,7 @@ public class SpatialHashing
             table[i] += table[i - 1];
         }
 
+        //Fix the table and sortedParticles arrays
         //[0 0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5]
         //[5 1 2 4 3] <- particle numbers and NOT positions in the array
         //[4 0 1 3 2] <- sortedParticles array which references indices in the particlePositions array
