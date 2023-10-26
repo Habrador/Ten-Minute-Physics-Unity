@@ -165,7 +165,7 @@ namespace FLIPFluidSimulator
         //Convert from simulation space to cell space = in which cell is a certain coordinate
         public Vector2Int SimToCell(float x, float y)
         {
-            float cellSize = fluid.h;
+            float cellSize = fluid.Spacing;
 
             int cellX = Mathf.FloorToInt(x / cellSize);
             int cellY = Mathf.FloorToInt(y / cellSize);

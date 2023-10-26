@@ -16,11 +16,11 @@ namespace FLIPFluidSimulator
         private readonly float density;
 
         //Simulation grid settings
-        public int numX;
-        public int numY;
-        private int numCells;
+        private readonly int numX;
+        private readonly int numY;
+        private readonly int numCells;
         //Cell height and width
-        public float h;
+        private readonly float h;
         //1/h
         private readonly float one_over_h;
 
@@ -65,13 +65,13 @@ namespace FLIPFluidSimulator
         public readonly float[] particleColor;
         //The vel of each particle (x,y) after each other
         private readonly float[] particleVel;
-        //The density of particles in a cell
+        //The density of particles in a cell. Its not 1 particle in cell = +1 density. It depends on how close a particle is to the center if a cell
         public readonly float[] particleDensity;
         //The average particle density before the simulation starts
         public float particleRestDensity;
         //Particle radius
         public readonly float particleRadius;
-        //To push them apart so they are not intersecting
+        //To push particles apart so they are not intersecting
         private readonly PushParticlesApart pushParticlesApart;
 
 
@@ -82,14 +82,22 @@ namespace FLIPFluidSimulator
         //https://softwareengineering.stackexchange.com/questions/212808/treating-a-1d-data-structure-as-2d-grid
         public int To1D(int xi, int yi) => xi + (numX * yi);
 
-        //These are not the same as the height we set at start because of the two border cells
-        public float SimWidth => numX * h;
-        public float SimHeight => numY * h;
-
         //Is a coordinate in local space within the simulation area?
         public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
 
 
+        //Getters
+
+        //These are not the same as the height we set at start because of the two border cells
+        public float SimWidth => numX * h;
+        public float SimHeight => numY * h;
+
+        public int NumX => numX;
+        public int NumY => numY;
+
+        public float Spacing => h;
+
+       
 
         public FLIPFluidSim(float density, int numX, int numY, float h, float particleRadius, int maxParticles)
         {

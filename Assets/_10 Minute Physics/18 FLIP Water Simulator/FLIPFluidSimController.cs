@@ -202,17 +202,17 @@ public class FLIPFluidSimController : MonoBehaviour
 
 
         //Setup grid cells for tank
-        int n = f.numY;
+        int n = f.NumY;
 
-        for (int i = 0; i < f.numX; i++)
+        for (int i = 0; i < f.NumX; i++)
         {
-            for (int j = 0; j < f.numY; j++)
+            for (int j = 0; j < f.NumY; j++)
             {
                 //Fluid
                 float s = 1f;
 
                 //Solid walls at left-right-bottom border
-                if (i == 0 || i == f.numX - 1 || j == 0)
+                if (i == 0 || i == f.NumX - 1 || j == 0)
                 {
                     s = 0f;
                 }
@@ -259,17 +259,17 @@ public class FLIPFluidSimController : MonoBehaviour
         FLIPFluidSim f = scene.fluid;
 
         //Ignore border
-        for (int cellX = 1; cellX < f.numX - 2; cellX++)
+        for (int cellX = 1; cellX < f.NumX - 2; cellX++)
         {
-            for (int cellY = 1; cellY < f.numY - 2; cellY++)
+            for (int cellY = 1; cellY < f.NumY - 2; cellY++)
             {
                 //Start by setting all cells to fluids (= 1)
                 //Cant do an System.Array.Fill because then the border will also be fluid
                 f.s[f.To1D(cellX, cellY)] = 1f;
 
                 //Distance from circle center to cell center
-                float dx = (cellX + 0.5f) * f.h - x;
-                float dy = (cellY + 0.5f) * f.h - y;
+                float dx = (cellX + 0.5f) * f.Spacing - x;
+                float dy = (cellY + 0.5f) * f.Spacing - y;
 
                 //Is the cell within the obstacle?
                 //Using the square is faster than actual distance but gives the same result 

@@ -47,9 +47,9 @@ namespace FLIPFluidSimulator
             Texture2D fluidTexture = scene.fluidTexture;
 
             //Generate a new texture if none exists or if we have changed resolution
-            if (fluidTexture == null || fluidTexture.width != f.numX || fluidTexture.height != f.numY)
+            if (fluidTexture == null || fluidTexture.width != f.NumX || fluidTexture.height != f.NumY)
             {
-                fluidTexture = new(f.numX, f.numY);
+                fluidTexture = new(f.NumX, f.NumY);
 
                 //Dont blend the pixels
                 fluidTexture.filterMode = FilterMode.Point;
@@ -70,15 +70,15 @@ namespace FLIPFluidSimulator
             //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
             //private readonly float[] cellColor;
             //This is cellColor in the tutorial
-            Color32[] textureColors = new Color32[f.numX * f.numY];
+            Color32[] textureColors = new Color32[f.NumX * f.NumY];
 
             //Find the colors
             //This was an array in the source, but we can treat the Vector4 as an array to make the code match
             //Vector4 color = new (255, 255, 255, 255);
 
-            for (int x = 0; x < f.numX; x++)
+            for (int x = 0; x < f.NumX; x++)
             {
-                for (int y = 0; y < f.numY; y++)
+                for (int y = 0; y < f.NumY; y++)
                 {
                     //This was an array in the source, but we can treat the Vector4 as an array to make the code match
                     //Moved to here from before the loop so it resets every time so we can display the walls if we deactivate both pressure and smoke
@@ -144,7 +144,7 @@ namespace FLIPFluidSimulator
             FLIPFluidSim f = scene.fluid;
 
             //Make it slightly bigger to hide the jagged edges we get because we use a grid with square cells which will not match the circle edges prefectly
-            float circleRadius = scene.obstacleRadius + f.h;
+            float circleRadius = scene.obstacleRadius + f.Spacing;
 
             //Circle center in global space
             Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
@@ -171,7 +171,7 @@ namespace FLIPFluidSimulator
         {
             FLIPFluidSim f = scene.fluid;
 
-            float one_over_h = 1f / f.h;
+            float one_over_h = 1f / f.Spacing;
 
             //For each particle
             for (int i = 0; i < f.numParticles; i++)
@@ -187,11 +187,11 @@ namespace FLIPFluidSimulator
                 float y = f.particlePos[2 * i + 1];
 
                 //The cell the particle is in
-                int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 1, f.numX - 1);
-                int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 1, f.numY - 1);
+                int xi = Mathf.Clamp(Mathf.FloorToInt(x * one_over_h), 1, f.NumX - 1);
+                int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 1, f.NumY - 1);
 
                 //2d to 1d array
-                int cellNr = xi * f.numY + yi;
+                int cellNr = f.To1D(xi, yi);
 
                 float d0 = f.particleRestDensity;
 
