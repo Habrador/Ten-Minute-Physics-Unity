@@ -348,26 +348,44 @@ namespace FLIPFluidSimulator
                 //The cells to interpolate between
                 //We have already made sure the particle is at least on the border between the first and second cell
                 //If the particle is left of the second p, we have to subtract 0.5 from its position to get the index of the left cell to interpolate from  
-                // _____ _____
+                //+-----+-----+
                 //|     |     |
                 //|  p  |  p  |
-                //|_____|_____|
+                //|     |     |
+                //+-----+-----+
                 int x0 = Mathf.FloorToInt((x - half_h) * one_over_h);
                 int x1 = Mathf.Min(x0 + 1, this.numX - 2);         
 
                 int y0 = Mathf.FloorToInt((y - half_h) * one_over_h);
                 int y1 = Math.Min(y0 + 1, this.numY - 2);
 
-                float tx = ((x - half_h) - x0 * h) * one_over_h;
-                float ty = ((y - half_h) - y0 * h) * one_over_h;
-                
+                //t is a parameter in the range [0, 1]. If tx = 0 we get A or if tx = 1 we get B if we interpolate between A and B where A has coordinate x0 and B has coordinate x1 -> x1-x0 = h
+                //tx = (xp - x0) / (x1 - x0) = (xp - x0) / h = deltaX / h
+                //Original code said (x - half_h) - x0 * h but its confusing why you should subtract half_h from x because we want the coordinate of x0
+                float deltaX = x - ((x0 * h) + half_h);
+                float deltaY = y - ((y0 * h) + half_h);
+
+                float tx = deltaX * one_over_h;
+                float ty = deltaY * one_over_h;
+
+                //From FluidSim class we know how to interpolate between A,B,C,D 
+                // C-----D
+                // |     |
+                // |___P |
+                // |   | |
+                // A-----B
+                //P = (1 - tx) * (1 - ty) * A + tx * (1 - ty) * B + (1 - tx) * ty * C + tx * ty * D
+
+                //To simplify:
                 float sx = 1f - tx;
                 float sy = 1f - ty;
 
-                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += sx * sy;
-                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += tx * sy;
-                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += tx * ty;
-                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += sx * ty;
+                //We get: P = sx * sy * A + tx * sy * B + sx * ty * C + tx * ty * D 
+                //The weighted density of a particle in each cell becomes:
+                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += sx * sy; //A
+                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += tx * sy; //B
+                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += sx * ty; //C
+                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += tx * ty; //D 
             }
 
 
