@@ -5,13 +5,11 @@ using UnityEngine;
 
 namespace FLIPFluidSimulator
 {
-    //This one is using a very similar data structure as the fluid an is thius a great source of confusion, so should be in its own class
+    //This one is using a very similar data structure as the fluid an is thus a great source of confusion, so should be in its own class
     public class PushParticlesApart
     {
         private readonly float particleRadius;
-        //To save computations: invSpacing = 1.0 / (2.2 * particleRadius);
-        //We use it because we might use some other cell structure to handle particle-particle collision more efficient
-        //To handle particle-particle collision we check the cell the particle is in and surrounding cells. To make sure that works, we may use another spacing... 
+        //1/h where h is cell size
         private readonly float invSpacing;
         //These may differ from the fluid simulation's 
         private readonly int numX;
@@ -20,9 +18,9 @@ namespace FLIPFluidSimulator
         //For particle-particle collision
         //How many particles are in each cell?
         private readonly int[] numCellParticles;
-        //Tells us the cellParticleIds index of the first particle in this cell
+        //Tells us the cellParticleIds index of the first particle in this cell. And it also tells us how many particles are in a cell
         private readonly int[] firstCellParticle;
-        //Sorts all particles so all particles are after each other in this array. What's stored in the array is indices in the array of particle positions
+        //Sorts all particles so all particles are after each other in this array. Each index in this array is a particle and references an index in the particle positions array
         private readonly int[] cellParticleIds;
 
         //Convert between 2d and 1d array
@@ -49,7 +47,7 @@ namespace FLIPFluidSimulator
             //Debug.Log(this.numCells); //47585
 
             this.numCellParticles = new int[this.numCells];
-            //Should be one bigger to be on the safe side
+            //Should be one bigger because we need a "guard" when finding colliding particles as fast as possible 
             this.firstCellParticle = new int[this.numCells + 1];
             this.cellParticleIds = new int[maxParticles];
         }
@@ -99,7 +97,7 @@ namespace FLIPFluidSimulator
             this.firstCellParticle[this.numCells] = first;
 
 
-            //Fill particles into cells
+            //Fill particles into cells while updating the data structure
             for (int i = 0; i < numParticles; i++)
             {
                 float x = particlePos[2 * i];
@@ -112,7 +110,7 @@ namespace FLIPFluidSimulator
                 //2d array to 1d
                 int cellNr = xi * this.numY + yi;
 
-                this.firstCellParticle[cellNr]--;
+                this.firstCellParticle[cellNr] -= 1;
 
                 this.cellParticleIds[this.firstCellParticle[cellNr]] = i;
             }
@@ -162,8 +160,10 @@ namespace FLIPFluidSimulator
                     //This one tells use the cellParticleIds index of the first particle in this cell, the rest if the particles come after it
                     int firstIndex = this.firstCellParticle[cellNr];
                     //lastIndex - firstIndex tells us how many particles we have
-                    int lastIndex = this.firstCellParticle[cellNr + 1]; 
-
+                    int lastIndex = this.firstCellParticle[cellNr + 1];
+                    
+                    //Debug.Log(lastIndex-firstIndex);
+                    
                     for (int j = firstIndex; j < lastIndex; j++)
                     {
                         int particleIndexOther = this.cellParticleIds[j];
@@ -174,46 +174,14 @@ namespace FLIPFluidSimulator
                             continue;
                         }
 
-                        //The position of the other particle we want to check collision against
-                        float qx = particlePos[2 * particleIndexOther];
-                        float qy = particlePos[2 * particleIndexOther + 1];
-
-                        //The distance square to this other particle
-                        float dx = qx - px;
-                        float dy = qy - py;
-
-                        float dSquare = dx * dx + dy * dy;
-
-                        //The min distance for the particle not to collide
-                        float minDist = 2f * particleRadius;
-
-                        float minDistSquare = minDist * minDist;
-
-                        //If outside or exactly at the same position
-                        if (dSquare > minDistSquare || dSquare == 0f)
-                        {
-                            continue;
-                        }
-
-                        //The actual distance to the other particle
-                        float d = Mathf.Sqrt(dSquare);
-
-                        //Push each particle half the distance needed to make them no longer collide
-                        float s = 0.5f * (minDist - d) / d;
-
-                        dx *= s;
-                        dy *= s;
-
-                        //Update their positions
-                        particlePos[2 * particleIndex] -= dx;
-                        particlePos[2 * particleIndex + 1] -= dy;
-
-                        particlePos[2 * particleIndexOther] += dx;
-                        particlePos[2 * particleIndexOther + 1] += dy;
-
+                        //Check if two particles are colliding, if so push them apart
+                        bool areColliding = PushTwoParticlesApart(particleIndex, px, py, particleIndexOther, particlePos);
 
                         //Update particle colors
-                        UpdateColor(particleColor, particleIndex, particleIndexOther);
+                        if (areColliding)
+                        {
+                            UpdateColor(particleColor, particleIndex, particleIndexOther); 
+                        }
                     }
                 }
             }
@@ -221,7 +189,57 @@ namespace FLIPFluidSimulator
 
 
 
-        private void UpdateColor(float[] particleColor, int particle_index, int particle_index_other)
+        //We know two particles are colliding and now we want to push them apart
+        private bool PushTwoParticlesApart(int particleIndex, float px, float py, int particleIndexOther, float[] particlePos)
+        {
+            bool areColliding = false;
+        
+            //The position of the other particle we want to check collision against
+            float qx = particlePos[2 * particleIndexOther];
+            float qy = particlePos[2 * particleIndexOther + 1];
+
+            //The distance square to this other particle
+            float dx = qx - px;
+            float dy = qy - py;
+
+            float dSquare = dx * dx + dy * dy;
+
+            //The min distance for the particle not to collide
+            float minDist = 2f * particleRadius;
+
+            float minDistSquare = minDist * minDist;
+
+            //If outside or exactly at the same position
+            if (dSquare > minDistSquare || dSquare == 0f)
+            {
+                return areColliding;
+            }
+
+            //The actual distance to the other particle
+            float d = Mathf.Sqrt(dSquare);
+
+            //Push each particle half the distance needed to make them no longer collide
+            float s = 0.5f * (minDist - d) / d;
+
+            dx *= s;
+            dy *= s;
+
+            //Update their positions
+            particlePos[2 * particleIndex] -= dx;
+            particlePos[2 * particleIndex + 1] -= dy;
+
+            particlePos[2 * particleIndexOther] += dx;
+            particlePos[2 * particleIndexOther + 1] += dy;
+
+            areColliding = true;
+
+            return areColliding;
+        }
+
+
+
+        //Blend colors of colliding particles
+        private void UpdateColor(float[] particleColor, int particleIndex, int particleIndexOther)
         {
             //Diffuse colors of colliding particles
             float colorDiffusionCoeff = 0.001f;
@@ -229,13 +247,13 @@ namespace FLIPFluidSimulator
             //r, g, b 
             for (int k = 0; k < 3; k++)
             {
-                float color0 = particleColor[3 * particle_index + k];
-                float color1 = particleColor[3 * particle_index_other + k];
+                float color0 = particleColor[3 * particleIndex + k];
+                float color1 = particleColor[3 * particleIndexOther + k];
 
                 float color = (color0 + color1) * 0.5f;
 
-                particleColor[3 * particle_index + k] = color0 + (color - color0) * colorDiffusionCoeff;
-                particleColor[3 * particle_index_other + k] = color1 + (color - color1) * colorDiffusionCoeff;
+                particleColor[3 * particleIndex + k] = color0 + (color - color0) * colorDiffusionCoeff;
+                particleColor[3 * particleIndexOther + k] = color1 + (color - color1) * colorDiffusionCoeff;
             }
         }
     }
