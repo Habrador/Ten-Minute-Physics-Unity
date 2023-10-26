@@ -67,7 +67,7 @@ namespace FLIPFluidSimulator
         private readonly float[] particleVel;
         //The density of particles in a cell
         public readonly float[] particleDensity;
-        //The average density of water cells before the simulation starts
+        //The average particle density before the simulation starts
         public float particleRestDensity;
         //Particle radius
         public readonly float particleRadius;
@@ -127,7 +127,8 @@ namespace FLIPFluidSimulator
             this.maxParticles = maxParticles;
 
             this.particlePos = new float[2 * this.maxParticles];
-            
+            this.particleVel = new float[2 * this.maxParticles];
+
             this.particleColor = new float[this.maxParticles * 3];
             
             //Init the colors to blue
@@ -140,8 +141,6 @@ namespace FLIPFluidSimulator
                 this.particleColor[3 * i + 2] = 1f;
             }
                 
-
-            this.particleVel = new float[2 * this.maxParticles];
             this.particleDensity = new float[numCells];
             this.particleRestDensity = 0f;
 
@@ -210,7 +209,7 @@ namespace FLIPFluidSimulator
             //Velocity transfer: Particles -> Grid
             //TransferVelocities(true);
 
-            //
+            //Update the density of particles in a cell and calculate rest density at the start of the simulation
             //UpdateParticleDensity();
 
             //Make the grid velocities incompressible
@@ -317,12 +316,13 @@ namespace FLIPFluidSimulator
 
 
         
+        //
+        // Update the density of particles
+        //
 
-
+        //The density is defined at the center of each cell
         private void UpdateParticleDensity()
-        {
-            int n = this.numY;
-            
+        {   
             float h = this.h;
             float one_over_h = this.one_over_h;
             float half_h = 0.5f * h;
@@ -340,44 +340,58 @@ namespace FLIPFluidSimulator
                 float y = this.particlePos[2 * i + 1];
 
                 //Make sure the particle is within the grid
+                //Density is defined at the center of each cell
+                //If the particle is to the left of center in the first cell we push it to be on the border between the first cell and second cell  
                 x = Mathf.Clamp(x, h, (this.numX - 1) * h);
                 y = Mathf.Clamp(y, h, (this.numY - 1) * h);
 
                 //The cells to interpolate between
+                //We have already made sure the particle is at least on the border between the first and second cell
+                //If the particle is left of the second p, we have to subtract 0.5 from its position to get the index of the left cell to interpolate from  
+                // _____ _____
+                //|     |     |
+                //|  p  |  p  |
+                //|_____|_____|
                 int x0 = Mathf.FloorToInt((x - half_h) * one_over_h);
-                float tx = ((x - half_h) - x0 * h) * one_over_h;
-                int x1 = Mathf.Min(x0 + 1, this.numX - 2);
+                int x1 = Mathf.Min(x0 + 1, this.numX - 2);         
 
                 int y0 = Mathf.FloorToInt((y - half_h) * one_over_h);
-                float ty = ((y - half_h) - y0 * h) * one_over_h;
                 int y1 = Math.Min(y0 + 1, this.numY - 2);
 
+                float tx = ((x - half_h) - x0 * h) * one_over_h;
+                float ty = ((y - half_h) - y0 * h) * one_over_h;
+                
                 float sx = 1f - tx;
                 float sy = 1f - ty;
 
-                if (x0 < this.numX && y0 < this.numY) d[x0 * n + y0] += sx * sy;
-                if (x1 < this.numX && y0 < this.numY) d[x1 * n + y0] += tx * sy;
-                if (x1 < this.numX && y1 < this.numY) d[x1 * n + y1] += tx * ty;
-                if (x0 < this.numX && y1 < this.numY) d[x0 * n + y1] += sx * ty;
+                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += sx * sy;
+                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += tx * sy;
+                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += tx * ty;
+                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += sx * ty;
             }
 
+
+            //Calculate the average density of water cells before the simulation starts
+            //We set particleRestDensity = 0 in the start so this will update once  
             if (this.particleRestDensity == 0f)
             {
                 float sum = 0f;
                 
                 int numFluidCells = 0;
 
+                //Calculate the total fluid density and how many cells have fluids in them 
                 for (int i = 0; i < this.numCells; i++)
                 {
                     if (this.cellType[i] == FLUID_CELL)
                     {
                         sum += d[i];
-                        numFluidCells++;
+                        numFluidCells += 1;
                     }
                 }
 
                 if (numFluidCells > 0)
                 {
+                    //The average density
                     this.particleRestDensity = sum / numFluidCells;
                 }
             }
@@ -572,7 +586,7 @@ namespace FLIPFluidSimulator
 
 
         //
-        // Make the fluid incompressible and calculate the pressure at the same time
+        // Make the fluid incompressible and calculate the pressure at the same time. Also compensate for drift 
         //
 
         private void SolveIncompressibility(int numIters, float dt, float overRelaxation, bool compensateDrift = true)
@@ -591,7 +605,7 @@ namespace FLIPFluidSimulator
             //this.prevV.set(this.v);
 
 
-            int n = this.numY;
+            //int n = this.numY;
 
             float cp = this.density * this.h / dt;
 
@@ -643,9 +657,11 @@ namespace FLIPFluidSimulator
                         //Divergence = total amount of fluid velocity the leaves the cell 
                         float divergence = this.u[right] - this.u[center] + this.v[top] - this.v[center];
 
-                        //???
+                        //Reduce divergence in dense regions to compensare for drift
+                        //This will cause more outward push
                         if (this.particleRestDensity > 0f && compensateDrift)
                         {
+                            //PSstiffness coefficient parameter
                             float k = 1f;
 
                             float compression = this.particleDensity[To1D(i, j)] - this.particleRestDensity;
