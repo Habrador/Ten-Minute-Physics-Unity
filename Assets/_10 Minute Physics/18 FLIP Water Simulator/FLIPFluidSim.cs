@@ -225,7 +225,6 @@ namespace FLIPFluidSimulator
         // Simulate particles
         //
 
-        //Move particles
         private void IntegrateParticles(float dt, float gravity)
         {
             //For each particle
@@ -244,7 +243,11 @@ namespace FLIPFluidSimulator
         }
 
 
-        //Handle particle-world collisions
+
+        //
+        // Handle particle-world collisions
+        //
+
         private void HandleParticleCollisions(float obstacleX, float obstacleY, float obstacleRadius, float obstacleVelX, float obstacleVelY)
         {
             //Why are we using 1f / this.fInvSpacing and not just h?
@@ -708,5 +711,4 @@ namespace FLIPFluidSimulator
             }
         }
     }
-
 }
