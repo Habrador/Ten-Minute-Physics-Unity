@@ -214,7 +214,7 @@ namespace FLIPFluidSimulator
             //UpdateParticleDensity();
 
             //Make the grid velocities incompressible
-            //SolveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
+            //SolveIncompressibility(numPressureIters, dt, overRelaxation, compensateDrift);
 
             //Velocity transfer: Grid -> Particles
             //TransferVelocities(false, flipRatio);
@@ -612,61 +612,63 @@ namespace FLIPFluidSimulator
                 {
                     for (int j = 1; j < this.numY - 1; j++)
                     {
-                        //If this cell is not a fluid, meaning its air or obbstacle
-                        if (this.cellType[i * n + j] != FLUID_CELL)
+                        //If this cell is not a fluid, meaning its air or obstacle
+                        if (this.cellType[To1D(i, j)] != FLUID_CELL)
                         {
                             continue;
                         }   
                             
-
-                        int center = i * n + j;
-                        int left = (i - 1) * n + j;
-                        int right = (i + 1) * n + j;
-                        int bottom = i * n + j - 1;
-                        int top = i * n + j + 1;
+                        int center = To1D(i, j);
+                        int left = To1D(i - 1, j);
+                        int right = To1D(i + 1, j);
+                        int bottom = To1D(i, j - 1);
+                        int top = To1D(i, j + 1);
 
                         //Cache how many of the surrounding cells are obstacles
-                        float s = this.s[center];
-                        float sx0 = this.s[left];
-                        float sx1 = this.s[right];
-                        float sy0 = this.s[bottom];
-                        float sy1 = this.s[top];
+                        //float s = this.s[center];
+                        float sLeft = this.s[left];
+                        float sRight = this.s[right];
+                        float sBottom = this.s[bottom];
+                        float sTop = this.s[top];
 
-                        float sTot = sx0 + sx1 + sy0 + sy1;
+                        float sTot = sLeft + sRight + sBottom + sTop;
                         
-                        if (s == 0f || sTot == 0f)
+                        //Continue if all surrounding cells are obstacles
+                        //We have already made sure this cell is a fluid cell
+                        if (sTot == 0f)
                         {
                             continue;
                         }
 
                         //Divergence = total amount of fluid velocity the leaves the cell 
-                        float div = this.u[right] - this.u[center] + this.v[top] - this.v[center];
+                        float divergence = this.u[right] - this.u[center] + this.v[top] - this.v[center];
 
                         //???
                         if (this.particleRestDensity > 0f && compensateDrift)
                         {
                             float k = 1f;
 
-                            float compression = this.particleDensity[i * n + j] - this.particleRestDensity;
+                            float compression = this.particleDensity[To1D(i, j)] - this.particleRestDensity;
 
                             if (compression > 0f)
                             {
-                                div -= k * compression;
+                                divergence -= k * compression;
                             }
                         }
 
-                        float p = -div / s;
+                        float divergence_Over_sTot = -divergence / sTot;
 
-                        p *= overRelaxation;
+                        //Multiply by the overrelaxation coefficient to speed up the convergence of Gauss-Seidel relaxation
+                        divergence_Over_sTot *= overRelaxation;
 
                         //Calculate pressure
-                        this.p[center] += cp * p;
+                        this.p[center] += cp * divergence_Over_sTot;
 
                         //Update velocities to ensure incompressibility
-                        this.u[center] -= sx0 * p;
-                        this.u[right] += sx1 * p;
-                        this.v[center] -= sy0 * p;
-                        this.v[top] += sy1 * p;
+                        this.u[center] -= sLeft * divergence_Over_sTot;
+                        this.u[right] += sRight * divergence_Over_sTot;
+                        this.v[center] -= sBottom * divergence_Over_sTot;
+                        this.v[top] += sTop * divergence_Over_sTot;
                     }
                 }
             }
