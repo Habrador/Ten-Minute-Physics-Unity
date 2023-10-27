@@ -1,6 +1,7 @@
 using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
 
@@ -9,13 +10,18 @@ namespace FLIPFluidSimulator
 {
     public class DisplayFLIPFluid : MonoBehaviour
     {
+        //The circle we can move around with mouse
         private static Mesh circleMesh;
 
+        //Particles
         private static Mesh[] particleMeshes;
 
         private static Mesh particleMesh;
 
         private static Transform[] particleTransforms;
+
+        //Grid
+        private static Mesh gridMesh;
 
 
 
@@ -32,6 +38,11 @@ namespace FLIPFluidSimulator
             if (scene.showParticles)
             {
                 ShowParticles(scene, particlePrefabGO);
+            }
+
+            if (scene.showGrid)
+            {
+                DisplayGrid(scene);
             }
         }
 
@@ -336,6 +347,90 @@ namespace FLIPFluidSimulator
                 particleTransforms[i].position = particleGlobalPositions[i];
             }
             */
+        }
+
+
+
+        //
+        // Display a grid to show each cell
+        //
+
+        private static void DisplayGrid(FLIPFluidScene scene)
+        {
+            if (gridMesh == null)
+            {
+                gridMesh = InitGridMesh(scene);
+            }
+
+            Material gridMat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Red);
+
+            Graphics.DrawMesh(gridMesh, Vector3.zero, Quaternion.identity, gridMat, 0, Camera.main, 0);
+        }
+
+
+        //Generate a line mesh
+        private static Mesh InitGridMesh(FLIPFluidScene scene)
+        {
+            //Generate the vertices
+            List<Vector3> lineVertices = new();
+
+            int numX = scene.fluid.NumX;
+            int numY = scene.fluid.NumY;
+
+            //These are in local space
+            //float localCellWidthAndHeight = scene.fluid.Spacing;
+
+            //This is the cell width and height in global space
+            float cellWidthAndHeight = scene.simPlaneWidth / numX; 
+
+            //Map width and height in global space
+            float mapWidth = cellWidthAndHeight * numX;
+            float mapHeight = cellWidthAndHeight * numY;
+
+            //The map is centered around 0 so grid lines start in bottom-left corner
+            Vector3 startPos = new(-mapWidth * 0.5f, -mapHeight * 0.5f, -0.1f);
+
+            //Vertical lines                
+            Vector3 linePosX = startPos;
+
+            for (int x = 0; x <= numX; x++)
+            {
+                lineVertices.Add(linePosX);
+                lineVertices.Add(linePosX + Vector3.up * mapHeight);
+
+                linePosX += Vector3.right * cellWidthAndHeight;
+            }
+
+
+            //Horizontal lines
+            Vector3 linePosY = startPos;
+
+            for (int y = 0; y <= numY; y++)
+            {
+                lineVertices.Add(linePosY);
+                lineVertices.Add(linePosY + Vector3.right * mapWidth);
+
+                linePosY += Vector3.up * cellWidthAndHeight;
+            }
+
+
+            //Generate the indices
+            List<int> indices = new();
+
+            for (int i = 0; i < lineVertices.Count; i++)
+            {
+                indices.Add(i);
+            }
+
+
+            //Generate the mesh
+            Mesh gridMesh = new();
+
+            gridMesh.SetVertices(lineVertices);
+            gridMesh.SetIndices(indices, MeshTopology.Lines, 0);
+
+
+            return gridMesh;
         }
     }
 }

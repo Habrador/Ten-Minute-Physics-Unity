@@ -11,8 +11,8 @@ using UnityEngine;
 //A problem with PIC is that when we transfer velocities from the grid to the particles (and vice versa), the velocities are smoothed. To solve this, people came up with FLIP (Fluid Implicit Particle) where we interpolate the change in velocity from the grid to the particles, and then we increment the velocity of the particles based on this change. This means FLIP will be free of numerical diffusion!
 //BUT the problem with FLIP is that it may develop noise. PIC doesnt have this problem so lets combine PIC and FLIP. 
 //TODO:
-//- What is drift?
-//- Optimize particle-particle intersection
+//- What is drift? Balls getting clumped together? 
+//- Optimize particle-particle intersection which is the current bottleneck
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public

@@ -75,6 +75,8 @@ namespace FLIPFluidSimulator
         private readonly PushParticlesApart pushParticlesApart;
 
 
+        //Help methods
+
         //Convert between 2d and 1d array
         //The conversion can cause great confusion, so we better do it in one place throughout all code
         //Was (i * numY) + j in tutorial but should be i + (numX * j) if we want them row-by-row after each other in the flat array
