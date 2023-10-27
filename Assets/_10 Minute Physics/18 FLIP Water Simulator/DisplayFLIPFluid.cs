@@ -23,6 +23,10 @@ namespace FLIPFluidSimulator
         //Grid
         private static Mesh gridMesh;
 
+        //Offsets so stuff doesnt intersect
+        //Plane is at 0
+        private static float obstacleOffset = -0.1f;
+        private static float gridOffset = -0.01f;
 
 
         //Called every Update
@@ -161,7 +165,7 @@ namespace FLIPFluidSimulator
             Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
 
             //3d space infront of the texture
-            Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, -0.1f);
+            Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, obstacleOffset);
 
             //Generate a new circle mesh if we havent done so
             if (circleMesh == null)
@@ -388,7 +392,7 @@ namespace FLIPFluidSimulator
             float mapHeight = cellWidthAndHeight * numY;
 
             //The map is centered around 0 so grid lines start in bottom-left corner
-            Vector3 startPos = new(-mapWidth * 0.5f, -mapHeight * 0.5f, -0.1f);
+            Vector3 startPos = new(-mapWidth * 0.5f, -mapHeight * 0.5f, gridOffset);
 
             //Vertical lines                
             Vector3 linePosX = startPos;
