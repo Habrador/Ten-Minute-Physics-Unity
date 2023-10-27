@@ -25,8 +25,8 @@ namespace FLIPFluidSimulator
 
         //Offsets so stuff doesnt intersect
         //Plane is at 0
-        private static float obstacleOffset = -0.1f;
-        private static float gridOffset = -0.01f;
+        private readonly static float obstacleOffset = -0.1f;
+        private readonly static float gridOffset = -0.01f;
 
 
         //Called every Update
@@ -36,7 +36,7 @@ namespace FLIPFluidSimulator
 
             if (scene.showObstacle)
             {
-                ShowObstacle(scene);
+                ShowInteractiveCircleObstacle(scene);
             }
 
             if (scene.showParticles)
@@ -82,21 +82,14 @@ namespace FLIPFluidSimulator
 
 
             //The texture colors
-            //Color of each cell (r, g, b) after each other. Color values are in the rannge [0,1]
-            //private readonly float[] cellColor;
-            //This is cellColor in the tutorial
             Color32[] textureColors = new Color32[f.NumX * f.NumY];
 
-            //Find the colors
-            //This was an array in the source, but we can treat the Vector4 as an array to make the code match
-            //Vector4 color = new (255, 255, 255, 255);
-
+            //Find the color in each cell
             for (int x = 0; x < f.NumX; x++)
             {
                 for (int y = 0; y < f.NumY; y++)
                 {
-                    //This was an array in the source, but we can treat the Vector4 as an array to make the code match
-                    //Moved to here from before the loop so it resets every time so we can display the walls if we deactivate both pressure and smoke
+                    //Start with white
                     Vector4 color = new(255, 255, 255, 255);
 
                     int index = f.To1D(x, y);
@@ -118,9 +111,11 @@ namespace FLIPFluidSimulator
 
                             if (f.particleRestDensity > 0f)
                             {
+                                //Current density divided by average density
                                 d /= f.particleRestDensity;
                             }
 
+                            //Should make high density areas green and low density areas light-blue
                             color = UsefulMethods.GetSciColor(d, 0f, 2f);
                         }
                         //Air
@@ -136,7 +131,12 @@ namespace FLIPFluidSimulator
 
                     //Add the color to this pixel
                     //Color32 is 0-255
-                    Color32 pixelColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)color[3]);
+                    byte r = (byte)color[0];
+                    byte g = (byte)color[1];
+                    byte b = (byte)color[2];
+                    byte a = (byte)color[3];
+
+                    Color32 pixelColor = new(r, g, b, a);
 
                     textureColors[f.To1D(x, y)] = pixelColor;
                 }
@@ -154,7 +154,7 @@ namespace FLIPFluidSimulator
         //
         // Display the circle obstacle
         //
-        private static void ShowObstacle(FLIPFluidScene scene)
+        private static void ShowInteractiveCircleObstacle(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -182,6 +182,9 @@ namespace FLIPFluidSimulator
         //
         // Display the fluid particles
         //
+
+        //Update particle colors
+        //We also update them in the simulation - if they collide the color of each particle is diffused
         private static void UpdateParticleColors(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
@@ -193,6 +196,7 @@ namespace FLIPFluidSimulator
             {
                 float s = 0.01f;
 
+                //Make the color more blue by decreasing red and green while increasing the blue
                 f.particleColor[3 * i + 0] = Mathf.Clamp(f.particleColor[3 * i + 0] - s, 0f, 1f);
                 f.particleColor[3 * i + 1] = Mathf.Clamp(f.particleColor[3 * i + 1] - s, 0f, 1f);
                 f.particleColor[3 * i + 2] = Mathf.Clamp(f.particleColor[3 * i + 2] + s, 0f, 1f);
@@ -208,10 +212,12 @@ namespace FLIPFluidSimulator
                 //2d to 1d array
                 int cellNr = f.To1D(xi, yi);
 
+                //The average particle density before the simulation starts
                 float d0 = f.particleRestDensity;
 
                 if (d0 > 0f)
                 {
+                    //Current desity in this cell in relation to average density
                     float relDensity = f.particleDensity[cellNr] / d0;
 
                     if (relDensity < 0.7f)
@@ -219,6 +225,7 @@ namespace FLIPFluidSimulator
                         //Theres another s abover so this is s2
                         float s2 = 0.8f;
 
+                        //Make the particle light blue in low density areas
                         f.particleColor[3 * i + 0] = s2;
                         f.particleColor[3 * i + 1] = s2;
                         f.particleColor[3 * i + 2] = 1f;
@@ -227,6 +234,8 @@ namespace FLIPFluidSimulator
             }
         }
 
+
+        //Display the individual particles
         private static void ShowParticles(FLIPFluidScene scene, GameObject particlePrefabGO)
         {
             //First update their colors
