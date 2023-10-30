@@ -147,7 +147,7 @@ namespace FLIPFluidSimulator
                 //r = 0
                 //g = 0
                 //b = 1
-                //(r,g,b) after each other so index 2 = blue 
+                //(r,g,b) after each other in the array so index 2 = blue 
                 this.particleColor[3 * i + 2] = 1f;
             }
                 
@@ -158,6 +158,7 @@ namespace FLIPFluidSimulator
 
             this.pushParticlesApart = new(particleRadius, SimWidth, SimHeight, maxParticles);
 
+            //We set this to the actual value after we created the simulation object when we create particles
             this.numParticles = 0;
         }
 
@@ -395,10 +396,16 @@ namespace FLIPFluidSimulator
 
                 //We get: P = sx * sy * A + tx * sy * B + sx * ty * C + tx * ty * D 
                 //The weighted density of a particle in each cell becomes:
-                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += sx * sy; //A
-                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += tx * sy; //B
-                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += sx * ty; //C
-                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += tx * ty; //D 
+                //Weights: wA + wB + wC + wD = 1
+                float weightA = sx * sy;
+                float weightB = tx * sy;
+                float weightC = sx * ty;
+                float weightD = tx * ty;
+
+                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += weightA;
+                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += weightB;
+                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += weightC;
+                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += weightD;
             }
 
 
@@ -435,13 +442,12 @@ namespace FLIPFluidSimulator
         //
 
         private void TransferVelocities(bool toGrid, float flipRatio = 0.8f)
-        {
-            int n = this.numY;
-            
+        {            
             float h = this.h;
             float one_over_h = this.one_over_h;
             float half_h = 0.5f * h;
 
+            //We want to transfer velocities from the particles to the grid
             if (toGrid)
             {
                 //Fill previous velocities arrays before we update velocities
@@ -454,7 +460,7 @@ namespace FLIPFluidSimulator
                 //this.prevU.set(this.u);
                 //this.prevV.set(this.v);
 
-                //Here we reset u, so above should be correct
+                //Here we reset u and v, so above should be correct
                 System.Array.Fill(du, 0f);
                 System.Array.Fill(dv, 0f);
 
@@ -485,7 +491,7 @@ namespace FLIPFluidSimulator
                     int yi = Mathf.Clamp(Mathf.FloorToInt(y * one_over_h), 0, this.numY - 1);
                     
                     //2d to 1d
-                    int cellNr = xi * n + yi;
+                    int cellNr = To1D(xi, yi);
 
                     //If the particle is in an air cell, then make it a fluid cell
                     if (this.cellType[cellNr] == AIR_CELL)
@@ -504,13 +510,14 @@ namespace FLIPFluidSimulator
                 float dy = component == 0 ? half_h : 0f;
 
                 //Do we modify u or v velocities?
-                float[] f = component == 0 ? this.u : this.v;
-                float[] prevF = component == 0 ? this.uPrev : this.vPrev;
-                float[] d = component == 0 ? this.du : this.dv;
+                float[] vel = component == 0 ? this.u : this.v;
+                float[] velPrev = component == 0 ? this.uPrev : this.vPrev;
+                float[] dVel = component == 0 ? this.du : this.dv;
 
                 //For each particle
                 for (int i = 0; i < this.numParticles; i++)
                 {
+                    //The position of the particle
                     float x = this.particlePos[2 * i];
                     float y = this.particlePos[2 * i + 1];
 
@@ -519,76 +526,118 @@ namespace FLIPFluidSimulator
                     y = Mathf.Clamp(y, h, (this.numY - 1) * h);
 
                     //Which cells are we interpolating from
+                    //The cells to interpolate between
+                    //We have already made sure the particle is at least on the border between the first and second cell
+                    //+--v--+--v--+
+                    //|     |     |
+                    //u     u     u
+                    //|     |     |
+                    //+--v--+--v--+
+                    //|   p |     |
+                    //u     u     u
+                    //|     |     |
+                    //+--v--+--v--+
+                    //We dont have an u on then right side of the last cellm nor a v on the top of the uppermost cell
                     int x0 = Mathf.Min(Mathf.FloorToInt((x - dx) * one_over_h), this.numX - 2);
-                    float tx = ((x - dx) - x0 * h) * one_over_h;
                     int x1 = Mathf.Min(x0 + 1, this.numX - 2);
 
+                    //I think theres a bug here, If h = 0.2 and x = 0.15 -> x0 = (0.2 - 0) / 0.2 = 1, but should be 0...
+
                     int y0 = Mathf.Min(Mathf.FloorToInt((y - dy) * one_over_h), this.numY - 2);
-                    float ty = ((y - dy) - y0 * h) * one_over_h;
                     int y1 = Mathf.Min(y0 + 1, this.numY - 2);
 
+                    //t is a parameter in the range [0, 1]. If tx = 0 we get A or if tx = 1 we get B if we interpolate between A and B where A has coordinate x0 and B has coordinate x1 -> x1-x0 = h
+                    //tx = (xp - x0) / (x1 - x0) = (xp - x0) / h = deltaX / h
+                    float tx = ((x - dx) - x0 * h) * one_over_h;
+                    float ty = ((y - dy) - y0 * h) * one_over_h;
 
+                    //From FluidSim class we know how to interpolate between A,B,C,D 
+                    // C-----D
+                    // |     |
+                    // |___P |
+                    // |   | |
+                    // A-----B
+                    //P = (1 - tx) * (1 - ty) * A + tx * (1 - ty) * B + (1 - tx) * ty * C + tx * ty * D
+
+                    //To simplify:
                     float sx = 1f - tx;
                     float sy = 1f - ty;
 
-                    float d0 = sx * sy;
-                    float d1 = tx * sy;
-                    float d2 = tx * ty;
-                    float d3 = sx * ty;
+                    //We get: P = sx * sy * A + tx * sy * B + sx * ty * C + tx * ty * D 
+                    //Weights: wA + wB + wC + wD = 1
+                    float weightA = sx * sy; //A
+                    float weightB = tx * sy; //B
+                    float weightC = sx * ty; //C
+                    float weightD = tx * ty; //D
 
                     //2d array to 1d array 
-                    int nr0 = x0 * n + y0;
-                    int nr1 = x1 * n + y0;
-                    int nr2 = x1 * n + y1;
-                    int nr3 = x0 * n + y1;
+                    int A = To1D(x0, y0);
+                    int B = To1D(x1, y0);
+                    int C = To1D(x0, y1);
+                    int D = To1D(x1, y1);
 
                     //Transfer this particle's velocity to the grid
                     if (toGrid)
                     {
-                        float pv = this.particleVel[2 * i + component];
+                        float pVel = this.particleVel[2 * i + component];
 
-                        f[nr0] += pv * d0; d[nr0] += d0;
-                        f[nr1] += pv * d1; d[nr1] += d1;
-                        f[nr2] += pv * d2; d[nr2] += d2;
-                        f[nr3] += pv * d3; d[nr3] += d3;
+                        vel[A] += pVel * weightA; dVel[A] += weightA;
+                        vel[B] += pVel * weightB; dVel[B] += weightB;
+                        vel[C] += pVel * weightC; dVel[C] += weightC;
+                        vel[D] += pVel * weightD; dVel[D] += weightD;
                     }
                     //Transfer velocities from the grid to the particle
                     else
                     {
-                        int offset = component == 0 ? n : 1;
+                        int offset = component == 0 ? this.numY : 1;
                         
-                        float valid0 = this.cellType[nr0] != AIR_CELL || this.cellType[nr0 - offset] != AIR_CELL ? 1f : 0f;
-                        float valid1 = this.cellType[nr1] != AIR_CELL || this.cellType[nr1 - offset] != AIR_CELL ? 1f : 0f;
-                        float valid2 = this.cellType[nr2] != AIR_CELL || this.cellType[nr2 - offset] != AIR_CELL ? 1f : 0f;
-                        float valid3 = this.cellType[nr3] != AIR_CELL || this.cellType[nr3 - offset] != AIR_CELL ? 1f : 0f;
+                        //Ignore air cells
+                        float validA = this.cellType[A] != AIR_CELL || this.cellType[A - offset] != AIR_CELL ? 1f : 0f;
+                        float validB = this.cellType[B] != AIR_CELL || this.cellType[B - offset] != AIR_CELL ? 1f : 0f;
+                        float validC = this.cellType[D] != AIR_CELL || this.cellType[D - offset] != AIR_CELL ? 1f : 0f;
+                        float validD = this.cellType[C] != AIR_CELL || this.cellType[C - offset] != AIR_CELL ? 1f : 0f;
 
-                        float v = this.particleVel[2 * i + component];
+                        //The current velocity of the particle we investigate, either u or v
+                        float currentParticleVel = this.particleVel[2 * i + component];
 
                         //The source code calls this d, but we also say that d = du or dv array above
-                        float this_d = valid0 * d0 + valid1 * d1 + valid2 * d2 + valid3 * d3;
+                        float this_d = validA * weightA + validB * weightB + validC * weightD + validD * weightC;
 
                         if (this_d > 0f)
                         {
-                            float picV = (valid0 * d0 * f[nr0] + valid1 * d1 * f[nr1] + valid2 * d2 * f[nr2] + valid3 * d3 * f[nr3]) / this_d;
-                            
-                            float corr = (valid0 * d0 * (f[nr0] - prevF[nr0]) + valid1 * d1 * (f[nr1] - prevF[nr1])
-                                + valid2 * d2 * (f[nr2] - prevF[nr2]) + valid3 * d3 * (f[nr3] - prevF[nr3])) / this_d;
-                            
-                            float flipV = v + corr;
+                            float picV =
+                                validA * weightA * vel[A] + 
+                                validB * weightB * vel[B] + 
+                                validC * weightD * vel[D] + 
+                                validD * weightC * vel[C];
 
+                            picV /= this_d;
+                            
+                            float corr =
+                                validA * weightA * (vel[A] - velPrev[A]) + 
+                                validB * weightB * (vel[B] - velPrev[B]) + 
+                                validC * weightD * (vel[D] - velPrev[D]) + 
+                                validD * weightC * (vel[C] - velPrev[C]);
+
+                            corr /= this_d;
+                            
+                            float flipV = currentParticleVel + corr;
+
+                            //Combine pic and flip
                             this.particleVel[2 * i + component] = (1f - flipRatio) * picV + flipRatio * flipV;
                         }
                     }
                 }
 
 
+                //We want to transfer velocities from the particle to the grid
                 if (toGrid)
                 {
-                    for (int i = 0; i < f.Length; i++)
+                    for (int i = 0; i < vel.Length; i++)
                     {
-                        if (d[i] > 0f)
+                        if (dVel[i] > 0f)
                         {
-                            f[i] /= d[i];
+                            vel[i] /= dVel[i];
                         }
                     }
 
@@ -597,16 +646,16 @@ namespace FLIPFluidSimulator
                     {
                         for (int j = 0; j < this.numY; j++)
                         {
-                            bool solid = this.cellType[i * n + j] == SOLID_CELL;
+                            bool solid = this.cellType[To1D(i, j)] == SOLID_CELL;
                             
-                            if (solid || (i > 0 && this.cellType[(i - 1) * n + j] == SOLID_CELL))
+                            if (solid || (i > 0 && this.cellType[To1D(i - 1, + j)] == SOLID_CELL))
                             {
-                                this.u[i * n + j] = this.uPrev[i * n + j];
+                                this.u[To1D(i, j)] = this.uPrev[To1D(i, j)];
                             }
                                 
-                            if (solid || (j > 0 && this.cellType[i * n + j - 1] == SOLID_CELL))
+                            if (solid || (j > 0 && this.cellType[To1D(i, j - 1)] == SOLID_CELL))
                             {
-                                this.v[i * n + j] = this.vPrev[i * n + j];
+                                this.v[To1D(i, j)] = this.vPrev[To1D(i, j)];
                             }
                         }
                     }
