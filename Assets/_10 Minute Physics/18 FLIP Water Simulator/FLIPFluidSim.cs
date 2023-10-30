@@ -47,11 +47,11 @@ namespace FLIPFluidSimulator
 
         //The different cell types we can have
         //In this simulation a cell can also be air
-        public readonly int FLUID_CELL = 0;
-        public readonly int AIR_CELL = 1;
-        public readonly int SOLID_CELL = 2;
+        public readonly int FLUID = 0;
+        public readonly int AIR = 1;
+        public readonly int SOLID = 2;
 
-        public readonly int[] cellType;
+        private readonly int[] cellType;
 
         //Particles
         //How many particles?
@@ -86,6 +86,11 @@ namespace FLIPFluidSimulator
 
         //Is a coordinate in local space within the simulation area?
         public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
+
+        //Cell types
+        public bool IsAir(int index) => this.cellType[index] == this.AIR;
+        public bool IsFluid(int index) => this.cellType[index] == this.FLUID;
+        public bool IsSolid(int index) => this.cellType[index] == this.SOLID;
 
 
         //Getters
@@ -420,7 +425,7 @@ namespace FLIPFluidSimulator
                 //Calculate the total fluid density and how many cells have fluids in them 
                 for (int i = 0; i < this.numCells; i++)
                 {
-                    if (this.cellType[i] == FLUID_CELL)
+                    if (IsFluid(i))
                     {
                         sum += d[i];
                         numFluidCells += 1;
@@ -475,7 +480,7 @@ namespace FLIPFluidSimulator
                 //For each cell in the simulation
                 for (int i = 0; i < this.numCells; i++)
                 {
-                    this.cellType[i] = this.s[i] == 0f ? SOLID_CELL : AIR_CELL;
+                    this.cellType[i] = this.s[i] == 0f ? SOLID : AIR;
                 }
                     
                 //Check if an air cell is filled with water
@@ -494,9 +499,9 @@ namespace FLIPFluidSimulator
                     int cellNr = To1D(xi, yi);
 
                     //If the particle is in an air cell, then make it a fluid cell
-                    if (this.cellType[cellNr] == AIR_CELL)
+                    if (IsAir(cellNr))
                     {
-                        this.cellType[cellNr] = FLUID_CELL;
+                        this.cellType[cellNr] = FLUID;
                     }
                 }
             }
@@ -506,13 +511,13 @@ namespace FLIPFluidSimulator
             for (int component = 0; component < 2; component++)
             {
                 //Staggered grid...
-                float dx = component == 0 ? 0f : half_h;
-                float dy = component == 0 ? half_h : 0f;
+                float dx = (component == 0) ? 0f : half_h;
+                float dy = (component == 0) ? half_h : 0f;
 
-                //Do we modify u or v velocities?
-                float[] vel = component == 0 ? this.u : this.v;
-                float[] velPrev = component == 0 ? this.uPrev : this.vPrev;
-                float[] dVel = component == 0 ? this.du : this.dv;
+                //Do we want to do operations o the u or v velocities?
+                float[] vel = (component == 0) ? this.u : this.v;
+                float[] velPrev = (component == 0) ? this.uPrev : this.vPrev;
+                float[] dVel = (component == 0) ? this.du : this.dv;
 
                 //For each particle
                 for (int i = 0; i < this.numParticles; i++)
@@ -589,37 +594,43 @@ namespace FLIPFluidSimulator
                     //Transfer velocities from the grid to the particle
                     else
                     {
-                        int offset = component == 0 ? this.numY : 1;
+                        //Was this.numY but I believe it should be X because our grid is defined differently???
+                        int offset = (component == 0) ? this.numX : 1;
                         
                         //Ignore air cells
-                        float validA = this.cellType[A] != AIR_CELL || this.cellType[A - offset] != AIR_CELL ? 1f : 0f;
-                        float validB = this.cellType[B] != AIR_CELL || this.cellType[B - offset] != AIR_CELL ? 1f : 0f;
-                        float validC = this.cellType[D] != AIR_CELL || this.cellType[D - offset] != AIR_CELL ? 1f : 0f;
-                        float validD = this.cellType[C] != AIR_CELL || this.cellType[C - offset] != AIR_CELL ? 1f : 0f;
+                        float isValidA = (!IsAir(A) || !IsAir(A - offset)) ? 1f : 0f;
+                        float isValidB = (!IsAir(B) || !IsAir(B - offset)) ? 1f : 0f;
+                        float isValidC = (!IsAir(C) || !IsAir(C - offset)) ? 1f : 0f;
+                        float isValidD = (!IsAir(D) || !IsAir(D - offset)) ? 1f : 0f;
 
                         //The current velocity of the particle we investigate, either u or v
                         float currentParticleVel = this.particleVel[2 * i + component];
 
                         //The source code calls this d, but we also say that d = du or dv array above
-                        float this_d = validA * weightA + validB * weightB + validC * weightD + validD * weightC;
+                        float sumOfValidWeights = 
+                            isValidA * weightA + 
+                            isValidB * weightB + 
+                            isValidC * weightC + 
+                            isValidD * weightD;
 
-                        if (this_d > 0f)
+                        //To avoid division by 0
+                        if (sumOfValidWeights > 0f)
                         {
                             float picV =
-                                validA * weightA * vel[A] + 
-                                validB * weightB * vel[B] + 
-                                validC * weightD * vel[D] + 
-                                validD * weightC * vel[C];
+                                isValidA * weightA * vel[A] + 
+                                isValidB * weightB * vel[B] + 
+                                isValidD * weightD * vel[D] + 
+                                isValidC * weightC * vel[C];
 
-                            picV /= this_d;
+                            picV /= sumOfValidWeights;
                             
                             float corr =
-                                validA * weightA * (vel[A] - velPrev[A]) + 
-                                validB * weightB * (vel[B] - velPrev[B]) + 
-                                validC * weightD * (vel[D] - velPrev[D]) + 
-                                validD * weightC * (vel[C] - velPrev[C]);
+                                isValidA * weightA * (vel[A] - velPrev[A]) + 
+                                isValidB * weightB * (vel[B] - velPrev[B]) + 
+                                isValidD * weightD * (vel[D] - velPrev[D]) + 
+                                isValidC * weightC * (vel[C] - velPrev[C]);
 
-                            corr /= this_d;
+                            corr /= sumOfValidWeights;
                             
                             float flipV = currentParticleVel + corr;
 
@@ -633,6 +644,7 @@ namespace FLIPFluidSimulator
                 //We want to transfer velocities from the particle to the grid
                 if (toGrid)
                 {
+                    //Divide all velocities by the velocity difference 
                     for (int i = 0; i < vel.Length; i++)
                     {
                         if (dVel[i] > 0f)
@@ -641,21 +653,25 @@ namespace FLIPFluidSimulator
                         }
                     }
 
-                    //Restore solid cells
+                    //Restore velocities of solid cells by giving them the velocity of whatever the velocity of that cell was before
                     for (int i = 0; i < this.numX; i++)
                     {
                         for (int j = 0; j < this.numY; j++)
                         {
-                            bool solid = this.cellType[To1D(i, j)] == SOLID_CELL;
+                            int cellIndex = To1D(i, j);
+
+                            bool solid = IsSolid(cellIndex);
                             
-                            if (solid || (i > 0 && this.cellType[To1D(i - 1, + j)] == SOLID_CELL))
+                            //If this cell is solid or the cell left of it is solid, restore u
+                            if (solid || (i > 0 && IsSolid(To1D(i - 1, j))))
                             {
-                                this.u[To1D(i, j)] = this.uPrev[To1D(i, j)];
+                                this.u[cellIndex] = this.uPrev[cellIndex];
                             }
-                                
-                            if (solid || (j > 0 && this.cellType[To1D(i, j - 1)] == SOLID_CELL))
+
+                            //If this cell is solid or the cell below it is solid, restore v
+                            if (solid || (j > 0 && IsSolid(To1D(i, j - 1))))
                             {
-                                this.v[To1D(i, j)] = this.vPrev[To1D(i, j)];
+                                this.v[cellIndex] = this.vPrev[cellIndex];
                             }
                         }
                     }
@@ -707,7 +723,7 @@ namespace FLIPFluidSimulator
                     for (int j = 1; j < this.numY - 1; j++)
                     {
                         //If this cell is not a fluid, meaning its air or obstacle
-                        if (this.cellType[To1D(i, j)] != FLUID_CELL)
+                        if (this.cellType[To1D(i, j)] != FLUID)
                         {
                             continue;
                         }   

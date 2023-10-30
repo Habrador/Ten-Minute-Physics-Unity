@@ -97,7 +97,7 @@ namespace FLIPFluidSimulator
                     if (scene.showGrid)
                     {
                         //Solid
-                        if (f.cellType[index] == f.SOLID_CELL)
+                        if (f.IsSolid(index))
                         {
                             //Gray
                             color[0] = 0.5f;
@@ -105,7 +105,7 @@ namespace FLIPFluidSimulator
                             color[2] = 0.5f;
                         }
                         //Fluid
-                        else if (f.cellType[index] == f.FLUID_CELL)
+                        else if (f.IsFluid(index))
                         {
                             float d = f.particleDensity[index];
 
