@@ -74,7 +74,7 @@ namespace FLIPFluidSimulator
         public int numParticleIters = 2;
         //Display particles in the scene?
         public bool showParticles = true;
-        //
+        //To avoid particles clumping together
         public bool compensateDrift = true;
 
 

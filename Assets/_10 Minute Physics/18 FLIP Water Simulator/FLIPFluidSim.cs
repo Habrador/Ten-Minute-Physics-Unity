@@ -57,7 +57,7 @@ namespace FLIPFluidSimulator
         //How many particles?
         public int numParticles;
         //How many particles allowed?
-        private int maxParticles;
+        private readonly int maxParticles;
         //The pos of each particle (x,y) after each other
         public readonly float[] particlePos;
         //The color of each particle (r,g,b) after each other. Color values are in the range [0,1]

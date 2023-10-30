@@ -13,6 +13,7 @@ using UnityEngine;
 //TODO:
 //- What is drift? Balls getting clumped together? 
 //- Optimize particle-particle intersection which is the current bottleneck
+//- Why do we need both an array for solid/non-solid and solid/fluid/air array? 
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public
@@ -201,23 +202,21 @@ public class FLIPFluidSimController : MonoBehaviour
         }
 
 
-        //Setup grid cells for tank
-        int n = f.NumY;
-
-        for (int i = 0; i < f.NumX; i++)
+        //Setup walls for tank
+        for (int cellX = 0; cellX < f.NumX; cellX++)
         {
-            for (int j = 0; j < f.NumY; j++)
+            for (int cellY = 0; cellY < f.NumY; cellY++)
             {
-                //Fluid
+                //1 = fluid
                 float s = 1f;
 
                 //Solid walls at left-right-bottom border
-                if (i == 0 || i == f.NumX - 1 || j == 0)
+                if (cellX == 0 || cellX == f.NumX - 1 || cellY == 0)
                 {
                     s = 0f;
                 }
 
-                f.s[i * n + j] = s;
+                f.s[f.To1D(cellX, cellY)] = s;
             }
         }
 
