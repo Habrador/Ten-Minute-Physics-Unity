@@ -112,7 +112,7 @@ public static class GridInterpolation
 
 
     //Clamp the iterpolation point P so we know we can interpolate from 4 grid points
-    public static void ClampInterpolationPoint(ref float xP, ref float yP, GridData gridData, Grid sampleField)
+    public static void ClampInterpolationPoint(float xP, float yP, GridData gridData, Grid sampleField, out float xP_clamped, out float yP_clamped)
     {
         float minXOffset, maxXOffset, minYOffset, maxYOffset;
 
@@ -125,8 +125,8 @@ public static class GridInterpolation
             case Grid.v: minYOffset = 0f; maxYOffset = gridData.h; break;
         }
 
-        xP = Mathf.Max(Mathf.Min(xP, gridData.numX * gridData.h - maxXOffset), minXOffset);
-        yP = Mathf.Max(Mathf.Min(yP, gridData.numY * gridData.h - maxYOffset), minYOffset);
+        xP_clamped = Mathf.Max(Mathf.Min(xP, gridData.numX * gridData.h - maxXOffset), minXOffset);
+        yP_clamped = Mathf.Max(Mathf.Min(yP, gridData.numY * gridData.h - maxYOffset), minYOffset);
     }
 
 
