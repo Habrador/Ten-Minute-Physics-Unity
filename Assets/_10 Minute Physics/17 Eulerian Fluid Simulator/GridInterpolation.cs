@@ -7,7 +7,7 @@ using UnityEngine;
 //- The center of the cell
 //- In the middle of the vertical lines (staggered grid)
 //- In the middle of the horizontal lines (staggered grid)
-public class GridInterpolation
+public static class GridInterpolation
 {
     //Derivation of how to find the linear interpolation of P by using A, B, C, D and their respective coordinates
     //This is a square with side length h (I did my best)
@@ -17,11 +17,11 @@ public class GridInterpolation
     // |   |  |
     // A------B
     // The points have the coordinates
-    // A: (x0, y0)
-    // B: (x1, y0)
-    // C: (x0, y1)
-    // D: (x1, y1)
-    // P: (xp, yp)
+    // A: (xA, yA)
+    // B: (xB, yB)
+    // C: (xC, yC)
+    // D: (xD, yD)
+    // P: (xP, yP)
     //
     //We need to do 3 linear interpolations to find P:
     // P_AB = (1 - tx) * A + tx * B
@@ -34,8 +34,8 @@ public class GridInterpolation
     //
     //t is a parameter in the range [0, 1]. If tx = 0 we get A or if tx = 1 we get B in the P_AB case
     //The parameter can be written as:
-    // tx = (xp - x0) / (x1 - x0) = (xp - x0) / h = deltaX / h
-    // ty = (yp - y0) / (y1 - y0) = (yp - y0) / h = deltaY / h
+    // tx = (xp - xA) / (xB - xA) = (xP - xA) / h = deltaX / h
+    // ty = (yp - yA) / (yB - yA) = (yP - yA) / h = deltaY / h
     //
     //Define:
     // sx = 1 - tx
@@ -61,4 +61,33 @@ public class GridInterpolation
     //float P_AB = math.lerp(A, B, tx); //Similar to Mathf.Lerp()
     //float P_CD = math.lerp(C, D, tx);
     //float P = math.lerp(P_AB, P_CD, ty);
+    public static void GetWeights(
+        float xP, float yP, 
+        float xA, float yA, 
+        float one_over_h, 
+        out float wA, out float wB, out float wC, out float wD)
+    {
+        float deltaX = xP - xA;
+        float deltaY = yP - yA;
+
+        float tx = deltaX * one_over_h;
+        float ty = deltaY * one_over_h;
+
+        float sx = 1 - tx;
+        float sy = 1 - ty;
+
+        wA = sx * sy;
+        wB = tx * sy;
+        wC = sx * ty;
+        wD = tx * ty;
+    }
+
+
+
+    //Clamp the iterpolation point so we know we can interpolate from 4 grid points
+    public static void ClampInterpolationPoint()
+    {
+
+    }
+
 }
