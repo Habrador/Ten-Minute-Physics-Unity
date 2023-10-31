@@ -4,10 +4,6 @@ using UnityEngine;
 using static EulerianFluidSimulator.FluidSim;
 
 //General class to interpolate a grid
-//The values we want to interpolate can be on:
-//- The center of the cell
-//- In the middle of the vertical lines (staggered grid)
-//- In the middle of the horizontal lines (staggered grid)
 public static class GridInterpolation
 {
     //Derivation of how to find the linear interpolation of P by using A, B, C, D and their respective coordinates
@@ -57,11 +53,11 @@ public static class GridInterpolation
     // P = wA * A + wB * B + wC * C + wD * D 
     //
     //In simple code (which is slightly slower than the above because we do some calculations multiple times but easy to understand):
-    //float tx = math.unlerp(x0, x1, xp); //Similar to Mathf.InverseLerp()
-    //float ty = math.unlerp(y0, y1, yp);
-    //float P_AB = math.lerp(A, B, tx); //Similar to Mathf.Lerp()
-    //float P_CD = math.lerp(C, D, tx);
-    //float P = math.lerp(P_AB, P_CD, ty);
+    //float tx = Mathf.InverseLerp(xA, xB, xP);
+    //float ty = Mathf.InverseLerp(yA, yB, yP);
+    //float P_AB = Mathf.Lerp(A, B, tx); 
+    //float P_CD = Mathf.Lerp(C, D, tx);
+    //float P = Mathf.Lerp(P_AB, P_CD, ty);
     public static void GetWeights(
         float xP, float yP,
         float xA, float yA,
@@ -101,7 +97,10 @@ public static class GridInterpolation
     //|     |     |     |
     //+--v--+--v--+--v--+
 
-    //Which grid to we want to interpolate from? 
+    //The values we want to interpolate can be on:
+    //- The center of the cell
+    //- In the middle of the vertical lines (staggered grid): u
+    //- In the middle of the horizontal lines (staggered grid): v
     public enum Grid
     {
         u,
