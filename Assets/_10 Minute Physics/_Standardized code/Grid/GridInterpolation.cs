@@ -150,8 +150,16 @@ public static class GridInterpolation
         GetGridOffsets(sampleField, gridData.half_h, out float dx, out float dy);
 
         //To go from coordinate to cell we generally do: FloorToInt(pos / cellSize)
-        xA_index = Mathf.Min(Mathf.FloorToInt((xP - dx) * gridData.one_over_h), gridData.numX - 2);
-        yA_index = Mathf.Min(Mathf.FloorToInt((yP - dy) * gridData.one_over_h), gridData.numY - 2);
+        //But we have to compensate because of the staggered grid
+        int cellIndexX = Mathf.FloorToInt((xP - dx) * gridData.one_over_h);
+        int cellIndexY = Mathf.FloorToInt((yP - dy) * gridData.one_over_h);
+
+        //Clamp
+        //The input position is assumed to be within the grid
+        //To interpolate between 4 values we have to make sure we are 1 extra cell in from the maximum side
+        //So on the maximum side we will interpolate between gridData.numX - 2 and gridData.numX - 1 in x direction 
+        xA_index = Mathf.Min(cellIndexX, gridData.numX - 2);
+        yA_index = Mathf.Min(cellIndexY, gridData.numY - 2);
     }
 
 
