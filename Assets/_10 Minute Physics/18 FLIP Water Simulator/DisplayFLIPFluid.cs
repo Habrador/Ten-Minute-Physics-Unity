@@ -13,13 +13,6 @@ namespace FLIPFluidSimulator
         //The circle we can move around with mouse
         private static Mesh circleMesh;
 
-        //Particles
-        private static Mesh[] particleMeshes;
-
-        private static Mesh particleMesh;
-
-        private static Transform[] particleTransforms;
-
         //Grid
         private static Mesh gridMesh;
 
@@ -30,7 +23,7 @@ namespace FLIPFluidSimulator
 
 
         //Called every Update
-        public static void Draw(FLIPFluidScene scene, GameObject particlePrefabGO)
+        public static void Draw(FLIPFluidScene scene)
         {
             UpdateTexture(scene);
 
@@ -41,7 +34,7 @@ namespace FLIPFluidSimulator
 
             if (scene.showParticles)
             {
-                ShowParticles(scene, particlePrefabGO);
+                ShowParticles(scene);
             }
 
             if (scene.showGrid)
@@ -235,8 +228,9 @@ namespace FLIPFluidSimulator
         }
 
 
+
         //Display the individual particles
-        private static void ShowParticles(FLIPFluidScene scene, GameObject particlePrefabGO)
+        private static void ShowParticles(FLIPFluidScene scene)
         {
             //First update their colors
             UpdateParticleColors(scene);
@@ -245,7 +239,7 @@ namespace FLIPFluidSimulator
             FLIPFluidSim f = scene.fluid;
 
             //
-            float particleRadius = f.particleRadius;
+            //float particleRadius = f.particleRadius;
 
             //The position of each particle (x, y) after each other
             float[] particleFlatPositions = f.particlePos;
@@ -280,86 +274,6 @@ namespace FLIPFluidSimulator
             Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
 
             DisplayShapes.DrawVertices(verts, mat);
-
-            /*
-            //Draw the particles as meshes
-
-            //Putting them in an array and use Graphics.DrawMesh is slow as molasses - better to use instanced
-            if (particleMeshes == null)
-            {
-                particleMeshes = new Mesh[particleGlobalPositions.Length];
-
-                for (int i = 0; i < particleGlobalPositions.Length; i++)
-                {
-                    Mesh circleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, particleRadius, 8);
-
-                    particleMeshes[i] = circleMesh;
-                }
-            }
-
-
-            //Display the circle meshes
-            Material particleMat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue); 
-
-            for (int i = 0; i < particleMeshes.Length; i++)
-            {
-                Mesh mesh = particleMeshes[i];
-            
-                Vector3 pos = particleGlobalPositions[i];
-
-                Graphics.DrawMesh(mesh, pos, Quaternion.identity, particleMat, 0, Camera.main, 0);
-            }
-            */
-
-
-            //Graphics.RenderMeshInstanced limits you to 1k meshes
-            //if (particleMesh == null)
-            //{
-            //    particleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, particleRadius, 8);
-            //}
-
-            /*
-            //Better to let Unity handling the batching for now
-            //That means we have to create a gameobject for each particle
-            if (particleTransforms == null)
-            {
-                particleTransforms = new Transform[particleGlobalPositions.Length];
-
-                Mesh particleMesh = DisplayShapes.GenerateCircleMesh_XY(Vector3.zero, particleRadius, 6);
-
-                //Parent GO
-                GameObject parentGO = new();
-
-                parentGO.name = "Particles";
-
-                //Material particleMat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
-
-                for (int i = 0; i < particleGlobalPositions.Length; i++)
-                {
-                    GameObject particleGO = Instantiate(particlePrefabGO);
-
-                    particleGO.transform.parent = parentGO.transform;
-
-                    //MeshRenderer mr = particleGO.AddComponent<MeshRenderer>();
-                    //MeshFilter mf = particleGO.AddComponent<MeshFilter>();
-
-                    //mf.mesh = particleMesh;
-                    //mr.material = particleMat;
-
-                    //particleGO.transform.position = particleGlobalPositions[i];
-
-                    particleGO.GetComponent<MeshFilter>().mesh = particleMesh;
-
-                    particleTransforms[i] = particleGO.transform;
-                }
-            }
-
-            //Set each particles pos
-            for (int i = 0; i < particleGlobalPositions.Length; i++)
-            {
-                particleTransforms[i].position = particleGlobalPositions[i];
-            }
-            */
         }
 
 

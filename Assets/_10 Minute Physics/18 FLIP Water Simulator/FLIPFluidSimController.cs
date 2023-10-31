@@ -19,7 +19,9 @@ public class FLIPFluidSimController : MonoBehaviour
     //Public
     public Material fluidMaterial;
 
-    public GameObject particlePrefabGO;
+    public Material particlesMaterial;
+
+    public GameObject particlesPlane;
 
 
     //Private
@@ -49,7 +51,7 @@ public class FLIPFluidSimController : MonoBehaviour
         //Display the fluid
         //DisplayFluid.TestDraw(scene);
 
-        DisplayFLIPFluid.Draw(scene, particlePrefabGO);
+        DisplayFLIPFluid.Draw(scene);
     }
 
 

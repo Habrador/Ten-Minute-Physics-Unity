@@ -63,8 +63,12 @@ namespace FLIPFluidSimulator
         //To which we attach the texture
         public Material fluidMaterial;
 
-        //The texture used to display fluid data 
+        //The texture used to display fluid data on a grid 
         public Texture2D fluidTexture;
+        //The texture used to show the particles
+        public Texture2D particlesTexture;
+        //The quad on which we display the particles
+        public GameObject particlesQuad;
 
         //FLIP specific
         public float flipRatio = 0.9f;
