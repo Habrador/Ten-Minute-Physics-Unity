@@ -125,8 +125,19 @@ public static class GridInterpolation
             case Grid.v: minYOffset = 0f; maxYOffset = gridData.h; break;
         }
 
-        xP_clamped = Mathf.Max(Mathf.Min(xP, gridData.numX * gridData.h - maxXOffset), minXOffset);
-        yP_clamped = Mathf.Max(Mathf.Min(yP, gridData.numY * gridData.h - maxYOffset), minYOffset);
+        //In the center case we have to push it in 0.5*h in all directions
+        //In the u case:
+        //- We have to push it in 0 from the left side because the point can be on the vertical line
+        //- h from the right side because there's no u on the right side of the last cell
+        //In the v case we have to push it in 0.5 from both left and right side in x direction
+
+        //Clamp to be inside of the grid on the maximum side 
+        xP_clamped = Mathf.Min(xP, gridData.XLength - maxXOffset);
+        yP_clamped = Mathf.Min(yP, gridData.YLength - maxYOffset);
+
+        //Clamp to be inside of the grid on the minimum side
+        xP_clamped = Mathf.Max(xP_clamped, minXOffset);
+        yP_clamped = Mathf.Max(yP_clamped, minYOffset);
     }
 
 
