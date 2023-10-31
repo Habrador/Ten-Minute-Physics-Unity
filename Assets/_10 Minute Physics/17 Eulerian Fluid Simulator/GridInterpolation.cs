@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static EulerianFluidSimulator.FluidSim;
 
 //General class to interpolate a grid
 //The values we want to interpolate can be on:
@@ -83,11 +84,82 @@ public static class GridInterpolation
     }
 
 
+    //3x3 Staggered grid (c is not staggered)
+    //0,0 is bottom left
+    //Notice there's no u on the vertical line to the right of the last cell and no v at the top
+    //+-----+-----+-----+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
 
-    //Clamp the iterpolation point so we know we can interpolate from 4 grid points
-    public static void ClampInterpolationPoint()
+    //Which grid to we want to interpolate from? 
+    public enum Grid
     {
-
+        u,
+        v,
+        center
     }
 
+
+
+    //Clamp the iterpolation point P so we know we can interpolate from 4 grid points
+    public static void ClampInterpolationPoint(ref float xP, ref float yP, float h, int numX, int numY, Grid sampleField)
+    {
+        float minXOffset, maxXOffset, minYOffset, maxYOffset;
+
+        minXOffset = maxXOffset = minYOffset = maxYOffset = 0.5f * h;
+
+        //Which grid to we want to interpolate from? 
+        switch (sampleField)
+        {
+            case Grid.u: minXOffset = 0f; maxXOffset = h; break;
+            case Grid.v: minYOffset = 0f; maxYOffset = h; break;
+        }
+
+        xP = Mathf.Max(Mathf.Min(xP, numX * h - maxXOffset), minXOffset);
+        yP = Mathf.Max(Mathf.Min(yP, numY * h - maxYOffset), minYOffset);
+    }
+
+
+
+    //Get grid indices to interplate from
+    //We assume the interpolation point has been clamped
+    //We only need the indices of A, the other ones are just xA + 1 and yA + 1 
+    public static void GetInterpolationArrayIndices(float xP, float yP, float half_h, float one_over_h, int numX, int numY, Grid sampleField, out int xA_index, out int yA_index)
+    {
+        //Figure out which array indices to interpolate between
+        //To go from coordinate to cell we generally do: FloorToInt(pos / cellSize) on a non-staggered grid but here we have to compensate for the staggerness 
+        float dx = 0f;
+        float dy = 0f;
+
+        //Which grid to we want to interpolate from? 
+        switch (sampleField)
+        {
+            case Grid.u: dy = half_h; break;
+            case Grid.v: dx = half_h; break;
+            case Grid.center: dx = half_h; dy = half_h; break;
+        }
+
+        xA_index = Mathf.Min(Mathf.FloorToInt((xP - dx) * one_over_h), numX - 2);
+        yA_index = Mathf.Min(Mathf.FloorToInt((yP - dy) * one_over_h), numY - 2);
+    }
+
+
+
+    //Get grid coordinates to interpolate from
+    //We only need the coordinates of A
+    public static void GetACoordinates(int xA_index, int yA_index, float h, float dx, float dy, out float xA, out float yA)
+    {
+        xA = yA_index * h + dx;
+        yA = yA_index * h + dy;
+    }
 }
