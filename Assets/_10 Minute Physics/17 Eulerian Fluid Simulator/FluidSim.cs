@@ -299,7 +299,7 @@ namespace EulerianFluidSimulator
 
 			float h = this.h;
 			//The position of the velocity components are in the middle of the border of the cells
-			float h2 = 0.5f * h;
+			float half_h = 0.5f * h;
 
 			for (int j = 1; j < this.numY; j++)
 			{
@@ -313,7 +313,7 @@ namespace EulerianFluidSimulator
 					{
 						//The pos of the u velocity in simulation space
 						float x = i * h;
-						float y = j * h + h2;
+						float y = j * h + half_h;
 
 						//The current velocity
 						float u = this.u[To1D(i, j)];
@@ -333,7 +333,7 @@ namespace EulerianFluidSimulator
 					if (this.s[To1D(i, j)] != 0f && this.s[To1D(i, j - 1)] != 0f && i < numX - 1)
 					{
 						//The pos of the v velocity in simulation space
-						float x = i * h + h2;
+						float x = i * h + half_h;
 						float y = j * h;
 
 						//The current velocity
@@ -434,7 +434,7 @@ namespace EulerianFluidSimulator
 		//See class GridInterpolation for a better explanation of this works 
 		public float SampleField(float xP, float yP, SampleArray field)
 		{
-			GridData gridData = new(this.h, this.numX, this.numY);
+			GridConstants gridData = new(this.h, this.numX, this.numY);
 			
 
             //Which array do we want to sample?
@@ -539,10 +539,10 @@ namespace EulerianFluidSimulator
                 case SampleArray.smokeField: f = this.m; dx = halfH; dy = halfH; break;
             }
 
-            int x0_index = Mathf.Min((int)Mathf.Floor((xp_pos - dx) * oneOverH), this.numX - 2);
+            int x0_index = Mathf.Min(Mathf.FloorToInt((xp_pos - dx) * oneOverH), this.numX - 2);
             int x1_index = x0_index + 1;
 
-            int y0_index = Mathf.Min((int)Mathf.Floor((yp_pos - dy) * oneOverH), this.numY - 2);
+            int y0_index = Mathf.Min(Mathf.FloorToInt((yp_pos - dy) * oneOverH), this.numY - 2);
             int y1_index = y0_index + 1;
 
 
