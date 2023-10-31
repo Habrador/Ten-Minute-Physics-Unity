@@ -432,97 +432,56 @@ namespace EulerianFluidSimulator
 		//Get data (u, v, smoke density) from the simulation at coordinate x,y
 		//Input is coordinates in simulation space - NOT cell indices
 		//See class GridInterpolation for a better explanation of this works 
-		public float SampleField(float xp_pos, float yp_pos, SampleArray field)
+		public float SampleField(float xP, float yP, SampleArray field)
 		{
-			//Cellsize
-			float h = this.h;
-			//To simplify and speed up calculations
-			float halfH = 0.5f * h;
-			float oneOverH = 1f / h;
+			GridData gridData = new(this.h, this.numX, this.numY);
+			
 
+            //Which array do we want to sample?
+            //- u is stored in the middle of the vertical cell lines
+            //- v is stored in the middle of the horizontal cell lines
+            //- smoke is stored in the center of each cell
+            GridInterpolation.Grid sampleField = GridInterpolation.Grid.center;
+            
+			float[] f = this.m;
 
-			//Make sure the sample point is within an area so we can interpolate between 4 points 
-			//- u is stored in the middle of the vertical cell lines
-			//- v is stored in the middle of the horizontal cell lines
-			//- smoke is stored in the center of each cell
-			float minXOffset, maxXOffset, minYOffset, maxYOffset;
-
-			minXOffset = maxXOffset = minYOffset = maxYOffset = halfH;
-
-			switch (field)
+            switch (field)
 			{
-				case SampleArray.uField: minXOffset = 0f; maxXOffset = h; break;
-				case SampleArray.vField: minYOffset = 0f; maxYOffset = h; break;
-			}
+				case SampleArray.uField: sampleField = GridInterpolation.Grid.u; f = this.u; break;
+				case SampleArray.vField: sampleField = GridInterpolation.Grid.v; f = this.v; break;
+            }
 
-			xp_pos = Mathf.Max(Mathf.Min(xp_pos, this.numX * h - maxXOffset), minXOffset);
-			yp_pos = Mathf.Max(Mathf.Min(yp_pos, this.numY * h - maxYOffset), minYOffset);
+			//Sample!
+            // C-----D
+            // |     |
+            // |___P |
+            // |   | |
+            // A-----B
 
+            //Clamp the sample point so we know we can sample from 4 grid points
+            GridInterpolation.ClampInterpolationPoint(ref xP, ref yP, gridData, sampleField);
 
+			//Get the array index of A 
+			GridInterpolation.GetInterpolationArrayIndices(xP, yP, gridData, sampleField, out int xA_index, out int yA_index);
 
-			//Figure out which array indices to interpolate between
-			//To go from coordinate to cell we generally do: FloorToInt(pos / cellSize) on a non-staggered grid but here we have to compensate for the staggerness 
-			float dx = 0f;
-			float dy = 0f;
-
-			//Which array do we want to sample?
-			float[] f = null;
-
-			switch (field)
-			{
-				case SampleArray.uField: f = this.u; dy = halfH; break;
-				case SampleArray.vField: f = this.v; dx = halfH; break;
-				case SampleArray.smokeField: f = this.m; dx = halfH; dy = halfH; break;
-			}
-
-			int x0_index = Mathf.Min((int)Mathf.Floor((xp_pos - dx) * oneOverH), this.numX - 2);
-			int x1_index = x0_index + 1;
-
-			int y0_index = Mathf.Min((int)Mathf.Floor((yp_pos - dy) * oneOverH), this.numY - 2);
-			int y1_index = y0_index + 1;
-
-
-			//Calculate the deltas:
-			// C-----D
-			// |     |
-			// |___P |
-			// |   | |
-			// A-----B
-			//- delta x = the length of the horizontal line going to P
-			//- delta y = the length of the vertical line going to P
-			float x0_pos = x0_index * h + dx;
-			float y0_pos = y0_index * h + dy;
-
-			float deltaX = xp_pos - x0_pos;
-			float deltaY = yp_pos - y0_pos;
-
+			//Get the (x, y) coordinates of A
+			GridInterpolation.GetACoordinates(sampleField, xA_index, yA_index, gridData, out float xA, out float yA);
 
 			//The weights for the interpolation
-			float w_01 = deltaX * oneOverH;
-			float w_11 = deltaY * oneOverH;
+			GridInterpolation.GetWeights(xP, yP, xA, yA, gridData, out float wA, out float wB, out float wC, out float wD);
 
-			float w_00 = 1f - w_01;
-			float w_10 = 1f - w_11;
-
-
-			//The values we want to interpolate from
-			// C-----D
-			// |     |
-			// |___P |
-			// |   | |
-			// A-----B
-			float A = f[To1D(x0_index, y0_index)];
-			float B = f[To1D(x1_index, y0_index)];
-			float C = f[To1D(x0_index, y1_index)];
-			float D = f[To1D(x1_index, y1_index)];
-
+            //The values we want to interpolate from
+            float A = f[To1D(xA_index + 0, yA_index + 0)];
+			float B = f[To1D(xA_index + 1, yA_index + 0)];
+			float C = f[To1D(xA_index + 0, yA_index + 1)];
+			float D = f[To1D(xA_index + 1, yA_index + 1)];
 
 			//The final interpolation
 			float interpolatedValue =
-				w_00 * w_10 * A +
-				w_01 * w_10 * B +
-				w_00 * w_11 * C +
-				w_01 * w_11 * D;
+				wA * A +
+                wB * B +
+				wC * C +
+				wD * D;
 
 
 			return interpolatedValue;
@@ -530,8 +489,107 @@ namespace EulerianFluidSimulator
 
 
 
-		//Return min and max pressure
-		public MinMax GetMinMaxPressure()
+		//This is closer ow it looked like in the tutorial
+        public float SampleFieldOld(float xp_pos, float yp_pos, SampleArray field)
+        {
+            //Cellsize
+            float h = this.h;
+            //To simplify and speed up calculations
+            float halfH = 0.5f * h;
+            float oneOverH = 1f / h;
+
+
+            //Make sure the sample point is within an area so we can interpolate between 4 points 
+            //- u is stored in the middle of the vertical cell lines
+            //- v is stored in the middle of the horizontal cell lines
+            //- smoke is stored in the center of each cell
+            float minXOffset, maxXOffset, minYOffset, maxYOffset;
+
+            minXOffset = maxXOffset = minYOffset = maxYOffset = halfH;
+
+            switch (field)
+            {
+                case SampleArray.uField: minXOffset = 0f; maxXOffset = h; break;
+                case SampleArray.vField: minYOffset = 0f; maxYOffset = h; break;
+            }
+
+            xp_pos = Mathf.Max(Mathf.Min(xp_pos, this.numX * h - maxXOffset), minXOffset);
+            yp_pos = Mathf.Max(Mathf.Min(yp_pos, this.numY * h - maxYOffset), minYOffset);
+
+
+
+            //Figure out which array indices to interpolate between
+            //To go from coordinate to cell we generally do: FloorToInt(pos / cellSize) on a non-staggered grid but here we have to compensate for the staggerness 
+            float dx = 0f;
+            float dy = 0f;
+
+            //Which array do we want to sample?
+            float[] f = null;
+
+            switch (field)
+            {
+                case SampleArray.uField: f = this.u; dy = halfH; break;
+                case SampleArray.vField: f = this.v; dx = halfH; break;
+                case SampleArray.smokeField: f = this.m; dx = halfH; dy = halfH; break;
+            }
+
+            int x0_index = Mathf.Min((int)Mathf.Floor((xp_pos - dx) * oneOverH), this.numX - 2);
+            int x1_index = x0_index + 1;
+
+            int y0_index = Mathf.Min((int)Mathf.Floor((yp_pos - dy) * oneOverH), this.numY - 2);
+            int y1_index = y0_index + 1;
+
+
+            //Calculate the deltas:
+            // C-----D
+            // |     |
+            // |___P |
+            // |   | |
+            // A-----B
+            //- delta x = the length of the horizontal line going to P
+            //- delta y = the length of the vertical line going to P
+            float x0_pos = x0_index * h + dx;
+            float y0_pos = y0_index * h + dy;
+
+            float deltaX = xp_pos - x0_pos;
+            float deltaY = yp_pos - y0_pos;
+
+
+            //The weights for the interpolation
+            float w_01 = deltaX * oneOverH;
+            float w_11 = deltaY * oneOverH;
+
+            float w_00 = 1f - w_01;
+            float w_10 = 1f - w_11;
+
+
+            //The values we want to interpolate from
+            // C-----D
+            // |     |
+            // |___P |
+            // |   | |
+            // A-----B
+            float A = f[To1D(x0_index, y0_index)];
+            float B = f[To1D(x1_index, y0_index)];
+            float C = f[To1D(x0_index, y1_index)];
+            float D = f[To1D(x1_index, y1_index)];
+
+
+            //The final interpolation
+            float interpolatedValue =
+                w_00 * w_10 * A +
+                w_01 * w_10 * B +
+                w_00 * w_11 * C +
+                w_01 * w_11 * D;
+
+
+            return interpolatedValue;
+        }
+
+
+
+        //Return min and max pressure
+        public MinMax GetMinMaxPressure()
 		{
 			float minP = p[0];
 			float maxP = p[0];
