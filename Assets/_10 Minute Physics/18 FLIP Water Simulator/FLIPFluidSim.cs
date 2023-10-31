@@ -570,10 +570,10 @@ namespace FLIPFluidSimulator
 
                     //We get: P = sx * sy * A + tx * sy * B + sx * ty * C + tx * ty * D 
                     //Weights: wA + wB + wC + wD = 1
-                    float weightA = sx * sy; //A
-                    float weightB = tx * sy; //B
-                    float weightC = sx * ty; //C
-                    float weightD = tx * ty; //D
+                    float weightA = sx * sy;
+                    float weightB = tx * sy;
+                    float weightC = sx * ty;
+                    float weightD = tx * ty;
 
                     //2d array to 1d array 
                     int A = To1D(x0, y0);
