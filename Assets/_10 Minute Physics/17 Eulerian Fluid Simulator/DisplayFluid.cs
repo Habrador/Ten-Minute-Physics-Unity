@@ -224,11 +224,11 @@ namespace EulerianFluidSimulator
 					float x1 = i * h + u * scale;
 					float y = (j + 0.5f) * h; //the u vel is in the middle of the cell in y direction, thus the 0.5
 
-					scene.SimToWorld(x0, y, out float uStartX, out float uStartY);
-					scene.SimToWorld(x1, y, out float uEndX, out float uEndY);
+					Vector2 uStart = scene.SimToWorld(new (x0, y));
+                    Vector2 uEnd = scene.SimToWorld(new(x1, y));
 
-					linesToDisplay.Add(new Vector3(uStartX, uStartY, z));
-					linesToDisplay.Add(new Vector3(uEndX, uEndY, z));
+					linesToDisplay.Add(new Vector3(uStart.x, uStart.y, z));
+					linesToDisplay.Add(new Vector3(uEnd.x, uEnd.y, z));
 
 
 					//v velocity
@@ -236,11 +236,11 @@ namespace EulerianFluidSimulator
 					float y0 = j * h;
 					float y1 = j * h + v * scale;
 
-					scene.SimToWorld(x, y0, out float vStartX, out float vStartY);
-					scene.SimToWorld(x, y1, out float vEndX, out float vEndY);
+					Vector2 vStart = scene.SimToWorld(new(x, y0));
+					Vector2 vEnd = scene.SimToWorld(new(x, y1));
 
-					linesToDisplay.Add(new Vector3(vStartX, vStartY, z));
-					linesToDisplay.Add(new Vector3(vEndX, vEndY, z));
+					linesToDisplay.Add(new Vector3(vStart.x, vStart.y, z));
+					linesToDisplay.Add(new Vector3(vEnd.x, vEnd.y, z));
 				}
 			}
 
@@ -278,9 +278,9 @@ namespace EulerianFluidSimulator
 					float y = (j + 0.5f) * f.h;
 
 					//Simulation space to global
-					scene.SimToWorld(x, y, out float startPosX, out float startPosY);
+					Vector2 startPos = scene.SimToWorld(new(x, y));
 
-					streamlineCoordinates.Add(new Vector3(startPosX, startPosY, z));
+					streamlineCoordinates.Add(new Vector3(startPos.x, startPos.y, z));
 
 					//Build the line
 					for (int n = 0; n < numSegs; n++)
@@ -301,9 +301,9 @@ namespace EulerianFluidSimulator
 						}
 
 						//Add the next coordinate of the streamline
-						scene.SimToWorld(x, y, out float nextPos2DX, out float nextPos2DY);
+						Vector2 nextPos2D = scene.SimToWorld(new(x, y));
 
-						streamlineCoordinates.Add(new Vector3(nextPos2DX, nextPos2DY, z));
+						streamlineCoordinates.Add(new Vector3(nextPos2D.x, nextPos2D.y, z));
 					}
 
 					//Display the line
@@ -334,10 +334,10 @@ namespace EulerianFluidSimulator
 			}
 
 			//Circle center in global space
-			scene.SimToWorld(scene.obstacleX, scene.obstacleY, out float globalCenter2DX, out float globalCenter2DY);
+			Vector2 globalCenter2D = scene.SimToWorld(new(scene.obstacleX, scene.obstacleY));
 
 			//3d space infront of the texture
-			Vector3 circleCenter = new (globalCenter2DX, globalCenter2DY, -0.1f);
+			Vector3 circleCenter = new (globalCenter2D.x, globalCenter2D.y, -0.1f);
 
 			//Generate a new circle mesh if we havent done so before or radius has changed 
 			if (circleMesh == null || DisplayFluid.circleRadius != circleRadius)
