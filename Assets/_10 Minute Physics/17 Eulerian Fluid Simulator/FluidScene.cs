@@ -106,11 +106,11 @@ namespace EulerianFluidSimulator
             //The plane is assumed to be centered around world space origo
             //Origo of the simulation space is in bottom-left of the plane, so start by moving the point to simulation space (0,0)
             Vector2 offset = new(simPlaneWidth * 0.5f, simPlaneHeight * 0.5f);
-
-            pos += offset;
-
+            
             //Scale the coordinates to match simulation space
             Vector2 scale = new(fluid.SimWidth / simPlaneWidth, fluid.SimHeight / simPlaneHeight);
+
+            pos += offset;
 
             pos *= scale;
 
@@ -125,10 +125,10 @@ namespace EulerianFluidSimulator
             //Scale
             Vector2 scale = new(fluid.SimWidth / simPlaneWidth, fluid.SimHeight / simPlaneHeight);
 
-            pos /= scale;
-
             //Compensate for where origo starts  
             Vector2 offset = new(simPlaneWidth * 0.5f, simPlaneHeight * 0.5f);
+
+            pos /= scale;
 
             pos -= offset;
 
