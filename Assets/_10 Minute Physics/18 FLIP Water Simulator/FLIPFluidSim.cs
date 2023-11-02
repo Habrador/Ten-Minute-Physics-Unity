@@ -20,7 +20,7 @@ namespace FLIPFluidSimulator
         private readonly int numY;
         private readonly int numCells;
         //Cell height and width
-        private readonly float h;
+        public readonly float h;
         //1/h
         private readonly float one_over_h;
 

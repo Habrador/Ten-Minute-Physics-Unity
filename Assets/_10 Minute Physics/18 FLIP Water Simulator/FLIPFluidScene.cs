@@ -105,78 +105,53 @@ namespace FLIPFluidSimulator
 
 
         //Convert from world space to simulation space
-        public Vector2 WorldToSim(float x, float y)
+        public Vector2 WorldToSim(Vector2 pos)
         {
             //The plane is assumed to be centered around world space origo
-            //Origo of the simulation space is in bottom-left of the plane, so start by moving origo
-            x += simPlaneWidth * 0.5f;
-            y += simPlaneHeight * 0.5f;
+            //Origo of the simulation space is in bottom-left of the plane, so start by moving the point to simulation space (0,0)
+            Vector2 offset = new(simPlaneWidth * 0.5f, simPlaneHeight * 0.5f);
 
             //Scale the coordinates to match simulation space
+            Vector2 scale = new(fluid.SimWidth / simPlaneWidth, fluid.SimHeight / simPlaneHeight);
 
-            //For testing
-            //int cellsX = 4;
-            //int cellsY = 2;
+            pos += offset;
 
-            //float h = 3f;
+            pos *= scale;
 
-            //float simWidth = cellsX * h;
-            //float simHeight = cellsY * h;
-
-            //For actual simulation
-            float simWidth = fluid.SimWidth;
-            float simHeight = fluid.SimHeight;
-
-            x *= simWidth / simPlaneWidth;
-            y *= simHeight / simPlaneHeight;
-
-            Vector2 simSpaceCoordinates = new(x, y);
-
-            return simSpaceCoordinates;
+            return pos;
         }
 
 
 
         //Convert from simulation space to world space
-        public Vector2 SimToWorld(float x, float y)
+        public Vector2 SimToWorld(Vector2 pos)
         {
-            //For testing
-            //int cellsX = 4;
-            //int cellsY = 2;
+            //Scale
+            Vector2 scale = new(fluid.SimWidth / simPlaneWidth, fluid.SimHeight / simPlaneHeight);
 
-            //float h = 3f;
+            //Compensate for where origo starts  
+            Vector2 offset = new(simPlaneWidth * 0.5f, simPlaneHeight * 0.5f);
 
-            //float simWidth = cellsX * h;
-            //float simHeight = cellsY * h;
+            pos /= scale;
 
-            //For actual simulation
-            float simWidth = fluid.SimWidth;
-            float simHeight = fluid.SimHeight;
+            pos -= offset;
 
-            x /= simWidth / simPlaneWidth;
-            y /= simHeight / simPlaneHeight;
-
-            x -= simPlaneWidth * 0.5f;
-            y -= simPlaneHeight * 0.5f;
-
-            Vector2 worldSpaceCoordinates = new(x, y);
-
-            return worldSpaceCoordinates;
+            return pos;
         }
 
 
 
         //Convert from simulation space to cell space = in which cell is a certain coordinate
-        public Vector2Int SimToCell(float x, float y)
+        public Vector2Int SimToCell(Vector2 pos)
         {
-            float cellSize = fluid.Spacing;
+            float cellSize = fluid.h;
 
-            int cellX = Mathf.FloorToInt(x / cellSize);
-            int cellY = Mathf.FloorToInt(y / cellSize);
+            int xCell = Mathf.FloorToInt(pos.x / cellSize);
+            int yCell = Mathf.FloorToInt(pos.y / cellSize);
 
-            Vector2Int cellPos = new(cellX, cellY);
+            Vector2Int cell = new(xCell, yCell);
 
-            return cellPos;
+            return cell;
         }
     }
 }

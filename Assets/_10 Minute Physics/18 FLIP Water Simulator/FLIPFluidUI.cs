@@ -196,7 +196,7 @@ namespace FLIPFluidSimulator
                 //Debug.Log(mousePos);
 
                 //From world space to simulation space
-                mousePos = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
+                mousePos = scene.WorldToSim(new(mousePos3D.x, mousePos3D.y));
             }
 
             return mousePos;

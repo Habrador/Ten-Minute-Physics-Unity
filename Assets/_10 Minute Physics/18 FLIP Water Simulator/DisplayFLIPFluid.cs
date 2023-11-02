@@ -155,7 +155,7 @@ namespace FLIPFluidSimulator
             float circleRadius = scene.obstacleRadius + f.Spacing;
 
             //Circle center in global space
-            Vector2 globalCenter2D = scene.SimToWorld(scene.obstacleX, scene.obstacleY);
+            Vector2 globalCenter2D = scene.SimToWorld(new(scene.obstacleX, scene.obstacleY));
 
             //3d space infront of the texture
             Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, obstacleOffset);
@@ -252,7 +252,7 @@ namespace FLIPFluidSimulator
                 float localY = particleFlatPositions[i + 1];
 
                 //Circle center in global space
-                Vector2 globalCenter2D = scene.SimToWorld(localX, localY);
+                Vector2 globalCenter2D = scene.SimToWorld(new(localX, localY));
 
                 //3d space infront of the texture
                 Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, -0.1f);
