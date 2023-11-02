@@ -339,12 +339,17 @@ namespace FLIPFluidSimulator
         // Update the density of particles
         //
 
-        //The density is defined at the center of each cell
+  
         private void UpdateParticleDensity()
         {   
-            float h = this.h;
-            float one_over_h = this.one_over_h;
-            float half_h = 0.5f * h;
+            //float h = this.h;
+            //float one_over_h = this.one_over_h;
+            //float half_h = 0.5f * h;
+
+            GridConstants gridData = new(this.h, this.numX, this.numY);
+
+            //The density is defined at the center of each cell
+            GridInterpolation.Grid fieldToSample = GridInterpolation.Grid.center;
 
             float[] d = particleDensity;
 
@@ -358,6 +363,44 @@ namespace FLIPFluidSimulator
                 float x = this.particlePos[2 * i];
                 float y = this.particlePos[2 * i + 1];
 
+                //Sample!
+                // C-----D
+                // |     |
+                // |___P |
+                // |   | |
+                // A-----B
+
+                //Clamp the sample point so we know we can sample from 4 grid points
+                GridInterpolation.ClampInterpolationPoint(x, y, gridData, fieldToSample, out float xP_clamped, out float yP_clamped);
+
+                //Figure out which values to interpolate between
+
+                //Get the array index of A 
+                GridInterpolation.GetAIndices(xP_clamped, yP_clamped, gridData, fieldToSample, out int xA_index, out int yA_index);
+
+                //With these we get the array indices of A,B,C,D
+                int x0 = xA_index;
+                int y0 = yA_index;
+                int x1 = xA_index + 1;
+                int y1 = yA_index + 1;
+
+                //Figure out the interpolation weights
+
+                //Get the (x,y) coordinates of A
+                GridInterpolation.GetACoordinates(fieldToSample, xA_index, yA_index, gridData, out float xA, out float yA);
+
+                //The weights for the interpolation between the values
+                GridInterpolation.GetWeights(xP_clamped, yP_clamped, xA, yA, gridData, out float weightA, out float weightB, out float weightC, out float weightD);
+
+                //Add to the densities
+                if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += weightA;
+                if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += weightB;
+                if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += weightC;
+                if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += weightD;
+
+
+                /*
+                //Original code
                 //Make sure the particle is within the grid
                 //Density is defined at the center of each cell
                 //If the particle is to the left of center in the first cell we push it to be on the border between the first cell and second cell  
@@ -406,11 +449,13 @@ namespace FLIPFluidSimulator
                 float weightB = tx * sy;
                 float weightC = sx * ty;
                 float weightD = tx * ty;
+                
 
                 if (x0 < this.numX && y0 < this.numY) d[To1D(x0, y0)] += weightA;
                 if (x1 < this.numX && y0 < this.numY) d[To1D(x1, y0)] += weightB;
                 if (x0 < this.numX && y1 < this.numY) d[To1D(x0, y1)] += weightC;
                 if (x1 < this.numX && y1 < this.numY) d[To1D(x1, y1)] += weightD;
+                */
             }
 
 
@@ -714,8 +759,8 @@ namespace FLIPFluidSimulator
             }
             */
 
-            //Make the fluid incompressible by looping the cells multiple times
-            for (int iter = 0; iter < numIters; iter++)
+                //Make the fluid incompressible by looping the cells multiple times
+                for (int iter = 0; iter < numIters; iter++)
             {
                 //For each cell except the border
                 for (int i = 1; i < this.numX - 1; i++)
