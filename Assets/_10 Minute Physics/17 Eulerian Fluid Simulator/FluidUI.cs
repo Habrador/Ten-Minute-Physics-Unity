@@ -177,14 +177,14 @@ namespace EulerianFluidSimulator
         {
             Vector2 mousePos = GetMousePos(scene);
 
-            Vector2Int cellPos = scene.SimToCell(mousePos.x, mousePos.y);
+            scene.SimToCell(mousePos.x, mousePos.y, out int x, out int y);
 
             //Debug.Log(cellPos);
 
             FluidSim f = scene.fluid;
 
-            int x = cellPos.x;
-            int y = cellPos.y;
+            // int x = cellPos.x;
+            //int y = cellPos.y;
 
             if (x >= 0 && x < f.numX && y >= 0 && y < f.numY)
             {
@@ -229,7 +229,9 @@ namespace EulerianFluidSimulator
                 //Debug.Log(mousePos);
 
                 //From world space to simulation space
-                mousePos = scene.WorldToSim(mousePos3D.x, mousePos3D.y);
+                scene.WorldToSim(mousePos3D.x, mousePos3D.y, out float mousePosX, out float mousePosY);
+
+                mousePos = new(mousePosX, mousePosY);
             }
 
             return mousePos;

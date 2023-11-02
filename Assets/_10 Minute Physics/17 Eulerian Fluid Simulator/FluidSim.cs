@@ -496,7 +496,7 @@ namespace EulerianFluidSimulator
 
 
 
-		//This is closer ow it looked like in the tutorial
+		//This is closer how it looked like in the tutorial
         public float SampleFieldOld(float xp_pos, float yp_pos, SampleArray field)
         {
             //Cellsize
