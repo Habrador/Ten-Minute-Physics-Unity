@@ -142,15 +142,16 @@ public static class GridInterpolation
 
 
 
-    //Get grid indices to interpolate from
+    //Get grid indices of A
     //We assume the interpolation point has been clamped
     //We only need the indices of A, the other ones are just xA_index + 1 and yA_index + 1 
-    public static void GetInterpolationArrayIndices(float xP, float yP, GridConstants gridData, Grid sampleField, out int xA_index, out int yA_index)
+    public static void GetAIndices(float xP, float yP, GridConstants gridData, Grid sampleField, out int xA_index, out int yA_index)
     {
         GetGridOffsets(sampleField, gridData.half_h, out float dx, out float dy);
 
         //To go from coordinate to cell we generally do: FloorToInt(pos / cellSize)
-        //But we have to compensate because of the staggered grid
+        //But we have to compensate because of the staggered grid to always get the index to the "left" of the point (in x direction) 
+        //If we want to sample the center of the cell then dx will be half the cell width to push the sample point into the correct cell to always get the index of A which is to the left of the sample point 
         int cellIndexX = Mathf.FloorToInt((xP - dx) * gridData.one_over_h);
         int cellIndexY = Mathf.FloorToInt((yP - dy) * gridData.one_over_h);
 
@@ -164,8 +165,8 @@ public static class GridInterpolation
 
 
 
-    //Get grid coordinates to interpolate from
-    //We only need the coordinates of A
+    //Get grid coordinates of A in local space
+    //We only need the coordinates of A, the other ones are just xA + cellWidth and yA + cellWidth 
     public static void GetACoordinates(Grid sampleField, int xA_index, int yA_index, GridConstants gridData, out float xA, out float yA)
     {
         GetGridOffsets(sampleField, gridData.half_h, out float dx, out float dy);
@@ -177,6 +178,20 @@ public static class GridInterpolation
 
 
     //Get parameters so we can standardize the code depending on which grid data we want to sample
+    //+-----+-----+-----+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
+    //|     |     |     |
+    //u  c  u  c  u  c  |
+    //|     |     |     |
+    //+--v--+--v--+--v--+
+    //If we want to sample the center of the cell then dx will be half the cell width to push the sample point into the correct cell to always get the index of A which is to the left of the sample point in x direction
     private static void GetGridOffsets(Grid sampleField, float half_h, out float dx, out float dy)
     {
         dx = 0f;

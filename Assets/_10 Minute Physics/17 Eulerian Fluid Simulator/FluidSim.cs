@@ -466,7 +466,7 @@ namespace EulerianFluidSimulator
             //Figure out which values to interpolate between
 
             //Get the array index of A 
-            GridInterpolation.GetInterpolationArrayIndices(xP_clamped, yP_clamped, gridData, sampleField, out int xA_index, out int yA_index);
+            GridInterpolation.GetAIndices(xP_clamped, yP_clamped, gridData, sampleField, out int xA_index, out int yA_index);
 
             float A = arrayToSample[To1D(xA_index + 0, yA_index + 0)];
 			float B = arrayToSample[To1D(xA_index + 1, yA_index + 0)];
