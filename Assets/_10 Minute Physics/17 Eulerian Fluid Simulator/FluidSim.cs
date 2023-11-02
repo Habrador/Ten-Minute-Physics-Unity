@@ -441,14 +441,14 @@ namespace EulerianFluidSimulator
             //- u is stored in the middle of the vertical cell lines
             //- v is stored in the middle of the horizontal cell lines
             //- smoke is stored in the center of each cell
-            GridInterpolation.Grid sampleField = GridInterpolation.Grid.center;
+            GridInterpolation.Grid fieldToSample = GridInterpolation.Grid.center;
             
 			float[] arrayToSample = this.m;
 
             switch (field)
 			{
-				case SampleArray.uField: sampleField = GridInterpolation.Grid.u; arrayToSample = this.u; break;
-				case SampleArray.vField: sampleField = GridInterpolation.Grid.v; arrayToSample = this.v; break;
+				case SampleArray.uField: fieldToSample = GridInterpolation.Grid.u; arrayToSample = this.u; break;
+				case SampleArray.vField: fieldToSample = GridInterpolation.Grid.v; arrayToSample = this.v; break;
             }
 
 
@@ -460,14 +460,15 @@ namespace EulerianFluidSimulator
             // A-----B
 
             //Clamp the sample point so we know we can sample from 4 grid points
-            GridInterpolation.ClampInterpolationPoint(xP, yP, gridData, sampleField, out float xP_clamped, out float yP_clamped);
+            GridInterpolation.ClampInterpolationPoint(xP, yP, gridData, fieldToSample, out float xP_clamped, out float yP_clamped);
 
 
             //Figure out which values to interpolate between
 
             //Get the array index of A 
-            GridInterpolation.GetAIndices(xP_clamped, yP_clamped, gridData, sampleField, out int xA_index, out int yA_index);
+            GridInterpolation.GetAIndices(xP_clamped, yP_clamped, gridData, fieldToSample, out int xA_index, out int yA_index);
 
+			//The values we want to interpolate between
             float A = arrayToSample[To1D(xA_index + 0, yA_index + 0)];
 			float B = arrayToSample[To1D(xA_index + 1, yA_index + 0)];
 			float C = arrayToSample[To1D(xA_index + 0, yA_index + 1)];
@@ -477,7 +478,7 @@ namespace EulerianFluidSimulator
             //Figure out the interpolation weights
 
             //Get the (x,y) coordinates of A
-            GridInterpolation.GetACoordinates(sampleField, xA_index, yA_index, gridData, out float xA, out float yA);
+            GridInterpolation.GetACoordinates(fieldToSample, xA_index, yA_index, gridData, out float xA, out float yA);
 
             //The weights for the interpolation between the values
             GridInterpolation.GetWeights(xP_clamped, yP_clamped, xA, yA, gridData, out float wA, out float wB, out float wC, out float wD);

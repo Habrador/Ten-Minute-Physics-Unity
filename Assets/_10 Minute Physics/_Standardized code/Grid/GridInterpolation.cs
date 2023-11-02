@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using static EulerianFluidSimulator.FluidSim;
 
-//General class to interpolate a grid
+//General class to interpolate between points in a grid
+//These points can be in a staggered grid where they are defined on the horizontal and vertical lines
 public static class GridInterpolation
 {
     //Derivation of how to find the linear interpolation of P by using A, B, C, D and their respective coordinates
@@ -142,7 +143,7 @@ public static class GridInterpolation
 
 
 
-    //Get grid indices of A
+    //Get grid indices of A which is defined to always be to the left and below the sample point 
     //We assume the interpolation point has been clamped
     //We only need the indices of A, the other ones are just xA_index + 1 and yA_index + 1 
     public static void GetAIndices(float xP, float yP, GridConstants gridData, Grid sampleField, out int xA_index, out int yA_index)

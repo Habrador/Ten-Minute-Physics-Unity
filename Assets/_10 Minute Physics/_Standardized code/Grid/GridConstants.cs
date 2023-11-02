@@ -14,8 +14,8 @@ public struct GridConstants
     public int numX;
     public int numY;
 
-    public float XLength => this.numX * h;
-    public float YLength => this.numY * h;
+    public readonly float XLength => this.numX * h;
+    public readonly float YLength => this.numY * h;
 
 
     public GridConstants(float h, int numX, int numY)
