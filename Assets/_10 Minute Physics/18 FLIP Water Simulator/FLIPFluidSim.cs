@@ -493,9 +493,11 @@ namespace FLIPFluidSimulator
 
         private void TransferVelocities(bool toGrid, float flipRatio = 0.8f)
         {            
-            float h = this.h;
-            float one_over_h = this.one_over_h;
-            float half_h = 0.5f * h;
+            //float h = this.h;
+            //float one_over_h = this.one_over_h;
+            //float half_h = 0.5f * h;
+
+            GridConstants gridData = new(this.h, this.numX, this.numY);
 
             //We want to transfer velocities from the particles to the grid
             if (toGrid)
@@ -556,8 +558,8 @@ namespace FLIPFluidSimulator
             for (int component = 0; component < 2; component++)
             {
                 //Staggered grid...
-                float dx = (component == 0) ? 0f : half_h;
-                float dy = (component == 0) ? half_h : 0f;
+                float dx = (component == 0) ? 0f : gridData.half_h;
+                float dy = (component == 0) ? gridData.half_h : 0f;
 
                 //Do we want to do operations o the u or v velocities?
                 float[] vel = (component == 0) ? this.u : this.v;
