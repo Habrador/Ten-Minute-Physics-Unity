@@ -67,7 +67,7 @@ Is not optimizing the code from #11, but is showing how you can use a more detai
 
 ## 13. Tetrahedralizer (TODO)
 
-Implemetation of an algorithm that splits a mesh into tetrahedrons.
+Implemetation of an algorithm that splits a mesh into tetrahedrons. Will be available here when finished: [Open source Computational Geometry library](https://github.com/Habrador/Computational-geometry)
 
 
 ## 14. Cloth simulation
