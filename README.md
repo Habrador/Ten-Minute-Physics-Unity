@@ -39,11 +39,21 @@ Simulate the chaotic behavior of pendulums with as many arms as you want and whe
 [![Link to youtube video double pendulum](https://img.youtube.com/vi/jMDiP7mhEx0/0.jpg)](https://www.youtube.com/watch?v=jMDiP7mhEx0)
 
 
+## 7. 3d Vector Math for Simulation
+
+Nothing to simulate
+
+
 ## 8. Interaction
 
 Catch and throw a ball with your mouse.
 
 <img src="/_media/08-user-interaction.png" width="400">
+
+
+## 9. Getting ready to simulate the world with XPBD
+
+Nothing to simulate
 
 
 ## 10. Soft body physics
@@ -84,9 +94,14 @@ Spoiler: It's just the simulation part that's 200 lines of code. You need a few 
 [![Link to youtube video fluid simulation](https://img.youtube.com/vi/6Jw1CsTOkDg/0.jpg)](https://www.youtube.com/watch?v=6Jw1CsTOkDg)
 
 
-## 18. FLIP Water Simulator (todo)
+## 18. FLIP Water Simulator
 
--
+TODO
+
+
+## 19. Differential equations and calculus from scratch
+
+Nothing to simulate
 
 	
 ## 20. Height-field water simulation
@@ -95,6 +110,20 @@ Simulate a swimming pool with balls.
 
 <img src="/_media/20-heightfield.gif" width="400">
 
+
+## 21. Fire simulator
+
+TODO
+
+
+## 22. Basic rigid body simulator
+
+TODO
+
+
+## 23. Sweep and Prune collision detection
+
+TODO
 
 
 # Bonus
