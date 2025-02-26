@@ -268,17 +268,12 @@ public class SweepAndPruneController : MonoBehaviour
             Vector3 TL = new(0f, borderSizeY, 0f);
             Vector3 TR = new(borderSizeX, borderSizeY, 0f);
 
+            //Generate line segments
             List<Vector3> lineVertices = new();
 
             lineVertices.Add(BL);
             lineVertices.Add(BR);
-
-            lineVertices.Add(BR);
             lineVertices.Add(TR);
-
-            lineVertices.Add(TR);
-            lineVertices.Add(TL);
-
             lineVertices.Add(TL);
             lineVertices.Add(BL);
 
@@ -296,7 +291,7 @@ public class SweepAndPruneController : MonoBehaviour
             borderMesh = new();
 
             borderMesh.SetVertices(lineVertices);
-            borderMesh.SetIndices(indices, MeshTopology.Lines, 0);
+            borderMesh.SetIndices(indices, MeshTopology.LineStrip, 0);
         }
 
         //Display the mesh
