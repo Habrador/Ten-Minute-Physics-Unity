@@ -68,18 +68,37 @@ public class SweepAndPruneController : MonoBehaviour
         //Add random spheres
         for (int i = 0; i < totalSpheres; i++)
         {
-            float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f);
+            //The data needed to simulate each sphere
+            float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
             
-            float x = Random.value * (borderSizeX - radius * 2) + radius;
-            float y = Random.value * (borderSizeY - radius * 2) + radius;
-            
-            float vx = Random.value * 400 - 200;
-            float vy = Random.value * 400 - 200;
+            //Random pos within the border 
+            float x = Random.value * (borderSizeX - radius * 2f) + radius;
+            float y = Random.value * (borderSizeY - radius * 2f) + radius;
+
+            //Random velocity between -1 and 1 multiplied by some scale
+            float velocityScale = 10f;
+
+            float vx = (Random.value * 2f - 1f) * velocityScale;
+            float vy = (Random.value * 2f - 1f) * velocityScale;
             
             spheres.Add(new Sphere(x, y, vx, vy, radius));
 
+
             //Initialize the gameobject sphere which we can actually see
-            //this.color = `hsl(${ Math.random() * 360}, 70 %, 50 %)`;
+            Vector3 spherePos = new(x, y, 0f);
+
+            //Scale is diameter
+            Vector3 sphereScale = radius * 2f * Vector3.one;
+
+            GameObject newVisualSphereObj = Instantiate(spherePrefabObj, spherePos, Quaternion.identity);
+
+            newVisualSphereObj.transform.localScale = sphereScale;
+
+            //Random color
+            //The tutorial uses //this.color = `hsl(${ Math.random() * 360}, 70 %, 50 %)`; but hsl is not easily available in Unity
+            newVisualSphereObj.GetComponent<MeshRenderer>().material.color = Random.ColorHSV();
+            
+            visualSpheres.Add(newVisualSphereObj.transform);
         }
     }
 
@@ -98,7 +117,12 @@ public class SweepAndPruneController : MonoBehaviour
 
             visualSpheres[i].position = spherePos;
         }
+    }
 
+
+
+    private void LateUpdate()
+    {
         DisplayBorder();
     }
 
@@ -247,6 +271,7 @@ public class SweepAndPruneController : MonoBehaviour
             {
                 Sphere sphere2 = sortedSpheres[j];
 
+                //If the left side of the sphere to the right is on the right side of the sphere to the left we know they cant collide
                 if (sphere2.Left > sphere1.Right)
                 {
                     break;
@@ -313,7 +338,8 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
-    //Buttons, checkboxes, show min/max pressure
+    //Buttons to select which collision algorithm to use
+    //Text to display info to see the difference between the algorithms
     public void MyOnGUI()
     {
         GUILayout.BeginHorizontal("box");
