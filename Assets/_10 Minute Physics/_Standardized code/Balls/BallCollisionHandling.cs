@@ -27,17 +27,17 @@ public static class BallCollisionHandling
     }
 
     //2d space using components
-    public static bool AreDiscsColliding(float x1, float y1, float x2, float y2, float r1, float r2)
+    public static bool AreDiscsColliding(Disc disc_1, Disc disc_2)
     {
         bool areColliding = true;
 
         //Direction from ball 1 to ball 2
-        float dir_x = x1 - x2;
-        float dir_y = y1 - y2;
+        float dir_x = disc_1.x - disc_2.x;
+        float dir_y = disc_1.y - disc_2.y;
 
         float distSqr = dir_x * dir_x + dir_y * dir_y;
 
-        float minAllowedDistance = r1 + r2;
+        float minAllowedDistance = disc_1.radius + disc_2.radius;
 
         //The balls are not colliding (or they are exactly at the same position)
         //Square minAllowedDistance because we are using distance Square, which is faster 
@@ -116,27 +116,9 @@ public static class BallCollisionHandling
     public static bool HandleDiscDiscCollision(Disc disc_1, Disc disc_2, float restitution)
     {
         bool areColliding = true;
-    
-        float x1 = disc_1.x;
-        float y1 = disc_1.y;
-
-        float x2 = disc_2.x;
-        float y2 = disc_2.y;
-
-        float r1 = disc_1.radius;
-        float r2 = disc_2.radius;
-
-        float m1 = disc_1.mass;
-        float m2 = disc_2.mass;
-
-        float vx1 = disc_1.vx;
-        float vy1 = disc_1.vy;
-
-        float vx2 = disc_2.vx;
-        float vy2 = disc_2.vy;
 
         //Check if the balls are colliding
-        areColliding = AreDiscsColliding(x1, y1, x2, y2, r1, r2);
+        areColliding = AreDiscsColliding(disc_1, disc_2);
 
         if (!areColliding)
         {
@@ -146,8 +128,8 @@ public static class BallCollisionHandling
         }
 
         //Direction from ball 1 to ball 2
-        float dir_x = x1 - x2;
-        float dir_y = y1 - y2;
+        float dir_x = disc_1.x - disc_2.x;
+        float dir_y = disc_1.y - disc_2.y;
 
         //The distance between the balls
         float distance = Mathf.Sqrt(dir_x * dir_x + dir_y * dir_y);
@@ -158,7 +140,7 @@ public static class BallCollisionHandling
 
 
         //Update positions so the spheres dont overlap
-        float overlap = r1 + r2 - distance;
+        float overlap = disc_1.radius + disc_2.radius - distance;
 
         //How far each ball should move and in which direction to no longer overlap
         //0.5 because each ball should move half of the overlap
@@ -186,12 +168,12 @@ public static class BallCollisionHandling
             return areColliding;
         }
 
-        float j = -(1f + restitution) * vn / (1f / m1 + 1f / m2);
+        float j = -(1f + restitution) * vn / (1f / disc_1.mass + 1f / disc_2.mass);
 
-        disc_1.vx = disc_1.vx - (j * normalized_dir_x) / m1;
-        disc_1.vy = disc_1.vy - (j * normalized_dir_y) / m1;
-        disc_2.vx = disc_2.vx + (j * normalized_dir_x) / m2;
-        disc_2.vy = disc_2.vy + (j * normalized_dir_y) / m2;
+        disc_1.vx -= (j * normalized_dir_x) / disc_1.mass;
+        disc_1.vy -= (j * normalized_dir_y) / disc_1.mass;
+        disc_2.vx += (j * normalized_dir_x) / disc_2.mass;
+        disc_2.vy += (j * normalized_dir_y) / disc_2.mass;
 
 
         return areColliding;

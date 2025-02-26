@@ -106,9 +106,9 @@ public class SweepAndPruneController : MonoBehaviour
 
     private void Update()
     {
-        return;
-    
-        //Update the visual position of the sphere
+        //return;
+
+        //Update the visual position of the discs
         for (int i = 0; i < visualDiscs.Count; i++)
         {
             Disc discData = discs[i];
@@ -130,27 +130,28 @@ public class SweepAndPruneController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        return;
+        //return;
     
         //Reset the counters
         collisionChecks = 0;
         actualCollisions = 0;
 
+        //Disc simulation
         float dt = Time.fixedDeltaTime;
 
         float subDt = dt / (float)numSubsteps;
 
         for (int step = 0; step < numSubsteps; step++)
         {
-            //Move each disc and make sure the disc is not outside of the map
+            //Move each disc and make sure the disc is not outside of the border
             foreach (Disc disc in discs)
             {
-                disc.Update(subDt);
+                disc.UpdatePos(subDt);
 
-                SolveBorderCollision(disc);
+                SolveDiscBorderCollision(disc);
             }
 
-            //Check for collisions with other spheres
+            //Check for collisions with other discs
             if (activeCollisionAlgorithm == CollisionAlgorithm.BruteForce)
             {
                 BruteForceCollisions(discs);
@@ -171,7 +172,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
-    private void SolveBorderCollision(Disc disc)
+    private void SolveDiscBorderCollision(Disc disc)
     {
         //Check if the ball ended outside of the map
         //If so move it inside and invert the vel component

@@ -7,8 +7,6 @@ public class Disc
 {
     public float x, y, vx, vy, radius, mass;
 
-    public Color color;
-
     //Getters
     //Left border of the AABB belonging to the disc
     public float Left => this.x - this.radius;
@@ -29,14 +27,14 @@ public class Disc
         
         this.radius = radius;
         
+        //Mass depends on disc area
         this.mass = Mathf.PI * radius * radius;
     }
     
 
 
-    //Move the sphere by integrating one step pos = pos + dt * vel
-    //Check for collision with map border
-    public void Update(float dt)
+    //Move the disc by integrating one step pos = pos + dt * vel
+    public void UpdatePos(float dt)
     {
         //Move the ball
         this.x += this.vx * dt;
