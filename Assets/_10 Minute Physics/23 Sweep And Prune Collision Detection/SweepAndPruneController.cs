@@ -202,6 +202,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
     //Check if two discs are colliding
+    //If so push them apart and update velocity
     private void SolveCollision(Disc disc_1, Disc disc_2)
     {
         collisionChecks++;
@@ -216,45 +217,45 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
-    //Slow collision detection where we check each speher against all other spheres
-    private void BruteForceCollisions(List<Disc> spheres)
+    //Slow collision detection where we check each disc against all other discs
+    private void BruteForceCollisions(List<Disc> discs)
     {
-        for (int i = 0; i < spheres.Count; i++)
+        for (int i = 0; i < discs.Count; i++)
         {
-            for (int j = i + 1; j < spheres.Count; j++)
+            for (int j = i + 1; j < discs.Count; j++)
             {
-                SolveCollision(spheres[i], spheres[j]);
+                SolveCollision(discs[i], discs[j]);
             }
         }
     }
 
 
 
-    //Fast collision detection where we first sort all objects by their left-border x coordinate
-    private void SweepAndPruneCollisions(List<Disc> spheres)
+    //Fast collision detection where we first sort all discs by their left-border x coordinate
+    private void SweepAndPruneCollisions(List<Disc> discs)
     {
         //const sortedSpheres = spheres.sort((a, b) => a.Left - b.Left);
 
         //TEMP
-        List<Disc> sortedSpheres = spheres;
+        List<Disc> sortedDiscs = discs;
 
-        for (int i = 0; i < sortedSpheres.Count; i++)
+        for (int i = 0; i < sortedDiscs.Count; i++)
         {
-            Disc sphere1 = sortedSpheres[i];
+            Disc disc_1 = sortedDiscs[i];
 
-            for (int j = i + 1; j < sortedSpheres.Count; j++)
+            for (int j = i + 1; j < sortedDiscs.Count; j++)
             {
-                Disc sphere2 = sortedSpheres[j];
+                Disc disc_2 = sortedDiscs[j];
 
                 //If the left side of the sphere to the right is on the right side of the sphere to the left we know they cant collide
-                if (sphere2.Left > sphere1.Right)
+                if (disc_2.Left > disc_1.Right)
                 {
                     break;
                 }
 
-                if (Mathf.Abs(sphere1.y - sphere2.y) <= sphere1.radius + sphere2.radius)
+                if (Mathf.Abs(disc_1.y - disc_2.y) <= disc_1.radius + disc_2.radius)
                 {
-                    SolveCollision(sphere1, sphere2);
+                    SolveCollision(disc_1, disc_2);
                 }
             }
         }
