@@ -86,6 +86,8 @@ public class SweepAndPruneController : MonoBehaviour
 
     private void Update()
     {
+        return;
+    
         //Update the visual position of the sphere
         for (int i = 0; i < visualSpheres.Count; i++)
         {
@@ -103,6 +105,8 @@ public class SweepAndPruneController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        return;
+    
         //Reset the counters
         collisionChecks = 0;
         actualCollisions = 0;
@@ -170,7 +174,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
-    //Check of two spheres are colliding
+    //Check if two spheres are colliding
     private void SolveCollision(Sphere sphere1, Sphere sphere2)
     {
         collisionChecks++;
@@ -250,6 +254,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
+    //Display the border with line segments
     public void DisplayBorder()
     {
         //Display the grid with lines
