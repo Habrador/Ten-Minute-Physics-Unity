@@ -4,6 +4,8 @@ using UnityEngine;
 
 public static class BallCollisionHandling
 {
+    //Are two balls colliding in 3d space?
+    //If they are at the same pos we assume they are NOT colliding because it makes calculations simpler
     public static bool AreBallsColliding(Vector3 p1, Vector3 p2, float r1, float r2)
     {
         bool areColliding = true;
@@ -24,8 +26,33 @@ public static class BallCollisionHandling
         return areColliding;
     }
 
+    //2d space using components
+    public static bool AreDiscsColliding(float x1, float y1, float x2, float y2, float r1, float r2)
+    {
+        bool areColliding = true;
+
+        //Direction from ball 1 to ball 2
+        float dir_x = x1 - x2;
+        float dir_y = y1 - y2;
+
+        float distSqr = dir_x * dir_x + dir_y * dir_y;
+
+        float minAllowedDistance = r1 + r2;
+
+        //The balls are not colliding (or they are exactly at the same position)
+        //Square minAllowedDistance because we are using distance Square, which is faster 
+        //They might be at the same position if we check if the ball is colliding with itself, which might be faster than checking if the other ball is not the same as the ball 
+        if (distSqr == 0f || distSqr > minAllowedDistance * minAllowedDistance)
+        {
+            areColliding = false;
+        }
+
+        return areColliding;
+    }
 
 
+
+    //Two balls are colliding in 3d space
     public static void HandleBallBallCollision(Ball b1, Ball b2, float restitution)
     {
         //Check if the balls are colliding
@@ -43,16 +70,16 @@ public static class BallCollisionHandling
         Vector3 dir = b2.pos - b1.pos;
 
         //The distance between the balls
-        float d = dir.magnitude;
+        float distance = dir.magnitude;
 
-        dir = dir.normalized;
+        Vector3 dir_normalized = dir.normalized;
 
         //The distace each ball should move so they no longer intersect 
-        float corr = (b1.radius + b2.radius - d) * 0.5f;
+        float corr = (b1.radius + b2.radius - distance) * 0.5f;
 
         //Move the balls apart along the dir vector
-        b1.pos += dir * -corr; //-corr because dir goes from b1 to b2
-        b2.pos += dir * corr;
+        b1.pos += dir_normalized * -corr; //-corr because dir goes from b1 to b2
+        b2.pos += dir_normalized * corr;
 
 
         //Update velocities
@@ -61,8 +88,8 @@ public static class BallCollisionHandling
 
         //The part of each balls velocity along dir (penetration direction)
         //The velocity is now in 1D making it easier to use standardized physics equations
-        float v1 = Vector3.Dot(b1.vel, dir);
-        float v2 = Vector3.Dot(b2.vel, dir);
+        float v1 = Vector3.Dot(b1.vel, dir_normalized);
+        float v2 = Vector3.Dot(b2.vel, dir_normalized);
 
         float m1 = b1.mass;
         float m2 = b2.mass;
@@ -81,10 +108,94 @@ public static class BallCollisionHandling
         //b2.vel += dir * new_v2;
 
         //Which can be simplified to:
-        b1.vel += dir * (new_v1 - v1);
-        b2.vel += dir * (new_v2 - v2);
+        b1.vel += dir_normalized * (new_v1 - v1);
+        b2.vel += dir_normalized * (new_v2 - v2);
     }
 
+    //Two discs are colliding in 2d space, using components
+    public static bool HandleDiscDiscCollision(Disc disc_1, Disc disc_2, float restitution)
+    {
+        bool areColliding = true;
+    
+        float x1 = disc_1.x;
+        float y1 = disc_1.y;
+
+        float x2 = disc_2.x;
+        float y2 = disc_2.y;
+
+        float r1 = disc_1.radius;
+        float r2 = disc_2.radius;
+
+        float m1 = disc_1.mass;
+        float m2 = disc_2.mass;
+
+        float vx1 = disc_1.vx;
+        float vy1 = disc_1.vy;
+
+        float vx2 = disc_2.vx;
+        float vy2 = disc_2.vy;
+
+        //Check if the balls are colliding
+        areColliding = AreDiscsColliding(x1, y1, x2, y2, r1, r2);
+
+        if (!areColliding)
+        {
+            areColliding = false;
+        
+            return areColliding;
+        }
+
+        //Direction from ball 1 to ball 2
+        float dir_x = x1 - x2;
+        float dir_y = y1 - y2;
+
+        //The distance between the balls
+        float distance = Mathf.Sqrt(dir_x * dir_x + dir_y * dir_y);
+
+        //Normalized direction
+        float normalized_dir_x = dir_x / distance;
+        float normalized_dir_y = dir_y / distance;
+
+
+        //Update positions so the spheres dont overlap
+        float overlap = r1 + r2 - distance;
+
+        //How far each ball should move and in which direction to no longer overlap
+        //0.5 because each ball should move half of the overlap
+        float corr_x = overlap * normalized_dir_x * 0.5f;
+        float corr_y = overlap * normalized_dir_y * 0.5f;
+
+        //-corr because dir goes from sphere 1 to sphere 2
+        disc_1.x -= corr_x;
+        disc_1.y -= corr_y;
+        disc_2.x += corr_x;
+        disc_2.y += corr_y;
+
+
+        //Update velocities after collision
+
+        //Relative velocity
+        float vrx = disc_2.vx - disc_1.vx;
+        float vry = disc_2.vy - disc_1.vy;
+
+        //Velocity normal?
+        float vn = vrx * normalized_dir_x + vry * normalized_dir_y;
+
+        if (vn > 0f)
+        {
+            return areColliding;
+        }
+
+        float j = -(1f + restitution) * vn / (1f / m1 + 1f / m2);
+
+        disc_1.vx = disc_1.vx - (j * normalized_dir_x) / m1;
+        disc_1.vy = disc_1.vy - (j * normalized_dir_y) / m1;
+        disc_2.vx = disc_2.vx + (j * normalized_dir_x) / m2;
+        disc_2.vy = disc_2.vy + (j * normalized_dir_y) / m2;
+
+
+        return areColliding;
+    }
 
 
     //The walls are a list if edges ordered counter-clockwise

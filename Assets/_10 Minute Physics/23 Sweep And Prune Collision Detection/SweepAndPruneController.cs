@@ -37,13 +37,13 @@ public class SweepAndPruneController : MonoBehaviour
     private Material borderMaterial;
     private Mesh borderMesh;
 
-    //Spheres
-    //Simulation data belonging to each sphere
-    private List<Sphere> spheres;
-    //The gameobject belonging to each sphere
-    private List<Transform> visualSpheres;
-    //How mmany spheres we simulate
-    private const int totalSpheres = 10;
+    //Discs
+    //Simulation data belonging to each disc
+    private List<Disc> discs;
+    //The gameobject belonging to each disc so we can see it
+    private List<Transform> visualDiscs;
+    //How mmany disc we simulate
+    private const int totalDiscs = 10;
 
     //Simulation settings
 
@@ -62,11 +62,11 @@ public class SweepAndPruneController : MonoBehaviour
     {
         Random.InitState(seed);
 
-        spheres = new();
-        visualSpheres = new();
+        discs = new();
+        visualDiscs = new();
 
-        //Add random spheres
-        for (int i = 0; i < totalSpheres; i++)
+        //Add random disc
+        for (int i = 0; i < totalDiscs; i++)
         {
             //The data needed to simulate each sphere
             float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
@@ -81,7 +81,7 @@ public class SweepAndPruneController : MonoBehaviour
             float vx = (Random.value * 2f - 1f) * velocityScale;
             float vy = (Random.value * 2f - 1f) * velocityScale;
             
-            spheres.Add(new Sphere(x, y, vx, vy, radius));
+            discs.Add(new Disc(x, y, vx, vy, radius));
 
 
             //Initialize the gameobject sphere which we can actually see
@@ -98,7 +98,7 @@ public class SweepAndPruneController : MonoBehaviour
             //The tutorial uses //this.color = `hsl(${ Math.random() * 360}, 70 %, 50 %)`; but hsl is not easily available in Unity
             newVisualSphereObj.GetComponent<MeshRenderer>().material.color = Random.ColorHSV();
             
-            visualSpheres.Add(newVisualSphereObj.transform);
+            visualDiscs.Add(newVisualSphereObj.transform);
         }
     }
 
@@ -109,13 +109,13 @@ public class SweepAndPruneController : MonoBehaviour
         return;
     
         //Update the visual position of the sphere
-        for (int i = 0; i < visualSpheres.Count; i++)
+        for (int i = 0; i < visualDiscs.Count; i++)
         {
-            Sphere sphereData = spheres[i];
+            Disc discData = discs[i];
 
-            Vector3 spherePos = new(sphereData.x, sphereData.y, 0f);
+            Vector3 spherePos = new(discData.x, discData.y, 0f);
 
-            visualSpheres[i].position = spherePos;
+            visualDiscs[i].position = spherePos;
         }
     }
 
@@ -142,20 +142,22 @@ public class SweepAndPruneController : MonoBehaviour
 
         for (int step = 0; step < numSubsteps; step++)
         {
-            //Move each sphere and make sure the sphere is not outside of the map
-            foreach (Sphere sphere in spheres)
+            //Move each disc and make sure the disc is not outside of the map
+            foreach (Disc disc in discs)
             {
-                sphere.Update(subDt, borderSizeX, borderSizeY);
+                disc.Update(subDt);
+
+                SolveBorderCollision(disc);
             }
 
             //Check for collisions with other spheres
             if (activeCollisionAlgorithm == CollisionAlgorithm.BruteForce)
             {
-                BruteForceCollisions(spheres);
+                BruteForceCollisions(discs);
             }
             else
             {
-                SweepAndPruneCollisions(spheres);
+                SweepAndPruneCollisions(discs);
             }
         }
     }
@@ -169,80 +171,52 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
-    //What happens if two spheres are colliding?
-    private void CalculateCollision(Sphere sphere1, Sphere sphere2, float e)
+    private void SolveBorderCollision(Disc disc)
     {
-        float dx = sphere2.x - sphere1.x;
-        float dy = sphere2.y - sphere1.y;
-
-        float dist = Mathf.Sqrt(dx * dx + dy * dy);
-
-        //The spheres are not colliding
-        if (dist > sphere1.radius + sphere2.radius)
-        {            
-            return;
-        }
-
-        float nx = dx / dist;
-        float ny = dy / dist;
-
-        float vrx = sphere2.vx - sphere1.vx;  // Changed direction of relative velocity
-        float vry = sphere2.vy - sphere1.vy;
-
-        float vn = vrx * nx + vry * ny;
-
-        if (vn > 0)
+        //Check if the ball ended outside of the map
+        //If so move it inside and invert the vel component
+        //This assumes maps bottom-left corner is at 0,0
+        if (disc.x - disc.radius < 0f)
         {
-            return;
+            disc.x = disc.radius;
+            disc.vx *= -1f;
         }
-
-        float j = -(1f + e) * vn / (1f / sphere1.mass + 1 / sphere2.mass);
-
-        sphere1.vx = sphere1.vx - (j * nx) / sphere1.mass;  // Changed sign
-        sphere1.vy = sphere1.vy - (j * ny) / sphere1.mass;  // Changed sign
-        sphere2.vx = sphere2.vx + (j * nx) / sphere2.mass;  // Changed sign
-        sphere2.vy = sphere2.vy + (j * ny) / sphere2.mass;  // Changed sign
+        if (disc.x + disc.radius > borderSizeX)
+        {
+            disc.x = borderSizeX - disc.radius;
+            disc.vx *= -1f;
+        }
+        if (disc.y + disc.radius > borderSizeY)
+        {
+            disc.y = borderSizeY - disc.radius;
+            disc.vy *= -1f;
+        }
+        if (disc.y - disc.radius < 0f)
+        {
+            disc.y = disc.radius;
+            disc.vy *= -1f;
+        }
     }
 
 
 
-    //Check if two spheres are colliding
-    private void SolveCollision(Sphere sphere1, Sphere sphere2)
+    //Check if two discs are colliding
+    private void SolveCollision(Disc disc_1, Disc disc_2)
     {
         collisionChecks++;
 
-        float dx = sphere2.x - sphere1.x;
-        float dy = sphere2.y - sphere1.y;
-        
-        float distance = Mathf.Sqrt(dx * dx + dy * dy);
+        bool areColliding = BallCollisionHandling.HandleDiscDiscCollision(disc_1, disc_2, e);
 
-        //The spheres are colliding
-        if (distance < sphere1.radius + sphere2.radius)
+        if (areColliding)
         {
             actualCollisions++;
-
-            //Calculate new velocities using provided function
-            CalculateCollision(sphere1, sphere2, e);
-
-            //Resolve overlap
-            float overlap = (sphere1.radius + sphere2.radius - distance);
-            float nx = dx / distance;
-            float ny = dy / distance;
-
-            float cx = overlap * nx / 2f;
-            float cy = overlap * ny / 2f;
-
-            sphere1.x -= cx;
-            sphere1.y -= cy;
-            sphere2.x += cx;
-            sphere2.y += cy;
         }
     }
 
 
 
     //Slow collision detection where we check each speher against all other spheres
-    private void BruteForceCollisions(List<Sphere> spheres)
+    private void BruteForceCollisions(List<Disc> spheres)
     {
         for (int i = 0; i < spheres.Count; i++)
         {
@@ -256,20 +230,20 @@ public class SweepAndPruneController : MonoBehaviour
 
 
     //Fast collision detection where we first sort all objects by their left-border x coordinate
-    private void SweepAndPruneCollisions(List<Sphere> spheres)
+    private void SweepAndPruneCollisions(List<Disc> spheres)
     {
         //const sortedSpheres = spheres.sort((a, b) => a.Left - b.Left);
 
         //TEMP
-        List<Sphere> sortedSpheres = spheres;
+        List<Disc> sortedSpheres = spheres;
 
         for (int i = 0; i < sortedSpheres.Count; i++)
         {
-            Sphere sphere1 = sortedSpheres[i];
+            Disc sphere1 = sortedSpheres[i];
 
             for (int j = i + 1; j < sortedSpheres.Count; j++)
             {
-                Sphere sphere2 = sortedSpheres[j];
+                Disc sphere2 = sortedSpheres[j];
 
                 //If the left side of the sphere to the right is on the right side of the sphere to the left we know they cant collide
                 if (sphere2.Left > sphere1.Right)
@@ -370,7 +344,7 @@ public class SweepAndPruneController : MonoBehaviour
         
 
         //Text
-        string infoText = $"Spheres: {totalSpheres} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
+        string infoText = $"Spheres: {totalDiscs} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
 
         GUIStyle textStyle = GUI.skin.GetStyle("Label");
 
