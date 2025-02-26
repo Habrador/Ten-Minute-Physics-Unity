@@ -1,3 +1,4 @@
+using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -133,6 +134,13 @@ public class SweepAndPruneController : MonoBehaviour
                 SweepAndPruneCollisions(spheres);
             }
         }
+    }
+
+
+
+    private void OnGUI()
+    {
+        MyOnGUI();
     }
 
 
@@ -303,4 +311,49 @@ public class SweepAndPruneController : MonoBehaviour
         Graphics.DrawMesh(borderMesh, Vector3.zero, Quaternion.identity, borderMaterial, 0, Camera.main, 0);
     }
 
+
+
+    //Buttons, checkboxes, show min/max pressure
+    public void MyOnGUI()
+    {
+        GUILayout.BeginHorizontal("box");
+
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+
+        //Buttons
+        GUIStyle buttonStyle = new(GUI.skin.button)
+        {
+            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
+
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        if (GUILayout.Button($"Brute Force", buttonStyle))
+        {
+            activeCollisionAlgorithm = CollisionAlgorithm.BruteForce;
+        }
+        if (GUILayout.Button("Sweep and Prune", buttonStyle))
+        {
+            activeCollisionAlgorithm = CollisionAlgorithm.SweepPrune;
+        }
+
+        
+
+        //Text
+        string infoText = $"Spheres: {totalSpheres} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
+
+        GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+        textStyle.fontSize = fontSize;
+        textStyle.margin = offset;
+
+        GUILayout.Label(infoText, textStyle);
+
+
+        GUILayout.EndHorizontal();
+    }
 }
