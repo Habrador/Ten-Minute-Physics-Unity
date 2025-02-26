@@ -9,25 +9,32 @@ public class Sphere
     public Color color;
 
     //Getters
+    //Left border of the AABB belonging to the sphere
     public float Left => this.x - this.radius;
-
+    //Right border of the AABB belonging to the sphere
     public float Right => this.x + this.radius;
 
 
 
     public Sphere(float x, float y, float vx, float vy, float radius)
     {
+        //Position
         this.x = x;
         this.y = y;
+
+        //Velocity
         this.vx = vx;
         this.vy = vy;
+        
         this.radius = radius;
+        
         this.mass = Mathf.PI * radius * radius;
-        //this.color = `hsl(${ Math.random() * 360}, 70 %, 50 %)`;
     }
     
 
 
+    //Move the sphere by integrating one step pos = pos + dt * vel
+    //Check for collision with map border
     public void Update(float dt, float mapSizeX, float mapSizeY)
     {
         //Move the ball
@@ -36,6 +43,7 @@ public class Sphere
 
         //Check if the ball ended outside of the map
         //If so move it inside and invert the vel component
+        //This assumes maps bottom-left corner is at 0,0
         if (this.x - this.radius < 0f)
         {
             this.x = this.radius;
@@ -57,15 +65,4 @@ public class Sphere
             this.vy *= -1f;
         }
     }
-
-    /*
-    draw()
-    {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-    */
 }

@@ -10,8 +10,11 @@ using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 //but can handle object of different sizes
 //Broad phase means it's only doing collision detection of each object's AABB
 //If you need more detailed collision detection you how do add it afterwards
+//Simulation is in 2d space: x,y
 public class SweepAndPruneController : MonoBehaviour
 {
+    public GameObject spherePrefabObj;
+
     //Which collision algorithm are we going to use?
     private enum CollisionAlgorithm 
     {
@@ -19,41 +22,63 @@ public class SweepAndPruneController : MonoBehaviour
         SweepPrune
     }
 
-    private CollisionAlgorithm activeCollisionAlgorithm = CollisionAlgorithm.SweepPrune;
+    private CollisionAlgorithm activeCollisionAlgorithm = CollisionAlgorithm.BruteForce;
 
-    //Size of map
-    //Collision detection assumes bottom left of map is at 0,0
-    private const float mapSizeX = 20f;
-    private const float mapSizeY = 10f;
-
+    //To see the difference between the collision algorithms
     private int collisionChecks = 0;
     private int actualCollisions = 0;
 
-    //All spheres
-    private List<Sphere> spheres;
+    //Size of border
+    //Collision detection assumes bottom left of map is at 0,0
+    private const float borderSizeX = 20f;
+    private const float borderSizeY = 10f;
+    //To display the border
+    private Material borderMaterial;
+    private Mesh borderMesh;
 
+    //Spheres
+    //Simulation data belonging to each sphere
+    private List<Sphere> spheres;
+    //The gameobject belonging to each sphere
+    private List<Transform> visualSpheres;
+    //How mmany spheres we simulate
     private const int totalSpheres = 10;
 
+    //Simulation settings
+
+    //To get the same simulation every time
     private const int seed = 0;
+
+    //Run multiple physics steps per frame
+    private const int numSubsteps = 5;
+
+    //Restitution coefficient = how bouncy the spheres are if they collide
+    private const float e = 1f;
 
 
 
     private void Start()
     {
         Random.InitState(seed);
-    
+
+        spheres = new();
+        visualSpheres = new();
+
         //Add random spheres
         for (int i = 0; i < totalSpheres; i++)
         {
             float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f);
             
-            float x = Random.value * (mapSizeX - radius * 2) + radius;
-            float y = Random.value * (mapSizeY - radius * 2) + radius;
+            float x = Random.value * (borderSizeX - radius * 2) + radius;
+            float y = Random.value * (borderSizeY - radius * 2) + radius;
             
             float vx = Random.value * 400 - 200;
             float vy = Random.value * 400 - 200;
             
             spheres.Add(new Sphere(x, y, vx, vy, radius));
+
+            //Initialize the gameobject sphere which we can actually see
+            //this.color = `hsl(${ Math.random() * 360}, 70 %, 50 %)`;
         }
     }
 
@@ -61,8 +86,17 @@ public class SweepAndPruneController : MonoBehaviour
 
     private void Update()
     {
-        //Draw all spheres
-        //spheres.forEach(sphere => sphere.draw());
+        //Update the visual position of the sphere
+        for (int i = 0; i < visualSpheres.Count; i++)
+        {
+            Sphere sphereData = spheres[i];
+
+            Vector3 spherePos = new(sphereData.x, sphereData.y, 0f);
+
+            visualSpheres[i].position = spherePos;
+        }
+
+        DisplayBorder();
     }
 
 
@@ -73,16 +107,16 @@ public class SweepAndPruneController : MonoBehaviour
         collisionChecks = 0;
         actualCollisions = 0;
 
-        //Run multiple physics steps per frame
-        int numSubsteps = 5;
-        float subDt = Time.fixedDeltaTime / (float)numSubsteps;
+        float dt = Time.fixedDeltaTime;
+
+        float subDt = dt / (float)numSubsteps;
 
         for (int step = 0; step < numSubsteps; step++)
         {
             //Move each sphere and make sure the sphere is not outside of the map
             foreach (Sphere sphere in spheres)
             {
-                sphere.Update(subDt, mapSizeX, mapSizeY);
+                sphere.Update(subDt, borderSizeX, borderSizeY);
             }
 
             //Check for collisions with other spheres
@@ -99,6 +133,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
+    //What happens if two spheres are colliding?
     private void CalculateCollision(Sphere sphere1, Sphere sphere2, float e)
     {
         float dx = sphere2.x - sphere1.x;
@@ -135,6 +170,7 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
+    //Check of two spheres are colliding
     private void SolveCollision(Sphere sphere1, Sphere sphere2)
     {
         collisionChecks++;
@@ -148,9 +184,6 @@ public class SweepAndPruneController : MonoBehaviour
         if (distance < sphere1.radius + sphere2.radius)
         {
             actualCollisions++;
-
-            //Restitution coefficient
-            float e = 1f;
 
             //Calculate new velocities using provided function
             CalculateCollision(sphere1, sphere2, e);
@@ -186,9 +219,10 @@ public class SweepAndPruneController : MonoBehaviour
 
 
 
+    //Fast collision detection where we first sort all objects by their left-border x coordinate
     private void SweepAndPruneCollisions(List<Sphere> spheres)
     {
-        //const sortedSpheres = spheres.sort((a, b) => a.left - b.left);
+        //const sortedSpheres = spheres.sort((a, b) => a.Left - b.Left);
 
         //TEMP
         List<Sphere> sortedSpheres = spheres;
@@ -212,6 +246,61 @@ public class SweepAndPruneController : MonoBehaviour
                 }
             }
         }
+    }
+
+
+
+    public void DisplayBorder()
+    {
+        //Display the grid with lines
+        if (borderMaterial == null)
+        {
+            borderMaterial = new Material(Shader.Find("Unlit/Color"));
+
+            borderMaterial.color = Color.black;
+        }
+
+        if (borderMesh == null)
+        {
+            //The 4 corners of the border
+            Vector3 BL = new(0f, 0f, 0f);
+            Vector3 BR = new(borderSizeX, 0f, 0f);
+            Vector3 TL = new(0f, borderSizeY, 0f);
+            Vector3 TR = new(borderSizeX, borderSizeY, 0f);
+
+            List<Vector3> lineVertices = new();
+
+            lineVertices.Add(BL);
+            lineVertices.Add(BR);
+
+            lineVertices.Add(BR);
+            lineVertices.Add(TR);
+
+            lineVertices.Add(TR);
+            lineVertices.Add(TL);
+
+            lineVertices.Add(TL);
+            lineVertices.Add(BL);
+
+
+            //Generate the indices
+            List<int> indices = new();
+
+            for (int i = 0; i < lineVertices.Count; i++)
+            {
+                indices.Add(i);
+            }
+
+
+            //Generate the mesh
+            borderMesh = new();
+
+            borderMesh.SetVertices(lineVertices);
+            borderMesh.SetIndices(indices, MeshTopology.Lines, 0);
+        }
+
+        //Display the mesh
+        Graphics.DrawMesh(borderMesh, Vector3.zero, Quaternion.identity, borderMaterial, 0, Camera.main, 0);
     }
 
 }
