@@ -23,6 +23,7 @@ public class DistanceConstraint
 
     Vector3 corr;
 
+    //A rb can be null if we want to attach the constraint to a fixed location
     public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0.0f, int color = 0xff0000)
     {
         //this.scene = scene;
@@ -65,7 +66,7 @@ public class DistanceConstraint
         UpdateMesh();
     }
             
-    private void Solve() 
+    public void Solve() 
     {
         //this.body0.localToWorld(this.localPos0, this.worldPos0);
         //if (this.body1 != undefined)
@@ -83,7 +84,7 @@ public class DistanceConstraint
         //this.updateText(Math.abs(force), elongation);
     }
 
-    private void UpdateMesh() 
+    public void UpdateMesh() 
     {
         //const start = this.worldPos0;
         //const end = this.worldPos1;

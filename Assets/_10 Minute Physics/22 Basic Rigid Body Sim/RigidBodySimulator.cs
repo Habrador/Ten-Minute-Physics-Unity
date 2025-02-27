@@ -5,11 +5,15 @@ using UnityEngine;
 
 public class RigidBodySimulator
 {
-    Vector3 gravity;
+    private Vector3 gravity;
 
-    List<MyRigidBody> rigidBodies;
+    private List<MyRigidBody> rigidBodies;
 
-    List<DistanceConstraint> distanceConstraints;
+    private List<DistanceConstraint> distanceConstraints;
+
+    //Add dragconstraint, meaning if we drag with mouse to interact we add a temp constraint
+
+
 
     //Removed scene, timeStepSize, parameters
     public RigidBodySimulator(Vector3 gravity)
@@ -26,15 +30,21 @@ public class RigidBodySimulator
         //this.dragCompliance = 0.001;
     }
 
+
+
     public void AddRigidBody(MyRigidBody rigidBody)
     {
-        this.rigidBodies.Add(rigidBody);
+        rigidBodies.Add(rigidBody);
     }
+
+
 
     public void AddDistanceConstraint(DistanceConstraint distanceConstraint)
     {
-        this.distanceConstraints.Add(distanceConstraint);
+        distanceConstraints.Add(distanceConstraint);
     }
+
+
 
     public void Simulate(float dt, int numSubSteps)
     {
@@ -47,35 +57,45 @@ public class RigidBodySimulator
                 rigidBodies[i].Integrate(sdt, this.gravity);
             }
                 
-            for (int i = 0; i < this.distanceConstraints.Count; i++)
+            for (int i = 0; i < distanceConstraints.Count; i++)
             {
-                //this.distanceConstraints[i].solve();
+                distanceConstraints[i].Solve();
             }
-                
 
+            //Move stuff with mouse
             //if (this.dragConstraint)
+            //{
             //    this.dragConstraint.solve();
+            //}
 
-            for (int i = 0; i < this.rigidBodies.Count; i++)
+            for (int i = 0; i < rigidBodies.Count; i++)
             {
-                this.rigidBodies[i].UpdateVelocities(sdt);
+                rigidBodies[i].UpdateVelocities(sdt);
             }
         }
 
-        for (int i = 0; i < this.rigidBodies.Count; i++)
+        //Update meshes, move to Update
+        for (int i = 0; i < rigidBodies.Count; i++)
         {
-            this.rigidBodies[i].UpdateMeshes();
+            rigidBodies[i].UpdateMeshes();
         }
             
-
-        for (int i = 0; i < this.distanceConstraints.Count; i++)
+        for (int i = 0; i < distanceConstraints.Count; i++)
         {
-            //this.distanceConstraints[i].UpdateMesh();
+            distanceConstraints[i].UpdateMesh();
         }
-            
+        
+        //Move stuff with mouse
         //if (this.dragConstraint)
         //    this.dragConstraint.updateMesh();
     }
+
+
+
+    //
+    // Mouse interactions
+    //
+
     //startDrag(body, pos)
     //{
     //    this.dragConstraint = new DistanceConstraint(this.scene, body, null, pos, pos, 0.0, this.dragCompliance);
@@ -96,6 +116,9 @@ public class RigidBodySimulator
     //    }
     //}
 
+
+
+    //Cleanup
     //dispose()
     //{
     //    for (let i = 0; i < this.rigidBodies.length; i++)

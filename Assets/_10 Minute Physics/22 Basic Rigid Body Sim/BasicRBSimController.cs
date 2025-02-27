@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 //Based on "22 How to write a basic rigid body simulator using position based dynamics"
 //from https://matthias-research.github.io/pages/tenMinutePhysics/index.html
@@ -10,7 +11,7 @@ public class BasicRBSimController : MonoBehaviour
     private RigidBodySimulator rbSimulator;
 
     //Simulation settings
-    private Vector3 gravity = new Vector3(0f, -10.0f, 0f);
+    private Vector3 gravity = new(0f, -10.0f, 0f);
 
     private float density = 1000f;
 
@@ -21,7 +22,6 @@ public class BasicRBSimController : MonoBehaviour
         CribMobile,
         Chain
     }
-
 
 
 
@@ -57,7 +57,11 @@ public class BasicRBSimController : MonoBehaviour
     }
 
 
-
+    //      ___|___
+    //     |       |
+    //   __|__     0
+    //  |     |     
+    //__|__   0
     private void InitCribMobileScene()
     {
         bool unilateral = true;
@@ -108,21 +112,22 @@ public class BasicRBSimController : MonoBehaviour
             MyRigidBody sphere = new MyRigidBody(MyRigidBody.Types.Sphere, sphereSize, density, spherePos, angles);
             rbSimulator.AddRigidBody(sphere);
 
-            //Vector3 p0 = new Vector3(spherePos.x, spherePos.y + 0.5f * radius, spherePos.z);
-            //Vector3 p1 = new Vector3(spherePos.x, spherePos.y + height - 0.5f * thickness, spherePos.z);
-            //let sphereConstraint = new DistanceConstraint(gThreeScene, sphere, bar, p0, p1, height - thickness, compliance, unilateral);
-            //gSimulator.addDistanceConstraint(sphereConstraint);
+            Vector3 p0_other = new Vector3(spherePos.x, spherePos.y + 0.5f * radius, spherePos.z);
+            Vector3 p1_other = new Vector3(spherePos.x, spherePos.y + height - 0.5f * thickness, spherePos.z);
+            DistanceConstraint sphereConstraint = new DistanceConstraint(sphere, bar, p0_other, p1_other, height - thickness, compliance, unilateral);
+            rbSimulator.AddDistanceConstraint(sphereConstraint);
 
+            //Last one
             if (i == numLevels - 1)
             {
                 spherePos.x -= 2.0f * distance;
-                sphere = new MyRigidBody(MyRigidBody.Types.Sphere, sphereSize, density, spherePos, angles);
-                rbSimulator.AddRigidBody(sphere);
+                MyRigidBody sphere_last = new MyRigidBody(MyRigidBody.Types.Sphere, sphereSize, density, spherePos, angles);
+                rbSimulator.AddRigidBody(sphere_last);
 
                 p0.x -= 2.0f * distance;
                 p1.x -= 2.0f * distance;
-                DistanceConstraint sphereConstraint = new DistanceConstraint(sphere, bar, p0, p1, height - thickness, compliance, unilateral);
-                rbSimulator.AddDistanceConstraint(sphereConstraint);
+                DistanceConstraint sphereConstraint_last = new DistanceConstraint(sphere_last, bar, p0, p1, height - thickness, compliance, unilateral);
+                rbSimulator.AddDistanceConstraint(sphereConstraint_last);
             }
 
             prevBar = bar;
@@ -132,18 +137,25 @@ public class BasicRBSimController : MonoBehaviour
     }
 
 
+    //4 boxes attached to each other, top box is attached to roof
+    //The "rope" between each box is not attached to the center if the boxes except the first
     private void InitChainScene()
     {
         bool unilateral = false;
         float compliance = 0.001f;
 
         Vector3 boxSize = new Vector3(0.1f, 0.1f, 0.1f);
+        //Pos where the constraint attaches to the roof
+        //First rope is attached to the center of the first box
         Vector3 boxPos = new Vector3(0.0f, 2.5f, 0.0f);
-        Vector3 boxAngles = new Vector3(0.0f, 0.0f, 0.0f);
+        Vector3 boxAngles = Vector3.zero;
 
         float width = 0.01f;
         float fontSize = 0.03f;
+        
+        //Distance between each box
         float dist = 0.2f;
+
         float prevY = 2.5f;
         float prevSize = 0.0f;
 
@@ -153,10 +165,13 @@ public class BasicRBSimController : MonoBehaviour
         {
             prevY = boxPos.y;
             boxPos.y -= dist + boxSize.y;
+
+            //Add box
             MyRigidBody box = new MyRigidBody(MyRigidBody.Types.Box, boxSize, density, boxPos, boxAngles, fontSize);
             box.damping = 5.0f;
             rbSimulator.AddRigidBody(box);
 
+            //Add constraint
             Vector3 p0 = new Vector3(0.4f * prevSize, boxPos.y + 0.5f * boxSize.y, 0.0f);
             Vector3 p1 = new Vector3(0.4f * prevSize, prevY - 0.5f * prevSize, 0.0f);
             DistanceConstraint barConstraint = new DistanceConstraint(box, prevBox, p0, p1, p1.y - p0.y, compliance, unilateral, width, fontSize);
@@ -164,7 +179,8 @@ public class BasicRBSimController : MonoBehaviour
 
             prevBox = box;
             prevSize = boxSize.y;
-            //boxSize.multiplyScalar(Math.cbrt(2.0));
+            //Cuberoot = They get 1.2599 bigger each update
+            boxSize *= Mathf.Pow(2f, 1f / 3f);
         }
     }
 
