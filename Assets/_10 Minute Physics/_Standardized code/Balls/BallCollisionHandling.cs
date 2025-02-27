@@ -11,14 +11,14 @@ public static class BallCollisionHandling
         bool areColliding = true;
 
         //The distance sqr between the balls
-        float dSqr = (p2- p1).sqrMagnitude;
+        float distSqr = (p2- p1).sqrMagnitude;
 
         float minAllowedDistance = r1 + r2;
 
         //The balls are not colliding (or they are exactly at the same position)
         //Square minAllowedDistance because we are using distance Square, which is faster 
         //They might be at the same position if we check if the ball is colliding with itself, which might be faster than checking if the other ball is not the same as the ball 
-        if (dSqr == 0f || dSqr > minAllowedDistance * minAllowedDistance)
+        if (distSqr == 0f || distSqr > minAllowedDistance * minAllowedDistance)
         {
             areColliding = false;
         }
@@ -26,14 +26,16 @@ public static class BallCollisionHandling
         return areColliding;
     }
 
+
+
     //2d space using components
     public static bool AreDiscsColliding(Disc disc_1, Disc disc_2)
     {
         bool areColliding = true;
 
-        //Direction from ball 1 to ball 2
-        float dir_x = disc_1.x - disc_2.x;
-        float dir_y = disc_1.y - disc_2.y;
+        //Direction from disc 1 to disc 2
+        float dir_x = disc_2.x - disc_1.x;
+        float dir_y = disc_2.y - disc_1.y;
 
         float distSqr = dir_x * dir_x + dir_y * dir_y;
 
@@ -112,6 +114,8 @@ public static class BallCollisionHandling
         b2.vel += dir_normalized * (new_v2 - v2);
     }
 
+
+
     //Two discs are colliding in 2d space, using components
     public static bool HandleDiscDiscCollision(Disc disc_1, Disc disc_2, float restitution)
     {
@@ -128,8 +132,8 @@ public static class BallCollisionHandling
         }
 
         //Direction from ball 1 to ball 2
-        float dir_x = disc_1.x - disc_2.x;
-        float dir_y = disc_1.y - disc_2.y;
+        float dir_x = disc_2.x - disc_1.x;
+        float dir_y = disc_2.y - disc_1.y;
 
         //The distance between the balls
         float distance = Mathf.Sqrt(dir_x * dir_x + dir_y * dir_y);
@@ -142,11 +146,13 @@ public static class BallCollisionHandling
         //Update positions so the spheres dont overlap
         float overlap = disc_1.radius + disc_2.radius - distance;
 
+        overlap *= 0.5f;
+
         //How far each ball should move and in which direction to no longer overlap
         //0.5 because each ball should move half of the overlap
-        float corr_x = overlap * normalized_dir_x * 0.5f;
-        float corr_y = overlap * normalized_dir_y * 0.5f;
-
+        float corr_x = overlap * normalized_dir_x;
+        float corr_y = overlap * normalized_dir_y;
+        
         //-corr because dir goes from sphere 1 to sphere 2
         disc_1.x -= corr_x;
         disc_1.y -= corr_y;
@@ -156,6 +162,32 @@ public static class BallCollisionHandling
 
         //Update velocities after collision
 
+        //Collisions can only change velocity components along the penetration direction
+        
+        //The part of each balls velocity along dir (penetration direction)
+        //The velocity is now in 1D making it easier to use standardized physics equations
+        
+        //Dot product
+        float v1 = disc_1.vx * normalized_dir_x + disc_1.vy * normalized_dir_y;
+        float v2 = disc_2.vx * normalized_dir_x + disc_2.vy * normalized_dir_y;
+
+        float m1 = disc_1.mass;
+        float m2 = disc_2.mass;
+
+        //If we assume the objects are stiff we can calculate the new velocities after collision
+        float new_v1 = (m1 * v1 + m2 * v2 - m2 * (v1 - v2) * restitution) / (m1 + m2);
+        float new_v2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * restitution) / (m1 + m2);
+
+        //Change velocity components along dir
+        //Subtract the old velocity because it doesnt exist anymore and then add the new velocity
+        disc_1.vx += normalized_dir_x * (new_v1 - v1);
+        disc_1.vy += normalized_dir_y * (new_v1 - v1);
+        disc_2.vx += normalized_dir_x * (new_v2 - v2);
+        disc_2.vy += normalized_dir_y * (new_v2 - v2);
+        
+
+        /*
+        //From tutorial which might be more optimized but more difficult to understand
         //Relative velocity
         float vrx = disc_2.vx - disc_1.vx;
         float vry = disc_2.vy - disc_1.vy;
@@ -174,7 +206,7 @@ public static class BallCollisionHandling
         disc_1.vy -= (j * normalized_dir_y) / disc_1.mass;
         disc_2.vx += (j * normalized_dir_x) / disc_2.mass;
         disc_2.vy += (j * normalized_dir_y) / disc_2.mass;
-
+        */
 
         return areColliding;
     }

@@ -1,3 +1,4 @@
+using Billiard;
 using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
@@ -43,7 +44,7 @@ public class SweepAndPruneController : MonoBehaviour
     //The gameobject belonging to each disc so we can see it
     private List<Transform> visualDiscs;
     //How mmany disc we simulate
-    private const int totalDiscs = 10;
+    private const int totalDiscs = 20;
 
     //Simulation settings
 
@@ -51,7 +52,7 @@ public class SweepAndPruneController : MonoBehaviour
     private const int seed = 0;
 
     //Run multiple physics steps per frame
-    private const int numSubsteps = 5;
+    private const int numSubsteps = 1;
 
     //Restitution coefficient = how bouncy the spheres are if they collide
     private const float e = 1f;
@@ -69,8 +70,8 @@ public class SweepAndPruneController : MonoBehaviour
         for (int i = 0; i < totalDiscs; i++)
         {
             //The data needed to simulate each sphere
-            float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
-            
+            //float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
+            float radius = 0.4f;
             //Random pos within the border 
             float x = Random.value * (borderSizeX - radius * 2f) + radius;
             float y = Random.value * (borderSizeY - radius * 2f) + radius;
@@ -135,12 +136,12 @@ public class SweepAndPruneController : MonoBehaviour
         //Reset the counters
         collisionChecks = 0;
         actualCollisions = 0;
-
+        
         //Disc simulation
         float dt = Time.fixedDeltaTime;
 
         float subDt = dt / (float)numSubsteps;
-
+        
         for (int step = 0; step < numSubsteps; step++)
         {
             //Move each disc and make sure the disc is not outside of the border
@@ -234,6 +235,7 @@ public class SweepAndPruneController : MonoBehaviour
     //Fast collision detection where we first sort all discs by their left-border x coordinate
     private void SweepAndPruneCollisions(List<Disc> discs)
     {
+        //Sort all AABB by their left edge
         //const sortedSpheres = spheres.sort((a, b) => a.Left - b.Left);
 
         //TEMP
@@ -253,6 +255,7 @@ public class SweepAndPruneController : MonoBehaviour
                     break;
                 }
 
+                //disc_2 is not above or below disc_1 so can collide
                 if (Mathf.Abs(disc_1.y - disc_2.y) <= disc_1.radius + disc_2.radius)
                 {
                     SolveCollision(disc_1, disc_2);
