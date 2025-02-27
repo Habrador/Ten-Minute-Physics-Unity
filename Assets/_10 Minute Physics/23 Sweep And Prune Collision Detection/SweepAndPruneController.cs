@@ -2,6 +2,7 @@ using Billiard;
 using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86;
 using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
@@ -24,7 +25,7 @@ public class SweepAndPruneController : MonoBehaviour
         SweepPrune
     }
 
-    private CollisionAlgorithm activeCollisionAlgorithm = CollisionAlgorithm.BruteForce;
+    private CollisionAlgorithm activeCollisionAlgorithm = CollisionAlgorithm.SweepPrune;
 
     //To see the difference between the collision algorithms
     private int collisionChecks = 0;
@@ -40,7 +41,7 @@ public class SweepAndPruneController : MonoBehaviour
 
     //Discs
     //Simulation data belonging to each disc
-    private List<Disc> discs;
+    private List<Disc> allDiscs;
     //The gameobject belonging to each disc so we can see it
     private List<Transform> visualDiscs;
     //How mmany disc we simulate
@@ -63,7 +64,7 @@ public class SweepAndPruneController : MonoBehaviour
     {
         Random.InitState(seed);
 
-        discs = new();
+        allDiscs = new();
         visualDiscs = new();
 
         //Add random disc
@@ -82,7 +83,7 @@ public class SweepAndPruneController : MonoBehaviour
             float vx = (Random.value * 2f - 1f) * velocityScale;
             float vy = (Random.value * 2f - 1f) * velocityScale;
             
-            discs.Add(new Disc(x, y, vx, vy, radius));
+            allDiscs.Add(new Disc(x, y, vx, vy, radius));
 
 
             //Initialize the gameobject sphere which we can actually see
@@ -112,7 +113,7 @@ public class SweepAndPruneController : MonoBehaviour
         //Update the visual position of the discs
         for (int i = 0; i < visualDiscs.Count; i++)
         {
-            Disc discData = discs[i];
+            Disc discData = allDiscs[i];
 
             Vector3 spherePos = new(discData.x, discData.y, 0f);
 
@@ -145,7 +146,7 @@ public class SweepAndPruneController : MonoBehaviour
         for (int step = 0; step < numSubsteps; step++)
         {
             //Move each disc and make sure the disc is not outside of the border
-            foreach (Disc disc in discs)
+            foreach (Disc disc in allDiscs)
             {
                 disc.UpdatePos(subDt);
 
@@ -155,11 +156,11 @@ public class SweepAndPruneController : MonoBehaviour
             //Check for collisions with other discs
             if (activeCollisionAlgorithm == CollisionAlgorithm.BruteForce)
             {
-                BruteForceCollisions(discs);
+                BruteForceCollisions(allDiscs);
             }
             else
             {
-                SweepAndPruneCollisions(discs);
+                SweepAndPruneCollisions(allDiscs);
             }
         }
     }
@@ -235,11 +236,8 @@ public class SweepAndPruneController : MonoBehaviour
     //Fast collision detection where we first sort all discs by their left-border x coordinate
     private void SweepAndPruneCollisions(List<Disc> discs)
     {
-        //Sort all AABB by their left edge
-        //const sortedSpheres = spheres.sort((a, b) => a.Left - b.Left);
-
-        //TEMP
-        List<Disc> sortedDiscs = discs;
+        //Sort all discs AABB by their left edge
+        List<Disc> sortedDiscs = discs.OrderBy(disc => disc.Left).ToList();
 
         for (int i = 0; i < sortedDiscs.Count; i++)
         {
