@@ -41,7 +41,7 @@ public class SweepAndPruneController : MonoBehaviour
     //The gameobject belonging to each disc so we can see it
     private List<Transform> visualDiscs;
     //How mmany disc we simulate
-    private const int totalDiscs = 20;
+    private const int totalDiscs = 200;
 
     //Simulation settings
 
@@ -83,7 +83,7 @@ public class SweepAndPruneController : MonoBehaviour
             float y = Random.value * (borderSizeY - radius * 2f) + radius;
 
             //Random velocity between -1 and 1 multiplied by some scale
-            float velocityScale = 10f;
+            float velocityScale = 2f;
 
             float vx = (Random.value * 2f - 1f) * velocityScale;
             float vy = (Random.value * 2f - 1f) * velocityScale;

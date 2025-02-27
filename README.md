@@ -123,7 +123,9 @@ TODO
 
 ## 23. Sweep and Prune collision detection
 
-TODO
+A fast way to check collisions between many objects by checking each object's Axis-Aligned Bounding Box (AABB). Is related to "11. Find overlaps among objects" but can handle objects with different sizes.  
+
+<img src="/_media/23-sweep-and-prune.png" width="400">
 
 
 # Bonus
