@@ -70,8 +70,8 @@ public class SweepAndPruneController : MonoBehaviour
         for (int i = 0; i < totalDiscs; i++)
         {
             //The data needed to simulate each sphere
-            //float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
-            float radius = 0.4f;
+            float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
+            
             //Random pos within the border 
             float x = Random.value * (borderSizeX - radius * 2f) + radius;
             float y = Random.value * (borderSizeY - radius * 2f) + radius;
