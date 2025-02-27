@@ -1,11 +1,7 @@
-using Billiard;
-using EulerianFluidSimulator;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Unity.Burst.Intrinsics.X86;
-using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 
 //Based on "23 Broad phase collision detection with Sweep and Prune"
 //from https://matthias-research.github.io/pages/tenMinutePhysics/index.html
@@ -71,7 +67,16 @@ public class SweepAndPruneController : MonoBehaviour
         for (int i = 0; i < totalDiscs; i++)
         {
             //The data needed to simulate each sphere
-            float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f) * 0.1f;
+
+            //float radius = Mathf.Floor(Mathf.Pow(Random.value, 10f) * 20f + 2f)
+            //The pow operation skews the distribution of the random number towards smaller values
+            float random_01_skewed = Mathf.Pow(Random.value, 10f);
+            //Make the discs because now some of them are close to 0, and make sure they have some min size
+            float radius = random_01_skewed * 10f + 2f;
+            //Make them equal size
+            radius = Mathf.Floor(radius);
+            //Scale (we cant scale before floor because then they will be zero)
+            radius *= 0.1f;
             
             //Random pos within the border 
             float x = Random.value * (borderSizeX - radius * 2f) + radius;
