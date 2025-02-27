@@ -147,7 +147,7 @@ public class MyRigidBody
         UpdateMeshes();
     }
 
-    private void UpdateMeshes()
+    public void UpdateMeshes()
     {
         for (int i = 0; i < this.meshes.Count; i++)
         {
@@ -182,7 +182,7 @@ public class MyRigidBody
     //    localPos.applyQuaternion(this.invRot);
     //}
 
-    private void Integrate(float dt, Vector3 gravity)
+    public void Integrate(float dt, Vector3 gravity)
                     {
         this.dt = dt;
 
@@ -218,7 +218,7 @@ public class MyRigidBody
         //this.invRot.invert();
     }
 
-    private void UpdateVelocities()
+    public void UpdateVelocities(float sdt)
     {
         if (this.invMass == 0f)
         {
