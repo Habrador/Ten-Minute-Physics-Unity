@@ -56,11 +56,11 @@ public class DebugDataStructure : MonoBehaviour
             allBalls.Add(new BilliardBall(Vector3.zero, t));
         }
 
-        Vector3[] ballPositions = new Vector3[allBalls.Count];
+        Vector2[] ballPositions = new Vector2[allBalls.Count];
 
         for (int i = 0; i < allBalls.Count; i++)
         {
-            ballPositions[i] = allBalls[i].pos;
+            ballPositions[i] = new Vector2(allBalls[i].pos.x, allBalls[i].pos.z);
         }
 
         spatialHashing.AddParticlesToGrid(ballPositions);
@@ -76,7 +76,7 @@ public class DebugDataStructure : MonoBehaviour
         {
             BilliardBall thisBall = allBalls[i];
 
-            Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos);
+            Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos.x, thisBall.pos.z);
 
             int ballArrayPos = spatialHashing.Get1DArrayIndex(ballCellPos);
 

@@ -5,6 +5,7 @@ using UnityEngine;
 //Find neighboring particles faster with Spatial Hashing which is a Spatial Partitioning Design Pattern
 //We are no longer constrained to a grid of a specific size, we can use an unbouded grid which has infinite size
 //Based on https://www.youtube.com/watch?v=D2M8jTtKi44
+//2d space assuming bottom-left is at origo
 public class SpatialHashing
 {
     //The size of a cell in an infinite grid
@@ -57,15 +58,15 @@ public class SpatialHashing
     //
 
     //Convert from Vector3 world pos to cell pos
-    public Vector2Int ConvertFromWorldToCell(Vector3 pos)
+    public Vector2Int ConvertFromWorldToCell(float x, float y)
     {
         //It works like this if cell size is 2:
         //pos.x is 1.8, then cellX will be 1.8/2 = 0.9 -> 0
         //pos.x is 2.1, then cellX will be 2.1/2 = 1.05 -> 1
-        int cellX = Mathf.FloorToInt(pos.x / cellSize);
-        int cellZ = Mathf.FloorToInt(pos.z / cellSize); //z instead of y because y is up in Unity's coordinate system
+        int cellX = Mathf.FloorToInt(x / cellSize);
+        int cellY = Mathf.FloorToInt(y / cellSize);
 
-        Vector2Int cellPos = new(cellX, cellZ);
+        Vector2Int cellPos = new(cellX, cellY);
 
         return cellPos;
     }
@@ -109,7 +110,7 @@ public class SpatialHashing
     // Update the data structure when particles have moved
     //
 
-    public void AddParticlesToGrid(Vector3[] particlePositions)
+    public void AddParticlesToGrid(Vector2[] particlePositions)
     {
         //Reset
         //[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
@@ -119,9 +120,9 @@ public class SpatialHashing
 
         //Add particles
         //[0 0 0 0 0 2 0 0 0 0 0 2 0 1 0 0 0 0 0 0 0] <- 5 particles are in 3 cells
-        foreach (Vector3 particlePos in particlePositions)
+        foreach (Vector2 particlePos in particlePositions)
         {
-            Vector2Int cellPos = ConvertFromWorldToCell(particlePos);
+            Vector2Int cellPos = ConvertFromWorldToCell(particlePos.x, particlePos.y);
 
             int index = Get1DArrayIndex(cellPos);
 
@@ -154,9 +155,9 @@ public class SpatialHashing
         //index 13? 5 - 4 = 1
         for (int i = 0; i < particlePositions.Length; i++)
         {
-            Vector3 thisParticlePos = particlePositions[i];
+            Vector2 thisParticlePos = particlePositions[i];
         
-            Vector2Int cellPos = ConvertFromWorldToCell(thisParticlePos);
+            Vector2Int cellPos = ConvertFromWorldToCell(thisParticlePos.x, thisParticlePos.y);
 
             int index = Get1DArrayIndex(cellPos);
 
@@ -210,5 +211,5 @@ public class SpatialHashing
         }
 
         Debug.Log(displayString);
-    }    
+    }
 }

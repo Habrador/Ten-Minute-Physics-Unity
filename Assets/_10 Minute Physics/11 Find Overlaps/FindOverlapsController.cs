@@ -39,8 +39,8 @@ public class FindOverlapsController : MonoBehaviour
 
     private List<BilliardBall> allBalls;
 
-    //The position of each ball
-    private Vector3[] ballPositions;
+    //The position of each ball in 2d space which is x,z 
+    private Vector2[] ballPositions;
 
     //To see the difference between the collision algorithms
     private int collisionChecks = 0;
@@ -63,7 +63,7 @@ public class FindOverlapsController : MonoBehaviour
 
         grid = new PlayArea(numberOfCells, cellSize);
 
-        ballPositions = new Vector3[numberOfBalls];
+        ballPositions = new Vector2[numberOfBalls];
 
 
         //Center camera on grid
@@ -197,7 +197,7 @@ public class FindOverlapsController : MonoBehaviour
         //Step 2. Add all balls to the grid data structure
         for (int i = 0; i < allBalls.Count; i++)
         {
-            ballPositions[i] = allBalls[i].pos;
+            ballPositions[i] = new Vector2(allBalls[i].pos.x, allBalls[i].pos.z);
         }
 
         spatialHashing.AddParticlesToGrid(ballPositions);
@@ -211,7 +211,7 @@ public class FindOverlapsController : MonoBehaviour
         {
             BilliardBall thisBall = allBalls[i];
 
-            Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos);
+            Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos.x, thisBall.pos.z);
 
             //Check this cell and 8 surrounding cells for other balls
             //We are in an unbounded grid so we dont need to check if a surroundig cell is within the grid 
