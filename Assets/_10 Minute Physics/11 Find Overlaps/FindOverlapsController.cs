@@ -42,6 +42,19 @@ public class FindOverlapsController : MonoBehaviour
     //The position of each ball
     private Vector3[] ballPositions;
 
+    //To see the difference between the collision algorithms
+    private int collisionChecks = 0;
+    private int actualCollisions = 0;
+
+    //Which collision algorithm are we going to use?
+    private enum CollisionAlgorithm
+    {
+        BruteForce,
+        SpatialHashing
+    }
+
+    private CollisionAlgorithm activeCollisionAlgorithm = CollisionAlgorithm.SpatialHashing;
+
 
 
     private void Start()
@@ -108,16 +121,39 @@ public class FindOverlapsController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        collisionChecks = 0;
+        actualCollisions = 0;
+    
         float sdt = Time.fixedDeltaTime / (float)subSteps;
 
-        //UpdateBallsOld(sdt);
-        UpdateBallsNew(sdt);
+        if (activeCollisionAlgorithm == CollisionAlgorithm.BruteForce)
+        {
+            UpdateBallsBruteForce(sdt);
+        }
+        else
+        {
+            UpdateBallsSpatialHashing(sdt);
+        }
+    }
+
+
+
+    private void LateUpdate()
+    {
+        grid.DisplayGrid();
+    }
+
+
+
+    private void OnGUI()
+    {
+        MyOnGUI();
     }
 
 
 
     //The old slow way of moving balls and doing ball-ball collision
-    private void UpdateBallsOld(float sdt)
+    private void UpdateBallsBruteForce(float sdt)
     {
         for (int i = 0; i < allBalls.Count; i++)
         {
@@ -130,7 +166,14 @@ public class FindOverlapsController : MonoBehaviour
             {
                 BilliardBall ballOther = allBalls[j];
 
-                BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
+                bool areColliding = BallCollisionHandling.HandleBallBallCollision(thisBall, ballOther, restitution);
+
+                collisionChecks++;
+
+                if (areColliding)
+                {
+                    actualCollisions++;
+                }
             }
 
             grid.HandleBallEnvironmentCollision(thisBall);
@@ -140,7 +183,7 @@ public class FindOverlapsController : MonoBehaviour
 
 
     //The new faster way of moving balls and doing ball-ball collision
-    private void UpdateBallsNew(float sdt)
+    private void UpdateBallsSpatialHashing(float sdt)
     {
         //Step 1. Move all balls and handle environment collisions
         foreach (BilliardBall thisBall in allBalls)
@@ -190,7 +233,14 @@ public class FindOverlapsController : MonoBehaviour
                 {
                     Ball otherBall = allBalls[spatialHashing.sortedParticles[j]];
 
-                    BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
+                    bool areColliding = BallCollisionHandling.HandleBallBallCollision(thisBall, otherBall, restitution);
+
+                    collisionChecks++;
+
+                    if (areColliding)
+                    {
+                        actualCollisions++;
+                    }
                 }
             }
         }
@@ -198,8 +248,48 @@ public class FindOverlapsController : MonoBehaviour
 
 
 
-    private void LateUpdate()
+    //Buttons to select which collision algorithm to use
+    //Text to display info to see the difference between the algorithms
+    public void MyOnGUI()
     {
-        grid.DisplayGrid();
+        GUILayout.BeginHorizontal("box");
+
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+
+        //Buttons
+        GUIStyle buttonStyle = new(GUI.skin.button)
+        {
+            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
+
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        if (GUILayout.Button($"Brute Force", buttonStyle))
+        {
+            activeCollisionAlgorithm = CollisionAlgorithm.BruteForce;
+        }
+        if (GUILayout.Button("Spatial Hashing", buttonStyle))
+        {
+            activeCollisionAlgorithm = CollisionAlgorithm.SpatialHashing;
+        }
+
+
+
+        //Text
+        string infoText = $"Spheres: {numberOfBalls} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
+
+        GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+        textStyle.fontSize = fontSize;
+        textStyle.margin = offset;
+
+        GUILayout.Label(infoText, textStyle);
+
+
+        GUILayout.EndHorizontal();
     }
 }

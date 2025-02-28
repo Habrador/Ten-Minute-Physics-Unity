@@ -55,14 +55,14 @@ public static class BallCollisionHandling
 
 
     //Two balls are colliding in 3d space
-    public static void HandleBallBallCollision(Ball b1, Ball b2, float restitution)
+    public static bool HandleBallBallCollision(Ball b1, Ball b2, float restitution)
     {
         //Check if the balls are colliding
         bool areColliding = AreBallsColliding(b1.pos, b2.pos, b1.radius, b2.radius);
 
         if (!areColliding)
         {
-            return;
+            return false;
         }
 
 
@@ -112,6 +112,8 @@ public static class BallCollisionHandling
         //Which can be simplified to:
         b1.vel += dir_normalized * (new_v1 - v1);
         b2.vel += dir_normalized * (new_v2 - v2);
+
+        return true;
     }
 
 
