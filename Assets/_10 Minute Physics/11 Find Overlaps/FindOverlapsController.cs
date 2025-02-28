@@ -24,9 +24,11 @@ public class FindOverlapsController : MonoBehaviour
     //Grid settings
     private readonly float cellSize = 0.2f;
     private readonly int numberOfCells = 20;
+    //Should be the same as number of particles
+    private readonly int tableSize = 10;
 
     //Simulation properties
-    private readonly int subSteps = 5;
+    private readonly int subSteps = 1;
 
     //How much velocity is lost after collision between balls [0, 1]
     //Is usually called e
@@ -59,7 +61,7 @@ public class FindOverlapsController : MonoBehaviour
 
     private void Start()
     {
-        spatialHashing = new SpatialHashing(cellSize, numberOfBalls);
+        spatialHashing = new SpatialHashing(cellSize, numberOfBalls, tableSize);
 
         grid = new PlayArea(numberOfCells, cellSize);
 

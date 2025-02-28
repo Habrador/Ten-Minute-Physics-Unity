@@ -12,7 +12,7 @@ public class SpatialHashing
     private readonly float cellSize;
 
     //We can use any size of the array, but tableSize = #particles often works well according to the video
-    private readonly int tableSize = 10;
+    private int tableSize;
     //From this array we can figure out how many particles are in a cell and it references the sortedParticles array
     public readonly int[] table;
     //Same length as #particles in the simulation
@@ -41,9 +41,10 @@ public class SpatialHashing
 
 
     //Important that cellSize and particle diameter is the same!
-    public SpatialHashing(float cellSize, int numberOfParticles)
+    public SpatialHashing(float cellSize, int numberOfParticles, int tableSize)
     {
         this.cellSize = cellSize;
+        this.tableSize = tableSize;
 
         //+1 because we need a guard
         this.table = new int[tableSize + 1];

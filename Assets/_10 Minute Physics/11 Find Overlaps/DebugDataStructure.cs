@@ -15,6 +15,7 @@ public class DebugDataStructure : MonoBehaviour
     //Grid settings
     private readonly float cellSize = 0.2f;
     private readonly int numberOfCells = 20;
+    private readonly int tableSize = 10;
 
     private readonly float ballRadius = 0.2f;
 
@@ -40,7 +41,7 @@ public class DebugDataStructure : MonoBehaviour
             allBalls.Add(new BilliardBall(Vector3.zero, t));
         }
 
-        spatialHashing = new SpatialHashing(cellSize, allBalls.Count);
+        spatialHashing = new SpatialHashing(cellSize, allBalls.Count, tableSize);
 
         grid = new PlayArea(numberOfCells, cellSize);
     }
