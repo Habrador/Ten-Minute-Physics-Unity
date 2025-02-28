@@ -8,6 +8,7 @@ using Billiard;
 //Implementation of the Spatial Partition Design Pattern where you split the scene into a grid
 //Basically same as "03 Billiard" so reusing code from that project
 //Based on https://www.youtube.com/watch?v=D2M8jTtKi44
+//Simulation is in 2d space x,z where origo is bottom-left
 public class FindOverlapsController : MonoBehaviour
 {
     //Public
@@ -21,10 +22,12 @@ public class FindOverlapsController : MonoBehaviour
 
     //Grid
     private PlayArea grid;
-    //Grid settings
+    //Spatial hashing settings
+    //Determines ball radius because a ball cant be larger than a cell
+    //Cell size = 2 * radius of a particle
     private readonly float cellSize = 0.2f;
     private readonly int numberOfCells = 20;
-    //Should be the same as number of particles
+    //Should be the same as number of particles but can also be smaller or larger
     private readonly int tableSize = 10;
 
     //Simulation properties
@@ -199,6 +202,7 @@ public class FindOverlapsController : MonoBehaviour
         //Step 2. Add all balls to the grid data structure
         for (int i = 0; i < allBalls.Count; i++)
         {
+            //Balls move in x,z space
             ballPositions[i] = new Vector2(allBalls[i].pos.x, allBalls[i].pos.z);
         }
 
@@ -213,6 +217,7 @@ public class FindOverlapsController : MonoBehaviour
         {
             BilliardBall thisBall = allBalls[i];
 
+            //Which cell is this ball in?
             Vector2Int ballCellPos = spatialHashing.ConvertFromWorldToCell(thisBall.pos.x, thisBall.pos.z);
 
             //Check this cell and 8 surrounding cells for other balls

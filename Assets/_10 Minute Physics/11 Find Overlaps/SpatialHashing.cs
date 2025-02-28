@@ -2,28 +2,66 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//Find neighboring particles faster with Spatial Hashing which is a Spatial Partitioning Design Pattern
+//Find neighboring particles of same size faster with Spatial Hashing which is a Spatial Partitioning Design Pattern
 //We are no longer constrained to a grid of a specific size, we can use an unbouded grid which has infinite size
 //Based on https://www.youtube.com/watch?v=D2M8jTtKi44
-//2d space assuming bottom-left is at origo
+//2d space x,y, but 3d space is also possible
 public class SpatialHashing
 {
-    //The size of a cell in an infinite grid
+    //The size of a cell in an infinite grid = spacing
+    //This cell should be the same size as 2*radius of the particles
     private readonly float cellSize;
-
-    //We can use any size of the array, but tableSize = #particles often works well according to the video
-    private int tableSize;
-    //From this array we can figure out how many particles are in a cell and it references the sortedParticles array
+    //We can use any size of the array because we are in an unbounded grid
+    //tableSize = 2* maxParticles often works well according to the video
+    private readonly int tableSize;
+    //From this array we can figure out how many particles are in a cell
+    //We can also find out which particles are in a cell bcause it references the sortedParticles array
     public readonly int[] table;
     //Same length as #particles in the simulation
     //Particles in the same cell are next to each other in this array
     //The items in this array are indices in the particlePositions array
-    //To figure out which particles are in a cell:
-    //Step 1. Use the hash to find the index in the table array and figure out which index in the sortedParticles array the first particle in this cell has and how many particles are in this cell
-    //Step 2. If we know the first index of a particle in the sortedParticles array and how many particles we have, we can figure out which positions these particles have by iterating over the particles in this cell 
     public readonly int[] sortedParticles;
+
+    //Example
+    //5 particles in a 5x4 grid -> numX = 5, numY = 4
+    // ___ ___ ___ ___ ___
+    //|___|___|___|___|___|
+    //|___|5,1|___|_3_|___|
+    //|___|___|___|___|___|
+    //|___|___|4,2|___|___|
+    //table: numX * numY + 1
+    //[0 0 0 0 0 0 2 2 2 2 2 2 4 4 5 5 5 5 5 5 5]
+    //To go from 2d index in the grid to 1d index in table, we use i_table = xi * numY + yi 
+    //sortedParticles: 5 because 5 particles
+    //[5 1 2 4 3]
+    //
+    //How do we use it?
+    //
+    //Particle 3 -> xi = 3 and yi = 1 -> i_table = xi * numY + yi = 3 * 4 + 1 = 13 
+    //table[13] = 4 which is an index in sortedParticles[4] = 3 which is the particle we are interested in
+    //How many particles in the cell? table[13 + 1] - table[13] = 5 - 4 = 1 particle 
+    //
+    //Particle 4 -> xi = 2, yi = 3 -> i_table = 2 * 4 + 3 = 11
+    //table[11] = 2 -> sortedParticles[2] = 2 which is a particle in the same cell as particle 4
+    //How many particles in the cell? table[11 + 1] - table[11] = 4 - 2 = 2 particles 
+
+    //In an unbounded grid we dont have numX and numY, but the same principle as above is true,
+    //BUT particles far away from each other may end up in the same 1d cell
+    //i_table = hash(xi, yi) % tableSize
+    //_|___|___|___|___|___|_
+    //_|___|___|___|___|___|_
+    //_|___|5,1|___|_3_|___|_
+    //_|___|___|___|___|___|_
+    //_|___|___|4,2|___|___|_
+    // |   |   |   |   |   |
+    //table:
+    //[0 0 0 0 0 0 0 0 3 3 3 3 3 3 5 5 5 5 5 5] (length tableSize)
+    //sortedParticles:
+    //[3 4 2 1 5]
+    //Because of hash collision particle 3, 4, 2 are in the same 1d cell
+
     //For debugging
-    private readonly int[] isParticleInCell;
+    //private readonly int[] isParticleInCell;
 
     //Help array to easier check surrounding cells
     public static Vector2Int[] cellCoordinates = {
@@ -49,7 +87,9 @@ public class SpatialHashing
         //+1 because we need a guard
         this.table = new int[tableSize + 1];
         this.sortedParticles = new int[numberOfParticles];
-        this.isParticleInCell = new int[tableSize + 1];
+        
+        //Debugging
+        //this.isParticleInCell = new int[tableSize + 1];
     }
 
 
@@ -77,9 +117,10 @@ public class SpatialHashing
     //The grid is in 2d but the array is 1d which is more efficient, so this will convert between them
     public int Get1DArrayIndex(Vector2Int cellPos)
     {
-        //If we had been using a data structure which is numberOfCellsX * numberOfCellsY which is less efficient
+        //Bounded grid
         //int index = cellPos.x * numberOfCells + cellPos.y;
 
+        //Unbounded grid
         int index = GetSpatialHashingIndex(cellPos);
 
         return index;
@@ -100,7 +141,7 @@ public class SpatialHashing
         //int h = (cellPos.x * 92837111) ^ (cellPos.y * 689287499) ^ (cellPos.z * 283923481);
 
         //h can be negative if a cellPos is negative, which is why we need the Abs
-        int arrayIndex = System.Math.Abs(hash) % this.tableSize;
+        int arrayIndex = Mathf.Abs(hash) % this.tableSize;
 
         return arrayIndex;
     }
@@ -116,7 +157,9 @@ public class SpatialHashing
         //Reset
         //[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
         System.Array.Fill(table, 0);
-        System.Array.Fill(isParticleInCell, 0);
+        
+        //Debugging
+        //System.Array.Fill(isParticleInCell, 0);
 
 
         //Add particles
@@ -129,7 +172,7 @@ public class SpatialHashing
 
             table[index] += 1;
 
-            isParticleInCell[index] = 1;
+            //isParticleInCell[index] = 1;
         }
 
 
@@ -194,14 +237,14 @@ public class SpatialHashing
         Debug.Log(displayString);
 
 
-        displayString = "";
+        //displayString = "";
 
-        foreach (int integer in isParticleInCell)
-        {
-            displayString += integer + "";
-        }
+        //foreach (int integer in isParticleInCell)
+        //{
+        //    displayString += integer + "";
+        //}
 
-        Debug.Log(displayString);
+        //Debug.Log(displayString);
 
 
         displayString = "";
