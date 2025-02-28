@@ -28,10 +28,10 @@ public class PlayArea
 
 
 
-    public PlayArea(int numberOfCells, float cellSize)
+    public PlayArea(float _gridWidth, float _cellSize)
     {
-        this.numberOfCells = numberOfCells;
-        this.cellSize = cellSize;
+        this.numberOfCells = Mathf.RoundToInt(_gridWidth / _cellSize);
+        this.cellSize = _cellSize;
     }
 
 

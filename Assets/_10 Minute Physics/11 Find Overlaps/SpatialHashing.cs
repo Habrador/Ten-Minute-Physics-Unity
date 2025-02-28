@@ -12,7 +12,7 @@ public class SpatialHashing
     //This cell should be the same size as 2*radius of the particles
     private readonly float cellSize;
     //We can use any size of the array because we are in an unbounded grid
-    //tableSize = 2* maxParticles often works well according to the video
+    //tableSize = 2 * maxParticles often works well according to the video
     private readonly int tableSize;
     //From this array we can figure out how many particles are in a cell
     //We can also find out which particles are in a cell bcause it references the sortedParticles array
