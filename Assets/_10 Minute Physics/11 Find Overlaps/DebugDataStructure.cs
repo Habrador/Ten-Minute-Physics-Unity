@@ -137,7 +137,7 @@ public class DebugDataStructure : MonoBehaviour
 
     private void LateUpdate()
     {
-        grid.DisplayGrid();
+        grid.DisplayMap(true);
     }
 
 

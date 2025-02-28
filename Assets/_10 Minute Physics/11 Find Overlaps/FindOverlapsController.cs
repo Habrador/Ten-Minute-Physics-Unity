@@ -24,14 +24,14 @@ public class FindOverlapsController : MonoBehaviour
     private PlayArea grid;
     //We simulate unbounded grid so this is just for display purposes
     private readonly float gridWidth = 4f;
-    private readonly bool DisplayGrid = true;
+    private readonly bool displayGrid = false;
 
     //Spatial hashing settings
     //Determines ball radius because a ball cant be larger than a cell
     //Cell size = 2 * radius of a particle
-    private readonly float cellSize = 0.2f;
+    private readonly float cellSize = 0.05f;
     //Should be the same as number of particles but can also be smaller or larger
-    private readonly int tableSize = 10;
+    private readonly int tableSize = 2000;
 
     //Simulation properties
     private readonly int subSteps = 1;
@@ -43,7 +43,7 @@ public class FindOverlapsController : MonoBehaviour
     private readonly float restitution = 1f;
 
     //Balls
-    private readonly int numberOfBalls = 100;
+    private readonly int numberOfBalls = 2000;
 
     private List<BilliardBall> allBalls;
 
@@ -148,10 +148,7 @@ public class FindOverlapsController : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (DisplayGrid)
-        {
-            grid.DisplayGrid();
-        }
+        grid.DisplayMap(displayGrid);
     }
 
 

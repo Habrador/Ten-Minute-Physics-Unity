@@ -12,6 +12,7 @@ public class PlayArea
     //Display the grid with line mesh
     private Material gridMaterial;
     private Mesh gridMesh;
+    private Mesh borderMesh;
 
     //Getters
     public float GridWidth => numberOfCells * cellSize;
@@ -41,7 +42,7 @@ public class PlayArea
     //
 
     //The grid is just for display purposes. Because we use spatial hashing so we are not limited to a fixed grid
-    public void DisplayGrid()
+    public void DisplayMap(bool showGrid)
     {
         //Display the grid with lines
         if (gridMaterial == null)
@@ -54,15 +55,23 @@ public class PlayArea
         if (gridMesh == null)
         {
             gridMesh = InitGridMesh();
+            borderMesh = InitBorderMesh();
         }
 
         //Display the mesh
-        Graphics.DrawMesh(gridMesh, Vector3.zero, Quaternion.identity, gridMaterial, 0, Camera.main, 0);
+        if (showGrid)
+        {
+            Graphics.DrawMesh(gridMesh, Vector3.zero, Quaternion.identity, gridMaterial, 0, Camera.main, 0);
+        }
+        else
+        {
+            Graphics.DrawMesh(borderMesh, Vector3.zero, Quaternion.identity, gridMaterial, 0, Camera.main, 0);
+        }
     }
 
 
 
-    //Generate a line mesh
+    //Generate a line mesh that displays the grid
     private Mesh InitGridMesh()
     {
         //Generate the vertices
@@ -99,6 +108,45 @@ public class PlayArea
 
         gridMesh.SetVertices(lineVertices);
         gridMesh.SetIndices(indices, MeshTopology.Lines, 0);
+
+
+        return gridMesh;
+    }
+
+
+
+    //Generate a line mesh that displays the border
+    private Mesh InitBorderMesh()
+    {
+        //Generate the vertices
+        List<Vector3> lineVertices = new();
+
+        //Y is up
+        Vector3 BL = new(0f, 0f, 0f);
+        Vector3 BR = new(GridWidth, 0f, 0f);
+        Vector3 TR = new(GridWidth, 0f, GridWidth);
+        Vector3 TL = new(0f, 0f, GridWidth);
+
+        lineVertices.Add(BL);
+        lineVertices.Add(BR);
+        lineVertices.Add(TR);
+        lineVertices.Add(TL);
+        lineVertices.Add(BL);
+
+        //Generate the indices
+        List<int> indices = new();
+
+        for (int i = 0; i < lineVertices.Count; i++)
+        {
+            indices.Add(i);
+        }
+
+
+        //Generate the mesh
+        Mesh gridMesh = new();
+
+        gridMesh.SetVertices(lineVertices);
+        gridMesh.SetIndices(indices, MeshTopology.LineStrip, 0);
 
 
         return gridMesh;
