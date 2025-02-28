@@ -23,7 +23,8 @@ public class FindOverlapsController : MonoBehaviour
     //Grid
     private PlayArea grid;
     //We simulate unbounded grid so this is just for display purposes
-    private readonly float gridWidth = 4f; 
+    private readonly float gridWidth = 4f;
+    private readonly bool DisplayGrid = true;
 
     //Spatial hashing settings
     //Determines ball radius because a ball cant be larger than a cell
@@ -147,7 +148,10 @@ public class FindOverlapsController : MonoBehaviour
 
     private void LateUpdate()
     {
-        grid.DisplayGrid();
+        if (DisplayGrid)
+        {
+            grid.DisplayGrid();
+        }
     }
 
 
@@ -201,7 +205,7 @@ public class FindOverlapsController : MonoBehaviour
         }
 
 
-        //Step 2. Add all balls to the grid data structure
+        //Step 2. Add all balls to the spatial hashing data structure
         for (int i = 0; i < allBalls.Count; i++)
         {
             //Balls move in x,z space
