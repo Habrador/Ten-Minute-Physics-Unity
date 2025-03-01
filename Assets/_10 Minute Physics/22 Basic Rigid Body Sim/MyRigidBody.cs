@@ -14,29 +14,55 @@ public class MyRigidBody
         Sphere
     }
 
-    Types type;
+    private Types type;
 
-    Vector3 size;
-    float dt;
+    //Radius if we have a sphere
+    private Vector3 size;
+    private float dt;
     public float damping;
 
-    Vector3 pos;
-    Quaternion rot;
-    Vector3 vel;
-    Vector3 omega;
+    //The center of mass of a rb acts like a particle with
+    //Position
+    private Vector3 pos;
+    //Velocity
+    private Vector3 vel;
+    //Rotation
+    private Quaternion rot;
+    //Angular velocity
+    //omega.magnitude -> speed of rotation in angle/seconds
+    private Vector3 omega;
+    //Mass (resistance to force)
+    //F = m * a -> a = 1/m * F (which is why we use inverse mass)
+    private float invMass;
+    //Moment of inertia I (resistance to torque)
+    //I ss a 3x3 matrix
+    //if the body is aligned witht he x,y,z axis we can treat it as a 3 dimensional vector
+    //and do calculations in local space by transforming everything to local space
+    //tau = I * alpha -> alpha = 1/I * tau (which is why we use inverse inertia)
+    //tau is torque, tau = r x F where r is the distance from center of mass to where the force is applied 
+    //alpha is angular acceleration
+    private Vector3 invInertia;
 
-    Vector3 prevPos;
-    Quaternion prevRot;
-    Quaternion dRot;
-    Quaternion invRot;
+    //For simulation
+    private Vector3 prevPos;
+    private Quaternion prevRot;
+    private Quaternion dRot;
+    private Quaternion invRot;
 
-    float invMass;
-    Vector3 invInertia;
+    //A list because we can have multiple meshes to create one rb
+    //In general theres just one mesh so can maybe be simplified
+    private List<Mesh> meshes;
+    private float[] vertices;
+    private int[] triIds;
 
-    List<Mesh> meshes;
-    float[] vertices;
-    int[] triIds;
 
+    //Useful equations
+    //The velocity at point a on the rb
+    //r is the distance between center and point a
+    //omega is angular velocity
+    //v_a = omega x r (cross product)
+    //If the rb moves, then
+    //v_a = v + omega x r
  
 
     //Removed parameter scene which is a gThreeScene whish is like the sim environment
@@ -57,6 +83,7 @@ public class MyRigidBody
         this.prevRot = this.rot;
         this.dRot = new Quaternion();
         this.invRot = this.rot;
+        //Inverts this quaternion - calculates the conjugate
         //this.invRot.invert();
 
         this.invMass = 0f;
@@ -76,6 +103,7 @@ public class MyRigidBody
         
             if (density > 0f)
             {
+                //mass = volume * density
                 mass = density * size.x * size.y * size.z;
 
                 this.invMass = 1f / mass;
@@ -91,6 +119,7 @@ public class MyRigidBody
             float ey = 0.5f * size.y;
             float ez = 0.5f * size.z;
 
+            //8 corners
             this.vertices = new float[]
             {
                 -ex, -ey, -ez,
@@ -105,14 +134,17 @@ public class MyRigidBody
         }
         else if (type == Types.Sphere) 
         {
+            //Two hemispheres form a sphere
             //let hemiSphere0 = new THREE.Mesh(new THREE.SphereBufferGeometry(size.x, 32, 32, 0.0, Math.PI), new THREE.MeshPhongMaterial({ color: 0xffffff }));
 
             //let hemiSphere1 = new THREE.Mesh(new THREE.SphereBufferGeometry(size.x, 32, 32, Math.PI, Math.PI), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
             
             //this.meshes.push(hemiSphere0);
             //this.meshes.push(hemiSphere1);
+
             if (density > 0f)
             {
+                //mass = volume * density
                 mass = 4f / 3f * Mathf.PI * size.x * size.x * size.x * density;
                 
                 this.invMass = 1f / mass;
@@ -123,7 +155,8 @@ public class MyRigidBody
             }
         }
 
-                    
+        
+        //Add all meshes to the scene and setup parameters
         //for (int i = 0; i < this.meshes.Count; i++)
         //{
         //    Mesh mesh = this.meshes[i];
@@ -168,6 +201,13 @@ public class MyRigidBody
     //
     // Begin simulation functions
     //
+    
+    //a is a point on the rb in local space
+    //a' is the same point but in world space
+    //q is the quaternion
+    //x is the position of rb (center of mass)
+
+    //a' = x + q * a 
     //private void LocalToWorld(localPos, worldPos)
     //{
     //    worldPos.copy(localPos);
@@ -175,6 +215,7 @@ public class MyRigidBody
     //    worldPos.add(this.pos);
     //}
 
+    //a = q^-1 * (a' - x)
     //private void WorldToLocal(worldPos, localPos)
     //                {
     //    localPos.copy(worldPos);
@@ -182,8 +223,9 @@ public class MyRigidBody
     //    localPos.applyQuaternion(this.invRot);
     //}
 
+    //Update vel, pos, omega, q
     public void Integrate(float dt, Vector3 gravity)
-                    {
+    {
         this.dt = dt;
 
         if (this.invMass == 0f)
@@ -192,6 +234,9 @@ public class MyRigidBody
         }
 
         //Linear motion
+        //pos_prev = pos
+        //vel = vel + dt * a
+        //pos = pos + dt * vel
         this.prevPos = this.pos;
 
         this.vel += gravity * dt;
@@ -199,6 +244,10 @@ public class MyRigidBody
         this.pos += this.vel * dt;
 
         //Angular motion
+        //q_prev = q
+        //omega = omega + h * I^-1 * tau_ext
+        //q = q + 0.5 * h * v * [omega_x, omega_x, omega_x, 0] * q I think 3 omega_x is wrong
+
         this.prevRot = this.rot;
 
         //this.dRot.set(
@@ -225,11 +274,14 @@ public class MyRigidBody
             return;
         }
 
-        // linear motion
+        //Linear motion
+        //vel = (pos - pos_prev) / dt
         //this.vel.subVectors(this.pos, this.prevPos);
         //this.vel.multiplyScalar(1.0 / this.dt);
 
-        //// angular motion
+        //Angular motion
+        //delta_q = q * q_prev^-1
+        //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
         //this.prevRot.invert();
         //this.dRot.multiplyQuaternions(this.rot, this.prevRot);
         //this.omega.set(

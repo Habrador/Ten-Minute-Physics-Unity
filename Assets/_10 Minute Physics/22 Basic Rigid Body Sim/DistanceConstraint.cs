@@ -6,8 +6,10 @@ using UnityEngine;
 using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 using UnityEngine.UIElements;
 
+//Distance between two rbs or one rb and fixed point
 public class DistanceConstraint
 {
+    //If one of these are null, then the attachment point is fixed
     MyRigidBody body0;
     MyRigidBody body1;
 
@@ -66,6 +68,24 @@ public class DistanceConstraint
         UpdateMesh();
     }
             
+    //Make sure the constraint has the correct length
+    //a - attachment points are defined relative to a rb's center of mass
+    //r - vector from center of mass to a 
+    //l_0 - wanted length
+    //l - current length
+    //Move each rb delta_x which is proportional to m^-1 and I^-1
+    //n = (a_2 - a_1) / |a_2 - a_1|
+    //C = l - l_0
+    //Compute generalized inverse mass for rb i
+    //w_i = m_i^-1 * (r_i x n)^T * I_i^-1 * (r_i x n)
+    //Compute Lagrange multiplier
+    //lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1 where 
+    //alpha is physical inverse stiffness
+    //Update pos and rot
+    //x_i = x_i +- w_i * lambda * n
+    //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+    //Constraint force
+    //F = (lambda * n) / dt^2
     public void Solve() 
     {
         //this.body0.localToWorld(this.localPos0, this.worldPos0);
