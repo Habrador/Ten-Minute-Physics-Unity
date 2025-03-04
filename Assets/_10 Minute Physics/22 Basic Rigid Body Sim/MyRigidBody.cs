@@ -275,15 +275,9 @@ public class MyRigidBody
 
 
         //[omega_x, omega_y, omega_z, 0] * q
-        //this.dRot.multiply(this.rot);
         this.dRot *= this.rot;
 
         //What happened to v? Maybe it should be v[omega_x, omega_y, omega_z, 0] meaning omegas are the v???
-        //this.rot.x += 0.5 * dt * this.dRot.x;
-        //this.rot.y += 0.5 * dt * this.dRot.y;
-        //this.rot.z += 0.5 * dt * this.dRot.z;
-        //this.rot.w += 0.5 * dt * this.dRot.w;
-
         this.rot.x += 0.5f * dt * this.dRot.x;
         this.rot.y += 0.5f * dt * this.dRot.y;
         this.rot.z += 0.5f * dt * this.dRot.z;
@@ -367,8 +361,8 @@ public class MyRigidBody
 
 
 
-    //
-    private void _ApplyCorrection(Vector3 corr, Vector3 pos)
+    //Actually move stuff
+    public void _ApplyCorrection(Vector3 corr, Vector3 pos)
     {
         if (this.invMass == 0f)
         {
@@ -408,35 +402,68 @@ public class MyRigidBody
 
 
 
-    //
-    private void ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos)
+    //Fix the distance constraint between this body and the other body
+    //compliance - inverse of physical stiffness (alpha in equations)
+    //corr - vector between this body and another body
+    //pos - where the constraint attaches to this body
+    //otherBody - the connected rb
+    //otherPos - where the constraint attaches to the other rb
+    private float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
     {
-        //if (corr.lengthSq() == 0.0)
-        //    return;
+        //Constraint distance C = l - l_0
+        //l_0 - wanted length
+        //l - current length
+        //Constraint direction n = (a2 - 1)/|a2 - a1|
+        //a - point on body where constraint attaches (not center!!!)
+        //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+        //r - vector from center of mass to attachment point (stored in local frame of the body)
+        //Lagrange multiplyer
+        //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
+        //Update pos and rot
+        //x_i = x_i +- w_i * lambda * n
+        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
 
-        //let C = corr.length();
-        //let normal = corr.clone();
-        //normal.normalize();
+        if (corr.sqrMagnitude == 0f)
+        {
+            return 0f;
+        }
 
-        //let w = this.getInverseMass(normal, pos);
-        //if (otherBody != undefined)
-        //    w += otherBody.getInverseMass(normal, otherPos);
+        float C = corr.magnitude;
 
-        //if (w == 0.0)
-        //    return;
+        Vector3 normal = corr.normalized;
 
-        //// XPBD
-        //let alpha = compliance / this.dt / this.dt;
-        //let lambda = -C / (w + alpha);
-        //normal.multiplyScalar(-lambda);
+        float w = this.GetInverseMass(normal, pos);
 
-        //this._applyCorrection(normal, pos);
-        //if (otherBody != undefined)
-        //{
-        //    normal.multiplyScalar(-1.0);
-        //    otherBody._applyCorrection(normal, otherPos);
-        //}
-        //return lambda / this.dt / this.dt;
+        if (otherBody != null)
+        {
+            w += otherBody.GetInverseMass(normal, otherPos);
+        }
+
+        if (w == 0f)
+        {
+            return 0f;
+        }
+
+        //XPBD
+        float alpha = compliance / dt / dt;
+
+        float lambda = -C / (w + alpha);
+
+        normal *= -lambda;
+
+        _ApplyCorrection(normal, pos);
+
+        if (otherBody != null)
+        {
+            normal *= -1f;
+            otherBody._ApplyCorrection(normal, otherPos);
+        }
+
+        //Constraint force
+        //F = (lambda * n) / dt^2
+        float constraintForce = lambda / dt / dt;
+
+        return constraintForce;
     }
 
 
