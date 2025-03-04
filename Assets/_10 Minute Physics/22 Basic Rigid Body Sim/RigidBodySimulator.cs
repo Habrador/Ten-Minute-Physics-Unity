@@ -58,16 +58,16 @@ public class RigidBodySimulator
 
 
 
-    private void Simulate(float sdt)
+    private void Simulate(float dt)
     {
         for (int i = 0; i < rigidBodies.Count; i++)
         {
-            rigidBodies[i].Integrate(sdt, this.gravity);
+            rigidBodies[i].Integrate(dt, this.gravity);
         }
 
         for (int i = 0; i < distanceConstraints.Count; i++)
         {
-            distanceConstraints[i].Solve();
+            distanceConstraints[i].Solve(dt);
         }
 
         //Move stuff with mouse
@@ -78,7 +78,7 @@ public class RigidBodySimulator
 
         for (int i = 0; i < rigidBodies.Count; i++)
         {
-            rigidBodies[i].UpdateVelocities(sdt);
+            rigidBodies[i].UpdateVelocities(dt);
         }
     }
 

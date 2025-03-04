@@ -222,7 +222,7 @@ public class MyRigidBody
     //x is the position of rb (center of mass)
 
     //a' = x + q * a 
-    private Vector3 LocalToWorld(Vector3 localPos)
+    public Vector3 LocalToWorld(Vector3 localPos)
     {
         Vector3 worldPos = this.pos + this.rot * localPos;
 
@@ -230,7 +230,7 @@ public class MyRigidBody
     }
 
     //a = q^-1 * (a' - x)
-    private Vector3 WorldToLocal(Vector3 worldPos)
+    public Vector3 WorldToLocal(Vector3 worldPos)
     {
         Vector3 localPos = this.invRot * (worldPos - this.pos);
 
@@ -408,6 +408,7 @@ public class MyRigidBody
     //pos - where the constraint attaches to this body
     //otherBody - the connected rb
     //otherPos - where the constraint attaches to the other rb
+    //Returns the force on this constraint
     private float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
     {
         //Constraint distance C = l - l_0

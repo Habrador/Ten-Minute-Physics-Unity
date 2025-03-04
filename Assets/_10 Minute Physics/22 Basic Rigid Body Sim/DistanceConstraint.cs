@@ -13,6 +13,7 @@ public class DistanceConstraint
     MyRigidBody body0;
     MyRigidBody body1;
 
+    //One sided, limit motion in one direction 
     bool unilateral;
 
     Vector3 worldPos0;
@@ -26,11 +27,14 @@ public class DistanceConstraint
     Vector3 corr;
 
     //A rb can be null if we want to attach the constraint to a fixed location
-    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0.0f, int color = 0xff0000)
+    //Here body1 is assumed to be the fixed one (if any exists)
+    //Attachment points pos0 and pos1 are in world pos
+    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f, int color = 0xff0000)
     {
         //this.scene = scene;
         this.body0 = body0;
         this.body1 = body1;
+
         this.unilateral = unilateral;
 
         this.worldPos0 = pos0;
@@ -38,22 +42,26 @@ public class DistanceConstraint
         this.localPos0 = pos0;
         this.localPos1 = pos1;
 
-        //this.body0.worldToLocal(pos0, this.localPos0);
+        this.localPos0 = this.body0.WorldToLocal(pos0);
 
-        //if (body1 != undefined)
-        //    this.body1.worldToLocal(pos1, this.localPos1);
-
+        if (body1 != null)
+        {
+            this.localPos1 = this.body1.WorldToLocal(pos1);
+        }
+        
         this.distance = distance;
         this.compliance = compliance;
 
-        // Create a cylinder for visualization
+
+        //Create a cylinder for visualization
         //const geometry = new THREE.CylinderGeometry(width, width, 1, 32);
         //const material = new THREE.MeshBasicMaterial({ color: color });
         //this.cylinder = new THREE.Mesh(geometry, material);
         //this.cylinder.castShadow = true;
         //this.cylinder.receiveShadow = true;
         //scene.add(this.cylinder);
-            
+        
+        
         //Create text renderer for force display
         //this.textRenderer = null;
         //if (fontSize > 0.0) 
@@ -65,9 +73,12 @@ public class DistanceConstraint
         //    });
         //}
 
+
         UpdateMesh();
     }
             
+
+
     //Make sure the constraint has the correct length
     //a - attachment points are defined relative to a rb's center of mass
     //r - vector from center of mass to a 
@@ -86,7 +97,7 @@ public class DistanceConstraint
     //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
     //Constraint force
     //F = (lambda * n) / dt^2
-    public void Solve() 
+    public void Solve(float dt) 
     {
         //this.body0.localToWorld(this.localPos0, this.worldPos0);
         //if (this.body1 != undefined)
@@ -103,6 +114,8 @@ public class DistanceConstraint
         //elongation = Math.round(elongation * 100) / 100;
         //this.updateText(Math.abs(force), elongation);
     }
+
+
 
     public void UpdateMesh() 
     {
@@ -133,6 +146,8 @@ public class DistanceConstraint
         //}
     }
 
+
+
     //private void UpdateText(force, elongation) 
     //{
     //    if (this.textRenderer)
@@ -142,6 +157,8 @@ public class DistanceConstraint
     //        m`, this.cylinder.position);
     //    }
     //}
+
+
 
     //private void Dispose() {
     //    if (this.cylinder)
