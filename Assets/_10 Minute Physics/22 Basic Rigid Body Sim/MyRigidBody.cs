@@ -18,8 +18,16 @@ public class MyRigidBody
 
     //Radius if we have a sphere
     private Vector3 size;
-    private float dt;
+    //Multiply velocity with this damping 
     public float damping;
+
+    //A rigidbody has the following properties:
+    //x,y,z - position, pos
+    //v - velocity, vel
+    //q - orientation, rot
+    //omega - angular velocity
+    //I - moment of inertia
+    //m - mass
 
     //The center of mass of a rb acts like a particle with
     //Position
@@ -46,6 +54,8 @@ public class MyRigidBody
     //For simulation
     private Vector3 prevPos;
     private Quaternion prevRot;
+
+    //dRot is some temp data holder so we dont need to create new quaternions all the time???
     private Quaternion dRot;
     private Quaternion invRot;
 
@@ -70,7 +80,6 @@ public class MyRigidBody
     {
         this.type = type;
         this.size = new Vector3(size.x, size.y, size.z);
-        this.dt = 0f;
         this.damping = 0f;
 
         this.pos = new Vector3(pos.x, pos.y, pos.z);
@@ -83,8 +92,7 @@ public class MyRigidBody
         this.prevRot = this.rot;
         this.dRot = new Quaternion();
         //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
-        this.invRot = this.rot;
-        this.invRot = Quaternion.Inverse(this.invRot);
+        this.invRot = Quaternion.Inverse(this.rot);
 
         this.invMass = 0f;
         this.invInertia = Vector3.zero;
@@ -207,36 +215,37 @@ public class MyRigidBody
 
 
 
-    //
-    // Begin simulation functions
-    //
-    
+    //Local pos to world pos and world pos to local pos
     //a is a point on the rb in local space
     //a' is the same point but in world space
     //q is the quaternion
     //x is the position of rb (center of mass)
 
     //a' = x + q * a 
-    //private void LocalToWorld(localPos, worldPos)
-    //{
-    //    worldPos.copy(localPos);
-    //    worldPos.applyQuaternion(this.rot);
-    //    worldPos.add(this.pos);
-    //}
+    private Vector3 LocalToWorld(Vector3 localPos)
+    {
+        Vector3 worldPos = this.pos + this.rot * localPos;
+
+        return worldPos;
+    }
 
     //a = q^-1 * (a' - x)
-    //private void WorldToLocal(worldPos, localPos)
-    //                {
-    //    localPos.copy(worldPos);
-    //    localPos.sub(this.pos);
-    //    localPos.applyQuaternion(this.invRot);
-    //}
+    private Vector3 WorldToLocal(Vector3 worldPos)
+    {
+        Vector3 localPos = this.invRot * (worldPos - this.pos);
 
-    //Update vel, pos, omega, q
+        return localPos;
+    }
+
+
+
+    //
+    // Begin simulation functions
+    //
+
+    //Update vel, pos, omega, rotation by using semi-implicit Euler
     public void Integrate(float dt, Vector3 gravity)
     {
-        this.dt = dt;
-
         if (this.invMass == 0f)
         {
             return;
@@ -254,29 +263,42 @@ public class MyRigidBody
 
         //Angular motion
         //q_prev = q
-        //omega = omega + h * I^-1 * tau_ext
-        //q = q + 0.5 * h * v * [omega_x, omega_x, omega_x, 0] * q I think 3 omega_x is wrong
+        //omega = omega + h * I^-1 * tau_ext, where tau_ext is external torque
+        //q = q + 0.5 * h * v * [omega_x, omega_y, omega_z, 0] * q
+        //where h = dt???
 
         this.prevRot = this.rot;
 
-        //this.dRot.set(
-        //    this.omega.x,
-        //    this.omega.y,
-        //    this.omega.z,
-        //    0.0
-        //);
+        //omega = omega because we have no external torque
 
+        this.dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
+
+
+        //[omega_x, omega_y, omega_z, 0] * q
         //this.dRot.multiply(this.rot);
+        this.dRot *= this.rot;
+
+        //What happened to v? Maybe it should be v[omega_x, omega_y, omega_z, 0] meaning omegas are the v???
         //this.rot.x += 0.5 * dt * this.dRot.x;
         //this.rot.y += 0.5 * dt * this.dRot.y;
         //this.rot.z += 0.5 * dt * this.dRot.z;
         //this.rot.w += 0.5 * dt * this.dRot.w;
-        //this.rot.normalize();
-        //this.invRot.copy(this.rot);
-        //this.invRot.invert();
+
+        this.rot.x += 0.5f * dt * this.dRot.x;
+        this.rot.y += 0.5f * dt * this.dRot.y;
+        this.rot.z += 0.5f * dt * this.dRot.z;
+        this.rot.w += 0.5f * dt * this.dRot.w;
+
+        this.rot.Normalize();
+
+        //Update the inverse rot with the new values
+        this.invRot = Quaternion.Inverse(this.rot);
     }
 
-    public void UpdateVelocities(float sdt)
+
+
+    //Fix velocity and angular velocity
+    public void UpdateVelocities(float dt)
     {
         if (this.invMass == 0f)
         {
@@ -285,25 +307,32 @@ public class MyRigidBody
 
         //Linear motion
         //vel = (pos - pos_prev) / dt
-        //this.vel.subVectors(this.pos, this.prevPos);
-        //this.vel.multiplyScalar(1.0 / this.dt);
+        this.vel = (this.pos - this.prevPos) / dt;
 
         //Angular motion
         //delta_q = q * q_prev^-1
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
-        //this.prevRot.invert();
-        //this.dRot.multiplyQuaternions(this.rot, this.prevRot);
-        //this.omega.set(
-        //    this.dRot.x * 2.0 / this.dt,
-        //    this.dRot.y * 2.0 / this.dt,
-        //    this.dRot.z * 2.0 / this.dt
-        //);
-        //if (this.dRot.w < 0.0)
-        //    this.omega.negate();
+     
+        //delta_q
+        this.dRot = this.rot * Quaternion.Inverse(this.prevRot);
 
-        //this.vel.multiplyScalar(Math.max(1.0 - this.damping * this.dt, 0.0));
+        Vector3 delta_q = new Vector3(this.dRot.x, this.dRot.y, this.dRot.z);
+
+        this.omega = delta_q * 2f / dt;
+
+        if (this.dRot.w < 0f)
+        {
+            //Negate
+            this.omega *= -1f;
+        }
+
+        //Damping
+        this.vel *= Mathf.Max(1f - this.damping * dt, 0f);
     }
 
+
+
+    //
     private float GetInverseMass(Vector3 normal, Vector3 pos)
     {
         if (this.invMass == 0f)
@@ -336,6 +365,9 @@ public class MyRigidBody
         return 0f;
     }
 
+
+
+    //
     private void _ApplyCorrection(Vector3 corr, Vector3 pos)
     {
         if (this.invMass == 0f)
@@ -374,6 +406,9 @@ public class MyRigidBody
         //this.invRot.invert();
     }
 
+
+
+    //
     private void ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos)
     {
         //if (corr.lengthSq() == 0.0)
@@ -404,18 +439,16 @@ public class MyRigidBody
         //return lambda / this.dt / this.dt;
     }
 
+
+
     //
     // End simulation functions
     //
 
     private void Dispose() 
     {
-        //for (let i = 0; i < this.meshes.length; i++)
-        //{
-        //    if (this.meshes[i].geometry) this.meshes[i].geometry.dispose();
-        //    if (this.meshes[i].material) this.meshes[i].material.dispose();
-        //    gThreeScene.remove(this.meshes[i]);
-        //}
+        GameObject.Destroy(rbObj);    
+
         //if (this.textRenderer)
         //{
         //    this.textRenderer.dispose();
