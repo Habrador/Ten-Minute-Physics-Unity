@@ -51,7 +51,7 @@ public class MyRigidBody
 
     //A list because we can have multiple meshes to create one rb
     //In general theres just one mesh so can maybe be simplified
-    private List<Mesh> meshes;
+    private GameObject rbObj;
     private float[] vertices;
     private int[] triIds;
 
@@ -82,25 +82,29 @@ public class MyRigidBody
         this.prevPos = this.pos;
         this.prevRot = this.rot;
         this.dRot = new Quaternion();
+        //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
         this.invRot = this.rot;
-        //Inverts this quaternion - calculates the conjugate
-        //this.invRot.invert();
+        this.invRot = Quaternion.Inverse(this.invRot);
 
         this.invMass = 0f;
         this.invInertia = Vector3.zero;
 
-        this.meshes = new List<Mesh>();
-        this.vertices = null;
-        this.triIds = null;
+        //this.rbObj = null;
+        //this.vertices = null;
+        //this.triIds = null;
 
         float mass = 0f;
         
         if (type == Types.Box)
         {
-            //let mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(size.x, size.y, size.z), new THREE.MeshPhongMaterial({ color: 0xffffff }));
-        
-            //this.meshes.push(mesh);
-        
+            //Create the obj we can see
+            GameObject newBoxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            newBoxObj.transform.localScale = this.size;
+
+            this.rbObj = newBoxObj;
+
+            //Init box data
             if (density > 0f)
             {
                 //mass = volume * density
@@ -108,6 +112,7 @@ public class MyRigidBody
 
                 this.invMass = 1f / mass;
                 
+                //Box inertia
                 float Ix = 1f / 12f * mass * (size.y * size.y + size.z * size.z);
                 float Iy = 1f / 12f * mass * (size.x * size.x + size.z * size.z);
                 float Iz = 1f / 12f * mass * (size.x * size.x + size.y * size.y);
@@ -134,14 +139,14 @@ public class MyRigidBody
         }
         else if (type == Types.Sphere) 
         {
-            //Two hemispheres form a sphere
-            //let hemiSphere0 = new THREE.Mesh(new THREE.SphereBufferGeometry(size.x, 32, 32, 0.0, Math.PI), new THREE.MeshPhongMaterial({ color: 0xffffff }));
+            //Create the obj we can see
+            GameObject newSphereObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
-            //let hemiSphere1 = new THREE.Mesh(new THREE.SphereBufferGeometry(size.x, 32, 32, Math.PI, Math.PI), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-            
-            //this.meshes.push(hemiSphere0);
-            //this.meshes.push(hemiSphere1);
+            newSphereObj.transform.localScale = this.size.x * Vector3.one;
 
+            this.rbObj = newSphereObj;
+
+            //Init Sphere data
             if (density > 0f)
             {
                 //mass = volume * density
@@ -149,6 +154,7 @@ public class MyRigidBody
                 
                 this.invMass = 1f / mass;
                 
+                //Sphere inertia
                 float I = 2f / 5f * mass * size.x * size.x;
                 
                 this.invInertia = new Vector3(1f / I, 1f / I, 1f / I);
@@ -180,14 +186,17 @@ public class MyRigidBody
         UpdateMeshes();
     }
 
+
+
+    //Move mesh to the simulate position and rotation
     public void UpdateMeshes()
     {
-        for (int i = 0; i < this.meshes.Count; i++)
-        {
-            //this.meshes[i].position.copy(this.pos);
-            //this.meshes[i].quaternion.copy(this.rot);
-            //this.meshes[i].geometry.computeBoundingSphere();
-        }
+        Transform rbTrans = rbObj.transform;
+
+        rbTrans.SetPositionAndRotation(this.pos, this.rot);
+
+        //Maybe recalculate bounds?
+        //rbTrans.GetComponent<MeshFilter>().mesh
 
         //if (this.textRenderer)
         //{

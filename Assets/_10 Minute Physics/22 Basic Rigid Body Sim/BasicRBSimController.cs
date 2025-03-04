@@ -10,20 +10,20 @@ public class BasicRBSimController : MonoBehaviour
 {
     private RigidBodySimulator rbSimulator;
 
-    //Simulation settings
-    private Vector3 gravity = new(0f, -10.0f, 0f);
-
-    private float density = 1000f;
-
-    private int numSubSteps = 1;
-
     private enum Scenes
     {
         CribMobile,
         Chain
     }
 
+    //Simulation settings
+    private Vector3 gravity = new(0f, -10.0f, 0f);
 
+    private readonly float density = 1000f;
+
+    private readonly int numSubSteps = 1;
+
+    
 
     private void Start()
     {
@@ -32,11 +32,18 @@ public class BasicRBSimController : MonoBehaviour
 
 
 
+    private void Update()
+    {
+        rbSimulator.MyUpdate();
+    }
+
+
+
     private void FixedUpdate()
     {
         float dt = Time.fixedDeltaTime;
 
-        rbSimulator.Simulate(dt, numSubSteps);
+        rbSimulator.MyFixedUpdate(dt, numSubSteps);
     }
 
 
@@ -45,6 +52,7 @@ public class BasicRBSimController : MonoBehaviour
     {
         rbSimulator = new RigidBodySimulator(gravity);
 
+        //Childs crib mobile but several connected to each other
         if (scene == Scenes.CribMobile)
         {
             InitCribMobileScene();
@@ -57,6 +65,8 @@ public class BasicRBSimController : MonoBehaviour
     }
 
 
+
+    //______________________
     //      ___|___
     //     |       |
     //   __|__     0
@@ -139,28 +149,37 @@ public class BasicRBSimController : MonoBehaviour
 
     //4 boxes attached to each other, top box is attached to roof
     //The "rope" between each box is not attached to the center if the boxes except the first
+    //____________________
+    //        _|_
+    //       |___|
+    //        _|_
+    //       |___|
     private void InitChainScene()
     {
         bool unilateral = false;
         float compliance = 0.001f;
 
+        //Size of the box
         Vector3 boxSize = new Vector3(0.1f, 0.1f, 0.1f);
-        //Pos where the constraint attaches to the roof
-        //First rope is attached to the center of the first box
+        //Center of the box
         Vector3 boxPos = new Vector3(0.0f, 2.5f, 0.0f);
+        //If the box has some rotation
         Vector3 boxAngles = Vector3.zero;
 
+        //Width of the mesh we use to display the constraint
         float width = 0.01f;
         float fontSize = 0.03f;
         
         //Distance between each box
         float dist = 0.2f;
 
+        //Build the chain
         float prevY = 2.5f;
         float prevSize = 0.0f;
 
         MyRigidBody prevBox = null;
 
+        //4 boxes
         for (int level = 0; level < 4; level++)
         {
             prevY = boxPos.y;
@@ -168,15 +187,20 @@ public class BasicRBSimController : MonoBehaviour
 
             //Add box
             MyRigidBody box = new MyRigidBody(MyRigidBody.Types.Box, boxSize, density, boxPos, boxAngles, fontSize);
-            box.damping = 5.0f;
+            box.damping = 5f;
+
             rbSimulator.AddRigidBody(box);
 
             //Add constraint
             Vector3 p0 = new Vector3(0.4f * prevSize, boxPos.y + 0.5f * boxSize.y, 0.0f);
             Vector3 p1 = new Vector3(0.4f * prevSize, prevY - 0.5f * prevSize, 0.0f);
+            
+            //Prevbox first iteration is null = roof
             DistanceConstraint barConstraint = new DistanceConstraint(box, prevBox, p0, p1, p1.y - p0.y, compliance, unilateral, width, fontSize);
+            
             rbSimulator.AddDistanceConstraint(barConstraint);
 
+            //Data for next iteration
             prevBox = box;
             prevSize = boxSize.y;
             //Cuberoot = They get 1.2599 bigger each update
@@ -184,9 +208,9 @@ public class BasicRBSimController : MonoBehaviour
         }
     }
 
-    private float GetRandom(float min, float max)
-    {
-        return min + Random.value * (max - min);
-    }
+    //private float GetRandom(float min, float max)
+    //{
+    //    return min + Random.value * (max - min);
+    //}
     
 }

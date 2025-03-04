@@ -12,22 +12,21 @@ public class RigidBodySimulator
     private List<DistanceConstraint> distanceConstraints;
 
     //Add dragconstraint, meaning if we drag with mouse to interact we add a temp constraint
+    //private DragConstraint dragConstraint
+    private float dragCompliance;
 
 
 
-    //Removed scene, timeStepSize, parameters
     public RigidBodySimulator(Vector3 gravity)
     {
         //this.scene = scene;
         this.gravity = gravity;
-        //this.dt = timeStepSize;
-        //this.numSubSteps = 10;
-        //this.numIterations = 1;
+        
         this.rigidBodies = new();
         this.distanceConstraints = new();
 
         //this.dragConstraint = null;
-        //this.dragCompliance = 0.001;
+        this.dragCompliance = 0.001f;
     }
 
 
@@ -46,45 +45,59 @@ public class RigidBodySimulator
 
 
 
-    public void Simulate(float dt, int numSubSteps)
+    //Called from FixedUpdate
+    public void MyFixedUpdate(float dt, int numSubSteps)
     {
         float sdt = dt / (float)numSubSteps;
 
         for (int subStep = 0; subStep < numSubSteps; subStep++)
         {
-            for (int i = 0; i < rigidBodies.Count; i++)
-            {
-                rigidBodies[i].Integrate(sdt, this.gravity);
-            }
-                
-            for (int i = 0; i < distanceConstraints.Count; i++)
-            {
-                distanceConstraints[i].Solve();
-            }
+            Simulate(sdt);
+        }
+    }
 
-            //Move stuff with mouse
-            //if (this.dragConstraint)
-            //{
-            //    this.dragConstraint.solve();
-            //}
 
-            for (int i = 0; i < rigidBodies.Count; i++)
-            {
-                rigidBodies[i].UpdateVelocities(sdt);
-            }
+
+    private void Simulate(float sdt)
+    {
+        for (int i = 0; i < rigidBodies.Count; i++)
+        {
+            rigidBodies[i].Integrate(sdt, this.gravity);
         }
 
-        //Update meshes, move to Update
+        for (int i = 0; i < distanceConstraints.Count; i++)
+        {
+            distanceConstraints[i].Solve();
+        }
+
+        //Move stuff with mouse
+        //if (this.dragConstraint)
+        //{
+        //    this.dragConstraint.solve();
+        //}
+
+        for (int i = 0; i < rigidBodies.Count; i++)
+        {
+            rigidBodies[i].UpdateVelocities(sdt);
+        }
+    }
+
+
+
+    //Called from Update
+    public void MyUpdate()
+    {
+        //Update meshes so they have correct orientation and position
         for (int i = 0; i < rigidBodies.Count; i++)
         {
             rigidBodies[i].UpdateMeshes();
         }
-            
+
         for (int i = 0; i < distanceConstraints.Count; i++)
         {
             distanceConstraints[i].UpdateMesh();
         }
-        
+
         //Move stuff with mouse
         //if (this.dragConstraint)
         //    this.dragConstraint.updateMesh();
