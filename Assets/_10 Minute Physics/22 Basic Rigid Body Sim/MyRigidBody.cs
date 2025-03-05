@@ -61,9 +61,7 @@ public class MyRigidBody
 
     //A list because we can have multiple meshes to create one rb
     //In general theres just one mesh so can maybe be simplified
-    private GameObject rbObj;
-    //private float[] vertices;
-    //private int[] triIds;
+    private readonly GameObject rbObj;
 
 
     //Useful equations
@@ -98,11 +96,6 @@ public class MyRigidBody
         this.invMass = 0f;
         this.invInertia = Vector3.zero;
 
-        //this.rbObj = null;
-        //this.vertices = null;
-        //this.triIds = null;
-
-        float mass = 0f;
         
         if (type == Types.Box)
         {
@@ -117,7 +110,7 @@ public class MyRigidBody
             if (density > 0f)
             {
                 //mass = volume * density
-                mass = density * size.x * size.y * size.z;
+                float mass = density * size.x * size.y * size.z;
 
                 this.invMass = 1f / mass;
                 
@@ -128,23 +121,6 @@ public class MyRigidBody
                 
                 this.invInertia = new Vector3(1f / Ix, 1f / Iy, 1f / Iz);
             }
-
-            //float ex = 0.5f * size.x;
-            //float ey = 0.5f * size.y;
-            //float ez = 0.5f * size.z;
-
-            ////8 corners
-            //this.vertices = new float[]
-            //{
-            //    -ex, -ey, -ez,
-            //    ex, -ey, -ez,
-            //    ex, ey, -ez,
-            //    -ex, ey, -ez,
-            //    -ex, -ey, ez,
-            //    ex, -ey, ez,
-            //    ex, ey, ez,
-            //    -ex, ey, ez
-            //};
         }
         else if (type == Types.Sphere) 
         {
@@ -159,7 +135,7 @@ public class MyRigidBody
             if (density > 0f)
             {
                 //mass = volume * density
-                mass = 4f / 3f * Mathf.PI * size.x * size.x * size.x * density;
+                float mass = 4f / 3f * Mathf.PI * size.x * size.x * size.x * density;
                 
                 this.invMass = 1f / mass;
                 
@@ -170,17 +146,6 @@ public class MyRigidBody
             }
         }
 
-        
-        //Add all meshes to the scene and setup parameters
-        //for (int i = 0; i < this.meshes.Count; i++)
-        //{
-        //    Mesh mesh = this.meshes[i];
-        //    mesh.body = this;       // for raycasting
-        //    mesh.layers.enable(1);
-        //    mesh.castShadow = true;
-        //    mesh.receiveShadow = true;
-        //    scene.add(mesh);
-        //}
 
         //Create text renderer for mass display
         //this.textRenderer = null;
@@ -264,9 +229,9 @@ public class MyRigidBody
 
         //Angular motion
         //q_prev = q
-        //omega = omega + h * I^-1 * tau_ext, where tau_ext is external torque
-        //q = q + 0.5 * h * v * [omega_x, omega_y, omega_z, 0] * q
-        //where h = dt???
+        //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
+        //q = q + 0.5 * dt * v * [omega_x, omega_y, omega_z, 0] * q
+        //(sometimes you see h instead of dt)
 
         this.prevRot = this.rot;
 
@@ -331,6 +296,9 @@ public class MyRigidBody
     //normal - direction between constraints
     //pos - where the constraint attaches to this body
     //Why can pos sometimes be undefined???
+    //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+    //m - mass
+    //n - correction direction
     private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUnedfined = false)
     {
         if (this.invMass == 0f)

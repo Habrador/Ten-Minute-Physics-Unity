@@ -6,6 +6,7 @@ using static UnityEngine.Rendering.DebugUI;
 
 //Based on "22 How to write a basic rigid body simulator using position based dynamics"
 //from https://matthias-research.github.io/pages/tenMinutePhysics/index.html
+//Simulate rigidbodies with XPBD - Extended Position Based Dynamics
 public class BasicRBSimController : MonoBehaviour
 {
     private RigidBodySimulator rbSimulator;

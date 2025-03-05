@@ -23,7 +23,7 @@ public class DistanceConstraint
 
     //The rest distance 
     private float wantedDistance;
-    //Inverse of physical stiffness (alpha in equations)
+    //Inverse of physical stiffness (alpha in equations) [m/N]
     private float compliance;
 
     //private Vector3 corr;
