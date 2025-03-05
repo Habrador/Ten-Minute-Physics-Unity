@@ -327,42 +327,48 @@ public class MyRigidBody
 
 
 
-    //
-    private float GetInverseMass(Vector3 normal, Vector3 pos)
+    //To enforce distance constraint
+    //normal - direction between constraints
+    //pos - where the constraint attaches to this body
+    //Why can pos sometimes be undefined???
+    private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUnedfined = false)
     {
         if (this.invMass == 0f)
         {
             return 0f;
         }
 
-        //let rn = normal.clone();
+        Vector3 rn = normal;
 
-        //if (pos == undefined)  // angular case
-        //{
-        //    rn.applyQuaternion(this.invRot);
-        //}
-        //else            // linear case
-        //{
-        //    rn.subVectors(pos, this.pos);
-        //    rn.cross(normal);
-        //    rn.applyQuaternion(this.invRot);
-        //}
+        //Angular case
+        if (isPosUnedfined)
+        {
+            rn = this.invRot * rn;
+        }
+        //Linear case
+        else
+        {
+            rn = pos - this.pos;
+            rn = Vector3.Cross(rn, normal);
+            rn = this.invRot * rn;
+        }
 
-        //let w =
-        //    rn.x * rn.x * this.invInertia.x +
-        //    rn.y * rn.y * this.invInertia.y +
-        //    rn.z * rn.z * this.invInertia.z;
+        float w =
+            rn.x * rn.x * this.invInertia.x +
+            rn.y * rn.y * this.invInertia.y +
+            rn.z * rn.z * this.invInertia.z;
 
-        //if (pos != undefined)
-        //    w += this.invMass;
+        if (isPosUnedfined)
+        {
+            w += this.invMass;
+        }
 
-        //return w;
-        return 0f;
+        return w;
     }
 
 
 
-    //Actually move stuff
+    //Update pos and rot to enforce distance constraints
     //Corr is lambda*normal and is multiplied by -1 depending which rb we move
     public void UpdatePosAndRot(Vector3 corr, Vector3 pos)
     {
