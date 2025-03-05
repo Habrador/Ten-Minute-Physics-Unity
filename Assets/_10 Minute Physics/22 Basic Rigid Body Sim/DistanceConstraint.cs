@@ -10,26 +10,30 @@ using UnityEngine.UIElements;
 public class DistanceConstraint
 {
     //If one of these are null, then the attachment point is fixed
-    MyRigidBody body0;
-    MyRigidBody body1;
+    private MyRigidBody body0;
+    private MyRigidBody body1;
 
     //One sided, limit motion in one direction 
-    bool unilateral;
+    private bool unilateral;
 
-    Vector3 worldPos0;
-    Vector3 worldPos1;
-    Vector3 localPos0;
-    Vector3 localPos1;
+    private Vector3 worldPos0;
+    private Vector3 worldPos1;
+    private Vector3 localPos0;
+    private Vector3 localPos1;
 
-    float distance;
-    float compliance;
+    //The rest distance 
+    private float wantedDistance;
+    //Inverse of physical stiffness (alpha in equations)
+    private float compliance;
 
-    Vector3 corr;
+    //private Vector3 corr;
+
+    private GameObject displayConstraintObj;
 
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)
     //Attachment points pos0 and pos1 are in world pos
-    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f, int color = 0xff0000)
+    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
     {
         //this.scene = scene;
         this.body0 = body0;
@@ -49,19 +53,20 @@ public class DistanceConstraint
             this.localPos1 = this.body1.WorldToLocal(pos1);
         }
         
-        this.distance = distance;
+        this.wantedDistance = distance;
         this.compliance = compliance;
 
 
         //Create a cylinder for visualization
-        //const geometry = new THREE.CylinderGeometry(width, width, 1, 32);
-        //const material = new THREE.MeshBasicMaterial({ color: color });
-        //this.cylinder = new THREE.Mesh(geometry, material);
-        //this.cylinder.castShadow = true;
-        //this.cylinder.receiveShadow = true;
-        //scene.add(this.cylinder);
-        
-        
+        GameObject newCylinderObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+
+        newCylinderObj.transform.localScale = new Vector3(width, width, 1f);
+
+        newCylinderObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.red;
+
+        this.displayConstraintObj = newCylinderObj;
+
+
         //Create text renderer for force display
         //this.textRenderer = null;
         //if (fontSize > 0.0) 
@@ -99,24 +104,39 @@ public class DistanceConstraint
     //F = (lambda * n) / dt^2
     public void Solve(float dt) 
     {
-        //this.body0.localToWorld(this.localPos0, this.worldPos0);
-        //if (this.body1 != undefined)
-        //    this.body1.localToWorld(this.localPos1, this.worldPos1);
-        //this.corr.subVectors(this.worldPos1, this.worldPos0);
-        //let distance = this.corr.length();
-        //this.corr.normalize();
-        //if (this.unilateral && distance < this.distance)
-        //    return;
-        //this.corr.multiplyScalar(distance - this.distance);
-        //let force = this.body0.applyCorrection(this.compliance, this.corr, this.worldPos0, this.body1, this.worldPos1);
+        this.worldPos0 = this.body0.LocalToWorld(this.localPos0);
+        
+        if (this.body1 != null)
+        {
+            this.worldPos1 = this.body1.LocalToWorld(this.localPos1);
+        }
 
-        //let elongation = distance - this.distance;
-        //elongation = Math.round(elongation * 100) / 100;
-        //this.updateText(Math.abs(force), elongation);
+        //Constraint distance C = l - l_0
+        Vector3 corr = this.worldPos1 - this.worldPos0;
+
+        float distance = corr.magnitude;
+        
+        corr = corr.normalized;
+        
+        if (this.unilateral && distance < this.wantedDistance)
+        {
+            return;
+        }
+        
+        corr *= distance - this.wantedDistance;
+        
+        float force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
+
+        float elongation = distance - this.wantedDistance;
+        
+        elongation = Mathf.Round(elongation * 100f) / 100f;
+        
+        //UpdateText(Mathf.Abs(force), elongation);
     }
 
 
 
+    //Move and rotate the mesh we use to display the constraint
     public void UpdateMesh() 
     {
         //const start = this.worldPos0;
@@ -148,29 +168,29 @@ public class DistanceConstraint
 
 
 
-    //private void UpdateText(force, elongation) 
-    //{
-    //    if (this.textRenderer)
-    //    {
-    //        this.textRenderer.createText(`   ${ Math.round(force)}
-    //        N,  ${ elongation}
-    //        m`, this.cylinder.position);
-    //    }
-    //}
+    private void UpdateText(float force, float elongation)
+    {
+        //if (this.textRenderer)
+        //{
+        //    this.textRenderer.createText(`   ${ Math.round(force)}
+        //    N,  ${ elongation}
+        //    m`, this.cylinder.position);
+        //}
+    }
 
 
 
-    //private void Dispose() {
-    //    if (this.cylinder)
-    //    {
-    //        if (this.cylinder.geometry) this.cylinder.geometry.dispose();
-    //        if (this.cylinder.material) this.cylinder.material.dispose();
-    //        this.scene.remove(this.cylinder);
-    //    }
-    //    if (this.textRenderer)
-    //    {
-    //        this.textRenderer.dispose();
-    //    }
-    //}
-    
+    private void Dispose()
+    {
+        if (this.displayConstraintObj)
+        {
+            GameObject.Destroy(this.displayConstraintObj);
+        }
+
+        //if (this.textRenderer)
+        //{
+        //    this.textRenderer.dispose();
+        //}
+    }
+
 }

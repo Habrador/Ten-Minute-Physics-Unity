@@ -433,11 +433,11 @@ public class MyRigidBody
     //Fix the distance constraint between this body and the other body
     //compliance - inverse of physical stiffness (alpha in equations)
     //corr - vector between this body and another body
-    //pos - where the constraint attaches to this body
+    //pos - where the constraint attaches to this body in world space
     //otherBody - the connected rb
-    //otherPos - where the constraint attaches to the other rb
+    //otherPos - where the constraint attaches to the other rb in world space
     //Returns the force on this constraint
-    private float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
+    public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
     {
         //Constraint distance C = l - l_0
         //l_0 - wanted length
