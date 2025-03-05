@@ -137,28 +137,35 @@ public class DistanceConstraint
 
 
     //Move and rotate the mesh we use to display the constraint
+    //so it goes between the attachment points
     public void UpdateMesh() 
     {
-        //const start = this.worldPos0;
-        //const end = this.worldPos1;
+        Vector3 start = this.worldPos0;
+        Vector3 end = this.worldPos1;
 
-        //// Calculate the center point
-        //const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        //Calculate the center point
+        Vector3 center = (start + end) * 0.5f;
 
-        //// Calculate the direction vector
-        //const direction = new THREE.Vector3().subVectors(end, start);
-        //const length = direction.length();
+        //Calculate the direction vector
+        Vector3 direction = end - start;
+        
+        float length = direction.magnitude;
 
-        //// Create a rotation quaternion
-        //const quaternion = new THREE.Quaternion();
+        ///Create a rotation quaternion
+        Quaternion quaternion = new Quaternion();
+
         //quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+        //Not sure if correct???
+        quaternion = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), direction.normalized);
 
-        //// Update cylinder's transformation
-        //this.cylinder.position.copy(center);
-        //this.cylinder.setRotationFromQuaternion(quaternion);
-        //this.cylinder.scale.set(1, length, 1);
+        //Update cylinder's transformation
+        Transform cylinderTrans = displayConstraintObj.transform;
 
-        //// Update text position and rotation
+        cylinderTrans.SetPositionAndRotation(center, quaternion);
+        cylinderTrans.localScale = new Vector3(1f, length, 1f);
+
+
+        //Update text position and rotation
         //if (this.textRenderer)
         //{
         //    this.textRenderer.updatePosition(center);
