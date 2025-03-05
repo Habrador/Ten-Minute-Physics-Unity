@@ -62,8 +62,8 @@ public class MyRigidBody
     //A list because we can have multiple meshes to create one rb
     //In general theres just one mesh so can maybe be simplified
     private GameObject rbObj;
-    private float[] vertices;
-    private int[] triIds;
+    //private float[] vertices;
+    //private int[] triIds;
 
 
     //Useful equations
@@ -76,6 +76,7 @@ public class MyRigidBody
  
 
     //Removed parameter scene which is a gThreeScene whish is like the sim environment
+    //If fontSize = 0 we wont display any text
     public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
     {
         this.type = type;
@@ -128,22 +129,22 @@ public class MyRigidBody
                 this.invInertia = new Vector3(1f / Ix, 1f / Iy, 1f / Iz);
             }
 
-            float ex = 0.5f * size.x;
-            float ey = 0.5f * size.y;
-            float ez = 0.5f * size.z;
+            //float ex = 0.5f * size.x;
+            //float ey = 0.5f * size.y;
+            //float ez = 0.5f * size.z;
 
-            //8 corners
-            this.vertices = new float[]
-            {
-                -ex, -ey, -ez,
-                ex, -ey, -ez,
-                ex, ey, -ez,
-                -ex, ey, -ez,
-                -ex, -ey, ez,
-                ex, -ey, ez,
-                ex, ey, ez,
-                -ex, ey, ez
-            };
+            ////8 corners
+            //this.vertices = new float[]
+            //{
+            //    -ex, -ey, -ez,
+            //    ex, -ey, -ez,
+            //    ex, ey, -ez,
+            //    -ex, ey, -ez,
+            //    -ex, -ey, ez,
+            //    ex, -ey, ez,
+            //    ex, ey, ez,
+            //    -ex, ey, ez
+            //};
         }
         else if (type == Types.Sphere) 
         {
@@ -362,42 +363,63 @@ public class MyRigidBody
 
 
     //Actually move stuff
-    public void _ApplyCorrection(Vector3 corr, Vector3 pos)
+    //Corr is lambda*normal and is multiplied by -1 depending which rb we move
+    public void UpdatePosAndRot(Vector3 corr, Vector3 pos)
     {
         if (this.invMass == 0f)
         {
             return;
         }
 
-        //// linear correction
+        //Linear correction
+        //+- Because we move in different directions because we have two rb
+        //x_i = x_i +- w_i * lambda * n
+        this.pos += this.invMass * corr;
 
-        //this.pos.addScaledVector(corr, this.invMass);
+        //Angular correction
+        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
 
-        //// angular correction
+        //dOmega <- lambda * (I_i^-1 * (r_i x n), 0)
+        
+        //r_i
+        Vector3 r = pos - this.pos;
+        
+        //r_i x n
+        Vector3 dOmega = Vector3.Cross(r, corr);
+        
+        //
+        dOmega = this.invRot * dOmega;
 
-        //let dOmega = corr.clone();
+        //Scales dOmega by the inverse inertia
+        //invInertia is a tensor - not a vector, so component-wise multiplication
+        dOmega.x *= this.invInertia.x;
+        dOmega.y *= this.invInertia.y;
+        dOmega.z *= this.invInertia.z;
 
-        //dOmega.subVectors(pos, this.pos);
-        //dOmega.cross(corr);
-        //dOmega.applyQuaternion(this.invRot);
-        //dOmega.multiply(this.invInertia);
-        //dOmega.applyQuaternion(this.rot);
+        //Tansforms dOmega back into the original coordinate frame after the inverse rotation was applied earlier
+        dOmega = this.rot * dOmega;
 
-        //this.dRot.set(
-        //    dOmega.x,
-        //    dOmega.y,
-        //    dOmega.z,
-        //    0.0
-        //);
+        //dRot <- dOmega * q_i
+        //lambda * (I_i^-1 * (r_i x n), 0)
+        this.dRot = new Quaternion(
+            dOmega.x,
+            dOmega.y,
+            dOmega.z,
+            0f
+        );
 
-        //this.dRot.multiply(this.rot);
-        //this.rot.x += 0.5 * this.dRot.x;
-        //this.rot.y += 0.5 * this.dRot.y;
-        //this.rot.z += 0.5 * this.dRot.z;
-        //this.rot.w += 0.5 * this.dRot.w;
-        //this.rot.normalize();
-        //this.invRot.copy(this.rot);
-        //this.invRot.invert();
+       this.dRot *= this.rot;
+
+        //q_i = q_i + 0.5 * dRot
+        this.rot.x += 0.5f * this.dRot.x;
+        this.rot.y += 0.5f * this.dRot.y;
+        this.rot.z += 0.5f * this.dRot.z;
+        this.rot.w += 0.5f * this.dRot.w;
+        
+        this.rot.Normalize();
+
+        //Cache the inverse
+        this.invRot = Quaternion.Inverse(this.rot);
     }
 
 
@@ -433,36 +455,41 @@ public class MyRigidBody
 
         Vector3 normal = corr.normalized;
 
-        float w = this.GetInverseMass(normal, pos);
+        float w_tot = this.GetInverseMass(normal, pos);
 
         if (otherBody != null)
         {
-            w += otherBody.GetInverseMass(normal, otherPos);
+            w_tot += otherBody.GetInverseMass(normal, otherPos);
         }
 
-        if (w == 0f)
+        if (w_tot == 0f)
         {
             return 0f;
         }
 
         //XPBD
-        float alpha = compliance / dt / dt;
 
-        float lambda = -C / (w + alpha);
+        //Lagrange multiplyer
+        //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
+        float lambda = -C / (w_tot + (compliance / (dt * dt)));
 
-        normal *= -lambda;
+        //Update pos and rot
+        //x_i = x_i +- w_i * lambda * n
+        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        Vector3 lambda_normal = normal * -lambda;
 
-        _ApplyCorrection(normal, pos);
+        UpdatePosAndRot(lambda_normal, pos);
 
         if (otherBody != null)
         {
-            normal *= -1f;
-            otherBody._ApplyCorrection(normal, otherPos);
+            lambda_normal *= -1f;
+            otherBody.UpdatePosAndRot(lambda_normal, otherPos);
         }
 
         //Constraint force
         //F = (lambda * n) / dt^2
-        float constraintForce = lambda / dt / dt;
+        //n is normalized
+        float constraintForce = lambda / (dt * dt);
 
         return constraintForce;
     }
