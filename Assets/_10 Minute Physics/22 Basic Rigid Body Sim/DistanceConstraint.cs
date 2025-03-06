@@ -22,13 +22,12 @@ public class DistanceConstraint
     private Vector3 localPos1;
 
     //The rest distance 
-    private float wantedDistance;
+    private readonly float wantedDistance;
     //Inverse of physical stiffness (alpha in equations) [m/N]
-    private float compliance;
+    private readonly float compliance;
 
-    //private Vector3 corr;
-
-    private GameObject displayConstraintObj;
+    private readonly GameObject displayConstraintObj;
+    private readonly Transform displayConstraintTrans;
 
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)
@@ -65,6 +64,7 @@ public class DistanceConstraint
         newCylinderObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.red;
 
         this.displayConstraintObj = newCylinderObj;
+        this.displayConstraintTrans = newCylinderObj.transform;
 
 
         //Create text renderer for force display
@@ -127,6 +127,7 @@ public class DistanceConstraint
         
         float force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
 
+        //Data for display purposes
         float elongation = distance - this.wantedDistance;
         
         elongation = Mathf.Round(elongation * 100f) / 100f;
@@ -159,10 +160,8 @@ public class DistanceConstraint
         quaternion = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), direction.normalized);
 
         //Update cylinder's transformation
-        Transform cylinderTrans = displayConstraintObj.transform;
-
-        cylinderTrans.SetPositionAndRotation(center, quaternion);
-        cylinderTrans.localScale = new Vector3(1f, length, 1f);
+        this.displayConstraintTrans.SetPositionAndRotation(center, quaternion);
+        this.displayConstraintTrans.localScale = new Vector3(1f, length, 1f);
 
 
         //Update text position and rotation
@@ -187,7 +186,7 @@ public class DistanceConstraint
 
 
 
-    private void Dispose()
+    public void Dispose()
     {
         if (this.displayConstraintObj)
         {

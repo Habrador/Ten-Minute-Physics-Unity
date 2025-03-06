@@ -48,6 +48,8 @@ public class MyRigidBody
 
     //The gameobject that represents this rigidbody
     private readonly GameObject rbObj;
+    //Faster to cache it
+    private readonly Transform rbTrans;
 
 
     //Useful equations
@@ -61,27 +63,29 @@ public class MyRigidBody
 
     //Removed parameter scene which is a gThreeScene whish is like the sim environment
     //If fontSize = 0 we wont display any text
+    //size - radius if we have a sphere, length of side if we have a box
     public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
     {
         this.type = type;
-        //this.size = new Vector3(size.x, size.y, size.z);
+
         this.damping = 0f;
 
-        this.pos = new Vector3(pos.x, pos.y, pos.z);
-        this.rot = new Quaternion();
-        this.rot.eulerAngles = angles;
+        this.pos = pos;
+
+        this.rot = new Quaternion
+        {
+            eulerAngles = angles
+        };
+
+        //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
+        this.invRot = Quaternion.Inverse(this.rot);
+
         this.vel = Vector3.zero;
+        
         this.omega = Vector3.zero;
 
         this.prevPos = this.pos;
         this.prevRot = this.rot;
-        //this.dRot = new Quaternion();
-        //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
-        this.invRot = Quaternion.Inverse(this.rot);
-
-        this.invMass = 0f;
-        this.invInertia = Vector3.zero;
-
         
         if (type == Types.Box)
         {
@@ -91,6 +95,7 @@ public class MyRigidBody
             newBoxObj.transform.localScale = size;
 
             this.rbObj = newBoxObj;
+            this.rbTrans = newBoxObj.transform;
 
             //Init box data
             if (density > 0f)
@@ -116,6 +121,7 @@ public class MyRigidBody
             newSphereObj.transform.localScale = size.x * Vector3.one;
 
             this.rbObj = newSphereObj;
+            this.rbTrans = newSphereObj.transform;
 
             //Init Sphere data
             if (density > 0f)
@@ -151,9 +157,7 @@ public class MyRigidBody
     //Move mesh to the simulate position and rotation
     public void UpdateMeshes()
     {
-        Transform rbTrans = rbObj.transform;
-
-        rbTrans.SetPositionAndRotation(this.pos, this.rot);
+        this.rbTrans.SetPositionAndRotation(this.pos, this.rot);
 
         //Maybe recalculate bounds?
         //rbTrans.GetComponent<MeshFilter>().mesh
@@ -234,7 +238,7 @@ public class MyRigidBody
         //v[omega_x, omega_y, omega_z, 0] * q
         dRot *= this.rot;
 
-        //What happened to v? Maybe it should be v[omega_x, omega_y, omega_z, 0] meaning omegas are the v???
+        //q = q + 0.5 * dt * dRot
         this.rot.x += 0.5f * dt * dRot.x;
         this.rot.y += 0.5f * dt * dRot.y;
         this.rot.z += 0.5f * dt * dRot.z;
@@ -466,7 +470,7 @@ public class MyRigidBody
     // End simulation functions
     //
 
-    private void Dispose() 
+    public void Dispose() 
     {
         GameObject.Destroy(rbObj);    
 
