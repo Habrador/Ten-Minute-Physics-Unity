@@ -38,6 +38,8 @@ public class BasicRBSimController : MonoBehaviour
     private void Update()
     {
         rbSimulator.MyUpdate();
+
+        MouseInteraction();
     }
 
 
@@ -209,5 +211,13 @@ public class BasicRBSimController : MonoBehaviour
             //Cuberoot = They get 1.2599 bigger each update
             boxSize *= Mathf.Pow(2f, 1f / 3f);
         }
+    }
+
+
+
+    //Interact with the scene by using mouse
+    private void MouseInteraction()
+    {
+        
     }
 }

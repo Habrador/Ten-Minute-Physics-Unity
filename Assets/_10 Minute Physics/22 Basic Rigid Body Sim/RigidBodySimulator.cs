@@ -5,8 +5,9 @@ using UnityEngine;
 
 public class RigidBodySimulator
 {
-    private Vector3 gravity;
+    private readonly Vector3 gravity;
 
+    //So we can delete all gameobjects from the scene if we change scene
     public List<MyRigidBody> allRigidBodies;
     public List<DistanceConstraint> allDistanceConstraints;
 
@@ -57,6 +58,7 @@ public class RigidBodySimulator
 
 
 
+    //The XPBD simulation loop
     private void Simulate(float dt)
     {
         for (int i = 0; i < allRigidBodies.Count; i++)
@@ -111,7 +113,10 @@ public class RigidBodySimulator
     //
     public void StartDrag(MyRigidBody body, Vector3 pos)
     {
-        //this.dragConstraint = new DistanceConstraint(this.scene, body, null, pos, pos, 0.0, this.dragCompliance);
+        //TODO: this is some default parameter in the original code and doesnt say what it is in this section, so might be true or false
+        bool unilateral = false;
+    
+        this.dragConstraint = new DistanceConstraint(this, body, null, pos, pos, 0f, this.dragCompliance, unilateral);
     }
 
     public void Drag(Vector3 pos)
