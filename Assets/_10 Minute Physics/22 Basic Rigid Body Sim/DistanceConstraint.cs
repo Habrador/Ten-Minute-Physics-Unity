@@ -17,7 +17,8 @@ public class DistanceConstraint
     private bool unilateral;
 
     private Vector3 worldPos0;
-    private Vector3 worldPos1;
+    //Public so we can access it when we drag with mouse 
+    public Vector3 worldPos1;
     private Vector3 localPos0;
     private Vector3 localPos1;
 
@@ -32,9 +33,10 @@ public class DistanceConstraint
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)
     //Attachment points pos0 and pos1 are in world pos
-    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
+    public DistanceConstraint(RigidBodySimulator scene, MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
     {
-        //this.scene = scene;
+        scene.allDistanceConstraints.Add(this);
+
         this.body0 = body0;
         this.body1 = body1;
 

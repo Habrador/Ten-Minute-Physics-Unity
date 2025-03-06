@@ -26,7 +26,7 @@ public class MyRigidBody
     //Inverse rot q^-1
     private Quaternion invRot;
     //Angular velocity omega
-    //omega.magnitude -> speed of rotation in angle/seconds
+    //omega.magnitude -> speed of rotation
     private Vector3 omega;
     //Mass (resistance to force)
     //F = m * a -> a = 1/m * F (which is why we use inverse mass)
@@ -64,8 +64,10 @@ public class MyRigidBody
     //Removed parameter scene which is a gThreeScene whish is like the sim environment
     //If fontSize = 0 we wont display any text
     //size - radius if we have a sphere, length of side if we have a box
-    public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
+    public MyRigidBody(RigidBodySimulator scene, Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
     {
+        scene.allRigidBodies.Add(this);
+
         this.type = type;
 
         this.damping = 0f;
@@ -227,15 +229,18 @@ public class MyRigidBody
         this.prevRot = this.rot;
 
         //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
-        //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q
+        //In the original paper: omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //q = q + 0.5 * dt * [omega_x, omega_y, omega_z, 0] * q
+        //In the tutorial there was a v[omega_x, omega_y, omega_z, 0] but I think it was a missprint because in the paper "Detailed rb sim with xpbd" it doesnt exist
         //(sometimes you see h instead of dt)
+        //q = q / |q|
 
         //omega = omega + 0 because we have no external torque
 
-        //v[omega_x, omega_y, omega_z, 0]
+        //[omega_x, omega_y, omega_z, 0]
         Quaternion dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
 
-        //v[omega_x, omega_y, omega_z, 0] * q
+        //[omega_x, omega_y, omega_z, 0] * q
         dRot *= this.rot;
 
         //q = q + 0.5 * dt * dRot
@@ -244,6 +249,7 @@ public class MyRigidBody
         this.rot.z += 0.5f * dt * dRot.z;
         this.rot.w += 0.5f * dt * dRot.w;
 
+        //q = q / |q|
         this.rot.Normalize();
 
         //Update the inverse rot with the new values
@@ -268,15 +274,14 @@ public class MyRigidBody
         //Angular motion
         //delta_q = q * q_prev^-1
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
-     
+        //omega = (delta_q.w >= 0) ? omega : -omega
+
         //delta_q
-        Quaternion dRot = this.rot * Quaternion.Inverse(this.prevRot);
+        Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
-        Vector3 delta_q = new Vector3(dRot.x, dRot.y, dRot.z);
+        this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
-        this.omega = delta_q * 2f / dt;
-
-        if (dRot.w < 0f)
+        if (delta_q.w < 0f)
         {
             //Negate
             this.omega *= -1f;
@@ -288,14 +293,14 @@ public class MyRigidBody
 
 
 
-    //To enforce distance constraint
+    //Get the general inverse mass
     //normal - direction between constraints
     //pos - where the constraint attaches to this body
     //Why can pos sometimes be undefined???
     //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
     //m - mass
     //n - correction direction
-    private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUnedfined = false)
+    private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
     {
         if (this.invMass == 0f)
         {
@@ -305,7 +310,7 @@ public class MyRigidBody
         Vector3 rn = normal;
 
         //Angular case
-        if (isPosUnedfined)
+        if (isPosUndefined)
         {
             rn = this.invRot * rn;
         }
@@ -314,7 +319,7 @@ public class MyRigidBody
         {
             rn = pos - this.pos;
             rn = Vector3.Cross(rn, normal);
-            rn = this.invRot * rn;
+            rn = this.invRot * rn; //To be able to use the inertia vector3 instead of the tensor?
         }
 
         float w =
@@ -322,7 +327,7 @@ public class MyRigidBody
             rn.y * rn.y * this.invInertia.y +
             rn.z * rn.z * this.invInertia.z;
 
-        if (isPosUnedfined)
+        if (isPosUndefined)
         {
             w += this.invMass;
         }
@@ -333,8 +338,8 @@ public class MyRigidBody
 
 
     //Update pos and rot to enforce distance constraints
-    //Corr is lambda*normal and is multiplied by -1 depending which rb we move
-    public void UpdatePosAndRot(Vector3 corr, Vector3 pos)
+    //lambda_normal is lambda*normal and is the positional impulse (also knownn as p)
+    public void UpdatePosAndRot(Vector3 lambda_normal, Vector3 pos)
     {
         if (this.invMass == 0f)
         {
@@ -344,18 +349,19 @@ public class MyRigidBody
         //Linear correction
         //+- Because we move in different directions because we have two rb
         //x_i = x_i +- w_i * lambda * n
-        this.pos += this.invMass * corr;
+        this.pos += this.invMass * lambda_normal;
 
         //Angular correction
-        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i <- From tutorial
+        //q_i = q_i + 0.5 * [I_i^-1 * (r_i x lambda_normal), 0] * q_i <- From paper
 
-        //dOmega <- lambda * (I_i^-1 * (r_i x n), 0)
-        
+        //dOmega <- lambda * [I_i^-1 * (r_i x n), 0]
+
         //r_i
         Vector3 r = pos - this.pos;
         
         //r_i x n
-        Vector3 dOmega = Vector3.Cross(r, corr);
+        Vector3 dOmega = Vector3.Cross(r, lambda_normal);
         
         //
         dOmega = this.invRot * dOmega;
@@ -370,7 +376,7 @@ public class MyRigidBody
         dOmega = this.rot * dOmega;
 
         //dRot <- dOmega * q_i
-        //lambda * (I_i^-1 * (r_i x n), 0)
+        //lambda * [I_i^-1 * (r_i x n), 0]
         Quaternion dRot = new Quaternion(
             dOmega.x,
             dOmega.y,
@@ -378,7 +384,7 @@ public class MyRigidBody
             0f
         );
 
-       dRot *= this.rot;
+        dRot *= this.rot;
 
         //q_i = q_i + 0.5 * dRot
         this.rot.x += 0.5f * dRot.x;
@@ -403,18 +409,30 @@ public class MyRigidBody
     //Returns the force on this constraint
     public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
     {
-        //Constraint distance C = l - l_0
+        //Constraint distance:
+        //C = l - l_0
         //l_0 - wanted length
         //l - current length
-        //Constraint direction n = (a2 - 1)/|a2 - a1|
-        //a - point on body where constraint attaches (not center!!!)
-        //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+        //Constraint direction:
+        //n = (a2 - 1)/|a2 - a1|
+        //a - point on body where constraint attaches (not center of mass)
+        //Generalized inverse masses:
+        //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
         //r - vector from center of mass to attachment point (stored in local frame of the body)
-        //Lagrange multiplyer
+        //Lagrange multiplyer:
         //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
-        //Update pos and rot
+        //Update pos:
         //x_i = x_i +- w_i * lambda * n
-        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        //Update rot:
+        //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
+        //Constraint force:
+        //F = (lambda * n) / dt^2
+
+        //In the paper you see
+        //delta_lambda = (-c - (alpha_tilde * lambda)) / (w_1 + w_2 + alpha_tilde)
+        //alpha_tilde = alpha / dt^2
+        //lambda = lambda + delta_lambda
+        //and instead of lambda * normal they use delta_lambda * normal
 
         if (corr.sqrMagnitude == 0f)
         {
@@ -445,7 +463,7 @@ public class MyRigidBody
 
         //Update pos and rot
         //x_i = x_i +- w_i * lambda * n
-        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
         Vector3 lambda_normal = normal * -lambda;
 
         UpdatePosAndRot(lambda_normal, pos);
@@ -458,7 +476,7 @@ public class MyRigidBody
 
         //Constraint force
         //F = (lambda * n) / dt^2
-        //n is normalized
+        //n is normalized -> lambda_normal.magnitude = lambda
         float constraintForce = lambda / (dt * dt);
 
         return constraintForce;

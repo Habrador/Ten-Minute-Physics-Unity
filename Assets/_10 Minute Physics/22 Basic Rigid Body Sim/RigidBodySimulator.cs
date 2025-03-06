@@ -7,25 +7,24 @@ public class RigidBodySimulator
 {
     private Vector3 gravity;
 
-    private List<MyRigidBody> rigidBodies;
+    public List<MyRigidBody> allRigidBodies;
+    public List<DistanceConstraint> allDistanceConstraints;
 
-    private List<DistanceConstraint> distanceConstraints;
-
-    //Add dragconstraint, meaning if we drag with mouse to interact we add a temp constraint
-    //private DragConstraint dragConstraint
+    //Dragconstraint, meaning if we drag with mouse to interact we add a temp distance constraint
+    private DistanceConstraint dragConstraint;
     private float dragCompliance;
 
 
 
     public RigidBodySimulator(Vector3 gravity)
     {
-        //this.scene = scene;
         this.gravity = gravity;
         
-        this.rigidBodies = new();
-        this.distanceConstraints = new();
+        this.allRigidBodies = new();
+        this.allDistanceConstraints = new();
 
-        //this.dragConstraint = null;
+        //Move stuff with mouse
+        this.dragConstraint = null;
         this.dragCompliance = 0.001f;
     }
 
@@ -33,14 +32,14 @@ public class RigidBodySimulator
 
     public void AddRigidBody(MyRigidBody rigidBody)
     {
-        rigidBodies.Add(rigidBody);
+        allRigidBodies.Add(rigidBody);
     }
 
 
 
     public void AddDistanceConstraint(DistanceConstraint distanceConstraint)
     {
-        distanceConstraints.Add(distanceConstraint);
+        allDistanceConstraints.Add(distanceConstraint);
     }
 
 
@@ -60,25 +59,25 @@ public class RigidBodySimulator
 
     private void Simulate(float dt)
     {
-        for (int i = 0; i < rigidBodies.Count; i++)
+        for (int i = 0; i < allRigidBodies.Count; i++)
         {
-            rigidBodies[i].Integrate(dt, this.gravity);
+            allRigidBodies[i].Integrate(dt, this.gravity);
         }
 
-        for (int i = 0; i < distanceConstraints.Count; i++)
+        for (int i = 0; i < allDistanceConstraints.Count; i++)
         {
-            distanceConstraints[i].Solve(dt);
+            allDistanceConstraints[i].Solve(dt);
         }
 
         //Move stuff with mouse
-        //if (this.dragConstraint)
-        //{
-        //    this.dragConstraint.solve();
-        //}
-
-        for (int i = 0; i < rigidBodies.Count; i++)
+        if (this.dragConstraint != null)
         {
-            rigidBodies[i].UpdateVelocities(dt);
+            this.dragConstraint.Solve(dt);
+        }
+
+        for (int i = 0; i < allRigidBodies.Count; i++)
+        {
+            allRigidBodies[i].UpdateVelocities(dt);
         }
     }
 
@@ -88,19 +87,21 @@ public class RigidBodySimulator
     public void MyUpdate()
     {
         //Update meshes so they have correct orientation and position
-        for (int i = 0; i < rigidBodies.Count; i++)
+        for (int i = 0; i < allRigidBodies.Count; i++)
         {
-            rigidBodies[i].UpdateMeshes();
+            allRigidBodies[i].UpdateMeshes();
         }
 
-        for (int i = 0; i < distanceConstraints.Count; i++)
+        for (int i = 0; i < allDistanceConstraints.Count; i++)
         {
-            distanceConstraints[i].UpdateMesh();
+            allDistanceConstraints[i].UpdateMesh();
         }
 
         //Move stuff with mouse
-        //if (this.dragConstraint)
-        //    this.dragConstraint.updateMesh();
+        if (this.dragConstraint != null)
+        {
+            this.dragConstraint.UpdateMesh();
+        }
     }
 
 
@@ -108,40 +109,46 @@ public class RigidBodySimulator
     //
     // Mouse interactions
     //
+    public void StartDrag(MyRigidBody body, Vector3 pos)
+    {
+        //this.dragConstraint = new DistanceConstraint(this.scene, body, null, pos, pos, 0.0, this.dragCompliance);
+    }
 
-    //startDrag(body, pos)
-    //{
-    //    this.dragConstraint = new DistanceConstraint(this.scene, body, null, pos, pos, 0.0, this.dragCompliance);
-    //}
+    public void Drag(Vector3 pos)
+    {
+        if (this.dragConstraint != null)
+        {
+            this.dragConstraint.worldPos1 = pos;
+        }
+    }
 
-    //drag(pos)
-    //{
-    //    if (this.dragConstraint)
-    //        this.dragConstraint.worldPos1.copy(pos);
-    //}
-
-    //endDrag(pos)
-    //{
-    //    if (this.dragConstraint)
-    //    {
-    //        this.dragConstraint.dispose();
-    //        this.dragConstraint = null;
-    //    }
-    //}
+    public void EndDrag()
+    {
+        if (this.dragConstraint != null)
+        {
+            this.dragConstraint.Dispose();
+            this.dragConstraint = null;
+        }
+    }
 
 
 
-    //Cleanup
-    //dispose()
-    //{
-    //    for (let i = 0; i < this.rigidBodies.length; i++)
-    //        this.rigidBodies[i].dispose();
+    //Cleanup to easily switch between scenes with rbs
+    public void Dispose()
+    {
+        for (int i = 0; i < this.allRigidBodies.Count; i++)
+        {
+            this.allRigidBodies[i].Dispose();
+        }
 
-    //    for (let i = 0; i < this.distanceConstraints.length; i++)
-    //        this.distanceConstraints[i].dispose();
+        for (int i = 0; i < this.allDistanceConstraints.Count; i++)
+        {
+            this.allDistanceConstraints[i].Dispose();
+        }
 
-    //    if (this.dragConstraint)
-    //        this.dragConstraint.dispose();
-    //}
-
+        if (this.dragConstraint != null)
+        {
+            this.dragConstraint.Dispose();
+        }
+    }
 }
