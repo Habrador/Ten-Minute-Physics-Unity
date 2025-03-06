@@ -30,20 +30,22 @@ public class MyRigidBody
     //m - mass
 
     //The center of mass of a rb acts like a particle with
-    //Position
+    //Position pos
     private Vector3 pos;
-    //Velocity
+    //Velocity vel
     private Vector3 vel;
-    //Rotation
+    //Rotation q
     private Quaternion rot;
-    //Angular velocity
+    //Inverse rot q^-1
+    private Quaternion invRot;
+    //Angular velocity omega
     //omega.magnitude -> speed of rotation in angle/seconds
     private Vector3 omega;
     //Mass (resistance to force)
     //F = m * a -> a = 1/m * F (which is why we use inverse mass)
     private float invMass;
     //Moment of inertia I (resistance to torque)
-    //I ss a 3x3 matrix
+    //Is a 3x3 matrix
     //if the body is aligned witht he x,y,z axis we can treat it as a 3 dimensional vector
     //and do calculations in local space by transforming everything to local space
     //tau = I * alpha -> alpha = 1/I * tau (which is why we use inverse inertia)
@@ -54,10 +56,6 @@ public class MyRigidBody
     //For simulation
     private Vector3 prevPos;
     private Quaternion prevRot;
-
-    //dRot is some temp data holder so we dont need to create new quaternions all the time???
-    private Quaternion dRot;
-    private Quaternion invRot;
 
     //A list because we can have multiple meshes to create one rb
     //In general theres just one mesh so can maybe be simplified
@@ -89,7 +87,7 @@ public class MyRigidBody
 
         this.prevPos = this.pos;
         this.prevRot = this.rot;
-        this.dRot = new Quaternion();
+        //this.dRot = new Quaternion();
         //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
         this.invRot = Quaternion.Inverse(this.rot);
 
@@ -217,37 +215,42 @@ public class MyRigidBody
             return;
         }
 
+
         //Linear motion
-        //pos_prev = pos
+
+        //Cache the pos as we need it later
+        this.prevPos = this.pos;
+
         //vel = vel + dt * a
         //pos = pos + dt * vel
-        this.prevPos = this.pos;
 
         this.vel += gravity * dt;
 
         this.pos += this.vel * dt;
 
-        //Angular motion
-        //q_prev = q
-        //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
-        //q = q + 0.5 * dt * v * [omega_x, omega_y, omega_z, 0] * q
-        //(sometimes you see h instead of dt)
 
+        //Angular motion
+
+        //Cache the rot as we need it later
         this.prevRot = this.rot;
 
-        //omega = omega because we have no external torque
+        //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
+        //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q
+        //(sometimes you see h instead of dt)
 
-        this.dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
+        //omega = omega + 0 because we have no external torque
 
+        //v[omega_x, omega_y, omega_z, 0]
+        Quaternion dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
 
-        //[omega_x, omega_y, omega_z, 0] * q
-        this.dRot *= this.rot;
+        //v[omega_x, omega_y, omega_z, 0] * q
+        dRot *= this.rot;
 
         //What happened to v? Maybe it should be v[omega_x, omega_y, omega_z, 0] meaning omegas are the v???
-        this.rot.x += 0.5f * dt * this.dRot.x;
-        this.rot.y += 0.5f * dt * this.dRot.y;
-        this.rot.z += 0.5f * dt * this.dRot.z;
-        this.rot.w += 0.5f * dt * this.dRot.w;
+        this.rot.x += 0.5f * dt * dRot.x;
+        this.rot.y += 0.5f * dt * dRot.y;
+        this.rot.z += 0.5f * dt * dRot.z;
+        this.rot.w += 0.5f * dt * dRot.w;
 
         this.rot.Normalize();
 
@@ -258,6 +261,7 @@ public class MyRigidBody
 
 
     //Fix velocity and angular velocity
+    //Add damping
     public void UpdateVelocities(float dt)
     {
         if (this.invMass == 0f)
@@ -274,13 +278,13 @@ public class MyRigidBody
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
      
         //delta_q
-        this.dRot = this.rot * Quaternion.Inverse(this.prevRot);
+        Quaternion dRot = this.rot * Quaternion.Inverse(this.prevRot);
 
-        Vector3 delta_q = new Vector3(this.dRot.x, this.dRot.y, this.dRot.z);
+        Vector3 delta_q = new Vector3(dRot.x, dRot.y, dRot.z);
 
         this.omega = delta_q * 2f / dt;
 
-        if (this.dRot.w < 0f)
+        if (dRot.w < 0f)
         {
             //Negate
             this.omega *= -1f;
@@ -375,20 +379,20 @@ public class MyRigidBody
 
         //dRot <- dOmega * q_i
         //lambda * (I_i^-1 * (r_i x n), 0)
-        this.dRot = new Quaternion(
+        Quaternion dRot = new Quaternion(
             dOmega.x,
             dOmega.y,
             dOmega.z,
             0f
         );
 
-       this.dRot *= this.rot;
+       dRot *= this.rot;
 
         //q_i = q_i + 0.5 * dRot
-        this.rot.x += 0.5f * this.dRot.x;
-        this.rot.y += 0.5f * this.dRot.y;
-        this.rot.z += 0.5f * this.dRot.z;
-        this.rot.w += 0.5f * this.dRot.w;
+        this.rot.x += 0.5f * dRot.x;
+        this.rot.y += 0.5f * dRot.y;
+        this.rot.z += 0.5f * dRot.z;
+        this.rot.w += 0.5f * dRot.w;
         
         this.rot.Normalize();
 
