@@ -16,23 +16,10 @@ public class MyRigidBody
 
     private Types type;
 
-    //Radius if we have a sphere
-    private Vector3 size;
-    //Multiply velocity with this damping 
-    public float damping;
-
     //A rigidbody has the following properties:
-    //x,y,z - position, pos
-    //v - velocity, vel
-    //q - orientation, rot
-    //omega - angular velocity
-    //I - moment of inertia
-    //m - mass
-
-    //The center of mass of a rb acts like a particle with
     //Position pos
     private Vector3 pos;
-    //Velocity vel
+    //Velocity v
     private Vector3 vel;
     //Rotation q
     private Quaternion rot;
@@ -49,16 +36,17 @@ public class MyRigidBody
     //if the body is aligned witht he x,y,z axis we can treat it as a 3 dimensional vector
     //and do calculations in local space by transforming everything to local space
     //tau = I * alpha -> alpha = 1/I * tau (which is why we use inverse inertia)
-    //tau is torque, tau = r x F where r is the distance from center of mass to where the force is applied 
+    //tau is torque
     //alpha is angular acceleration
     private Vector3 invInertia;
 
     //For simulation
     private Vector3 prevPos;
     private Quaternion prevRot;
+    //Multiply velocity with this damping 
+    public float damping;
 
-    //A list because we can have multiple meshes to create one rb
-    //In general theres just one mesh so can maybe be simplified
+    //The gameobject that represents this rigidbody
     private readonly GameObject rbObj;
 
 
@@ -69,14 +57,14 @@ public class MyRigidBody
     //v_a = omega x r (cross product)
     //If the rb moves, then
     //v_a = v + omega x r
- 
+
 
     //Removed parameter scene which is a gThreeScene whish is like the sim environment
     //If fontSize = 0 we wont display any text
     public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
     {
         this.type = type;
-        this.size = new Vector3(size.x, size.y, size.z);
+        //this.size = new Vector3(size.x, size.y, size.z);
         this.damping = 0f;
 
         this.pos = new Vector3(pos.x, pos.y, pos.z);
@@ -100,7 +88,7 @@ public class MyRigidBody
             //Create the obj we can see
             GameObject newBoxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-            newBoxObj.transform.localScale = this.size;
+            newBoxObj.transform.localScale = size;
 
             this.rbObj = newBoxObj;
 
@@ -125,7 +113,7 @@ public class MyRigidBody
             //Create the obj we can see
             GameObject newSphereObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
-            newSphereObj.transform.localScale = this.size.x * Vector3.one;
+            newSphereObj.transform.localScale = size.x * Vector3.one;
 
             this.rbObj = newSphereObj;
 
