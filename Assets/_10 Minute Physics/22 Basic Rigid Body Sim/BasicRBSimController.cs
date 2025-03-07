@@ -9,6 +9,8 @@ using static UnityEngine.Rendering.DebugUI;
 //Simulate rigidbodies with XPBD - Extended Position Based Dynamics
 //Read paper "Detailed rigid body simulation with xpbd" because
 //some of the equations in the youtube tutorial are inaccurate and missing
+//TODO:
+//- Use doubles instead of floats
 public class BasicRBSimController : MonoBehaviour
 {
     private RigidBodySimulator rbSimulator;
@@ -25,6 +27,7 @@ public class BasicRBSimController : MonoBehaviour
     //Needed to calculate mass
     private readonly float density = 1000f;
     //How many steps each FixedUpdate
+    //Was 10 in tutorial
     private readonly int numSubSteps = 1;
 
     
@@ -224,6 +227,12 @@ public class BasicRBSimController : MonoBehaviour
     //Interact with the scene by using mouse
     private void MouseInteraction()
     {
-        
+        //Use raycasting
+        //p - position where ray intersects with the collider
+        //d - distance from position to camera
+        //r - p but in local space of the body
+        //Create distance constraint
+
+        //On mouse move -> update p by using distance d and camera dir
     }
 }

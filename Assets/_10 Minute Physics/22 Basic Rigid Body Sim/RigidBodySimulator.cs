@@ -77,6 +77,8 @@ public class RigidBodySimulator
             this.dragConstraint.Solve(dt);
         }
 
+        //The velocities we calculated in Integrate are not the velocities we want
+        //because they make simulation unstable 
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
             allRigidBodies[i].UpdateVelocities(dt);

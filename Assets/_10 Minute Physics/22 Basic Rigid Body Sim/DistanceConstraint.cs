@@ -108,6 +108,7 @@ public class DistanceConstraint
     //F = (lambda * n) / dt^2
     public void Solve(float dt) 
     {
+        //Local -> global
         this.worldPos0 = this.body0.LocalToWorld(this.localPos0);
         
         if (this.body1 != null)

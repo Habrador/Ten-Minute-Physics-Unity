@@ -34,6 +34,9 @@ public class MyRigidBody
     //Moment of inertia I (resistance to torque)
     //Is a 3x3 matrix
     //if the body is aligned witht he x,y,z axis we can treat it as a 3 dimensional vector
+    //I = |I_xx 0    0   | -> I = (I_xx, I_yy, I_zz)
+    //    |0    I_yy 0   |
+    //    |0    0    I_zz|
     //and do calculations in local space by transforming everything to local space
     //tau = I * alpha -> alpha = 1/I * tau (which is why we use inverse inertia)
     //tau is torque
@@ -83,7 +86,6 @@ public class MyRigidBody
         this.invRot = Quaternion.Inverse(this.rot);
 
         this.vel = Vector3.zero;
-        
         this.omega = Vector3.zero;
 
         this.prevPos = this.pos;
@@ -259,6 +261,9 @@ public class MyRigidBody
 
 
     //Fix velocity and angular velocity
+    //The velocities calculated in Inegrate() are not the velocities we want
+    //because they make the simulation unstable because we havent take into
+    //consideration the constraints
     //Add damping
     public void UpdateVelocities(float dt)
     {
@@ -276,9 +281,11 @@ public class MyRigidBody
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
         //omega = (delta_q.w >= 0) ? omega : -omega
 
+        //The transformation that transforms the body from the frame before the solve into the frame after the solve
         //delta_q
         Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
+        //Turn the transformation into an angular velocity
         this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
         if (delta_q.w < 0f)
@@ -409,6 +416,9 @@ public class MyRigidBody
     //Returns the force on this constraint
     public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
     {
+        //When you pull the bodies closer you also make the bodies rotate
+        //The rotations are distributed according to I^-1
+    
         //Constraint distance:
         //C = l - l_0
         //l_0 - wanted length
@@ -433,6 +443,12 @@ public class MyRigidBody
         //alpha_tilde = alpha / dt^2
         //lambda = lambda + delta_lambda
         //and instead of lambda * normal they use delta_lambda * normal
+        //BUT according to the YT video "09 Getting ready to simulate the world with XPBD"
+        //we dont need to keep track of the lagrange multiplier per constraint
+        //if we iterate over the constraints just once
+        //Notice that iteration and substeps are not the same
+        //Some are iterating over the constraints multiple times each substep
+        //But we are doing it just once because it generates a better result
 
         if (corr.sqrMagnitude == 0f)
         {
