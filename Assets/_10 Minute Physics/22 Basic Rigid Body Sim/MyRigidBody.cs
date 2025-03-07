@@ -151,13 +151,13 @@ public class MyRigidBody
         //    this.textRenderer.createText(`${ mass.toFixed(1)} kg`, this.meshes[0].position);});
         //}
                     
-        UpdateMeshes();
+        UpdateMesh();
     }
 
 
 
     //Move mesh to the simulate position and rotation
-    public void UpdateMeshes()
+    public void UpdateMesh()
     {
         this.rbTrans.SetPositionAndRotation(this.pos, this.rot);
 

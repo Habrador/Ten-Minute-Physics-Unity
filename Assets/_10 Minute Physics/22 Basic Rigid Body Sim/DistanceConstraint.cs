@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 //Distance between two rbs or one rb and fixed point
 public class DistanceConstraint
 {
-    //If one of these are null, then the attachment point is fixed
+    //Null if attachment point is fixed
     private MyRigidBody body0;
     private MyRigidBody body1;
 
@@ -29,6 +29,8 @@ public class DistanceConstraint
 
     private readonly GameObject displayConstraintObj;
     private readonly Transform displayConstraintTrans;
+
+
 
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)

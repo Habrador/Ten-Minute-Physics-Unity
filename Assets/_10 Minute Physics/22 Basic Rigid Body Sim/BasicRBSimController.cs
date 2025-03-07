@@ -13,6 +13,7 @@ public class BasicRBSimController : MonoBehaviour
 {
     private RigidBodySimulator rbSimulator;
 
+    //The scenes we can chose from
     private enum Scenes
     {
         CribMobile,
@@ -21,15 +22,16 @@ public class BasicRBSimController : MonoBehaviour
 
     //Simulation settings
     private Vector3 gravity = new(0f, -10.0f, 0f);
-
+    //Needed to calculate mass
     private readonly float density = 1000f;
-
+    //How many steps each FixedUpdate
     private readonly int numSubSteps = 1;
 
     
 
     private void Start()
     {
+        //Default scene
         InitScene(Scenes.Chain);
     }
 
@@ -63,9 +65,13 @@ public class BasicRBSimController : MonoBehaviour
             InitCribMobileScene();
         }
         //Boxes hanging from the roof connected to each other by a rope
-        else
+        else if (scene == Scenes.Chain)
         {
             InitChainScene();
+        }
+        else
+        {
+            Debug.Log("There's no scene to init!");
         }
     }
 
@@ -180,7 +186,7 @@ public class BasicRBSimController : MonoBehaviour
 
         //Build the chain
         float prevY = 2.5f;
-        float prevSize = 0.0f;
+        float prevSize = 0f;
 
         MyRigidBody prevBox = null;
 

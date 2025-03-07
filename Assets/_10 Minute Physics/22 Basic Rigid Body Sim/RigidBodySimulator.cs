@@ -91,7 +91,7 @@ public class RigidBodySimulator
         //Update meshes so they have correct orientation and position
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
-            allRigidBodies[i].UpdateMeshes();
+            allRigidBodies[i].UpdateMesh();
         }
 
         for (int i = 0; i < allDistanceConstraints.Count; i++)
