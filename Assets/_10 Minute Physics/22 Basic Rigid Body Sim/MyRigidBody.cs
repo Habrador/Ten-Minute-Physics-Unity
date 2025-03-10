@@ -367,7 +367,7 @@ public class MyRigidBody
     //n - correction direction
     //r - vector from center of mass to contact point
     //Derivation at the end of the paper "Detailed rb simulation with xpbd"
-    private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
+    private float GetInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
     {
         if (this.invMass == 0f)
         {
@@ -402,6 +402,46 @@ public class MyRigidBody
         return w;
     }
 
+    //As in the code in the video (not on github)
+    private float GetInverseMass(Vector3 normal, Vector3 pos)
+    {
+        if (this.invMass == 0f)
+        {
+            return 0f;
+        }
+
+        //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+
+        //r_i
+        Vector3 r = pos - this.pos;
+        
+        //(r_i x n)
+        Vector3 rn = Vector3.Cross(r, normal);
+
+        //To be able to use the inertia vector3 which is only useful in local space
+        rn = this.invRot * rn;
+
+        //(r_i x n)^T * I_i^-1 * (r_i x n)
+        //rn^T * I_i^-1 * rn
+        //3x3 * 3x1 = 3x1
+        //|invI.x 0      0     | * |rn.x| = |rn.x * invI.x|
+        //|0      invI.y 0     |   |rn.y|   |rn.y * invI.y|
+        //|0      0      invI.z|   |rn.z|   |rn.z * invI.z|
+        //1x3 * 3x1 = 1x1
+        //|rn.x rn.y rn.z| * |rn.x * invI.x|
+        //                   |rn.y * invI.y|
+        //                   |rn.z * invI.z|
+        float w =
+            rn.x * rn.x * this.invInertia.x +
+            rn.y * rn.y * this.invInertia.y +
+            rn.z * rn.z * this.invInertia.z;
+
+        //m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+        w += this.invMass;
+
+        return w;
+    }
+
 
 
     //Update pos and rot to enforce distance constraints
@@ -416,6 +456,7 @@ public class MyRigidBody
         //Linear correction
         //+- Because we move in different directions because we have two rb
         //x_i = x_i +- w_i * lambda * n
+        //lambda_normal already has this +- in it
         this.pos += this.invMass * lambda_normal;
 
         //Angular correction
@@ -430,7 +471,7 @@ public class MyRigidBody
         //r_i x n
         Vector3 dOmega = Vector3.Cross(r, lambda_normal);
         
-        //
+        //Transform dOmega to local space so we can use the simplifed moment of inertia
         dOmega = this.invRot * dOmega;
 
         //Scales dOmega by the inverse inertia
@@ -451,6 +492,7 @@ public class MyRigidBody
             0f
         );
 
+        //lambda * [I_i^-1 * (r_i x n), 0] * q_i
         dRot *= this.rot;
 
         //q_i = q_i + 0.5 * dRot
@@ -459,6 +501,7 @@ public class MyRigidBody
         this.rot.z += 0.5f * dRot.z;
         this.rot.w += 0.5f * dRot.w;
         
+        //Always normnalize when we update rotation
         this.rot.Normalize();
 
         //Cache the inverse
