@@ -38,9 +38,6 @@ public class MyRigidBody
     //    |0    I_yy 0   |
     //    |0    0    I_zz|
     //and do calculations in local space by transforming everything to local space
-    //tau = I * alpha -> alpha = 1/I * tau (which is why we use inverse inertia)
-    //tau is torque
-    //alpha is angular acceleration
     private Vector3 invInertia;
 
     //For simulation
@@ -203,7 +200,7 @@ public class MyRigidBody
     // Begin simulation functions
     //
 
-    //Update vel, pos, omega, rotation by using semi-implicit Euler
+    //Update position, velocity, angular velocity, and rotation by using semi-implicit Euler
     public void Integrate(float dt, Vector3 gravity)
     {
         if (this.invMass == 0f)
@@ -217,6 +214,7 @@ public class MyRigidBody
         //Cache the pos as we need it later
         this.prevPos = this.pos;
 
+        //Calculate the new positon and velocity after this time step
         //vel = vel + dt * a
         //pos = pos + dt * vel
 
@@ -230,15 +228,52 @@ public class MyRigidBody
         //Cache the rot as we need it later
         this.prevRot = this.rot;
 
+        //From the tutorial:
+        //Update angular velocity:
         //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
-        //In the original paper: omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //Update rotation:
+        //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q
+
+        //From the paper "Detailed rb simulation with xpbd":
+        //Update angular velocity:
+        //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //Update rotation:
         //q = q + 0.5 * dt * [omega_x, omega_y, omega_z, 0] * q
-        //In the tutorial there was a v[omega_x, omega_y, omega_z, 0] but I think it was a missprint because in the paper "Detailed rb sim with xpbd" it doesnt exist
+        //In the tutorial theres a v before [omega_x, omega_y, omega_z, 0]
+        //but I think it was a missprint because in the paper it doesnt exist
         //(sometimes you see h instead of dt)
+        //Normalize
         //q = q / |q|
+
+        //Derivation of the above equations:
+        //tau = I * aa -> aa = I^-1 * tau (which is why we use inverse inertia)
+        //where:
+        // tau - torque (external)
+        // aa - angular acceleration
+        // I - moment of inertia
+        //Which is similar to F = m * a -> a = m^-1 * F
+        //To update angular velocity, we do something similar as when we update velocity vel = vel + a * dt;
+        //omega = omega + aa * dt = omega + I^-1 * tau * dt
+        //To update rotation we do something similar as when we update position pos = pos + vel * dt
+        //q = q + omega * dt
+        //This works fine in 2d where the rb can only rotate around the z axis (up direction):
+        //omega.z = omega.z + tau.z * I.z^-1 * dt
+        //rot.z = rot.z + omega.z * dt
+        //BUT in 3d it gets more complicated
+        //Rotation
+        //How to relate a rotation to an angular velocity
+        //rot = rot + 0.5 * omega * rot * dt
+        //(If omega is in body coordinates, you use rot = rot + 0.5 * rot * omega * dt)
+        //Angular velocity
+        //The angular equation of motion:
+        //Sum(M_cg) = d*H_cg / dt = I * (domega/dt) + (omega x (I * omega))
+        //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
+        //Which is the equation from the paper:
+        //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
 
         //omega = omega + 0 because we have no external torque
 
+        //Put the angular velocity in quaternion form so we can multiply it by a quaternion
         //[omega_x, omega_y, omega_z, 0]
         Quaternion dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
 
@@ -251,6 +286,7 @@ public class MyRigidBody
         this.rot.z += 0.5f * dt * dRot.z;
         this.rot.w += 0.5f * dt * dRot.w;
 
+        //The orientation quaternion must be a unit quaternion
         //q = q / |q|
         this.rot.Normalize();
 
@@ -263,7 +299,7 @@ public class MyRigidBody
     //Fix velocity and angular velocity
     //The velocities calculated in Inegrate() are not the velocities we want
     //because they make the simulation unstable because we havent take into
-    //consideration the constraints
+    //consideration the constraints which changes the position
     //Add damping
     public void UpdateVelocities(float dt)
     {
@@ -294,7 +330,7 @@ public class MyRigidBody
             this.omega *= -1f;
         }
 
-        //Damping
+        //Damping (should maybe be in its own method)
         this.vel *= Mathf.Max(1f - this.damping * dt, 0f);
     }
 
