@@ -266,20 +266,29 @@ public class MyRigidBody
         //
         //Angular velocity
         //The angular equation of motion:
+        //Takes into account both external influences and the body's own rotational behavior.
         //Sum(M_cg) = dH_cg / dt = I * (domega/dt) + (omega x (I * omega))
         //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
         //Which is the equation from the paper:
         //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //omega x (I * omega) represents the effect of the body's current rotation on its angular momentum, contributing to the overall torque.
+        //I^-1 Scales the effect of the torques based on the body's resistance to changes in its rotational motion.
         //
         //Rotation
-        //How to relate a rotation to an angular velocity (linearized formula = approximately correct):
+        //How a quaternion, which represents the orientation of an object, changes over time due to the angular velocity:
         //dq/dt = 0.5 * omega * q -> q_next = q + 0.5 * omega * q * dt
+        //The factor of 0.5 arises from the mathematical properties of quaternions (they use half-angles)
+        //and ensures that the rate of change of the quaternion correctly represents the physical rotation
         //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
 
         //omega = omega + 0 because we have no external torque
+        //The tutorial is not taking into account the body's own rotational behavior (omega x (I * omega)???
 
         //Put the angular velocity in quaternion form so we can multiply it by a quaternion
+        //This is known as a pure quaternion (a quaternion with a real part of zero: w = 0)
         //[omega_x, omega_y, omega_z, 0]
+        //Some sources say it should be [0, omega_x, omega_y, omega_z],
+        //but it depends on how the quaternion is implemented 
         Quaternion dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
 
         //[omega_x, omega_y, omega_z, 0] * q
@@ -318,12 +327,17 @@ public class MyRigidBody
         this.vel = (this.pos - this.prevPos) / dt;
 
         //Angular motion
+        //Compute the relative rotation between the two quaternions
+        //The transformation that transforms the body from the frame before the solve into the frame after the solve
+        //This operation is often used to determine the difference or change in orientation between two rotations
         //delta_q = q * q_prev^-1
-        //Linearized formula (approximately correct)
+        //Quaternions represent rotations using half-angles, so to convert back to full angles, you multiply by 2
+        //Similar to vel = (pos - pos_prev) / dt
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
+        //If delta_q.w is negative, the resulting angular velocity might point in the opposite direction of the intended rotation
+        //If it is negative, negating the entire angular velocity vector omega corrects the direction to be consistent with the intended rotation
         //omega = (delta_q.w >= 0) ? omega : -omega
 
-        //The transformation that transforms the body from the frame before the solve into the frame after the solve
         //delta_q = q * q_prev^-1
         Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
