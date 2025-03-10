@@ -11,6 +11,7 @@ using static UnityEngine.Rendering.DebugUI;
 //some of the equations in the youtube tutorial are inaccurate and missing
 //TODO:
 //- Use doubles instead of floats
+//- Figure out whats in local space in whats in global space
 public class BasicRBSimController : MonoBehaviour
 {
     private RigidBodySimulator rbSimulator;

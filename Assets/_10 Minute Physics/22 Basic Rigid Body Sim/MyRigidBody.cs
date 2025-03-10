@@ -37,7 +37,7 @@ public class MyRigidBody
     //I = |I_xx 0    0   | -> I = (I_xx, I_yy, I_zz)
     //    |0    I_yy 0   |
     //    |0    0    I_zz|
-    //and do calculations in local space by transforming everything to local space
+    //and do calculations in local space by transforming everything needed to local space
     private Vector3 invInertia;
 
     //For simulation
@@ -248,9 +248,9 @@ public class MyRigidBody
         //Derivation of the above equations:
         //tau = I * aa -> aa = I^-1 * tau (which is why we use inverse inertia)
         //where:
-        // tau - torque (external)
+        // tau - torque (external), tau = r x F where r is vector from center of mass to where you apply the force
         // aa - angular acceleration
-        // I - moment of inertia
+        // I - moment of inertia (resistance to torque)
         //Which is similar to F = m * a -> a = m^-1 * F
         //To update angular velocity, we do something similar as when we update velocity vel = vel + a * dt;
         //omega = omega + aa * dt = omega + I^-1 * tau * dt
@@ -260,16 +260,18 @@ public class MyRigidBody
         //omega.z = omega.z + tau.z * I.z^-1 * dt
         //rot.z = rot.z + omega.z * dt
         //BUT in 3d it gets more complicated
-        //Rotation
-        //How to relate a rotation to an angular velocity
-        //rot = rot + 0.5 * omega * rot * dt
-        //(If omega is in body coordinates, you use rot = rot + 0.5 * rot * omega * dt)
+        //
         //Angular velocity
         //The angular equation of motion:
-        //Sum(M_cg) = d*H_cg / dt = I * (domega/dt) + (omega x (I * omega))
+        //Sum(M_cg) = dH_cg / dt = I * (domega/dt) + (omega x (I * omega))
         //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
         //Which is the equation from the paper:
         //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //
+        //Rotation
+        //How to relate a rotation to an angular velocity (linearized formula = approximately correct):
+        //dq/dt = 0.5 * omega * q -> q_next = q + 0.5 * omega * q * dt
+        //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
 
         //omega = omega + 0 because we have no external torque
 
@@ -314,16 +316,19 @@ public class MyRigidBody
 
         //Angular motion
         //delta_q = q * q_prev^-1
+        //Linearized formula (approximately correct)
         //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
         //omega = (delta_q.w >= 0) ? omega : -omega
 
         //The transformation that transforms the body from the frame before the solve into the frame after the solve
-        //delta_q
+        //delta_q = q * q_prev^-1
         Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
         //Turn the transformation into an angular velocity
+        //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
         this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
+        //omega = (delta_q.w >= 0) ? omega : -omega
         if (delta_q.w < 0f)
         {
             //Negate
@@ -343,6 +348,8 @@ public class MyRigidBody
     //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
     //m - mass
     //n - correction direction
+    //r - vector from center of mass to contact point
+    //Derivation at the end of the paper "Detailed rb simulation with xpbd"
     private float GetInverseMass(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
     {
         if (this.invMass == 0f)
@@ -357,7 +364,7 @@ public class MyRigidBody
         {
             rn = this.invRot * rn;
         }
-        //Linear case
+        //Linear case (which is what exists in the video but in the code on github theres also this if/else)
         else
         {
             rn = pos - this.pos;
