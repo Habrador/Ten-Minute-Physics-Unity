@@ -28,8 +28,7 @@ public class MyRigidBody
     //Angular velocity omega
     //omega.magnitude -> speed of rotation
     private Vector3 omega;
-    //Mass (resistance to force)
-    //F = m * a -> a = 1/m * F (which is why we use inverse mass)
+    //Inverse mass m^-1
     private float invMass;
     //Moment of inertia I (resistance to torque)
     //Is a 3x3 matrix
@@ -38,6 +37,7 @@ public class MyRigidBody
     //    |0    I_yy 0   |
     //    |0    0    I_zz|
     //and do calculations in local space by transforming everything needed to local space
+    //Inverse moment of inertia I^-1
     private Vector3 invInertia;
 
     //For simulation
@@ -52,16 +52,7 @@ public class MyRigidBody
     private readonly Transform rbTrans;
 
 
-    //Useful equations
-    //The velocity at point a on the rb
-    //r is the distance between center and point a
-    //omega is angular velocity
-    //v_a = omega x r (cross product)
-    //If the rb moves, then
-    //v_a = v + omega x r
 
-
-    //Removed parameter scene which is a gThreeScene whish is like the sim environment
     //If fontSize = 0 we wont display any text
     //size - radius if we have a sphere, length of side if we have a box
     public MyRigidBody(RigidBodySimulator scene, Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
@@ -88,6 +79,8 @@ public class MyRigidBody
         this.prevPos = this.pos;
         this.prevRot = this.rot;
         
+        //Create the object we can see
+        //Calculate inverse mass and inverse moment of inertia
         if (type == Types.Box)
         {
             //Create the obj we can see
@@ -105,8 +98,13 @@ public class MyRigidBody
                 float mass = density * size.x * size.y * size.z;
 
                 this.invMass = 1f / mass;
-                
-                //Box inertia
+
+                //I (solid rectangular cuboid)
+                //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+                //h,w,d = height,width,depth
+                //I_h = 1/12 * m * (w^2 + d^2)
+                //I_w = 1/12 * m * (h^2 + d^2)
+                //I_d = 1/12 * m * (h^2 + w^2)
                 float Ix = 1f / 12f * mass * (size.y * size.y + size.z * size.z);
                 float Iy = 1f / 12f * mass * (size.x * size.x + size.z * size.z);
                 float Iz = 1f / 12f * mass * (size.x * size.x + size.y * size.y);
@@ -127,18 +125,23 @@ public class MyRigidBody
             //Init Sphere data
             if (density > 0f)
             {
-                //mass = volume * density
-                float mass = 4f / 3f * Mathf.PI * size.x * size.x * size.x * density;
+                float r = size.x;
+            
+                //mass = volume * density = 4/3 * pi * r^3 * density
+                float mass = 4f / 3f * Mathf.PI * r * r * r * density;
                 
                 this.invMass = 1f / mass;
-                
-                //Sphere inertia
-                float I = 2f / 5f * mass * size.x * size.x;
+
+                //I (solid sphere)
+                //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+                //I = 2/5 * m * r^2
+                float I = 2f / 5f * mass * r * r;
                 
                 this.invInertia = new Vector3(1f / I, 1f / I, 1f / I);
             }
         }
 
+        //Add collider to objects for raycasting
 
         //Create text renderer for mass display
         //this.textRenderer = null;
