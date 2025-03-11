@@ -23,7 +23,7 @@ public class MyRigidBody
     private Vector3 vel;
     //Rotation q
     private Quaternion rot;
-    //Inverse rot q^-1
+    //Inverse rot q^-1 = q* / |q|^2
     private Quaternion invRot;
     //Angular velocity omega
     //omega.magnitude -> speed of rotation
@@ -53,12 +53,12 @@ public class MyRigidBody
 
 
 
+    //Removed scene as parameter - we add the rb to the simulator when we create it
+    //When we want to delete the physical object we call Dispose()
     //If fontSize = 0 we wont display any text
     //size - radius if we have a sphere, length of side if we have a box
-    public MyRigidBody(RigidBodySimulator scene, Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
+    public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
     {
-        scene.allRigidBodies.Add(this);
-
         this.type = type;
 
         this.damping = 0f;
@@ -70,7 +70,7 @@ public class MyRigidBody
             eulerAngles = angles
         };
 
-        //Inverts this quaternion - calculates the "conjugate" according to documentation, which is the same as inverse
+        //Inverts this quaternion
         this.invRot = Quaternion.Inverse(this.rot);
 
         this.vel = Vector3.zero;

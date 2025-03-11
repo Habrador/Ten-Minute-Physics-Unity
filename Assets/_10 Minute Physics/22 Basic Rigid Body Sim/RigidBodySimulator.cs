@@ -118,7 +118,7 @@ public class RigidBodySimulator
         //TODO: this is some default parameter in the original code and doesnt say what it is in this section, so might be true or false
         bool unilateral = false;
     
-        this.dragConstraint = new DistanceConstraint(this, body, null, pos, pos, 0f, this.dragCompliance, unilateral);
+        this.dragConstraint = new DistanceConstraint(body, null, pos, pos, 0f, this.dragCompliance, unilateral);
     }
 
     public void Drag(Vector3 pos)

@@ -32,13 +32,13 @@ public class DistanceConstraint
 
 
 
+    //Removed scene as parameter - we add the rb to the simulator when we create it
+    //When we want to delete the physical object we call Dispose()
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)
     //Attachment points pos0 and pos1 are in world pos
-    public DistanceConstraint(RigidBodySimulator scene, MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
+    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
     {
-        scene.allDistanceConstraints.Add(this);
-
         this.body0 = body0;
         this.body1 = body1;
 
