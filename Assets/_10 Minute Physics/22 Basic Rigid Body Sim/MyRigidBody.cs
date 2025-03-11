@@ -115,6 +115,8 @@ public class MyRigidBody
         else if (type == Types.Sphere) 
         {
             //Create the obj we can see
+            //The tutorial is using two half-spheres where one is white and other is red
+            //to easier see the rotations, we can maybe use a texture instead???
             GameObject newSphereObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
             newSphereObj.transform.localScale = size.x * Vector3.one;
