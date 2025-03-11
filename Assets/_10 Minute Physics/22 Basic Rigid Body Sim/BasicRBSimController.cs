@@ -45,9 +45,9 @@ public class BasicRBSimController : MonoBehaviour
 
     private void Update()
     {
-        rbSimulator.MyUpdate();
+        //rbSimulator.MyUpdate();
 
-        MouseInteraction();
+        //MouseInteraction();
     }
 
 
@@ -56,7 +56,7 @@ public class BasicRBSimController : MonoBehaviour
     {
         float dt = Time.fixedDeltaTime;
 
-        rbSimulator.MyFixedUpdate(dt, numSubSteps);
+        //rbSimulator.MyFixedUpdate(dt, numSubSteps);
     }
 
 

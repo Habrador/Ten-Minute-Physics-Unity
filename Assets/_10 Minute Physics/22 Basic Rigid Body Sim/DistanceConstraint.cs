@@ -63,7 +63,7 @@ public class DistanceConstraint
         //Create a cylinder for visualization
         GameObject newCylinderObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
-        newCylinderObj.transform.localScale = new Vector3(width, width, 1f);
+        newCylinderObj.transform.localScale = new Vector3(width, 1f, width);
 
         newCylinderObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.red;
 
@@ -166,7 +166,10 @@ public class DistanceConstraint
 
         //Update cylinder's transformation
         this.displayConstraintTrans.SetPositionAndRotation(center, quaternion);
-        this.displayConstraintTrans.localScale = new Vector3(1f, length, 1f);
+
+        Vector3 currentScale = this.displayConstraintTrans.localScale;
+
+        this.displayConstraintTrans.localScale = new Vector3(currentScale.x, length, currentScale.z);
 
 
         //Update text position and rotation
