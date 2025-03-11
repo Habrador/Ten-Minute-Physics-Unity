@@ -143,18 +143,20 @@ public class MyRigidBody
             }
         }
 
-        //Add collider to objects for raycasting
+        //Change settings for all meshes
+        this.rbObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.white;
+
 
         //Create text renderer for mass display
         //this.textRenderer = null;
-        
+
         //if (fontSize > 0.0)
         //{
         //    this.textRenderer = new TextRenderer(scene, fontSize);
         //    this.textRenderer.loadFont().then(() => {
         //    this.textRenderer.createText(`${ mass.toFixed(1)} kg`, this.meshes[0].position);});
         //}
-                    
+
         UpdateMesh();
     }
 
