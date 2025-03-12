@@ -169,6 +169,9 @@ public class DistanceConstraint
 
         Vector3 currentScale = this.displayConstraintTrans.localScale;
 
+        //In Unity we have to multiply the length ny 0.5
+        length *= 0.5f;
+
         this.displayConstraintTrans.localScale = new Vector3(currentScale.x, length, currentScale.z);
 
 
