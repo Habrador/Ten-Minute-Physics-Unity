@@ -59,7 +59,7 @@ public class DistanceConstraint
         this.wantedDistance = distance;
         this.compliance = compliance;
 
-
+        
         //Create a cylinder for visualization
         GameObject newCylinderObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
@@ -69,7 +69,7 @@ public class DistanceConstraint
 
         this.displayConstraintObj = newCylinderObj;
         this.displayConstraintTrans = newCylinderObj.transform;
-
+        
 
         //Create text renderer for force display
         //this.textRenderer = null;
@@ -149,25 +149,43 @@ public class DistanceConstraint
         Vector3 start = this.worldPos0;
         Vector3 end = this.worldPos1;
 
+        //Depending on the number of iterations we might have to recalculate these even though we cache them in FixedUpdate
+        //start = this.body0.LocalToWorld(this.localPos0);
+
+        //if (this.body1 != null)
+        //{
+        //    end = this.body1.LocalToWorld(this.localPos1);
+        //}
+
+        //Debug.DrawLine(start, end, UnityEngine.Color.blue);
+
+        //return;
+
+        //Position
+
         //Calculate the center point
         Vector3 center = (start + end) * 0.5f;
+
+        //Rotation
 
         //Calculate the direction vector
         Vector3 direction = end - start;
         
-        float length = direction.magnitude;
-
-        ///Create a rotation quaternion
+        //Create a rotation quaternion
         Quaternion quaternion = new Quaternion();
 
-        //quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-        //Not sure if correct???
-        quaternion = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), direction.normalized);
+        quaternion = Quaternion.LookRotation(direction.normalized, Vector3.up);
+
+        quaternion *= Quaternion.Euler(90f, 0f, 0f);
 
         //Update cylinder's transformation
         this.displayConstraintTrans.SetPositionAndRotation(center, quaternion);
 
+
+        //Scale
         Vector3 currentScale = this.displayConstraintTrans.localScale;
+
+        float length = direction.magnitude;
 
         //In Unity we have to multiply the length ny 0.5
         length *= 0.5f;

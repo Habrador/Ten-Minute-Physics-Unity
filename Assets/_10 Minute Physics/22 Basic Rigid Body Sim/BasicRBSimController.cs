@@ -31,7 +31,7 @@ public class BasicRBSimController : MonoBehaviour
     private readonly float density = 1000f;
     //How many steps each FixedUpdate
     //Was 10 in tutorial
-    private readonly int numSubSteps = 1;
+    private readonly int numSubSteps = 10;
 
     
 
