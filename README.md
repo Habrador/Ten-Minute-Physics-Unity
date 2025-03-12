@@ -128,7 +128,9 @@ TODO
 
 ## 22. Basic rigid body simulator
 
-TODO
+Simulating rigid bodies using XPBD. 
+
+<img src="/_media/22-basic-rb-simulator.png" width="400">
 
 
 ## 23. Sweep and Prune collision detection
