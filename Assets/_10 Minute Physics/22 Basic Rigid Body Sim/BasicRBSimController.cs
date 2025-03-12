@@ -45,8 +45,9 @@ public class BasicRBSimController : MonoBehaviour
 
     private void Update()
     {
-        //rbSimulator.MyUpdate();
+        rbSimulator.MyUpdate();
 
+        //Should maybe be in LateUpdate()???
         //MouseInteraction();
     }
 
@@ -56,11 +57,12 @@ public class BasicRBSimController : MonoBehaviour
     {
         float dt = Time.fixedDeltaTime;
 
-        //rbSimulator.MyFixedUpdate(dt, numSubSteps);
+        rbSimulator.MyFixedUpdate(dt, numSubSteps);
     }
 
 
 
+    //Create a new rb simulation envrionment with some objects we want to simulate
     private void InitScene(Scenes scene)
     {
         rbSimulator = new RigidBodySimulator(gravity);
@@ -262,5 +264,7 @@ public class BasicRBSimController : MonoBehaviour
         //Create distance constraint
 
         //On mouse move -> update p by using distance d and camera dir
+
+        //Each gameobject in Unity has a unique identifer which we can use to find it among the rb we simulate
     }
 }
