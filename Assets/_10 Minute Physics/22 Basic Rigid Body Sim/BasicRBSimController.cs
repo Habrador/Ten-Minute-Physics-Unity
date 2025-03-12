@@ -247,7 +247,7 @@ public class BasicRBSimController : MonoBehaviour
 
         //Width of the mesh we use to display the constraint
         float width = 0.01f;
-        float fontSize = 0.03f;
+        int fontSize = 15;
         
         //Distance between each box
         float dist = 0.2f;

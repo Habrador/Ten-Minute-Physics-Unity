@@ -53,13 +53,16 @@ public class MyRigidBody
     //Faster to cache it
     private readonly Transform rbVisualTrans;
 
+    //Font size determines if we should display rb data on the screen
+    private int fontSize;
+
 
 
     //Removed scene as parameter - we add the rb to the simulator when we create it
     //When we want to delete the physical object we call Dispose()
     //If fontSize = 0 we wont display any text
     //size - radius if we have a sphere, length of side if we have a box
-    public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, float fontSize = 0f)
+    public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, int fontSize = 0)
     {
         this.type = type;
 
@@ -149,15 +152,9 @@ public class MyRigidBody
         this.rbVisualObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.white;
 
 
-        //Create text renderer for mass display
-        //this.textRenderer = null;
+        //
+        this.fontSize = fontSize;
 
-        //if (fontSize > 0.0)
-        //{
-        //    this.textRenderer = new TextRenderer(scene, fontSize);
-        //    this.textRenderer.loadFont().then(() => {
-        //    this.textRenderer.createText(`${ mass.toFixed(1)} kg`, this.meshes[0].position);});
-        //}
 
         UpdateMesh();
     }
@@ -175,15 +172,20 @@ public class MyRigidBody
     //Display mass in kg next to object using OnGUI 
     public void DisplayData()
     {
+        if (fontSize == 0)
+        {
+            return;
+        }
+    
         string displayText = Mathf.RoundToInt(1f / this.invMass) + "kg";
 
         GUIStyle textStyle = new GUIStyle();
 
-        textStyle.fontSize = 24;
+        textStyle.fontSize = this.fontSize;
         textStyle.normal.textColor = UnityEngine.Color.black;
 
         //The position and size of the text area
-        Rect textArea = new Rect(10, 10, 200, 25);
+        Rect textArea = new Rect(10, 10, 200, this.fontSize);
 
         //From world space to screen space
         Vector3 screenPos = Camera.main.WorldToScreenPoint(this.pos);

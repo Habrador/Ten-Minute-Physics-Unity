@@ -33,6 +33,8 @@ public class DistanceConstraint
     //For displaying
     private float force;
     private float elongation;
+    //Font size determines if we should display rb data on the screen
+    private int fontSize;
 
 
 
@@ -41,7 +43,7 @@ public class DistanceConstraint
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)
     //Attachment points pos0 and pos1 are in world pos
-    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, float fontSize = 0f)
+    public DistanceConstraint(MyRigidBody body0, MyRigidBody body1, Vector3 pos0, Vector3 pos1, float distance, float compliance, bool unilateral, float width = 0.01f, int fontSize = 0)
     {
         this.body0 = body0;
         this.body1 = body1;
@@ -76,18 +78,10 @@ public class DistanceConstraint
 
         this.displayConstraintObj = newCylinderObj;
         this.displayConstraintTrans = newCylinderObj.transform;
-        
 
-        //Create text renderer for force display
-        //this.textRenderer = null;
-        //if (fontSize > 0.0) 
-        //{
-        //    this.textRenderer = new TextRenderer(scene, fontSize);
-        //    this.textRenderer.loadFont().then(() => {
-        //        this.updateText(0, 1);
-        //        this.updateMesh();
-        //    });
-        //}
+
+        //
+        this.fontSize = fontSize;
 
 
         UpdateMesh();
@@ -205,15 +199,20 @@ public class DistanceConstraint
     //Display force on constraint in N and the elogation in m next to object using OnGUI 
     public void DisplayData()
     {
+        if (this.fontSize == 0)
+        {
+            return;
+        }
+        
         string displayText = Mathf.RoundToInt(Mathf.Abs(this.force)) + "N" + ", " + this.elongation + "m";
 
         GUIStyle textStyle = new GUIStyle();
 
-        textStyle.fontSize = 24;
+        textStyle.fontSize = this.fontSize;
         textStyle.normal.textColor = UnityEngine.Color.black;
 
         //The position and size of the text area
-        Rect textArea = new Rect(10, 10, 200, 25);
+        Rect textArea = new Rect(10, 10, 200, this.fontSize);
 
         //From world space to screen space
         Vector3 screenPos = Camera.main.WorldToScreenPoint(this.displayConstraintTrans.position);
