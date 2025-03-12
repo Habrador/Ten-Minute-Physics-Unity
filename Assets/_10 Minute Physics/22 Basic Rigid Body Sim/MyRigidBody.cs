@@ -47,9 +47,9 @@ public class MyRigidBody
     public float damping;
 
     //The gameobject that represents this rigidbody
-    private readonly GameObject rbObj;
+    public readonly GameObject rbVisualObj;
     //Faster to cache it
-    private readonly Transform rbTrans;
+    private readonly Transform rbVisualTrans;
 
 
 
@@ -88,8 +88,8 @@ public class MyRigidBody
 
             newBoxObj.transform.localScale = size;
 
-            this.rbObj = newBoxObj;
-            this.rbTrans = newBoxObj.transform;
+            this.rbVisualObj = newBoxObj;
+            this.rbVisualTrans = newBoxObj.transform;
 
             //Init box data
             if (density > 0f)
@@ -121,8 +121,8 @@ public class MyRigidBody
 
             newSphereObj.transform.localScale = size.x * Vector3.one;
 
-            this.rbObj = newSphereObj;
-            this.rbTrans = newSphereObj.transform;
+            this.rbVisualObj = newSphereObj;
+            this.rbVisualTrans = newSphereObj.transform;
 
             //Init Sphere data
             if (density > 0f)
@@ -144,7 +144,7 @@ public class MyRigidBody
         }
 
         //Change settings for all meshes
-        this.rbObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.white;
+        this.rbVisualObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.white;
 
 
         //Create text renderer for mass display
@@ -165,7 +165,7 @@ public class MyRigidBody
     //Move mesh to the simulate position and rotation
     public void UpdateMesh()
     {
-        this.rbTrans.SetPositionAndRotation(this.pos, this.rot);
+        this.rbVisualTrans.SetPositionAndRotation(this.pos, this.rot);
 
         //Maybe recalculate bounds?
         //rbTrans.GetComponent<MeshFilter>().mesh
@@ -613,7 +613,7 @@ public class MyRigidBody
 
     public void Dispose() 
     {
-        GameObject.Destroy(rbObj);    
+        GameObject.Destroy(rbVisualObj);    
 
         //if (this.textRenderer)
         //{

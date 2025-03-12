@@ -33,12 +33,19 @@ public class BasicRBSimController : MonoBehaviour
     //Was 10 in tutorial
     private readonly int numSubSteps = 10;
 
+    //Mouse interaction
+    private bool hasSelectedRb = false;
+    private float d;
+    private Camera thisCamera;
     
+
 
     private void Start()
     {
         //Default scene
         InitScene(Scenes.Chain);
+
+        thisCamera = Camera.main;
     }
 
 
@@ -48,7 +55,7 @@ public class BasicRBSimController : MonoBehaviour
         rbSimulator.MyUpdate();
 
         //Should maybe be in LateUpdate()???
-        //MouseInteraction();
+        MouseInteraction();
     }
 
 
@@ -257,14 +264,66 @@ public class BasicRBSimController : MonoBehaviour
     //Interact with the scene by using mouse
     private void MouseInteraction()
     {
-        //Use raycasting
-        //p - position where ray intersects with the collider
-        //d - distance from position to camera
-        //r - p but in local space of the body
-        //Create distance constraint
+        //Try to select rb
+        if (Input.GetMouseButtonDown(0) && hasSelectedRb == false)
+        {
+            //Raycasting
+            Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
+            
+            //If we hit a collider
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                //Each gameobject in Unity has a unique identifer which we can use to find it among the rb we simulate
+                int id = hit.transform.gameObject.GetInstanceID();
 
-        //On mouse move -> update p by using distance d and camera dir
+                //Debug.Log(hit.transform.gameObject.GetInstanceID());
+                Debug.Log("hit");
 
-        //Each gameobject in Unity has a unique identifer which we can use to find it among the rb we simulate
+                //Find the rigidbody with this id in the list of all rbs in the simulator
+                List<MyRigidBody> allRigidBodies = rbSimulator.allRigidBodies;
+
+                foreach (MyRigidBody thisRb in allRigidBodies)
+                {
+                    //If the ids match
+                    if (thisRb.rbVisualObj.GetInstanceID() == id)
+                    {
+                        Debug.Log("Identified the rb");
+
+                        //Data
+
+                        //p_m - position where ray intersects with the collider
+                        Vector3 p = hit.point;
+
+                        //d - distance from position we hit to mouse
+                        this.d = (p - ray.GetPoint(0f)).magnitude;
+
+                        //Create a distance constraint
+                        rbSimulator.StartDrag(thisRb, hit.point);
+
+                        hasSelectedRb = true;
+
+                        break;
+                    }
+                }
+            }
+        }
+        //Drag selected rb
+        else if (Input.GetMouseButtonDown(0) && hasSelectedRb == true)
+        {
+            //On mouse move -> update p by using distance d and new mouse ray
+            Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
+
+            //Update p_m using d
+            Vector3 p_m = ray.direction * d;
+        
+            rbSimulator.Drag(p_m);
+        }
+        //Deselect rb
+        else if (Input.GetMouseButtonUp(0) && hasSelectedRb == true)
+        {
+            rbSimulator.EndDrag();
+            
+            hasSelectedRb = false;
+        }
     }
 }

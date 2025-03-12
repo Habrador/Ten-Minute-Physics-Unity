@@ -113,6 +113,8 @@ public class RigidBodySimulator
     //
     // Mouse interactions
     //
+
+    //pos is in world coordinates
     public void StartDrag(MyRigidBody body, Vector3 pos)
     {
         //TODO: this is some default parameter in the original code and doesnt say what it is in this section, so might be true or false
