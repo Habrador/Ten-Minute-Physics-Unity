@@ -30,6 +30,10 @@ public class DistanceConstraint
     private readonly GameObject displayConstraintObj;
     private readonly Transform displayConstraintTrans;
 
+    //For displaying
+    private float force;
+    private float elongation;
+
 
 
     //Removed scene as parameter - we add the rb to the simulator when we create it
@@ -133,15 +137,13 @@ public class DistanceConstraint
         
         corr *= distance - this.wantedDistance;
         
-        float force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
+        this.force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
 
 
         //Data for display purposes
         float elongation = distance - this.wantedDistance;
         
-        elongation = Mathf.Round(elongation * 100f) / 100f;
-        
-        //UpdateText(Mathf.Abs(force), elongation);
+        this.elongation = Mathf.Round(elongation * 100f) / 100f;
     }
 
 
@@ -196,26 +198,38 @@ public class DistanceConstraint
         length *= 0.5f;
 
         this.displayConstraintTrans.localScale = new Vector3(currentScale.x, length, currentScale.z);
-
-
-        //Update text position and rotation
-        //if (this.textRenderer)
-        //{
-        //    this.textRenderer.updatePosition(center);
-        //    this.textRenderer.updateRotation(gCamera.quaternion);
-        //}
     }
 
 
 
-    private void UpdateText(float force, float elongation)
+    //Display force on constraint in N and the elogation in m next to object using OnGUI 
+    public void DisplayData()
     {
-        //if (this.textRenderer)
-        //{
-        //    this.textRenderer.createText(`   ${ Math.round(force)}
-        //    N,  ${ elongation}
-        //    m`, this.cylinder.position);
-        //}
+        string displayText = Mathf.RoundToInt(Mathf.Abs(this.force)) + "N" + ", " + this.elongation + "m";
+
+        GUIStyle textStyle = new GUIStyle();
+
+        textStyle.fontSize = 24;
+        textStyle.normal.textColor = UnityEngine.Color.black;
+
+        //The position and size of the text area
+        Rect textArea = new Rect(10, 10, 200, 25);
+
+        //From world space to screen space
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(this.displayConstraintTrans.position);
+
+        //WorldToScreenPoint and GUI.Label y positions are for some reason inverted
+        screenPos.y = Screen.height - screenPos.y;
+
+        //We also want it centered
+        screenPos.y -= textArea.height * 0.5f;
+
+        //And offset it in x direction so its outside of the object
+        screenPos.x += 30f;
+
+        textArea.position = new Vector2(screenPos.x, screenPos.y);
+
+        GUI.Label(textArea, displayText, textStyle);
     }
 
 

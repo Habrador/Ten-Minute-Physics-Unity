@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 using static UnityEditor.PlayerSettings;
+using static UnityEngine.GraphicsBuffer;
 
 public class MyRigidBody
 {
@@ -166,15 +168,38 @@ public class MyRigidBody
     public void UpdateMesh()
     {
         this.rbVisualTrans.SetPositionAndRotation(this.pos, this.rot);
+    }
 
-        //Maybe recalculate bounds?
-        //rbTrans.GetComponent<MeshFilter>().mesh
 
-        //if (this.textRenderer)
-        //{
-        //    this.textRenderer.updatePosition(this.meshes[0].position);
-        //    this.textRenderer.updateRotation(gCamera.quaternion);
-        //}
+
+    //Display mass in kg next to object using OnGUI 
+    public void DisplayData()
+    {
+        string displayText = Mathf.RoundToInt(1f / this.invMass) + "kg";
+
+        GUIStyle textStyle = new GUIStyle();
+
+        textStyle.fontSize = 24;
+        textStyle.normal.textColor = UnityEngine.Color.black;
+
+        //The position and size of the text area
+        Rect textArea = new Rect(10, 10, 200, 25);
+
+        //From world space to screen space
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(this.pos);
+
+        //WorldToScreenPoint and GUI.Label y positions are for some reason inverted
+        screenPos.y = Screen.height - screenPos.y;
+
+        //We also want it centered
+        screenPos.y -= textArea.height * 0.5f;
+
+        //And offset it in x direction so its outside of the object
+        screenPos.x += 30f;
+
+        textArea.position = new Vector2(screenPos.x, screenPos.y);
+
+        GUI.Label(textArea, displayText, textStyle);
     }
 
 

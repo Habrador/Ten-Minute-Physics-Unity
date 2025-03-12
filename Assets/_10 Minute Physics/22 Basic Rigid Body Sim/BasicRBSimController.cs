@@ -69,9 +69,37 @@ public class BasicRBSimController : MonoBehaviour
 
 
 
+    private void OnGUI()
+    {
+        MainGUI();
+
+        List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;
+
+        foreach (MyRigidBody thisRb in allRbs)
+        {
+            thisRb.DisplayData();
+        }
+
+        List<DistanceConstraint> allConstraints = rbSimulator.allDistanceConstraints;
+
+        foreach (DistanceConstraint thisConstraint in allConstraints)
+        {
+            thisConstraint.DisplayData();
+        }
+    }
+
+
+
     //Create a new rb simulation envrionment with some objects we want to simulate
     private void InitScene(Scenes scene)
     {
+        //Destroy previous scene
+        if (rbSimulator != null)
+        {
+            rbSimulator.Dispose();
+        }
+    
+        //Create a new rb simulator
         rbSimulator = new RigidBodySimulator(gravity);
 
         //Childs crib mobile but several connected to each other
@@ -335,5 +363,52 @@ public class BasicRBSimController : MonoBehaviour
             
             hasSelectedRb = false;
         }
+    }
+
+
+
+    //Buttons to select which collision algorithm to use
+    //Text to display info to see the difference between the algorithms
+    private void MainGUI()
+    {
+        GUILayout.BeginHorizontal("box");
+
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+
+        //Buttons
+        GUIStyle buttonStyle = new(GUI.skin.button)
+        {
+            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
+
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        if (GUILayout.Button($"Crib mobile", buttonStyle))
+        {
+            InitScene(Scenes.CribMobile);
+        }
+        if (GUILayout.Button("Chain", buttonStyle))
+        {
+            InitScene(Scenes.Chain);
+        }
+
+
+        /*
+        //Text
+        string infoText = $"Spheres: {totalDiscs} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
+
+        GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+        textStyle.fontSize = fontSize;
+        textStyle.margin = offset;
+
+        GUILayout.Label(infoText, textStyle);
+        */
+
+        GUILayout.EndHorizontal();
     }
 }
