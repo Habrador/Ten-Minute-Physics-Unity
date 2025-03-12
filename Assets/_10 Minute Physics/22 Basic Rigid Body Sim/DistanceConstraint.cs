@@ -16,7 +16,7 @@ public class DistanceConstraint
     //One sided, limit motion in one direction 
     private bool unilateral;
 
-    private Vector3 worldPos0;
+    public Vector3 worldPos0;
     //Public so we can access it when we drag with mouse 
     public Vector3 worldPos1;
     private Vector3 localPos0;

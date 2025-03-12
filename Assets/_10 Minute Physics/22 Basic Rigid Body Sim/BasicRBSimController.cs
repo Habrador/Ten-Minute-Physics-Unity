@@ -277,7 +277,7 @@ public class BasicRBSimController : MonoBehaviour
                 int id = hit.transform.gameObject.GetInstanceID();
 
                 //Debug.Log(hit.transform.gameObject.GetInstanceID());
-                Debug.Log("hit");
+                //Debug.Log("hit");
 
                 //Find the rigidbody with this id in the list of all rbs in the simulator
                 List<MyRigidBody> allRigidBodies = rbSimulator.allRigidBodies;
@@ -287,7 +287,7 @@ public class BasicRBSimController : MonoBehaviour
                     //If the ids match
                     if (thisRb.rbVisualObj.GetInstanceID() == id)
                     {
-                        Debug.Log("Identified the rb");
+                        //Debug.Log("Identified the rb");
 
                         //Data
 
@@ -295,7 +295,7 @@ public class BasicRBSimController : MonoBehaviour
                         Vector3 p = hit.point;
 
                         //d - distance from position we hit to mouse
-                        this.d = (p - ray.GetPoint(0f)).magnitude;
+                        this.d = hit.distance;
 
                         //Create a distance constraint
                         rbSimulator.StartDrag(thisRb, hit.point);
@@ -307,19 +307,29 @@ public class BasicRBSimController : MonoBehaviour
                 }
             }
         }
+        
+
+
         //Drag selected rb
-        else if (Input.GetMouseButtonDown(0) && hasSelectedRb == true)
+        if (hasSelectedRb == true)
         {
             //On mouse move -> update p by using distance d and new mouse ray
             Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
 
             //Update p_m using d
-            Vector3 p_m = ray.direction * d;
+            Vector3 p_m = ray.origin + ray.direction * d;
         
             rbSimulator.Drag(p_m);
+
+            //Vector3 p0 = rbSimulator.dragConstraint.worldPos0;
+
+            //Debug.DrawLine(p0, p_m, UnityEngine.Color.blue);
         }
+        
+
+
         //Deselect rb
-        else if (Input.GetMouseButtonUp(0) && hasSelectedRb == true)
+        if (Input.GetMouseButtonUp(0) && hasSelectedRb == true)
         {
             rbSimulator.EndDrag();
             

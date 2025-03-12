@@ -12,7 +12,7 @@ public class RigidBodySimulator
     public List<DistanceConstraint> allDistanceConstraints;
 
     //Dragconstraint, meaning if we drag with mouse to interact we add a temp distance constraint
-    private DistanceConstraint dragConstraint;
+    public DistanceConstraint dragConstraint;
     private float dragCompliance;
 
 
