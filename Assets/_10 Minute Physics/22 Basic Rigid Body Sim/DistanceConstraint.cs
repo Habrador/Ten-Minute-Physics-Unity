@@ -67,6 +67,9 @@ public class DistanceConstraint
 
         newCylinderObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.red;
 
+        //Remove collider because the constraint is not part of the raycasting
+        newCylinderObj.GetComponent<Collider>().enabled = false;
+
         this.displayConstraintObj = newCylinderObj;
         this.displayConstraintTrans = newCylinderObj.transform;
         
@@ -132,6 +135,7 @@ public class DistanceConstraint
         
         float force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
 
+
         //Data for display purposes
         float elongation = distance - this.wantedDistance;
         
@@ -176,6 +180,7 @@ public class DistanceConstraint
 
         quaternion = Quaternion.LookRotation(direction.normalized, Vector3.up);
 
+        //Rotate 90 degrees to align it properly
         quaternion *= Quaternion.Euler(90f, 0f, 0f);
 
         //Update cylinder's transformation
@@ -187,7 +192,7 @@ public class DistanceConstraint
 
         float length = direction.magnitude;
 
-        //In Unity we have to multiply the length ny 0.5
+        //In Unity we have to multiply the length by 0.5
         length *= 0.5f;
 
         this.displayConstraintTrans.localScale = new Vector3(currentScale.x, length, currentScale.z);
