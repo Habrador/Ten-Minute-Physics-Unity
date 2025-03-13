@@ -239,11 +239,5 @@ public class DistanceConstraint
         {
             GameObject.Destroy(this.displayConstraintObj);
         }
-
-        //if (this.textRenderer)
-        //{
-        //    this.textRenderer.dispose();
-        //}
     }
-
 }

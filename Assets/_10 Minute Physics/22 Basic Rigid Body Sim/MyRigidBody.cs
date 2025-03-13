@@ -640,12 +640,7 @@ public class MyRigidBody
 
     public void Dispose() 
     {
-        GameObject.Destroy(rbVisualObj);    
-
-        //if (this.textRenderer)
-        //{
-        //    this.textRenderer.dispose();
-        //}
+        GameObject.Destroy(rbVisualObj);
     }
     
 }

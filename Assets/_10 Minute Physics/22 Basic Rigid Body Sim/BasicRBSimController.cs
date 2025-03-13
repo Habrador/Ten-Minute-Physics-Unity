@@ -396,19 +396,6 @@ public class BasicRBSimController : MonoBehaviour
             InitScene(Scenes.Chain);
         }
 
-
-        /*
-        //Text
-        string infoText = $"Spheres: {totalDiscs} | Collision checks / frame: {collisionChecks} | Actual collisions / frame: {actualCollisions}";
-
-        GUIStyle textStyle = GUI.skin.GetStyle("Label");
-
-        textStyle.fontSize = fontSize;
-        textStyle.margin = offset;
-
-        GUILayout.Label(infoText, textStyle);
-        */
-
         GUILayout.EndHorizontal();
     }
 }
