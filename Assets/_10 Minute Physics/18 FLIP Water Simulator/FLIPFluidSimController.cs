@@ -29,6 +29,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private FLIPFluidUI fluidUI;
 
+    private FLIPFluidSim sim;
 
 
     private void Start()
@@ -42,6 +43,8 @@ public class FLIPFluidSimController : MonoBehaviour
         scene.simPlaneHeight = 1f;
 
         SetupScene();
+
+        sim = scene.fluid;
     }
 
 
@@ -104,6 +107,21 @@ public class FLIPFluidSimController : MonoBehaviour
                 scene.obstacleVelX,
                 scene.obstacleVelY);
 
+        //sim.Simulate(
+        //        scene.dt,
+        //        scene.gravity,
+        //        scene.flipRatio,
+        //        scene.numPressureIters,
+        //        scene.numParticleIters,
+        //        scene.overRelaxation,
+        //        scene.compensateDrift,
+        //        scene.separateParticles,
+        //        scene.obstacleX,
+        //        scene.obstacleY,
+        //        scene.obstacleRadius,
+        //        scene.obstacleVelX,
+        //        scene.obstacleVelY);
+
         scene.frameNr++;
     }
 
@@ -148,13 +166,12 @@ public class FLIPFluidSimController : MonoBehaviour
         //Particles
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
-        //This will generate 28860 particles which is slow as molasses
-        //3000 particles is going relatively fast
-        float relWaterHeight = 0.2f;
-        float relWaterWidth = 0.3f;
+        //Tutorial is generating 32116 particles
+        float relWaterHeight = 0.4f; //Was 0.8
+        float relWaterWidth = 0.3f; //Was 0.6
 
         //Particle radius wrt cell size
-        float r = 0.3f * h;
+        float r = 0.3f * h; //0.009
         //We want to init the particles not like a chessboard but like this:
         //o o o o
         // o o o
@@ -175,6 +192,8 @@ public class FLIPFluidSimController : MonoBehaviour
         int maxParticles = numParticlesX * numParticlesY;
 
         //Debug.Log(maxParticles);
+        //Debug.Log(tankWidth);
+        //Debug.Log(tankHeight);
 
 
         //Create a new fluid simulator

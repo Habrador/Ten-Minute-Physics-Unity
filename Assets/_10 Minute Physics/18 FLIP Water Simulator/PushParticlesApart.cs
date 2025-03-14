@@ -24,6 +24,7 @@ namespace FLIPFluidSimulator
         private readonly int[] cellParticleIds;
 
         //Convert between 2d and 1d array
+        //Tut is using xi * this.numY + yi;
         public int To1D(int xi, int yi) => xi + (numX * yi);
 
 
@@ -31,6 +32,8 @@ namespace FLIPFluidSimulator
         public PushParticlesApart(float particleRadius, float simWidth, float simHeight, int maxParticles)
         {
             this.particleRadius = particleRadius;
+
+            //Debug.Log(particleRadius);
 
             //To optimize particle-particle collision
             //Which is why we need another grid than the fluid grid
@@ -44,6 +47,7 @@ namespace FLIPFluidSimulator
 
             this.numCells = this.numX * this.numY;
 
+            //51224 in tutorial
             //Debug.Log(this.numCells); //47585
 
             this.numCellParticles = new int[this.numCells];
@@ -73,8 +77,8 @@ namespace FLIPFluidSimulator
                 int yi = Mathf.Clamp(Mathf.FloorToInt(y * this.invSpacing), 0, this.numY - 1);
 
                 //2d array to 1d
-                int cellNr = xi * this.numY + yi;
-                //int cellNr = To1D()
+                //int cellNr = xi * this.numY + yi;
+                int cellNr = To1D(xi, yi);
 
                 //Add 1 to this cell because a particle is in it
                 this.numCellParticles[cellNr]++;
@@ -108,7 +112,8 @@ namespace FLIPFluidSimulator
                 int yi = Mathf.Clamp(Mathf.FloorToInt(y * this.invSpacing), 0, this.numY - 1);
 
                 //2d array to 1d
-                int cellNr = xi * this.numY + yi;
+                //int cellNr = xi * this.numY + yi;
+                int cellNr = To1D(xi,yi);
 
                 this.firstCellParticle[cellNr] -= 1;
 
@@ -117,7 +122,7 @@ namespace FLIPFluidSimulator
 
 
             //Push particles apart
-
+            
             //The more iterations the fewer the particles are still colliding with each other
             for (int iter = 0; iter < numIters; iter++)
             {
@@ -155,7 +160,8 @@ namespace FLIPFluidSimulator
                 for (int yi = y0; yi <= y1; yi++)
                 {
                     //2d array to 1d 
-                    int cellNr = xi * this.numY + yi;
+                    //int cellNr = xi * this.numY + yi;
+                    int cellNr = To1D(xi, yi);
 
                     //This one tells use the cellParticleIds index of the first particle in this cell, the rest if the particles come after it
                     int firstIndex = this.firstCellParticle[cellNr];
@@ -192,6 +198,8 @@ namespace FLIPFluidSimulator
         //We know two particles are colliding and now we want to push them apart
         private bool PushTwoParticlesApart(int particleIndex, float px, float py, int particleIndexOther, float[] particlePos)
         {
+            //return false;
+        
             bool areColliding = false;
         
             //The position of the other particle we want to check collision against
@@ -205,7 +213,7 @@ namespace FLIPFluidSimulator
             float dSquare = dx * dx + dy * dy;
 
             //The min distance for the particle not to collide
-            float minDist = 2f * particleRadius;
+            float minDist = 2f * this.particleRadius;
 
             float minDistSquare = minDist * minDist;
 

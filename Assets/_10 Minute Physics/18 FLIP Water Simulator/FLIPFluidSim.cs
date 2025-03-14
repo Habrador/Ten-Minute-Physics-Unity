@@ -294,7 +294,7 @@ namespace FLIPFluidSimulator
                 float dy = y - obstacleY;
                 float distSquare = dx * dx + dy * dy;
 
-                //If a particle is colliding with the moving obstalcle, set their velocity to the velocity of the obstacle
+                //If a particle is colliding with the moving obstacle, set their velocity to the velocity of the obstacle
                 if (distSquare < minDistSquare)
                 {
                     this.particleVel[2 * i] = obstacleVelX;
