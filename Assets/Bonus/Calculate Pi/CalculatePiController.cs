@@ -7,14 +7,14 @@ using UnityEngine.UIElements;
 //Based on "3Blue1Brown" YouTube series where he calculates decimals in pi
 //The idea is that you collide boxes with different mass and a wall and
 //calculates how many collisions which is apaprently the same as decimals in pi
-//Simulation is in 1d space so we dont take rotations into account
+//Simulation is in 1d space so we dont take rotations/gravity into account
 public class CalculatePiController : MonoBehaviour
 {
-    Vector2 smallBoxPos;
-    Vector2 largeBoxPos;
+    float smallBoxPos_x;
+    float largeBoxPos_x;
 
-    Vector2 smallBoxVel;
-    Vector2 largeBoxVel;
+    float smallBoxVel_x = 0f;
+    float largeBoxVel_x = -2f;
 
     float smallBoxMass;
     float largeBoxMass;
@@ -39,7 +39,7 @@ public class CalculatePiController : MonoBehaviour
 
         this.smallBoxTrans = smallBoxObj.transform;
 
-        Vector3 smallBoxStartPos = new(2f, smallBoxSize * 0.5f, 0f);
+        Vector3 smallBoxStartPos = new(2f, 0f, 0f);
 
         this.smallBoxTrans.position = smallBoxStartPos;
         this.smallBoxTrans.localScale = Vector3.one * smallBoxSize;
@@ -53,7 +53,7 @@ public class CalculatePiController : MonoBehaviour
 
         this.largeBoxTrans = largeBoxObj.transform;
 
-        Vector3 largeBoxStartPos = new(7f, largeBoxSize * 0.5f, 0f);
+        Vector3 largeBoxStartPos = new(7f, 0f, 0f);
 
         this.largeBoxTrans.position = largeBoxStartPos;
         this.largeBoxTrans.localScale = Vector3.one * largeBoxSize;
@@ -67,7 +67,12 @@ public class CalculatePiController : MonoBehaviour
 
     private void Update()
     {
-        
+        //Because we simulate in 1d we pretend during simulation the boxes are at the same y-coordinate
+        Vector3 smallBoxPosVisual = new(this.smallBoxPos_x, smallBoxSize * 0.5f, 0f);
+        Vector3 largeBoxPosVisual = new(this.largeBoxPos_x, largeBoxSize * 0.5f, 0f);
+
+        this.smallBoxTrans.position = smallBoxPosVisual;
+        this.largeBoxTrans.position = largeBoxPosVisual;
     }
 
 
@@ -81,6 +86,47 @@ public class CalculatePiController : MonoBehaviour
         for (int i = 0; i < subSteps; i++)
         {
             //Simulate one step
+            Simulate(sdt);
         }
+    }
+
+
+
+    private void Simulate(float dt)
+    {
+        //No gravity or acceleration so no need to update vel
+
+        //Cache prev pos
+        float smallBoxPosPrev_x = this.smallBoxPos_x;
+        float largeBoxPosPrev_x = this.largeBoxPos_x;
+
+        //Update pos
+        this.smallBoxPos_x += this.smallBoxVel_x * dt;
+        this.largeBoxPos_x += this.largeBoxVel_x * dt;
+
+
+        //Collision checks
+
+        //With each other
+
+        //With left wall (which we know is at 0)
+
+        //Only need to check the small box
+        float smallBoxLeftPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
+
+        if (smallBoxLeftPos < 0f)
+        {
+            //Move the box
+            this.smallBoxPos_x = smallBoxSize * 0.5f;
+
+            //Flip x vel
+            this.smallBoxVel_x *= -1f;
+        }
+
+
+
+        //Fix velocity
+        this.smallBoxVel_x = (smallBoxPosPrev_x - this.smallBoxPos_x) / dt;
+        this.largeBoxVel_x = (largeBoxPosPrev_x - this.largeBoxPos_x) / dt;
     }
 }
