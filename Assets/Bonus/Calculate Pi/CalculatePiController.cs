@@ -39,7 +39,11 @@ public class CalculatePiController : MonoBehaviour
     private Transform largeBoxTrans;
 
     //Sim settings
+    //This is for simulation accuracy
     private int subSteps = 5;
+    //This is for simulation speed
+    //The more decimals we want the more time the simulation takes
+    private int speedUpSteps = 10;
 
     //This should approximate pi
     private int collisions;
@@ -100,14 +104,17 @@ public class CalculatePiController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float dt = Time.deltaTime;
-
-        float sdt = dt / (float)subSteps;
-
-        for (int i = 0; i < subSteps; i++)
+        for (int j = 0; j < speedUpSteps; j++)
         {
-            //Simulate one step
-            Simulate(sdt);
+            float dt = Time.deltaTime;
+
+            float sdt = dt / (float)subSteps;
+
+            for (int i = 0; i < subSteps; i++)
+            {
+                //Simulate one step
+                Simulate(sdt);
+            }
         }
     }
 
