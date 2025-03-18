@@ -150,3 +150,10 @@ Bonus implementations related to the code above.
 Simulation of planetary orbits based on this famous unsolved problem (https://en.wikipedia.org/wiki/Three-body_problem). Watch this YouTube video for examples: 
 
 [![Link to youtube video 3-body problem](https://img.youtube.com/vi/o5HWPeP-JS4/0.jpg)](https://www.youtube.com/watch?v=o5HWPeP-JS4)
+
+
+## Calculate pi
+
+Calculate decimals in pi by bouncing boxes with different mass and calculate collisions. Inspired by 3Blue1Bown's YouTube video: [The most unexpected answer to a counting puzzle](https://www.youtube.com/watch?v=HEfHFsfGXjs).
+
+<img src="/_media/bonus-calculate-pi.png" width="400">
