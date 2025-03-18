@@ -13,11 +13,11 @@ public class CalculatePiController : MonoBehaviour
     float smallBoxPos_x = 2f;
     float largeBoxPos_x = 7f;
 
-    float smallBoxVel_x = 0f;
+    float smallBoxVel_x = 1f;
     float largeBoxVel_x = -2f;
 
-    float smallBoxMass;
-    float largeBoxMass;
+    float smallBoxMass = 1f;
+    float largeBoxMass = 100f;
 
     //Size of the box doesnt matter here, mass is important
     //we just say we change density which is easier to experiment with
@@ -28,7 +28,7 @@ public class CalculatePiController : MonoBehaviour
     private Transform largeBoxTrans;
 
     //Sim settings
-    private int subSteps = 1;
+    private int subSteps = 5;
 
 
 
@@ -108,15 +108,35 @@ public class CalculatePiController : MonoBehaviour
         //Collision checks
 
         //With each other
-        float smallBoxRightPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
-        float largeBoxLeftPos = this.largeBoxPos_x - (largeBoxSize * 0.5f);
+        //float smallBoxRightPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
+        //float largeBoxLeftPos = this.largeBoxPos_x - (largeBoxSize * 0.5f);
 
-        //They collide if (the right side of the small box is to the right of the left side of the large box)
-        if (smallBoxRightPos > largeBoxLeftPos)
+        ////They collide if (the right side of the small box is to the right of the left side of the large box)
+        //if (smallBoxRightPos > largeBoxLeftPos)
+        //{
+        //    //Debug.Log("collision!");
+
+
+        //}
+
+        Disc smallDisc = new Disc(this.smallBoxPos_x, 0f, this.smallBoxVel_x, 0f, this.smallBoxSize * 0.5f);
+        Disc largeDisc = new Disc(this.largeBoxPos_x, 0f, this.largeBoxVel_x, 0f, this.largeBoxSize * 0.5f);
+
+        smallDisc.mass = this.smallBoxMass;
+        largeDisc.mass = this.largeBoxMass;
+
+        float restitution = 1f;
+
+        bool areColliding = BallCollisionHandling.HandleDiscDiscCollision(smallDisc, largeDisc, restitution);
+
+        if (areColliding)
         {
-            Debug.Log("collision!");
-        }
+            this.smallBoxPos_x = smallDisc.x;
+            this.largeBoxPos_x = largeDisc.x;
 
+            this.smallBoxVel_x = smallDisc.vx;
+            this.largeBoxVel_x = largeDisc.vx;
+        }
 
         //With left wall (which we know is at 0)
 
@@ -132,10 +152,11 @@ public class CalculatePiController : MonoBehaviour
             this.smallBoxVel_x *= -1f;
         }
 
+        //Debug.Log(this.smallBoxVel_x);
 
 
         //Fix velocity
-        this.smallBoxVel_x = (this.smallBoxPos_x - smallBoxPosPrev_x) / dt;
-        this.largeBoxVel_x = (this.largeBoxPos_x - largeBoxPosPrev_x) / dt;
+        //this.smallBoxVel_x = (this.smallBoxPos_x - smallBoxPosPrev_x) / dt;
+        //this.largeBoxVel_x = (this.largeBoxPos_x - largeBoxPosPrev_x) / dt;
     }
 }
