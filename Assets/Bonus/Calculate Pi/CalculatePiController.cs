@@ -10,8 +10,8 @@ using UnityEngine.UIElements;
 //Simulation is in 1d space so we dont take rotations/gravity into account
 public class CalculatePiController : MonoBehaviour
 {
-    float smallBoxPos_x;
-    float largeBoxPos_x;
+    float smallBoxPos_x = 2f;
+    float largeBoxPos_x = 7f;
 
     float smallBoxVel_x = 0f;
     float largeBoxVel_x = -2f;
@@ -39,7 +39,7 @@ public class CalculatePiController : MonoBehaviour
 
         this.smallBoxTrans = smallBoxObj.transform;
 
-        Vector3 smallBoxStartPos = new(2f, 0f, 0f);
+        Vector3 smallBoxStartPos = new(this.smallBoxPos_x, 0f, 0f);
 
         this.smallBoxTrans.position = smallBoxStartPos;
         this.smallBoxTrans.localScale = Vector3.one * smallBoxSize;
@@ -53,7 +53,7 @@ public class CalculatePiController : MonoBehaviour
 
         this.largeBoxTrans = largeBoxObj.transform;
 
-        Vector3 largeBoxStartPos = new(7f, 0f, 0f);
+        Vector3 largeBoxStartPos = new(this.largeBoxPos_x, 0f, 0f);
 
         this.largeBoxTrans.position = largeBoxStartPos;
         this.largeBoxTrans.localScale = Vector3.one * largeBoxSize;
@@ -108,6 +108,15 @@ public class CalculatePiController : MonoBehaviour
         //Collision checks
 
         //With each other
+        float smallBoxRightPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
+        float largeBoxLeftPos = this.largeBoxPos_x - (largeBoxSize * 0.5f);
+
+        //They collide if (the right side of the small box is to the right of the left side of the large box)
+        if (smallBoxRightPos > largeBoxLeftPos)
+        {
+            Debug.Log("collision!");
+        }
+
 
         //With left wall (which we know is at 0)
 
@@ -126,7 +135,7 @@ public class CalculatePiController : MonoBehaviour
 
 
         //Fix velocity
-        this.smallBoxVel_x = (smallBoxPosPrev_x - this.smallBoxPos_x) / dt;
-        this.largeBoxVel_x = (largeBoxPosPrev_x - this.largeBoxPos_x) / dt;
+        this.smallBoxVel_x = (this.smallBoxPos_x - smallBoxPosPrev_x) / dt;
+        this.largeBoxVel_x = (this.largeBoxPos_x - largeBoxPosPrev_x) / dt;
     }
 }
