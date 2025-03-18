@@ -5,30 +5,51 @@ using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 //Based on "3Blue1Brown" YouTube series where he calculates decimals in pi
+//https://www.youtube.com/watch?v=HEfHFsfGXjs
 //The idea is that you collide boxes with different mass and a wall and
 //calculates how many collisions which is apaprently the same as decimals in pi
 //Simulation is in 1d space so we dont take rotations/gravity into account
 public class CalculatePiController : MonoBehaviour
 {
     float smallBoxPos_x = 2f;
-    float largeBoxPos_x = 7f;
+    float largeBoxPos_x = 4f;
 
-    float smallBoxVel_x = 1f;
-    float largeBoxVel_x = -2f;
+    //Should start stationary
+    float smallBoxVel_x = 0f;
+    //Some velocity
+    //Should be small or we wont see anything because the boxes are travelling far away
+    float largeBoxVel_x = -0.05f;
 
+    //Always 1 kg
     float smallBoxMass = 1f;
-    float largeBoxMass = 100f;
+    //Can change (PI = 3.141592653)
+    //1 kg -> 3 collisions (in this sim: 3)
+    //100 kg -> 31 (in this sim: 31)
+    //10 000 kg -> 314 (in this sim: 314)
+    //1 000 000 kg -> 3141
+    float largeBoxMass = 10000f;
 
     //Size of the box doesnt matter here, mass is important
     //we just say we change density which is easier to experiment with
     float smallBoxSize = 1f;
     float largeBoxSize = 2f;
 
+    //To display what we simulate
     private Transform smallBoxTrans;
     private Transform largeBoxTrans;
 
     //Sim settings
     private int subSteps = 5;
+
+    //This should approximate pi
+    private int collisions;
+
+    //Physics settings
+
+    //No friction
+
+    //Perfect elastic
+    float restitution = 1f;
 
 
 
@@ -108,24 +129,13 @@ public class CalculatePiController : MonoBehaviour
         //Collision checks
 
         //With each other
-        //float smallBoxRightPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
-        //float largeBoxLeftPos = this.largeBoxPos_x - (largeBoxSize * 0.5f);
-
-        ////They collide if (the right side of the small box is to the right of the left side of the large box)
-        //if (smallBoxRightPos > largeBoxLeftPos)
-        //{
-        //    //Debug.Log("collision!");
-
-
-        //}
-
+        
+        //Treatb the cubes as discs which works fine because we simulate in 1d 
         Disc smallDisc = new Disc(this.smallBoxPos_x, 0f, this.smallBoxVel_x, 0f, this.smallBoxSize * 0.5f);
         Disc largeDisc = new Disc(this.largeBoxPos_x, 0f, this.largeBoxVel_x, 0f, this.largeBoxSize * 0.5f);
 
         smallDisc.mass = this.smallBoxMass;
         largeDisc.mass = this.largeBoxMass;
-
-        float restitution = 1f;
 
         bool areColliding = BallCollisionHandling.HandleDiscDiscCollision(smallDisc, largeDisc, restitution);
 
@@ -136,6 +146,8 @@ public class CalculatePiController : MonoBehaviour
 
             this.smallBoxVel_x = smallDisc.vx;
             this.largeBoxVel_x = largeDisc.vx;
+
+            collisions += 1;
         }
 
         //With left wall (which we know is at 0)
@@ -150,9 +162,11 @@ public class CalculatePiController : MonoBehaviour
 
             //Flip x vel
             this.smallBoxVel_x *= -1f;
+
+            collisions += 1;
         }
 
-        //Debug.Log(this.smallBoxVel_x);
+        Debug.Log(collisions);
 
 
         //Fix velocity
