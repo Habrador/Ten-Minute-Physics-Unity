@@ -170,9 +170,45 @@ public class CalculatePiController : MonoBehaviour
             collisions += 1;
         }
 
-        Debug.Log(collisions);
+        //Debug.Log(collisions);
 
 
         //Cant fix velocities because we update velocity when they collide 
+    }
+
+
+
+    private void OnGUI()
+    {
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+        GUIStyle textStyle = GUI.skin.GetStyle("Label");
+
+        textStyle.fontSize = fontSize;
+        textStyle.margin = offset;
+
+
+        GUILayout.BeginHorizontal("box");
+
+            //So we can see if the small box can catch up with the big box
+            string smallBoxVel = this.smallBoxVel_x.ToString("F4");
+            string largeBoxVel = this.largeBoxVel_x.ToString("F4");
+
+            string infoText = $"Vel small box: {smallBoxVel} | Vel large box: {largeBoxVel}";
+
+            GUILayout.Label(infoText, textStyle);
+
+        GUILayout.EndHorizontal();
+
+
+        GUILayout.BeginHorizontal("box");
+
+            string collisionText = $"Collisions: {collisions}";
+
+            GUILayout.Label(collisionText, textStyle);
+
+        GUILayout.EndHorizontal();
     }
 }
