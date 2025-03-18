@@ -59,6 +59,8 @@ public class CalculatePiController : MonoBehaviour
 
     private void Start()
     {
+        //Create the boxes we can see
+    
         //Small
         GameObject smallBoxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -124,22 +126,16 @@ public class CalculatePiController : MonoBehaviour
     {
         //No gravity or acceleration so no need to update vel
 
-        //Cache prev pos
-        float smallBoxPosPrev_x = this.smallBoxPos_x;
-        float largeBoxPosPrev_x = this.largeBoxPos_x;
-
         //Update pos
         this.smallBoxPos_x += this.smallBoxVel_x * dt;
         this.largeBoxPos_x += this.largeBoxVel_x * dt;
 
 
-        //Collision checks
-
-        //With each other
+        //Collision with each other
         
-        //Treatb the cubes as discs which works fine because we simulate in 1d 
-        Disc smallDisc = new Disc(this.smallBoxPos_x, 0f, this.smallBoxVel_x, 0f, this.smallBoxSize * 0.5f);
-        Disc largeDisc = new Disc(this.largeBoxPos_x, 0f, this.largeBoxVel_x, 0f, this.largeBoxSize * 0.5f);
+        //Treat the cubes as discs which works fine because we simulate in 1d 
+        Disc smallDisc = new(this.smallBoxPos_x, 0f, this.smallBoxVel_x, 0f, this.smallBoxSize * 0.5f);
+        Disc largeDisc = new(this.largeBoxPos_x, 0f, this.largeBoxVel_x, 0f, this.largeBoxSize * 0.5f);
 
         smallDisc.mass = this.smallBoxMass;
         largeDisc.mass = this.largeBoxMass;
@@ -157,14 +153,15 @@ public class CalculatePiController : MonoBehaviour
             collisions += 1;
         }
 
-        //With left wall (which we know is at 0)
+        
+        //Collision with left wall (which we know is at 0)
 
-        //Only need to check the small box
+        //Only the small box can collide with the left wall
         float smallBoxLeftPos = this.smallBoxPos_x - (smallBoxSize * 0.5f);
 
         if (smallBoxLeftPos < 0f)
         {
-            //Move the box
+            //Move the box so it doesnt collide anymore
             this.smallBoxPos_x = smallBoxSize * 0.5f;
 
             //Flip x vel
@@ -176,8 +173,6 @@ public class CalculatePiController : MonoBehaviour
         Debug.Log(collisions);
 
 
-        //Fix velocity
-        //this.smallBoxVel_x = (this.smallBoxPos_x - smallBoxPosPrev_x) / dt;
-        //this.largeBoxVel_x = (this.largeBoxPos_x - largeBoxPosPrev_x) / dt;
+        //Cant fix velocities because we update velocity when they collide 
     }
 }
