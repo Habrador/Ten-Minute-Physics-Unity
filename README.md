@@ -1,6 +1,6 @@
 # Ten Minute Physics in Unity
 
-Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/). My contribution is that I have translated the code from mainly JavaScript to C#, and I have commented the code to make it easier to understand what's going on. 
+Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/). My contribution is that I have translated the code from mainly JavaScript to C#, and I have commented the code to make it easier to understand what's going on. I have also fixed a few minor bugs and improved the performance.  
 
 
 ## 1-2. Cannon ball
