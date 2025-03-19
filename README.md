@@ -1,6 +1,6 @@
 # Ten Minute Physics in Unity
 
-Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/).
+Implementations in Unity of the YouTube channel [Ten Minute Physics](https://matthias-research.github.io/pages/tenMinutePhysics/). My contribution is that I have commented the code to make it easier to understand what's going on. 
 
 
 ## 1-2. Cannon ball
@@ -138,6 +138,12 @@ Simulating rigid bodies using XPBD.
 A fast way to check collisions between many objects by checking each object's Axis-Aligned Bounding Box (AABB). Is related to "11. Find overlaps among objects" but can handle objects with different sizes.  
 
 <img src="/_media/23-sweep-and-prune.png" width="400">
+
+
+## 24. Bounding Volume Hierarchies
+
+TODO
+
 
 
 # Bonus
