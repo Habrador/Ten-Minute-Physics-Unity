@@ -87,13 +87,15 @@ public class FLIPSimDebug : MonoBehaviour
         //scene.isPaused = false;
 
         //How detailed the simulation is in height (y) direction (how many cells)
-        int res = 100;
+        int res = 20;
 
         //The height of the simulation (the plane might be smaller but it doesnt matter because we can pretend its 3m and no one knows)
         float simHeight = 3f;
 
         //The size of a cell
         float h = simHeight / res;
+
+        //Debug.Log(h);
 
         //How many cells do we have
         //y is up
@@ -113,6 +115,9 @@ public class FLIPSimDebug : MonoBehaviour
 
         //Particle radius wrt cell size
         float r = 0.3f * h; //0.009
+
+        //Debug.Log(r); //0.045
+
         //We want to init the particles not like a chessboard but like this:
         //o o o o
         // o o o
@@ -196,7 +201,12 @@ public class FLIPSimDebug : MonoBehaviour
         {
             Transform newParticleTrans = Instantiate(particlePrefabObj).transform;
 
-            newParticleTrans.localScale = Vector3.one * r * 2f;
+            //Scale is diameter
+            //But r is in sim space which is NOT the same as world space
+            //height of simulation is 3 m but the plane we use is 1m high
+            float rGlobal = r / simHeight;
+
+            newParticleTrans.localScale = Vector3.one * rGlobal * 2f;
 
             allParticlesTrans[i] = newParticleTrans;
         }
