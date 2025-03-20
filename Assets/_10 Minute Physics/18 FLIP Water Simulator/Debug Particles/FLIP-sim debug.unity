@@ -183,7 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fluidMaterial: {fileID: 2100000, guid: 260223ed652cf634e817a132e78ee5ce, type: 2}
-  particlesMaterial: {fileID: 2100000, guid: 9df0abfbdb2576e4abfaef38705c9bbb, type: 2}
+  particlesMaterial: {fileID: 2100000, guid: 9b6fe8834ff3d9b4ca27925c05a66a7e, type: 2}
   particlesPlane: {fileID: 0}
   particlePrefabObj: {fileID: 7905579805420307992, guid: ea84e291a9c568f498209fd8460bb621,
     type: 3}
@@ -448,7 +448,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &893473466
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -491,7 +491,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9df0abfbdb2576e4abfaef38705c9bbb, type: 2}
+  - {fileID: 2100000, guid: 9b6fe8834ff3d9b4ca27925c05a66a7e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -530,7 +530,7 @@ Transform:
   m_GameObject: {fileID: 893473465}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
   m_LocalScale: {x: 2, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []

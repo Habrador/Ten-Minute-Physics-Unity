@@ -4,7 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
+//Observations:
+// - If you remove all fluid methods except those that belong to the particles, the particles are falling to the bottom showing some erratic behaviour, in the original code as well. As they are all being crushed to the bottom, the more collisions checks we have to make and the slower it gets. 
 public class FLIPSimDebug : MonoBehaviour
 {
     //Public
@@ -25,6 +28,16 @@ public class FLIPSimDebug : MonoBehaviour
     private FLIPFluidSim sim;
 
     private Transform[] allParticlesTrans;
+
+
+    //Shader stuff
+    private struct ParticleToShader
+    {
+        public Vector2 position;
+    }
+
+    private ComputeBuffer particleBuffer;
+    private ParticleToShader[] particles;
 
 
 
@@ -191,7 +204,7 @@ public class FLIPSimDebug : MonoBehaviour
         //Add the circle we move with mouse
         //SetObstacle(3f, 2f, true);
 
-
+        /*
         //Create the particles we can see
         int totalParticles = numParticlesX * numParticlesY;
 
@@ -210,6 +223,7 @@ public class FLIPSimDebug : MonoBehaviour
 
             allParticlesTrans[i] = newParticleTrans;
         }
+        */
     }
 
 
@@ -239,7 +253,7 @@ public class FLIPSimDebug : MonoBehaviour
         //First update their colors
         //UpdateParticleColors(scene);
 
-
+        
         FLIPFluidSim f = scene.fluid;
 
         //
@@ -248,6 +262,7 @@ public class FLIPSimDebug : MonoBehaviour
         //The position of each particle (x, y) after each other
         float[] particleFlatPositions = f.particlePos;
 
+        /*
         Vector3[] particleGlobalPositions = new Vector3[particleFlatPositions.Length / 2];
 
         for (int i = 0; i < particleFlatPositions.Length; i += 2)
@@ -283,5 +298,74 @@ public class FLIPSimDebug : MonoBehaviour
         {
             allParticlesTrans[i].position = particleGlobalPositions[i];
         }
+        */
+
+
+        //Update shader
+        int particleCount = particleFlatPositions.Length / 2;
+
+        particles = new ParticleToShader[particleCount];
+        particleBuffer = new ComputeBuffer(particleCount, 8); // 8 is the size of Particle struct
+
+        //for (int i = 0; i < particleCount; i++)
+        //{
+        //    particles[i] = new ParticleToShader
+        //    {
+        //        position = new Vector2(Random.value, Random.value)
+        //    };
+        //}
+
+        float simWidth = f.SimWidth;
+        float simHeight = f.SimHeight;
+
+        for (int i = 0; i < particleFlatPositions.Length; i += 2)
+        {
+            float localX = particleFlatPositions[i];
+            float localY = particleFlatPositions[i + 1];
+
+            //Circle center in shader space
+            Vector2 shaderCenter2D = new Vector2((localX / simWidth)*1f, (localY / simHeight)*1f);
+
+            //0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+            //0, 1, 2, 3, 4
+            //0 -> 0
+            //2 -> 1
+            //4 -> 2
+            //6 -> 3
+            //8 -> 4
+            //particleGlobalPositions[i / 2] = circleCenter;
+            particles[i / 2] = new ParticleToShader
+            {
+                position = shaderCenter2D
+            };
+        }
+
+
+        float particleRadius = f.particleRadius / simHeight;
+
+        Color particleColor = UnityEngine.Color.blue;
+
+        Transform planeTrans = particlesPlane.transform;
+
+        Vector2 planeScale = new(planeTrans.lossyScale.x, planeTrans.lossyScale.y);
+
+        //Debug.Log(planeScale);
+
+        //Data to shader
+        particleBuffer.SetData(particles);
+        particlesMaterial.SetBuffer("_Particles", particleBuffer);
+        
+        particlesMaterial.SetFloat("_ParticleRadius", particleRadius);
+        particlesMaterial.SetColor("_ParticleColor", particleColor);
+        particlesMaterial.SetInt("_ParticleCount", particleCount);
+        
+        particlesMaterial.SetVector("_PlaneScale", planeScale);
+    }
+
+
+
+    void OnDestroy()
+    {
+        particleBuffer.Release();
     }
 }
