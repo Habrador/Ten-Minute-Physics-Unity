@@ -8,7 +8,7 @@ using static UnityEngine.ParticleSystem;
 
 namespace FLIPFluidSimulator
 {
-    public class FLIPFluidDisplay : MonoBehaviour
+    public class FLIPFluidDisplay
     {
         //The circle we can move around with mouse
         private Mesh circleMesh;
@@ -159,6 +159,8 @@ namespace FLIPFluidSimulator
 
         //Update particle colors
         //We also update them in the simulation - if they collide the color of each particle is diffused
+        //In particleColor array each particle has its color (r,g,b) after each other
+        //(r,g,b) are in the range [0,1]
         private void UpdateParticleColors(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
@@ -213,63 +215,21 @@ namespace FLIPFluidSimulator
         //Display the individual particles
         public void ShowParticles(FLIPFluidScene scene, GameObject particlesPlane, Material particlesMaterial)
         {
-            //First update their colors
-            //UpdateParticleColors(scene);
-
+            //Init
             if (displayParticlesAsShader == null)
             {
                 displayParticlesAsShader = new DisplayParticlesAsShader(particlesPlane, particlesMaterial);
 
-                //Move the plane to correct z offset
-
+                //Move the plane to correct z offset 
                 Vector3 planePos = particlesPlane.transform.position;
 
                 particlesPlane.transform.position = new(planePos.x, planePos.y, particlesPlaneOffset);
             }
 
+            //First update their colors
+            //UpdateParticleColors(scene);
+
             displayParticlesAsShader.UpdateParticles(scene);
-
-
-            /*
-            FLIPFluidSim f = scene.fluid;
-
-            //
-            //float particleRadius = f.particleRadius;
-
-            //The position of each particle (x, y) after each other
-            float[] particleFlatPositions = f.particlePos;
-
-            Vector3[] particleGlobalPositions = new Vector3[particleFlatPositions.Length / 2];
-
-            for (int i = 0; i < particleFlatPositions.Length; i += 2)
-            {
-                float localX = particleFlatPositions[i];
-                float localY = particleFlatPositions[i + 1];
-
-                //Circle center in global space
-                Vector2 globalCenter2D = scene.SimToWorld(new(localX, localY));
-
-                //3d space infront of the texture
-                Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, -0.1f);
-
-                //0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-                //0, 1, 2, 3, 4
-                //0 -> 0
-                //2 -> 1
-                //4 -> 2
-                //6 -> 3
-                //8 -> 4
-                particleGlobalPositions[i / 2] = circleCenter;
-            }
-
-
-            //Draw the particles as a point cloud
-            List<Vector3> verts = new(particleGlobalPositions);
-
-            Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
-
-            DisplayShapes.DrawVertices(verts, mat);
-            */
         }
 
 

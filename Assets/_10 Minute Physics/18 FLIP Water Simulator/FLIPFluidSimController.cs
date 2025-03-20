@@ -14,6 +14,7 @@ using UnityEngine;
 //- What is drift? Balls getting clumped together? 
 //- Optimize particle-particle intersection which is the current bottleneck
 //- Why do we need both an array for solid/non-solid and solid/fluid/air array? 
+//- Use the scale of the plane to determine width and height of simulation
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public
@@ -168,7 +169,7 @@ public class FLIPFluidSimController : MonoBehaviour
         //scene.isPaused = false;
 
         //How detailed the simulation is in height (y) direction
-        int res = 100;
+        int res = 50; //100 in tutorial is is slow as molasses
 
         //The height of the simulation (the plane might be smaller but it doesnt matter because we can pretend its 3m and no one knows)
         float simHeight = 3f;
@@ -193,7 +194,8 @@ public class FLIPFluidSimController : MonoBehaviour
         float relWaterWidth = 0.3f; //Was 0.6
 
         //Particle radius wrt cell size
-        float r = 0.3f * h; //0.009
+        //Have to be smaller than the cell size
+        float r = 0.3f * h;
         //We want to init the particles not like a chessboard but like this:
         //o o o o
         // o o o
