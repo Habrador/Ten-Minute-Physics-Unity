@@ -305,15 +305,9 @@ public class FLIPSimDebug : MonoBehaviour
         int particleCount = particleFlatPositions.Length / 2;
 
         particles = new ParticleToShader[particleCount];
-        particleBuffer = new ComputeBuffer(particleCount, 8); // 8 is the size of Particle struct
 
-        //for (int i = 0; i < particleCount; i++)
-        //{
-        //    particles[i] = new ParticleToShader
-        //    {
-        //        position = new Vector2(Random.value, Random.value)
-        //    };
-        //}
+        //8 is the size of ParticleToShader struct
+        particleBuffer = new ComputeBuffer(particleCount, 8);
 
         float simWidth = f.SimWidth;
         float simHeight = f.SimHeight;
@@ -351,14 +345,24 @@ public class FLIPSimDebug : MonoBehaviour
 
         //Debug.Log(planeScale);
 
-        //Data to shader
+
+        //Pass data from a script to a shader
+
+        //Buffers are particularly useful when you need to send large amounts of data from CPU to GPU
+
+        //You typically use a ComputeBuffer to store the data you want to send to the shader. A ComputeBuffer is a block of memory that can be read by the GPU.
         particleBuffer.SetData(particles);
+
+        //In the shader, you define a StructuredBuffer that matches the structure of the data in the ComputeBuffer. This allows the shader to access the data efficiently.
+
+        //You use the SetBuffer method on a material or shader to bind the ComputeBuffer to the StructuredBuffer in the shader.
+        //This makes the data available to the shader for rendering or computation.
         particlesMaterial.SetBuffer("_Particles", particleBuffer);
         
+        //Single values
         particlesMaterial.SetFloat("_ParticleRadius", particleRadius);
         particlesMaterial.SetColor("_ParticleColor", particleColor);
         particlesMaterial.SetInt("_ParticleCount", particleCount);
-        
         particlesMaterial.SetVector("_PlaneScale", planeScale);
     }
 

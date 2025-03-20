@@ -40,6 +40,7 @@ Shader "Custom/DisplayAllParticles"
                 float2 position;
             };
 
+            //In the shader, you define a StructuredBuffer that matches the structure of the data in the ComputeBuffer. This allows the shader to access the data efficiently.
             StructuredBuffer<Particle> _Particles;
 
             v2f vert (appdata_t v)
