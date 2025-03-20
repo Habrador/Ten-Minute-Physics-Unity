@@ -184,7 +184,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fluidMaterial: {fileID: 2100000, guid: 260223ed652cf634e817a132e78ee5ce, type: 2}
   particlesMaterial: {fileID: 2100000, guid: 9b6fe8834ff3d9b4ca27925c05a66a7e, type: 2}
-  particlesPlane: {fileID: 0}
+  particlesPlane: {fileID: 893473465}
   particlePrefabObj: {fileID: 7905579805420307992, guid: ea84e291a9c568f498209fd8460bb621,
     type: 3}
 --- !u!1 &148191697

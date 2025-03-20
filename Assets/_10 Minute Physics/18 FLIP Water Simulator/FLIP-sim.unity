@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028334, g: 0.2257134, b: 0.30692226, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -168,8 +167,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fluidMaterial: {fileID: 2100000, guid: 260223ed652cf634e817a132e78ee5ce, type: 2}
-  particlesMaterial: {fileID: 0}
-  particlesPlane: {fileID: 0}
+  particlesMaterial: {fileID: 2100000, guid: 9b6fe8834ff3d9b4ca27925c05a66a7e, type: 2}
+  particlesPlane: {fileID: 893473465}
 --- !u!1 &148191697
 GameObject:
   m_ObjectHideFlags: 0
@@ -301,12 +300,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1 &560775527
 GameObject:
   m_ObjectHideFlags: 0
@@ -320,7 +319,7 @@ GameObject:
   - component: {fileID: 560775529}
   - component: {fileID: 560775528}
   m_Layer: 0
-  m_Name: Fluid sim grid
+  m_Name: Fluid sim display grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -426,12 +425,12 @@ GameObject:
   - component: {fileID: 893473467}
   - component: {fileID: 893473466}
   m_Layer: 0
-  m_Name: Fluid sim particles
+  m_Name: Fluid sim display particles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &893473466
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -513,7 +512,7 @@ Transform:
   m_GameObject: {fileID: 893473465}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
   m_LocalScale: {x: 2, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []

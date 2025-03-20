@@ -31,6 +31,9 @@ public class FLIPFluidSimController : MonoBehaviour
 
     private FLIPFluidSim sim;
 
+    private FLIPFluidDisplay displayFluid;
+
+
 
     private void Start()
     {
@@ -45,6 +48,8 @@ public class FLIPFluidSimController : MonoBehaviour
         SetupScene();
 
         sim = scene.fluid;
+
+        displayFluid = new();
     }
 
 
@@ -54,7 +59,7 @@ public class FLIPFluidSimController : MonoBehaviour
         //Display the fluid
         //DisplayFluid.TestDraw(scene);
 
-        DisplayFLIPFluid.Draw(scene);
+        displayFluid.Draw(scene);
     }
 
 

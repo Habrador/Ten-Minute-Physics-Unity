@@ -8,22 +8,24 @@ using static UnityEngine.ParticleSystem;
 
 namespace FLIPFluidSimulator
 {
-    public class DisplayFLIPFluid : MonoBehaviour
+    public class FLIPFluidDisplay : MonoBehaviour
     {
         //The circle we can move around with mouse
-        private static Mesh circleMesh;
+        private Mesh circleMesh;
 
         //Grid
-        private static Mesh gridMesh;
+        private Mesh gridMesh;
 
         //Offsets so stuff doesnt intersect
         //Plane is at 0
-        private readonly static float obstacleOffset = -0.1f;
-        private readonly static float gridOffset = -0.01f;
+        private readonly float obstacleOffset = -0.1f;
+        private readonly float gridOffset = -0.01f;
+        private readonly float particlePlaneOffset;
+
 
 
         //Called every Update
-        public static void Draw(FLIPFluidScene scene)
+        public void Draw(FLIPFluidScene scene)
         {
             UpdateTexture(scene);
 
@@ -48,7 +50,7 @@ namespace FLIPFluidSimulator
         //
         // Show the fluid simulation data on a texture
         //
-        private static void UpdateTexture(FLIPFluidScene scene)
+        private void UpdateTexture(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -147,7 +149,7 @@ namespace FLIPFluidSimulator
         //
         // Display the circle obstacle
         //
-        private static void ShowInteractiveCircleObstacle(FLIPFluidScene scene)
+        private void ShowInteractiveCircleObstacle(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -178,7 +180,7 @@ namespace FLIPFluidSimulator
 
         //Update particle colors
         //We also update them in the simulation - if they collide the color of each particle is diffused
-        private static void UpdateParticleColors(FLIPFluidScene scene)
+        private void UpdateParticleColors(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -230,7 +232,7 @@ namespace FLIPFluidSimulator
 
 
         //Display the individual particles
-        private static void ShowParticles(FLIPFluidScene scene)
+        private void ShowParticles(FLIPFluidScene scene)
         {
             //First update their colors
             UpdateParticleColors(scene);
@@ -282,7 +284,7 @@ namespace FLIPFluidSimulator
         // Display a grid to show each cell
         //
 
-        private static void DisplayGrid(FLIPFluidScene scene)
+        private void DisplayGrid(FLIPFluidScene scene)
         {
             if (gridMesh == null)
             {
@@ -296,7 +298,7 @@ namespace FLIPFluidSimulator
 
 
         //Generate a line mesh
-        private static Mesh InitGridMesh(FLIPFluidScene scene)
+        private Mesh InitGridMesh(FLIPFluidScene scene)
         {
             //Generate the vertices
             List<Vector3> lineVertices = new();
