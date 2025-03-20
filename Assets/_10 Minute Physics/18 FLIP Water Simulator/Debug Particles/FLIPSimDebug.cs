@@ -27,17 +27,7 @@ public class FLIPSimDebug : MonoBehaviour
 
     private FLIPFluidSim sim;
 
-    private Transform[] allParticlesTrans;
-
-
-    //Shader stuff
-    private struct ParticleToShader
-    {
-        public Vector2 position;
-    }
-
-    private ComputeBuffer particleBuffer;
-    private ParticleToShader[] particles;
+    private DisplayParticlesAsShader displayParticlesAsShader;
 
 
 
@@ -54,6 +44,8 @@ public class FLIPSimDebug : MonoBehaviour
         SetupScene();
 
         sim = scene.fluid;
+
+        displayParticlesAsShader = new DisplayParticlesAsShader(particlesPlane, particlesMaterial);
     }
 
 
@@ -203,27 +195,6 @@ public class FLIPSimDebug : MonoBehaviour
 
         //Add the circle we move with mouse
         //SetObstacle(3f, 2f, true);
-
-        /*
-        //Create the particles we can see
-        int totalParticles = numParticlesX * numParticlesY;
-
-        allParticlesTrans = new Transform[totalParticles];
-
-        for (int i = 0; i < totalParticles; i++)
-        {
-            Transform newParticleTrans = Instantiate(particlePrefabObj).transform;
-
-            //Scale is diameter
-            //But r is in sim space which is NOT the same as world space
-            //height of simulation is 3 m but the plane we use is 1m high
-            float rGlobal = r / simHeight;
-
-            newParticleTrans.localScale = Vector3.one * rGlobal * 2f;
-
-            allParticlesTrans[i] = newParticleTrans;
-        }
-        */
     }
 
 
@@ -253,123 +224,13 @@ public class FLIPSimDebug : MonoBehaviour
         //First update their colors
         //UpdateParticleColors(scene);
 
-        
-        FLIPFluidSim f = scene.fluid;
-
-        //
-        //float particleRadius = f.particleRadius;
-
-        //The position of each particle (x, y) after each other
-        float[] particleFlatPositions = f.particlePos;
-
-        /*
-        Vector3[] particleGlobalPositions = new Vector3[particleFlatPositions.Length / 2];
-
-        for (int i = 0; i < particleFlatPositions.Length; i += 2)
-        {
-            float localX = particleFlatPositions[i];
-            float localY = particleFlatPositions[i + 1];
-
-            //Circle center in global space
-            Vector2 globalCenter2D = scene.SimToWorld(new(localX, localY));
-
-            //3d space infront of the texture
-            Vector3 circleCenter = new(globalCenter2D.x, globalCenter2D.y, -0.1f);
-
-            //0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-            //0, 1, 2, 3, 4
-            //0 -> 0
-            //2 -> 1
-            //4 -> 2
-            //6 -> 3
-            //8 -> 4
-            particleGlobalPositions[i / 2] = circleCenter;
-        }
-
-
-        //Draw the particles as a point cloud
-        //List<Vector3> verts = new(particleGlobalPositions);
-
-        //Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
-
-        //DisplayShapes.DrawVertices(verts, mat);
-
-        for (int i = 0; i < particleGlobalPositions.Length; i++)
-        {
-            allParticlesTrans[i].position = particleGlobalPositions[i];
-        }
-        */
-
-
-        //Update shader
-        int particleCount = particleFlatPositions.Length / 2;
-
-        particles = new ParticleToShader[particleCount];
-
-        //8 is the size of ParticleToShader struct
-        particleBuffer = new ComputeBuffer(particleCount, 8);
-
-        float simWidth = f.SimWidth;
-        float simHeight = f.SimHeight;
-
-        for (int i = 0; i < particleFlatPositions.Length; i += 2)
-        {
-            float localX = particleFlatPositions[i];
-            float localY = particleFlatPositions[i + 1];
-
-            //Circle center in shader space
-            Vector2 shaderCenter2D = new Vector2((localX / simWidth)*1f, (localY / simHeight)*1f);
-
-            //0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-            //0, 1, 2, 3, 4
-            //0 -> 0
-            //2 -> 1
-            //4 -> 2
-            //6 -> 3
-            //8 -> 4
-            //particleGlobalPositions[i / 2] = circleCenter;
-            particles[i / 2] = new ParticleToShader
-            {
-                position = shaderCenter2D
-            };
-        }
-
-
-        float particleRadius = f.particleRadius / simHeight;
-
-        Color particleColor = UnityEngine.Color.blue;
-
-        Transform planeTrans = particlesPlane.transform;
-
-        Vector2 planeScale = new(planeTrans.lossyScale.x, planeTrans.lossyScale.y);
-
-        //Debug.Log(planeScale);
-
-
-        //Pass data from a script to a shader
-
-        //Buffers are particularly useful when you need to send large amounts of data from CPU to GPU
-
-        //You typically use a ComputeBuffer to store the data you want to send to the shader. A ComputeBuffer is a block of memory that can be read by the GPU.
-        particleBuffer.SetData(particles);
-
-        //In the shader, you define a StructuredBuffer that matches the structure of the data in the ComputeBuffer. This allows the shader to access the data efficiently.
-
-        //You use the SetBuffer method on a material or shader to bind the ComputeBuffer to the StructuredBuffer in the shader.
-        //This makes the data available to the shader for rendering or computation.
-        particlesMaterial.SetBuffer("_Particles", particleBuffer);
-        
-        //Single values
-        particlesMaterial.SetFloat("_ParticleRadius", particleRadius);
-        particlesMaterial.SetColor("_ParticleColor", particleColor);
-        particlesMaterial.SetInt("_ParticleCount", particleCount);
-        particlesMaterial.SetVector("_PlaneScale", planeScale);
+        displayParticlesAsShader.UpdateParticles(scene);
     }
 
 
 
     void OnDestroy()
     {
-        particleBuffer.Release();
+        displayParticlesAsShader.MyOnDestroy();
     }
 }
