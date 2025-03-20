@@ -16,41 +16,20 @@ namespace FLIPFluidSimulator
         //Grid
         private Mesh gridMesh;
 
-        //Offsets so stuff doesnt intersect
+        //z offsets so stuff doesnt intersect
         //Plane is at 0
         private readonly float obstacleOffset = -0.1f;
         private readonly float gridOffset = -0.01f;
-        private readonly float particlePlaneOffset;
+        private readonly float particlesPlaneOffset = -0.05f;
 
-
-
-        //Called every Update
-        public void Draw(FLIPFluidScene scene)
-        {
-            UpdateTexture(scene);
-
-            if (scene.showObstacle)
-            {
-                ShowInteractiveCircleObstacle(scene);
-            }
-
-            if (scene.showParticles)
-            {
-                ShowParticles(scene);
-            }
-
-            if (scene.showGrid)
-            {
-                DisplayGrid(scene);
-            }
-        }
+        private DisplayParticlesAsShader displayParticlesAsShader;
 
 
 
         //
         // Show the fluid simulation data on a texture
         //
-        private void UpdateTexture(FLIPFluidScene scene)
+        public void UpdateTexture(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -149,7 +128,7 @@ namespace FLIPFluidSimulator
         //
         // Display the circle obstacle
         //
-        private void ShowInteractiveCircleObstacle(FLIPFluidScene scene)
+        public void ShowInteractiveCircleObstacle(FLIPFluidScene scene)
         {
             FLIPFluidSim f = scene.fluid;
 
@@ -232,12 +211,26 @@ namespace FLIPFluidSimulator
 
 
         //Display the individual particles
-        private void ShowParticles(FLIPFluidScene scene)
+        public void ShowParticles(FLIPFluidScene scene, GameObject particlesPlane, Material particlesMaterial)
         {
             //First update their colors
-            UpdateParticleColors(scene);
+            //UpdateParticleColors(scene);
+
+            if (displayParticlesAsShader == null)
+            {
+                displayParticlesAsShader = new DisplayParticlesAsShader(particlesPlane, particlesMaterial);
+
+                //Move the plane to correct z offset
+
+                Vector3 planePos = particlesPlane.transform.position;
+
+                particlesPlane.transform.position = new(planePos.x, planePos.y, particlesPlaneOffset);
+            }
+
+            displayParticlesAsShader.UpdateParticles(scene);
 
 
+            /*
             FLIPFluidSim f = scene.fluid;
 
             //
@@ -276,6 +269,7 @@ namespace FLIPFluidSimulator
             Material mat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Blue);
 
             DisplayShapes.DrawVertices(verts, mat);
+            */
         }
 
 
@@ -284,7 +278,7 @@ namespace FLIPFluidSimulator
         // Display a grid to show each cell
         //
 
-        private void DisplayGrid(FLIPFluidScene scene)
+        public void DisplayGrid(FLIPFluidScene scene)
         {
             if (gridMesh == null)
             {

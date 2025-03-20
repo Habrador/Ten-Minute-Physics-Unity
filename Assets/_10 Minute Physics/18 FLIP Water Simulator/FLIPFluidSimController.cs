@@ -59,7 +59,24 @@ public class FLIPFluidSimController : MonoBehaviour
         //Display the fluid
         //DisplayFluid.TestDraw(scene);
 
-        displayFluid.Draw(scene);
+        //displayFluid.Draw(scene);
+
+        displayFluid.UpdateTexture(scene);
+
+        if (scene.showObstacle)
+        {
+            displayFluid.ShowInteractiveCircleObstacle(scene);
+        }
+
+        if (scene.showParticles)
+        {
+            displayFluid.ShowParticles(scene, particlesPlane, particlesMaterial);
+        }
+
+        if (scene.showGrid)
+        {
+            displayFluid.DisplayGrid(scene);
+        }
     }
 
 
