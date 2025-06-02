@@ -106,7 +106,7 @@ Spoiler: It's just the simulation part that's 200 lines of code. You need a few 
 
 ## 18. FLIP Water Simulator
 
-TODO
+<img src="/_media/18-flip-fluid.jpg" width="400">
 
 
 ## 19. Differential equations and calculus from scratch
