@@ -82,9 +82,9 @@ namespace FLIPFluidSimulator
             //Teleport obstacle if we click with left mouse
             if (Input.GetMouseButtonDown(0))
             {
+                //Mouse coordinate in sim space
                 Vector2 mousePos = GetMousePos(scene);
 
-                //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
                 if (scene.fluid.IsWithinArea(mousePos.x, mousePos.y))
                 {
                     controller.SetObstacle(mousePos.x, mousePos.y, true);
@@ -95,6 +95,7 @@ namespace FLIPFluidSimulator
             //Drag obstacle if we hold down left mouse
             else if (Input.GetMouseButton(0))
             {
+                //Mouse coordinate in sim space
                 Vector2 mousePos = GetMousePos(scene);
 
                 //Has the mouse positioned not changed = we are not dragging?
@@ -103,7 +104,7 @@ namespace FLIPFluidSimulator
                     return;
                 }
 
-                //Is this coordinate within the simulation space (Or we will move the object when trying to interact with the UI)
+               
                 if (scene.fluid.IsWithinArea(mousePos.x, mousePos.y))
                 {
                     controller.SetObstacle(mousePos.x, mousePos.y, false);

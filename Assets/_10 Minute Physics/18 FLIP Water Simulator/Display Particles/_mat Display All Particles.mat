@@ -118,8 +118,8 @@ Material:
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _ParticleCount: 1485
-    - _ParticleRadius: 0.0057692314
+    - _ParticleCount: 2666
+    - _ParticleRadius: 0.0060000005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Smoothness: 0.5

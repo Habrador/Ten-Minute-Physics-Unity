@@ -169,6 +169,7 @@ MonoBehaviour:
   fluidMaterial: {fileID: 2100000, guid: 260223ed652cf634e817a132e78ee5ce, type: 2}
   particlesMaterial: {fileID: 2100000, guid: 9b6fe8834ff3d9b4ca27925c05a66a7e, type: 2}
   particlesPlane: {fileID: 893473465}
+  gridPlane: {fileID: 560775527}
 --- !u!1 &148191697
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,7 +320,7 @@ GameObject:
   - component: {fileID: 560775529}
   - component: {fileID: 560775528}
   m_Layer: 0
-  m_Name: Fluid sim display grid
+  m_Name: Fluid sim - Display grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -425,7 +426,7 @@ GameObject:
   - component: {fileID: 893473467}
   - component: {fileID: 893473466}
   m_Layer: 0
-  m_Name: Fluid sim display particles
+  m_Name: Fluid sim - Display particles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

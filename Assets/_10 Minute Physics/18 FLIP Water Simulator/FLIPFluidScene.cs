@@ -51,6 +51,7 @@ namespace FLIPFluidSimulator
         public float obstacleVelX;
         public float obstacleVelY;
 
+        //Radius of obstacle in world space
         public float obstacleRadius = 0.05f; //Was 0.15 but his simulation is bigger
 
         public Material obstacleMaterial = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Red);

@@ -22,7 +22,10 @@ public class FLIPFluidSimController : MonoBehaviour
 
     public Material particlesMaterial;
 
+    //Display particles on this plane
     public GameObject particlesPlane;
+    //Display the grid on this plane where the fluid has a greenish color
+    public GameObject gridPlane;
 
 
     //Private
@@ -130,21 +133,6 @@ public class FLIPFluidSimController : MonoBehaviour
                 scene.obstacleVelX,
                 scene.obstacleVelY);
 
-        //sim.Simulate(
-        //        scene.dt,
-        //        scene.gravity,
-        //        scene.flipRatio,
-        //        scene.numPressureIters,
-        //        scene.numParticleIters,
-        //        scene.overRelaxation,
-        //        scene.compensateDrift,
-        //        scene.separateParticles,
-        //        scene.obstacleX,
-        //        scene.obstacleY,
-        //        scene.obstacleRadius,
-        //        scene.obstacleVelX,
-        //        scene.obstacleVelY);
-
         scene.frameNr++;
     }
 
@@ -189,8 +177,8 @@ public class FLIPFluidSimController : MonoBehaviour
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
         //Tutorial is generating 32116 particles
-        float relWaterHeight = 0.4f; //Was 0.8
-        float relWaterWidth = 0.3f; //Was 0.6
+        float relWaterHeight = 0.5f; //Was 0.8
+        float relWaterWidth = 0.4f; //Was 0.6
 
         //Particle radius wrt cell size
         //Have to be smaller than the cell size
@@ -220,6 +208,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
 
         //Create a new fluid simulator
+        //Notice now that numX and numY has changed because we add 2 extra cells
         FLIPFluidSim f = scene.fluid = new FLIPFluidSim(density, numX, numY, h, r, maxParticles);
 
 
@@ -297,6 +286,17 @@ public class FLIPFluidSimController : MonoBehaviour
 
         //Mark which cells are covered by the obstacle
         float r = scene.obstacleRadius;
+
+        //Convert radius from world space to simulation space
+        Vector2 worldMousePos = scene.SimToWorld(new Vector2(x, y));
+        Vector2 posOnCicleWorld = new Vector2(worldMousePos.x + r, worldMousePos.y);
+        Vector2 posOnCircleSim = scene.WorldToSim(posOnCicleWorld);
+        float rSim = (new Vector2(x, y) - posOnCircleSim).magnitude;
+
+        //Debug.Log(r);
+        //Debug.Log(rSim);
+
+        r = rSim;
 
         float rSquare = r * r;
 

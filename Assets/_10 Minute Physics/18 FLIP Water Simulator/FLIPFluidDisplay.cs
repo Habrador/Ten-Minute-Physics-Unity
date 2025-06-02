@@ -19,7 +19,7 @@ namespace FLIPFluidSimulator
         //z offsets so stuff doesnt intersect
         //Plane is at 0
         private readonly float obstacleOffset = -0.1f;
-        private readonly float gridOffset = -0.01f;
+        private readonly float gridOffset = -0.07f;
         private readonly float particlesPlaneOffset = -0.05f;
 
         private DisplayParticlesAsShader displayParticlesAsShader;
@@ -198,7 +198,7 @@ namespace FLIPFluidSimulator
 
                     if (relDensity < 0.7f)
                     {
-                        //Theres another s abover so this is s2
+                        //Theres another s above so this is s2
                         float s2 = 0.8f;
 
                         //Make the particle light blue in low density areas
@@ -260,19 +260,21 @@ namespace FLIPFluidSimulator
             int numX = scene.fluid.NumX;
             int numY = scene.fluid.NumY;
 
+            //Debug.Log(numY);
+
             //These are in local space
             //float localCellWidthAndHeight = scene.fluid.Spacing;
 
             //This is the cell width and height in global space
-            float cellWidthAndHeight = scene.simPlaneWidth / numX; 
-
+            float cellWidthAndHeight = scene.simPlaneWidth / numX;
+            
             //Map width and height in global space
             float mapWidth = cellWidthAndHeight * numX;
             float mapHeight = cellWidthAndHeight * numY;
 
             //The map is centered around 0 so grid lines start in bottom-left corner
             Vector3 startPos = new(-mapWidth * 0.5f, -mapHeight * 0.5f, gridOffset);
-
+            //Debug.Log(-mapHeight * 0.5f);
             //Vertical lines                
             Vector3 linePosX = startPos;
 

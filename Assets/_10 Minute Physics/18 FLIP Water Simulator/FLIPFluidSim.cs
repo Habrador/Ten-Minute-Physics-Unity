@@ -114,9 +114,10 @@ namespace FLIPFluidSimulator
             //Add 2 extra cells because we need a border, or are we adding two u's on each side???
             //Because we use a staggered grid, then there will be no u on the right side of the cells in the last column if we add new cells... The p's are in the middle and of the same size, so we add two new cells while ignoring there's no u's on the right side of the last column. The book "Fluid Simulation for Computer Graphics" says that the velocity arrays should be one larger than the pressure array because we have 1 extra velocity on the right side of the last column. 
             //He says border cells in the video
-            this.numX = numX + 2;
-            this.numY = numY + 2;
-
+            //Dont add 2 because the plane we use to display the fluid will no longer be 2 units wide and 1 unit high which causes other problems and it makes no difference?
+            this.numX = numX + 0;
+            this.numY = numY + 0;
+            
             //Cellspacing
             this.h = h;
             this.one_over_h = 1f / this.h;
@@ -228,19 +229,19 @@ namespace FLIPFluidSimulator
 
 
             //Velocity transfer: Particles -> Grid
-            //TransferVelocities(true);
+            TransferVelocities(true);
 
 
             //Update the density of particles in a cell and calculate rest density at the start of the simulation
-            //UpdateParticleDensity();
+            UpdateParticleDensity();
 
 
             //Make the grid velocities incompressible
-            //SolveIncompressibility(numPressureIters, dt, overRelaxation, compensateDrift);
+            SolveIncompressibility(numPressureIters, dt, overRelaxation, compensateDrift);
 
 
             //Velocity transfer: Grid -> Particles
-            //TransferVelocities(false, flipRatio);
+            TransferVelocities(false, flipRatio);
         }
 
 
