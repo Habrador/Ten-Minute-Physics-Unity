@@ -245,7 +245,7 @@ namespace FLIPFluidSimulator
                 gridMesh = InitGridMesh(scene);
             }
 
-            Material gridMat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Red);
+            Material gridMat = DisplayShapes.GetMaterial(DisplayShapes.ColorOptions.Black);
 
             Graphics.DrawMesh(gridMesh, Vector3.zero, Quaternion.identity, gridMat, 0, Camera.main, 0);
         }

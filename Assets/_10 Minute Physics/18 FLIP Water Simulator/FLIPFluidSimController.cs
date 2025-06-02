@@ -65,16 +65,21 @@ public class FLIPFluidSimController : MonoBehaviour
 
         //displayFluid.Draw(scene);
 
-        displayFluid.UpdateTexture(scene);
-
-        if (scene.showObstacle)
-        {
-            displayFluid.ShowInteractiveCircleObstacle(scene);
-        }
+        displayFluid.ShowInteractiveCircleObstacle(scene);
 
         if (scene.showParticles)
         {
             displayFluid.ShowParticles(scene, particlesPlane, particlesMaterial);
+
+            particlesPlane.SetActive(true);
+            gridPlane.SetActive(false);
+        }
+        else
+        {
+            displayFluid.UpdateTexture(scene);
+
+            particlesPlane.SetActive(false);
+            gridPlane.SetActive(true);
         }
 
         if (scene.showGrid)
