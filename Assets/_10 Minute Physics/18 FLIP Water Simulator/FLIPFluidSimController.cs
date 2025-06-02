@@ -159,17 +159,14 @@ public class FLIPFluidSimController : MonoBehaviour
         scene.obstacleRadius = 0.05f; //Was 0.15 but his simulation is 3x bigger in world space
         scene.overRelaxation = 1.9f;
 
-        //float
-
         scene.SetTimeStep(1f / 60f);
         scene.numPressureIters = 40;
         scene.numParticleIters = 2;
         scene.isPaused = false;
 
-        //scene.isPaused = false;
-
         //How detailed the simulation is in height (y) direction
-        int res = 50; //100 in tutorial is is slow as molasses
+        //Detailed means how many cells in y direction
+        int res = 50; //100 in tutorial but is slow as molasses
 
         //The height of the simulation (the plane might be smaller but it doesnt matter because we can pretend its 3m and no one knows)
         float simHeight = 3f;
@@ -185,8 +182,10 @@ public class FLIPFluidSimController : MonoBehaviour
 
         //Density of the fluid (water)
         float density = 1000f;
+        //We ignore air density
 
-        //Particles
+
+        //Init particles
 
         //Fill a rectangle with size 0.8 * height and 0.60 * width with particles
         //Tutorial is generating 32116 particles
@@ -252,12 +251,13 @@ public class FLIPFluidSimController : MonoBehaviour
         {
             for (int cellY = 0; cellY < f.NumY; cellY++)
             {
-                //1 = fluid
+                //1 means fluid
                 float s = 1f;
 
                 //Solid walls at left-right-bottom border
                 if (cellX == 0 || cellX == f.NumX - 1 || cellY == 0)
                 {
+                    //0 means solid
                     s = 0f;
                 }
 
@@ -307,7 +307,7 @@ public class FLIPFluidSimController : MonoBehaviour
         {
             for (int cellY = 1; cellY < f.NumY - 2; cellY++)
             {
-                //Start by setting all cells to fluids (= 1)
+                //Start by setting all cells to fluid (= 1)
                 //Cant do an System.Array.Fill because then the border will also be fluid
                 f.s[f.To1D(cellX, cellY)] = 1f;
 
@@ -321,7 +321,7 @@ public class FLIPFluidSimController : MonoBehaviour
 
                 if (distSqr < rSquare)
                 {
-                    //Mark this cell as obstacle 
+                    //Mark this cell as obstacle (= 0)
                     f.s[f.To1D(cellX, cellY)] = 0f;
 
                     //Give the fluid a velocity if we have moved it

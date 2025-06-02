@@ -16,6 +16,7 @@ namespace FLIPFluidSimulator
         private readonly float density;
 
         //Simulation grid settings
+        //Number of cells in x and y direction
         private readonly int numX;
         private readonly int numY;
         private readonly int numCells;
@@ -45,8 +46,8 @@ namespace FLIPFluidSimulator
         //Should use float instead of bool because it makes some calculations simpler
         public float[] s;
 
-        //The different cell types we can have
-        //In this simulation a cell can also be air
+        //The different cell types
+        //Confusing because above solid = 0 and fluid = 1
         public readonly int FLUID = 0;
         public readonly int AIR = 1;
         public readonly int SOLID = 2;
@@ -85,7 +86,7 @@ namespace FLIPFluidSimulator
         public int To1D(int xi, int yi) => xi + (numX * yi);
 
         //Is a coordinate in local space within the simulation area?
-        public bool IsWithinArea(float x, float y) => (x > 0 && x < SimWidth && y > 0 && y < SimHeight);
+        public bool IsWithinArea(float x, float y) => (x > 0f && x < SimWidth && y > 0f && y < SimHeight);
 
         //Cell types
         public bool IsAir(int index) => this.cellType[index] == this.AIR;
@@ -141,9 +142,11 @@ namespace FLIPFluidSimulator
             //Particles
             this.maxParticles = maxParticles;
 
+            //x,y after each other so size has to be twice the number of particles
             this.particlePos = new float[2 * this.maxParticles];
             this.particleVel = new float[2 * this.maxParticles];
 
+            //r,g,b after each other so size has to be three times the number of particles
             this.particleColor = new float[this.maxParticles * 3];
             
             //Init the colors to blue
@@ -209,27 +212,32 @@ namespace FLIPFluidSimulator
             float obstacleVelX, 
             float obstacleVelY)
         {
+            //Simulate particles
+            
             //Update particle vel and pos by adding gravity
             IntegrateParticles(dt, gravity);
 
             if (separateParticles)
             {
                 //Handle particle-particle collisions
-                //PushParticlesApart(numParticleIters);
                 pushParticlesApart.Push(numParticleIters, this.numParticles, this.particlePos, this.particleColor);
             }
 
             //Handle particle-world collisions
             HandleParticleCollisions(obstacleX, obstacleY, obstacleRadius, obstacleVelX, obstacleVelY);
 
+
             //Velocity transfer: Particles -> Grid
             //TransferVelocities(true);
+
 
             //Update the density of particles in a cell and calculate rest density at the start of the simulation
             //UpdateParticleDensity();
 
+
             //Make the grid velocities incompressible
             //SolveIncompressibility(numPressureIters, dt, overRelaxation, compensateDrift);
+
 
             //Velocity transfer: Grid -> Particles
             //TransferVelocities(false, flipRatio);
