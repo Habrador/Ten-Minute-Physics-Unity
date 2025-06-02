@@ -320,7 +320,7 @@ GameObject:
   - component: {fileID: 560775529}
   - component: {fileID: 560775528}
   m_Layer: 0
-  m_Name: Fluid sim - Display grid
+  m_Name: Fluid sim - Display cell data
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

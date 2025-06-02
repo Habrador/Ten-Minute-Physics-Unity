@@ -3,7 +3,7 @@ Shader "Custom/DisplayAllParticles"
     Properties
     {
         _ParticleTexture ("Particle Texture", 2D) = "white" {}
-        _ParticleColor ("Particle Color", Color) = (1,1,1,1)
+        //_ParticleColor ("Particle Color", Color) = (1,1,1,1)
         //_ParticleRadius ("Particle Radius", Float) = 0.1
         //_ParticleCount ("Particle Count", Int) = 100
     }
@@ -38,6 +38,7 @@ Shader "Custom/DisplayAllParticles"
             struct Particle
             {
                 float2 position;
+                //half3 rgbValues;
             };
 
             //In the shader, you define a StructuredBuffer that matches the structure of the data in the ComputeBuffer. This allows the shader to access the data efficiently.
@@ -57,6 +58,8 @@ Shader "Custom/DisplayAllParticles"
 
                 for (uint index = 0; index < _ParticleCount; index++)
                 {
+                    Particle thisParticle = _Particles[index];
+                    
                     float2 particlePos = _Particles[index].position;
                     
                     //Compensate for plane scale
@@ -66,9 +69,17 @@ Shader "Custom/DisplayAllParticles"
                     
                     if (dist < _ParticleRadius)
                     {
-                        color = tex2D(_ParticleTexture, particlePos) * _ParticleColor;
+                        //Make all particles blue, sending individual colors makes it too slow
+                        half4 particleColor = half4(0, 0, 1, 0);
+                        //half4 particleColor = half4(thisParticle.rgbValues, 1);
+                        
+                        color = tex2D(_ParticleTexture, particlePos) * particleColor;
+
+                        //Assuming one particle per pixel, break to avoid unnecessary iterations
+                        //break; 
                     }
                 }
+
                 return color;
             }
             ENDCG

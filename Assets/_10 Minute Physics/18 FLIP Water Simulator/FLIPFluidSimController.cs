@@ -12,9 +12,8 @@ using UnityEngine;
 //BUT the problem with FLIP is that it may develop noise. PIC doesnt have this problem so lets combine PIC and FLIP. 
 //TODO:
 //- What is drift? Balls getting clumped together? 
-//- Optimize particle-particle intersection which is the current bottleneck
+//- Fix so particles can have individual colors, currently too slow to send individual colors to shader
 //- Why do we need both an array for solid/non-solid and solid/fluid/air array? 
-//- Use the scale of the plane to determine width and height of simulation
 public class FLIPFluidSimController : MonoBehaviour
 {
     //Public

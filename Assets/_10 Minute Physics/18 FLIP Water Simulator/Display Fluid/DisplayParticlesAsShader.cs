@@ -13,6 +13,7 @@ public class DisplayParticlesAsShader
     private struct ParticleToShader
     {
         public Vector2 position;
+        //public Vector3 rgbValues;
     }
 
     private ComputeBuffer particleBuffer;
@@ -40,6 +41,7 @@ public class DisplayParticlesAsShader
         particles = new ParticleToShader[particleCount];
 
         //8 is the size of ParticleToShader struct
+        //20 is the size of Particle struct (8 for position + 12 for color)
         particleBuffer = new ComputeBuffer(particleCount, 8);
 
         float simWidth = fluidSim.SimWidth;
@@ -62,14 +64,13 @@ public class DisplayParticlesAsShader
             //8 -> 4
             particles[i / 2] = new ParticleToShader
             {
-                position = shaderCenter2D
+                position = shaderCenter2D,
+                //rgbValues = new Vector3(0f, 0f, 1f)
             };
         }
 
 
         float particleRadius = fluidSim.particleRadius / simHeight;
-
-        Color particleColor = UnityEngine.Color.blue;
 
         Transform planeTrans = particlesPlane.transform;
 
@@ -93,7 +94,7 @@ public class DisplayParticlesAsShader
 
         //Single values
         particlesMaterial.SetFloat("_ParticleRadius", particleRadius);
-        particlesMaterial.SetColor("_ParticleColor", particleColor);
+        //particlesMaterial.SetColor("_ParticleColor", particleColor);
         particlesMaterial.SetInt("_ParticleCount", particleCount);
         particlesMaterial.SetVector("_PlaneScale", planeScale);
     }
