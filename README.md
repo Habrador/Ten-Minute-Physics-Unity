@@ -160,6 +160,6 @@ Simulation of planetary orbits based on this famous unsolved problem (https://en
 
 ## Calculate pi
 
-Calculate decimals in pi by bouncing boxes with different mass and count collisions. If the small box is 1 kg and the big box is 10000 kg, then the small box will collide with the big box and the wall to the left 314 times (pi = 3.14...). Inspired by 3Blue1Bown's YouTube video: [The most unexpected answer to a counting puzzle](https://www.youtube.com/watch?v=HEfHFsfGXjs).
+Calculate decimals in pi by bouncing boxes with different mass and count collisions. If the small box is 1 kg and the big box is 10000 kg, then the small box will collide with the big box and the wall to the left 314 times (pi = 3.14...). To get more decimals increase the mass of the big box (or decrease the mass of the small box). Inspired by 3Blue1Bown's YouTube video: [The most unexpected answer to a counting puzzle](https://www.youtube.com/watch?v=HEfHFsfGXjs).
 
 <img src="/_media/bonus-calculate-pi.png" width="400">
