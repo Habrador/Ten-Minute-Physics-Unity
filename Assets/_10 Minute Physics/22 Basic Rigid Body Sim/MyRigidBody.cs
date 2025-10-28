@@ -1,11 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Threading;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
-using static UnityEditor.PlayerSettings;
-using static UnityEngine.GraphicsBuffer;
+
 
 public class MyRigidBody
 {
