@@ -203,29 +203,7 @@ public class DistanceConstraint
         
         string displayText = Mathf.RoundToInt(Mathf.Abs(this.force)) + "N" + ", " + this.elongation + "m";
 
-        GUIStyle textStyle = new GUIStyle();
-
-        textStyle.fontSize = this.fontSize;
-        textStyle.normal.textColor = UnityEngine.Color.black;
-
-        //The position and size of the text area
-        Rect textArea = new Rect(10, 10, 200, this.fontSize);
-
-        //From world space to screen space
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(this.displayConstraintTrans.position);
-
-        //WorldToScreenPoint and GUI.Label y positions are for some reason inverted
-        screenPos.y = Screen.height - screenPos.y;
-
-        //We also want it centered
-        screenPos.y -= textArea.height * 0.5f;
-
-        //And offset it in x direction so its outside of the object
-        screenPos.x += 30f;
-
-        textArea.position = new Vector2(screenPos.x, screenPos.y);
-
-        GUI.Label(textArea, displayText, textStyle);
+        BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.displayConstraintTrans.position);
     }
 
 

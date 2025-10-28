@@ -157,7 +157,7 @@ public class MyRigidBody
 
 
 
-    //Move mesh to the simulate position and rotation
+    //Move mesh to the simulated position and rotation
     public void UpdateMesh()
     {
         this.rbVisualTrans.SetPositionAndRotation(this.pos, this.rot);
@@ -175,29 +175,7 @@ public class MyRigidBody
     
         string displayText = Mathf.RoundToInt(1f / this.invMass) + "kg";
 
-        GUIStyle textStyle = new GUIStyle();
-
-        textStyle.fontSize = this.fontSize;
-        textStyle.normal.textColor = UnityEngine.Color.black;
-
-        //The position and size of the text area
-        Rect textArea = new Rect(10, 10, 200, this.fontSize);
-
-        //From world space to screen space
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(this.pos);
-
-        //WorldToScreenPoint and GUI.Label y positions are for some reason inverted
-        screenPos.y = Screen.height - screenPos.y;
-
-        //We also want it centered
-        screenPos.y -= textArea.height * 0.5f;
-
-        //And offset it in x direction so its outside of the object
-        screenPos.x += 30f;
-
-        textArea.position = new Vector2(screenPos.x, screenPos.y);
-
-        GUI.Label(textArea, displayText, textStyle);
+        BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.pos);
     }
 
 
@@ -338,7 +316,7 @@ public class MyRigidBody
 
 
     //Fix velocity and angular velocity
-    //The velocities calculated in Inegrate() are not the velocities we want
+    //The velocities calculated in Integrate() are not the velocities we want
     //because they make the simulation unstable because we havent take into
     //consideration the constraints which changes the position
     //Add damping

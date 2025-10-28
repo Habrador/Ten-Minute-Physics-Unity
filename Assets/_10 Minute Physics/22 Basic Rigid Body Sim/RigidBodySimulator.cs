@@ -61,11 +61,16 @@ public class RigidBodySimulator
     //The XPBD simulation loop
     private void Simulate(float dt)
     {
+        //v = v + dt * g
+        //p = x
+        //x = x + dt * v
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
             allRigidBodies[i].Integrate(dt, this.gravity);
         }
 
+        //Constraints
+        //x = x + dx
         for (int i = 0; i < allDistanceConstraints.Count; i++)
         {
             allDistanceConstraints[i].Solve(dt);
@@ -77,8 +82,9 @@ public class RigidBodySimulator
             this.dragConstraint.Solve(dt);
         }
 
-        //The velocities we calculated in Integrate are not the velocities we want
-        //because they make simulation unstable 
+        //The velocities we calculated in integrate() make the simulation unstable
+        //We get the new velocity by comparing the position before and after integrate() and solve_constraints()
+        //v = (x - p) / dt
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
             allRigidBodies[i].UpdateVelocities(dt);
