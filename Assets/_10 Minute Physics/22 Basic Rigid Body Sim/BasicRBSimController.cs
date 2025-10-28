@@ -25,6 +25,7 @@ public class BasicRBSimController : MonoBehaviour
     }
 
     //Simulation settings
+    //Gravity is set to 10 to easier see if we get a correct result
     private Vector3 gravity = new(0f, -10.0f, 0f);
     //Needed to calculate mass
     private readonly float density = 1000f;

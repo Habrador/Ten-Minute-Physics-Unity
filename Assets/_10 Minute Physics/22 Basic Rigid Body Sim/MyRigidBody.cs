@@ -350,7 +350,7 @@ public class MyRigidBody
 
 
 
-    //Get the general inverse mass
+    //Get the generalized inverse mass
     //normal - direction between constraints
     //pos - where the constraint attaches to this body
     //Why can pos sometimes be undefined???
@@ -359,7 +359,7 @@ public class MyRigidBody
     //n - correction direction
     //r - vector from center of mass to contact point
     //Derivation at the end of the paper "Detailed rb simulation with xpbd"
-    private float GetInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
+    private float GetGeneralizedInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
     {
         if (this.invMass == 0f)
         {
@@ -395,7 +395,7 @@ public class MyRigidBody
     }
 
     //As in the code in the video (not on github)
-    private float GetInverseMass(Vector3 normal, Vector3 pos)
+    private float GetGeneralizedInverseMass(Vector3 normal, Vector3 pos)
     {
         if (this.invMass == 0f)
         {
@@ -554,11 +554,11 @@ public class MyRigidBody
 
         Vector3 normal = corr.normalized;
 
-        float w_tot = this.GetInverseMass(normal, pos);
+        float w_tot = this.GetGeneralizedInverseMass(normal, pos);
 
         if (otherBody != null)
         {
-            w_tot += otherBody.GetInverseMass(normal, otherPos);
+            w_tot += otherBody.GetGeneralizedInverseMass(normal, otherPos);
         }
 
         if (w_tot == 0f)

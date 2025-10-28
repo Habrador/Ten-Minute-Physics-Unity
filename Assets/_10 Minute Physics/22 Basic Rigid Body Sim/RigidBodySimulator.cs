@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 
 public class RigidBodySimulator
@@ -61,16 +62,14 @@ public class RigidBodySimulator
     //The XPBD simulation loop
     private void Simulate(float dt)
     {
-        //v = v + dt * g
-        //p = x
-        //x = x + dt * v
+        //Update pos, vel, rot, angular vel
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
             allRigidBodies[i].Integrate(dt, this.gravity);
         }
 
         //Constraints
-        //x = x + dx
+        //Update pos and rot
         for (int i = 0; i < allDistanceConstraints.Count; i++)
         {
             allDistanceConstraints[i].Solve(dt);
@@ -83,8 +82,7 @@ public class RigidBodySimulator
         }
 
         //The velocities we calculated in integrate() make the simulation unstable
-        //We get the new velocity by comparing the position before and after integrate() and solve_constraints()
-        //v = (x - p) / dt
+        //Update vel and angular vel by using pos and rot before and after integrate() and solve()
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
             allRigidBodies[i].UpdateVelocities(dt);
