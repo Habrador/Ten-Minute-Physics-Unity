@@ -145,6 +145,11 @@ A fast way to check collisions between many objects by checking each object's Ax
 TODO
 
 
+## 25. Joint simulation made simple
+
+TODO
+
+
 
 # Bonus
 
