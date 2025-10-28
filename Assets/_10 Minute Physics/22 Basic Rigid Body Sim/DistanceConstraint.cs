@@ -35,7 +35,6 @@ public class DistanceConstraint
 
 
 
-    //Removed scene as parameter - we add the rb to the simulator when we create it
     //When we want to delete the physical object we call Dispose()
     //A rb can be null if we want to attach the constraint to a fixed location
     //Here body1 is assumed to be the fixed one (if any exists)

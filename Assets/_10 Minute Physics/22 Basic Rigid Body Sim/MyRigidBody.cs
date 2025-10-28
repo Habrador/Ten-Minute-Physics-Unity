@@ -52,9 +52,20 @@ public class MyRigidBody
     //Font size determines if we should display rb data on the screen
     private int fontSize;
 
+    //Local pos to world pos and world pos to local pos
+    // - a is a point on the rb in local space
+    // - a' is the same point but in world space
+    // - q is the quaternion
+    // - x is the position of rb (center of mass)
+
+    //a' = x + q * a 
+    public Vector3 LocalToWorld(Vector3 localPos) => this.pos + this.rot * localPos;
+
+    //a = q^-1 * (a' - x)
+    public Vector3 WorldToLocal(Vector3 worldPos) => this.invRot * (worldPos - this.pos);
 
 
-    //Removed scene as parameter - we add the rb to the simulator when we create it
+
     //When we want to delete the physical object we call Dispose()
     //If fontSize = 0 we wont display any text
     //size - radius if we have a sphere, length of side if we have a box
@@ -176,30 +187,6 @@ public class MyRigidBody
         string displayText = Mathf.RoundToInt(1f / this.invMass) + "kg";
 
         BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.pos);
-    }
-
-
-
-    //Local pos to world pos and world pos to local pos
-    //a is a point on the rb in local space
-    //a' is the same point but in world space
-    //q is the quaternion
-    //x is the position of rb (center of mass)
-
-    //a' = x + q * a 
-    public Vector3 LocalToWorld(Vector3 localPos)
-    {
-        Vector3 worldPos = this.pos + this.rot * localPos;
-
-        return worldPos;
-    }
-
-    //a = q^-1 * (a' - x)
-    public Vector3 WorldToLocal(Vector3 worldPos)
-    {
-        Vector3 localPos = this.invRot * (worldPos - this.pos);
-
-        return localPos;
     }
 
 
