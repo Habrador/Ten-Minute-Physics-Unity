@@ -25,6 +25,8 @@ public class JointSimulationController : MonoBehaviour
         { Scenes.Pendulums, "pendulum.json" },
     };
 
+    SceneImporter sceneImporter;
+
     //Simulation settings
     //In this sim gravity is 9.81 - not 10
     private Vector3 gravity = new(0f, -9.81f, 0f);
@@ -94,6 +96,11 @@ public class JointSimulationController : MonoBehaviour
     //Create a new rb simulation envrionment with some objects we want to simulate
     private void InitScene(Scenes scene)
     {
+        if (sceneImporter == null)
+        {
+            sceneImporter = new SceneImporter(this.rbSimulator);
+        }
+    
         //Destroy previous scene
         if (rbSimulator != null)
         {
@@ -103,24 +110,7 @@ public class JointSimulationController : MonoBehaviour
         //Create a new rb simulator
         rbSimulator = new RigidBodySimulator(gravity);
 
-        JointsSimScenes.InitJointsScene(jointScenes[scene], rbSimulator);
-
-        //if (scene == Scenes.BasicJoints)
-        //{
-        //    JointsSimScenes.InitJointsScene(rbSimulator);
-        //}
-        //else if (scene == Scenes.Steering)
-        //{
-        //    JointsSimScenes.InitSteeringScene(rbSimulator);
-        //}
-        //else if (scene == Scenes.Pendulums)
-        //{
-        //    JointsSimScenes.InitPendulumsScene(rbSimulator);
-        //}
-        //else
-        //{
-        //    Debug.Log("There's no scene to init!");
-        //}
+        sceneImporter.LoadScene(jointScenes[scene]);
     }
 
 
