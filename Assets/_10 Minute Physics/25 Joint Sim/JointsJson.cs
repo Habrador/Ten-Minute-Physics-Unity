@@ -17,7 +17,7 @@ using UnityEngine;
 public class JointsJson
 {
     public JointMesh[] meshes;
-    public string exportInfo;
+    public JointExportInfo exportInfo;
 }
 
 

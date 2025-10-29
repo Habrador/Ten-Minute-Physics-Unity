@@ -26,7 +26,7 @@ public static class JointsSimScenes
         }
 
         //40 which is what we want!
-        Debug.Log("Number of meshes: " + data.meshes.Length);
+        //Debug.Log("Number of meshes: " + data.meshes.Length);
 
         //JointMesh mesh = data.meshes[0];
 
@@ -70,7 +70,7 @@ public static class JointsSimScenes
             }
         }
 
-        Debug.Log($"Found {rigidCount} RigidBodies, {jointCount} Joints, and {visualCount} Visual");
+        Debug.Log($"Found {rigidCount} RigidBodies, {jointCount} Joints, and {visualCount} Visual meshes = {rigidCount + jointCount + visualCount} meshes. Total should be {data.exportInfo.totalMeshes}");
 
         //this.simulator.simulationView = false;
         //this.simulator.toggleView();
@@ -79,6 +79,9 @@ public static class JointsSimScenes
         //rigid bodies`);
     }
 
+
+
+    //Identify mesh type based on simType string
     private static bool IsRigidBody(JointMesh mesh)
     {
         string simType = mesh.properties.simType;
