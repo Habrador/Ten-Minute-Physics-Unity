@@ -30,34 +30,47 @@ public static class JointsSimScenes
 
         //JointMesh mesh = data.meshes[0];
 
-        //DisplayMesh(mesh);
+        //DisplayMeshData(mesh);
 
-        //Clear existing simulation
+        //Clear existing simulation (we do this outside this method in the Controller)
         //this.simulator.clear();
         //this.rigidBodies.clear();
 
-        //we need to separate the mehes which are RigidBox, joint or visual. The RigidBox are the cubic meshes and visual the more detailed meshes overlaying the simple ones
+        //We need to separate the meshes which are RigidBox, joint or Visual. The RigidBox are the cubic meshes and visual the more detailed meshes overlaying the simple ones
         //We need to show both and change between them by pressing "Toggle View" button
 
+        int rigidCount = 0;
+        int visualCount = 0;
+        int jointCount = 0;
+
+        JointMesh[] meshes = data.meshes;
+
         //Pass 1: Create all rigid bodies
-        //for (const mesh of data.meshes) {
-        //    if (this.isRigidBody(mesh))
-        //    {
-        //        this.createRigidBody(mesh);
-        //    }
-        //}
+        foreach (JointMesh mesh in meshes) 
+        {
+            if (IsRigidBody(mesh))
+            {
+                //this.createRigidBody(mesh);
+                rigidCount += 1;
+            }
+        }
 
         //Pass 2: Create joints and visual meshes
-        //for (const mesh of data.meshes) {
-        //    if (this.isJoint(mesh))
-        //    {
-        //        this.createJoint(mesh);
-        //    }
-        //    else if (this.isVisual(mesh))
-        //    {
-        //        this.createVisualMesh(mesh);
-        //    }
-        //}
+        foreach (JointMesh mesh in meshes)
+        {
+            if (IsJoint(mesh))
+            {
+                //this.createJoint(mesh);
+                jointCount += 1;
+            }
+            else if (IsVisual(mesh))
+            {
+                //this.createVisualMesh(mesh);
+                visualCount += 1;
+            }
+        }
+
+        Debug.Log($"Found {rigidCount} RigidBodies, {jointCount} Joints, and {visualCount} Visual");
 
         //this.simulator.simulationView = false;
         //this.simulator.toggleView();
@@ -66,9 +79,35 @@ public static class JointsSimScenes
         //rigid bodies`);
     }
 
+    private static bool IsRigidBody(JointMesh mesh)
+    {
+        string simType = mesh.properties.simType;
+
+        //We currently only have RigidBox, but in the future we might add other types
+        //See if simtype starts with Rigid
+        //Assuming the string has at least 5 characters which it should... 
+        return simType[..5] == "Rigid";
+    }
+
+    private static bool IsJoint(JointMesh mesh)
+    {
+        string simType = mesh.properties.simType;
+
+        //Joint is the last word, MotorJoint, HingeJoint, etc
+        return simType[^5..] == "Joint";
+    }
+
+    private static bool IsVisual(JointMesh mesh)
+    {
+        string simType = mesh.properties.simType;
+
+        //Visual is the entrie string, we never append stuff to it
+        return simType == "Visual";
+    }
 
 
-    private static void DisplayMesh(JointMesh mesh)
+
+    private static void DisplayMeshData(JointMesh mesh)
     {
         Debug.Log("Name: " + mesh.name);
 
