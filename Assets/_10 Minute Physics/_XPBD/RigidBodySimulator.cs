@@ -5,44 +5,43 @@ using UnityEngine;
 
 namespace XPBD
 {
+    //Simulate rigid bodies, constraints, joints using XPBD: Extended Position Based Dynamics
     public class RigidBodySimulator
     {
         private readonly Vector3 gravity;
 
         //So we can delete all gameobjects from the scene if we change scene
-        public List<MyRigidBody> allRigidBodies;
-        public List<DistanceConstraint> allDistanceConstraints;
+        public List<MyRigidBody> allRigidBodies = new();
+        public List<DistanceConstraint> allDistanceConstraints = new();
+        public List<MyJoint> allJoints = new();
 
         //Dragconstraint, meaning if we drag with mouse to interact we add a temp distance constraint
-        public DistanceConstraint dragConstraint;
-        private float dragCompliance;
+        public DistanceConstraint dragConstraint = null;
+        private readonly float dragCompliance = 0.001f;
 
 
 
         public RigidBodySimulator(Vector3 gravity)
         {
             this.gravity = gravity;
-
-            this.allRigidBodies = new();
-            this.allDistanceConstraints = new();
-
-            //Move stuff with mouse
-            this.dragConstraint = null;
-            this.dragCompliance = 0.001f;
         }
 
 
 
+        //Add stuff to the physics simulation
         public void AddRigidBody(MyRigidBody rigidBody)
         {
             allRigidBodies.Add(rigidBody);
         }
 
-
-
         public void AddDistanceConstraint(DistanceConstraint distanceConstraint)
         {
             allDistanceConstraints.Add(distanceConstraint);
+        }
+
+        public void AddJoint(MyJoint joint)
+        {
+            allJoints.Add(joint);
         }
 
 
@@ -147,7 +146,7 @@ namespace XPBD
 
 
 
-        //Cleanup to easily switch between scenes with rbs
+        //Cleanup when simulation is over
         public void Dispose()
         {
             for (int i = 0; i < this.allRigidBodies.Count; i++)
