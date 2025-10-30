@@ -16,11 +16,11 @@ public class MyRigidBody
 
     //A rigidbody has the following properties:
     //Position pos
-    private Vector3 pos;
+    public Vector3 pos;
     //Velocity v
     private Vector3 vel;
     //Rotation q
-    private Quaternion rot;
+    public Quaternion rot;
     //Inverse rot q^-1 = q* / |q|^2
     private Quaternion invRot;
     //Angular velocity omega

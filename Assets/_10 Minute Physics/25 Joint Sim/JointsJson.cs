@@ -59,12 +59,14 @@ public class JointProperties
     public float distanceMax;
     public float distanceMin;
     public float distanceTarget;
+    public float posTarget;
     public float velocityMax;
     public float velocityMin;
     public float targetAngle;
     public float targetAngleCompliance;
     public float[] color;
-    public float parent;
+    public string parent;
+    public float restDistance;
 }
 
 

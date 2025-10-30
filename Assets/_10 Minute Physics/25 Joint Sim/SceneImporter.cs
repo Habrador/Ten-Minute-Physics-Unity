@@ -11,6 +11,7 @@ public class SceneImporter
     private RigidBodySimulator simulator;
 
     //name -> RigidBody lookup
+    //Used to connect joints to rbs
     private Dictionary<string, MyRigidBody> rigidBodies;
 
 
@@ -29,7 +30,7 @@ public class SceneImporter
     {
         //string fileName = "basicJoints.json";
 
-        string filePathEditor = "Assets/_10 Minute Physics/25 Joint Sim/";
+        string filePathEditor = "Assets/_10 Minute Physics/25 Joint Sim/Scenes/";
 
         //filePathEditor includes a last /
         string JSONAsString = File.ReadAllText(filePathEditor + fileName);
@@ -39,11 +40,10 @@ public class SceneImporter
         //Check if scene data is empty
         if (data == null || data.meshes == null || data.meshes.Length == 0)
         {
-            Debug.Log("Empty scene data provided. No objects to load.");
+            Debug.Log("Empty scene data provided! No objects to load!");
             return;
         }
 
-        //40 which is what we want!
         //Debug.Log("Number of meshes: " + data.meshes.Length);
 
         //JointMesh mesh = data.meshes[0];
@@ -54,7 +54,7 @@ public class SceneImporter
         //this.simulator.Clear();
         this.rigidBodies.Clear();
 
-        //We need to separate the meshes which are RigidBox, joint or Visual. The RigidBox are the cubic meshes and visual the more detailed meshes overlaying the simple ones
+        //We need to separate the meshes which are RigidBox, ...Joint or Visual. The RigidBox are the cubic meshes and Visual the more detailed meshes overlaying the simple ones
         //We need to show both and change between them by pressing "Toggle View" button
 
         int rigidCount = 0;
@@ -68,7 +68,7 @@ public class SceneImporter
         {
             if (IsRigidBody(mesh))
             {
-                //this.createRigidBody(mesh);
+                CreateRigidBody(mesh);
                 rigidCount += 1;
             }
         }
@@ -78,12 +78,12 @@ public class SceneImporter
         {
             if (IsJoint(mesh))
             {
-                //this.createJoint(mesh);
+                CreateJoint(mesh);
                 jointCount += 1;
             }
             else if (IsVisual(mesh))
             {
-                //this.createVisualMesh(mesh);
+                CreateVisualMesh(mesh);
                 visualCount += 1;
             }
         }
@@ -93,8 +93,7 @@ public class SceneImporter
         //this.simulator.simulationView = false;
         //this.simulator.toggleView();
 
-        //console.log(`Loaded scene with ${ this.rigidBodies.size}
-        //rigid bodies`);
+        Debug.Log($"Loaded scene with ${ this.rigidBodies.Count} rigid bodies");
     }
 
 
@@ -126,58 +125,81 @@ public class SceneImporter
         return simType == "Visual";
     }
 
-    private void CreateRigidBody(JointMesh mesh)
+
+
+    //Extract position and rotation from transform
+    private void ExtractPosAndRot(JointMesh mesh, out Vector3 pos, out Quaternion rot)
     {
-        //const props = mesh.properties;
-        //const simType = props.simType;
-        //const density = props.density ?? 0.0;
+        pos = new(
+            mesh.transform.position[0],
+            mesh.transform.position[1],
+            mesh.transform.position[2]
+        );
 
-        //// Extract position and rotation from transform
-        //const pos = new THREE.Vector3(
-        //    mesh.transform.position[0],
-        //    mesh.transform.position[1],
-        //    mesh.transform.position[2]
-        //);
-
-        //const quat = new THREE.Quaternion(
-        //    mesh.transform.rotation[0],
-        //    mesh.transform.rotation[1],
-        //    mesh.transform.rotation[2],
-        //    mesh.transform.rotation[3]
-        //);
-        //const euler = new THREE.Euler().setFromQuaternion(quat);
-        //const angles = new THREE.Vector3(euler.x, euler.y, euler.z);
-
-        //let rigidBody;
-
-        //if (simType === 'RigidBox')
-        //{
-        //    // Calculate bounding box from vertices
-        //    const size = this.calculateBoundingBox(mesh.vertices);
-        //    rigidBody = new RigidBody(this.scene, "box", size, density, pos, angles);
-        //}
-        //else if (simType === 'RigidSphere')
-        //{
-        //    // Calculate bounding sphere radius
-        //    const radius = this.calculateBoundingSphere(mesh.vertices);
-        //    const size = new THREE.Vector3(radius, radius, radius);
-        //    rigidBody = new RigidBody(this.scene, "sphere", size, density, pos, angles);
-        //}
-        //else
-        //{
-        //    console.warn(`Unknown rigid body type: ${ simType}`);
-        //    return;
-        //}
-
-        //// Store in lookup table
-        //this.rigidBodies.set(mesh.name, rigidBody);
-        //this.simulator.addRigidBody(rigidBody);
-
-        //console.log(`Created ${ simType}: ${ mesh.name}`);
+        rot = new(
+            mesh.transform.rotation[0],
+            mesh.transform.rotation[1],
+            mesh.transform.rotation[2],
+            mesh.transform.rotation[3]
+        );
     }
 
 
 
+    //
+    // Init a rigidbody
+    //
+
+    private void CreateRigidBody(JointMesh mesh)
+    {
+        JointProperties props = mesh.properties;
+
+        string simType = props.simType;
+
+        //Extract position and rotation from transform
+        ExtractPosAndRot(mesh, out Vector3 pos, out Quaternion quat);
+
+        //Arent eurler and angles the same here???
+        //const euler = new THREE.Euler().setFromQuaternion(quat);
+        //const angles = new THREE.Vector3(euler.x, euler.y, euler.z);
+        Vector3 angles = quat.eulerAngles;
+
+        MyRigidBody rigidBody;
+
+        if (simType == "RigidBox")
+        {
+            //Calculate bounding box from vertices
+            Vector3 size = CalculateBoundingBox(mesh.vertices);
+
+            rigidBody = new MyRigidBody(MyRigidBody.Types.Box, size, props.density, pos, angles);
+        }
+        else if (simType == "RigidSphere")
+        {
+            //Calculate bounding sphere radius
+            float radius = CalculateBoundingSphere(mesh.vertices);
+            
+            Vector3 size = new(radius, radius, radius);
+            
+            rigidBody = new MyRigidBody(MyRigidBody.Types.Box, size, props.density, pos, angles);
+        }
+        else
+        {
+            Debug.Log($"Unknown rigid body type: ${ simType }");
+
+            return;
+        }
+
+        //Store in lookup table
+        this.rigidBodies[mesh.name] = rigidBody;
+
+        //Register with simulator
+        this.simulator.AddRigidBody(rigidBody);
+
+        Debug.Log($"Created ${ simType }: ${ mesh.name }");
+    }
+
+
+    //Given a set of vertices, calculate the bounding box
     private Vector3 CalculateBoundingBox(float[] vertices)
     {
         float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -207,6 +229,7 @@ public class SceneImporter
 
 
 
+    //Given a set of vertices, calculate the max radius 
     private float CalculateBoundingSphere(float[] vertices)
     {
         //Find center which is the average?
@@ -243,204 +266,242 @@ public class SceneImporter
 
 
 
+    //
+    // Init a joint
+    //
+    
     private void CreateJoint(JointMesh mesh)
     {
-        //const props = mesh.properties;
-        //const simType = props.simType;
+        JointProperties props = mesh.properties;
 
-        //// Look up parent bodies
-        //const body0 = this.rigidBodies.get(props.parent1);
-        //const body1 = this.rigidBodies.get(props.parent2);
+        string simType = props.simType;
 
-        //if (!body0)
-        //{
-        //    console.error(`Parent body not found: ${ props.parent1}`);
-        //    return;
-        //}
-        //if (!body1)
-        //{
-        //    console.error(`Parent body not found: ${ props.parent2}`);
-        //    return;
-        //}
+        //Look up parent bodies
+        if (!this.rigidBodies.TryGetValue(props.parent1, out MyRigidBody body0))
+        {
+            Debug.Log($"Parent body not found: ${ props.parent1 }");
+            return;
+        }
 
-        //// Joint position (use mesh position as anchor point)
-        //const jointPos = new THREE.Vector3(
-        //    mesh.transform.position[0],
-        //    mesh.transform.position[1],
-        //    mesh.transform.position[2]
-        //);
+        if (!this.rigidBodies.TryGetValue(props.parent2, out MyRigidBody body1))
+        {
+            Debug.Log($"Parent body not found: ${ props.parent2 }");
+            return;
+        }
 
-        //// Joint rotation
-        //const jointRot = new THREE.Quaternion(
-        //    mesh.transform.rotation[0],
-        //    mesh.transform.rotation[1],
-        //    mesh.transform.rotation[2],
-        //    mesh.transform.rotation[3]
-        //);
 
-        //// Create joint
-        //const joint = new Joint(body0, body1, jointPos, jointRot);
+        //Joint position (use mesh position as anchor point)
+        ExtractPosAndRot(mesh, out Vector3 jointPos, out Quaternion jointRot);
 
-        //// Configure joint based on type
-        //if (simType === 'BallJoint')
-        //{
-        //    let swingMax = props.swingMax ?? Number.MAX_VALUE
-        //                let twistMin = props.twistMin ?? -Number.MAX_VALUE
-        //                let twistMax = props.twistMax ?? Number.MAX_VALUE
-        //                let damping = props.damping ?? 0.0;
+        //Create joint
+        MyJoint joint = new(body0, body1, jointPos, jointRot);
 
-        //    joint.initBallJoint(swingMax, twistMin, twistMax, damping);
-        //}
-        //else if (simType === 'HingeJoint')
-        //{
-        //    let swingMin = props.swingMin ?? -Number.MAX_VALUE
-        //                let swingMax = props.swingMax ?? Number.MAX_VALUE;
-        //    let hasTargetAngle = props.targetAngle !== undefined;
-        //    let targetAngle = props.targetAngle ?? 0.0;
-        //    let compliance = props.targetAngleCompliance ?? 0.0;
-        //    let damping = props.damping ?? 0.0;
+        // Configure joint based on type
+        if (simType == "BallJoint")
+        {
+            //float swingMax = props.swingMax ?? Number.MAX_VALUE
+            //float twistMin = props.twistMin ?? -Number.MAX_VALUE
+            //float twistMax = props.twistMax ?? Number.MAX_VALUE
+            //float damping = props.damping ?? 0.0;
 
-        //    joint.initHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
-        //}
-        //else if (simType === 'ServoJoint')
-        //{
-        //    let swingMin = props.swingMin ?? -Number.MAX_VALUE
-        //                let swingMax = props.swingMax ?? Number.MAX_VALUE;
+            //Our floats cant be null, not sure how setting it to Number.MAX_VALUE will affect stuff later on...
+            float swingMax = props.swingMax;
+            float twistMin = props.twistMin;
+            float twistMax = props.twistMax;
+            float damping = props.damping;
 
-        //    joint.initServo(swingMin, swingMax);
-        //}
-        //else if (simType === 'MotorJoint')
-        //{
-        //    let velocity = props.velocity ?? 0.0;
-        //    velocity = 3.0;
-        //    joint.initMotor(velocity);
-        //}
-        //else if (simType === 'DistanceJoint')
-        //{
-        //    let restDistance = props.restDistance ?? 0.0;
-        //    let compliance = props.compliance ?? 0.0;
-        //    let damping = props.damping ?? 0.0;
+            joint.InitBallJoint(swingMax, twistMin, twistMax, damping);
+        }
+        else if (simType == "HingeJoint")
+        {
+            //float swingMin = props.swingMin ?? -Number.MAX_VALUE
+            //float swingMax = props.swingMax ?? Number.MAX_VALUE;
+            //bool hasTargetAngle = props.targetAngle !== undefined;
+            //float targetAngle = props.targetAngle ?? 0.0;
+            //float compliance = props.targetAngleCompliance ?? 0.0;
+            //float damping = props.damping ?? 0.0;
 
-        //    joint.initDistanceJoint(restDistance, compliance, damping);
-        //}
-        //else if (simType === 'PrismaticJoint')
-        //{
-        //    let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
-        //                let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
-        //    let compliance = props.compliance ?? 0.0;
-        //    let damping = props.damping ?? 0.0;
-        //    let hasTarget = props.distanceTarget !== undefined;
-        //    let targetDistance = props.posTarget ?? 0.0;
-        //    let twistMin = props.twistMin ?? -Number.MAX_VALUE;
-        //    let twistMax = props.twistMax ?? Number.MAX_VALUE;
-        //    joint.initPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
-        //}
-        //else if (simType === 'CylinderJoint')
-        //{
-        //    let hasDistanceLimits = props.distanceMin !== undefined && props.distanceMax !== undefined;
-        //    let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
-        //                let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
-        //    let twistMin = props.twistMin ?? -Number.MAX_VALUE;
-        //    let twistMax = props.twistMax ?? Number.MAX_VALUE;
-        //    joint.initCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
-        //}
-        //else
-        //{
-        //    console.warn(`Unknown joint type: ${ simType}`);
-        //    return;
-        //}
+            float swingMin = props.swingMin;
+            float swingMax = props.swingMax;
+            bool hasTargetAngle = true; //TODO FIX THIS
+            float targetAngle = props.targetAngle;
+            float compliance = props.targetAngleCompliance;
+            float damping = props.damping;
 
-        //// Add visuals and register with simulator
-        //joint.addVisuals(this.scene);
+            joint.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
+        }
+        else if (simType == "ServoJoint")
+        {
+            //let swingMin = props.swingMin ?? -Number.MAX_VALUE
+            //let swingMax = props.swingMax ?? Number.MAX_VALUE;
+
+            float swingMin = props.swingMin;
+            float swingMax = props.swingMax;
+
+            joint.InitServo(swingMin, swingMax);
+        }
+        else if (simType == "MotorJoint")
+        {
+            //float velocity = props.velocity;
+            
+            //Why is he stting velocity to 3, because he forgot to add it in the json???
+            float velocity = 3f;
+            
+            joint.InitMotor(velocity);
+        }
+        else if (simType == "DistanceJoint")
+        {
+            float restDistance = props.restDistance;
+            float compliance = props.compliance;
+            float damping = props.damping;
+
+            joint.InitDistanceJoint(restDistance, compliance, damping);
+        }
+        else if (simType == "PrismaticJoint")
+        {
+            //let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
+            //let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
+            //let compliance = props.compliance ?? 0.0;
+            //let damping = props.damping ?? 0.0;
+            //let hasTarget = props.distanceTarget !== undefined;
+            //let targetDistance = props.posTarget ?? 0.0;
+            //let twistMin = props.twistMin ?? -Number.MAX_VALUE;
+            //let twistMax = props.twistMax ?? Number.MAX_VALUE;
+
+            float distanceMin = props.distanceMin;
+            float distanceMax = props.distanceMax;
+            float compliance = props.compliance;
+            float damping = props.damping;
+            bool hasTarget = true; //TODO FIX THIS
+            float targetDistance = props.posTarget;
+            float twistMin = props.twistMin;
+            float twistMax = props.twistMax;
+
+            joint.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
+        }
+        else if (simType == "CylinderJoint")
+        {
+            //let hasDistanceLimits = props.distanceMin !== undefined && props.distanceMax !== undefined;
+            //let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
+            //let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
+            //let twistMin = props.twistMin ?? -Number.MAX_VALUE;
+            //let twistMax = props.twistMax ?? Number.MAX_VALUE;
+
+            //let hasDistanceLimits = props.distanceMin !== undefined && props.distanceMax !== undefined;
+            float distanceMin = props.distanceMin;
+            float distanceMax = props.distanceMax;
+            float twistMin = props.twistMin;
+            float twistMax = props.twistMax;
+
+            //Has 8 parameters, why is he using only 4???
+            //joint.InitCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
+        }
+        else
+        {
+            Debug.Log($"Unknown joint type: ${ simType }");
+            return;
+        }
+
+        //Add visuals (the small coordinate system showing how the joint connetcs)
+        joint.AddVisuals();
+
+        //Register with simulator
         //this.simulator.addJoint(joint);
 
-        //console.log(`Created ${ simType}: ${ mesh.name}
-        //connecting ${ props.parent1}
-        //to ${ props.parent2}`);
+        Debug.Log($"Created ${ simType}: ${ mesh.name } connecting ${ props.parent1 } to ${ props.parent2}");
     }
+
+
+
+    //
+    // Init a visual mesh
+    //
 
     private void CreateVisualMesh(JointMesh mesh)
     {
-    //    const props = mesh.properties;
-    //    const parentName = props.parent;
+         JointProperties props = mesh.properties;
+    
+         string parentName = props.parent;
 
-    //    // Look up parent body
-    //    const parentBody = this.rigidBodies.get(parentName);
-    //    if (!parentBody)
-    //    {
-    //        console.error(`Parent body not found for visual mesh: ${ parentName}`);
-    //        return;
-    //    }
+        // Look up parent body
+        if (!this.rigidBodies.TryGetValue(parentName, out MyRigidBody parentBody))
+        {
+            Debug.Log($"Parent body not found for visual mesh: ${ parentName}");
+            return;
+        }
 
-    //    // Get visual mesh transform
-    //    const visualPos = new THREE.Vector3(
-    //        mesh.transform.position[0],
-    //        mesh.transform.position[1],
-    //        mesh.transform.position[2]
-    //    );
+        //Get visual mesh transform
+        ExtractPosAndRot(mesh, out Vector3 visualPos, out Quaternion visualRot);
 
-    //    const visualRot = new THREE.Quaternion(
-    //        mesh.transform.rotation[0],
-    //        mesh.transform.rotation[1],
-    //        mesh.transform.rotation[2],
-    //        mesh.transform.rotation[3]
-    //    );
+        //Transform visual mesh to parent body local space
 
-    //    // Transform visual mesh to parent body local space
+        //const q_rel = parentBody.rot.clone().conjugate().multiply(visualRot);
+        //For unit quaternions (which are normalized), the conjugate is the same as the inverse.
+        Quaternion q_rel = Quaternion.Inverse(parentBody.rot) * visualRot;
 
-    //    const q_rel = parentBody.rot.clone().conjugate().multiply(visualRot);
-    //    const p_rel = visualPos.clone().sub(parentBody.pos).applyQuaternion(parentBody.rot.clone().conjugate());
+        //const p_rel = visualPos.clone().sub(parentBody.pos).applyQuaternion(parentBody.rot.clone().conjugate());
+        Vector3 p_rel = Quaternion.Inverse(parentBody.rot) * (parentBody.pos - visualPos); //???
 
-    //    const transformedVertices = [];
-    //    for (let i = 0; i < mesh.vertices.length; i += 3)
-    //    {
-    //        const vertex = new THREE.Vector3(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
-    //        vertex.applyQuaternion(q_rel);
-    //        vertex.add(p_rel);
+        List<Vector3> transformedVertices = new();
 
-    //        transformedVertices.push(vertex.x, vertex.y, vertex.z);
-    //    }
+        for (int i = 0; i < mesh.vertices.Length; i += 3)
+        {
+            Vector3 vertex = new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
 
-    //    const transformedNormals = [];
-    //    if (mesh.normals)
-    //    {
-    //        for (let i = 0; i < mesh.normals.length; i += 3)
-    //        {
-    //            const normal = new THREE.Vector3(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
-    //            normal.applyQuaternion(q_rel);
-    //            transformedNormals.push(normal.x, normal.y, normal.z);
-    //        }
-    //    }
+            //vertex.applyQuaternion(q_rel);
+            //vertex.add(p_rel);
+            vertex = q_rel * vertex + p_rel;
 
-    //    // Create Three.js geometry from transformed data
-    //    const geometry = new THREE.BufferGeometry();
-    //    geometry.setAttribute('position', new THREE.Float32BufferAttribute(transformedVertices, 3));
+            transformedVertices.Add(vertex);
+        }
 
-    //    if (transformedNormals.length > 0)
-    //    {
-    //        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(transformedNormals, 3));
-    //    }
+        List<Vector3> transformedNormals = new();
 
-    //    if (mesh.triangles)
-    //    {
-    //        geometry.setIndex(mesh.triangles);
-    //    }
+        if (mesh.normals != null)
+        {
+            for (int i = 0; i < mesh.normals.Length; i += 3)
+            {
+                Vector3 normal = new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
 
-    //    const color = props.color ? new THREE.Color(props.color[0], props.color[1], props.color[2]) : new THREE.Color(1, 1, 1);
-    //    const material = new THREE.MeshPhongMaterial({ color: color });
+                //normal.applyQuaternion(q_rel);
+                normal = q_rel * normal;
+                
+                transformedNormals.Add(normal);
+            }
+        }
 
-    //                // Create mesh
-    //                const visualMesh = new THREE.Mesh(geometry, material);
-    //visualMesh.castShadow = true;
-    //                visualMesh.receiveShadow = true;
-    //                visualMesh.body = parentBody; // For raycasting
+        //Create Unity geometry from transformed data
+        GameObject visualMesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-    //                parentBody.meshes.push(visualMesh);
-    //                parentBody.updateMeshes();
-                    
-    //                this.scene.add(visualMesh);
-                    
-    //                console.log(`Created visual mesh: ${mesh.name attached to ${parentName} (transformed to body space)`);
+        //Add new mesh
+        Mesh actualMesh = new()
+        {
+            vertices = transformedVertices.ToArray(),
+            triangles = mesh.triangles,
+            normals = transformedNormals.ToArray()
+        };
+
+        visualMesh.GetComponent<MeshFilter>().mesh = actualMesh;
+
+        //Add color
+        Color color = Color.white;
+
+        if (props.color != null)
+        {
+            color = new Color(props.color[0], props.color[1], props.color[2]);
+        }
+
+        visualMesh.GetComponent<MeshRenderer>().material.color = color;
+
+        //Not sure what this means? The simplifed mesh is the collider???
+        //visualMesh.body = parentBody; // For raycasting
+
+        //parentBody.meshes.push(visualMesh);
+        //parentBody.updateMeshes();
+
+        //this.scene.add(visualMesh);
+
+        Debug.Log($"Created visual mesh: ${ mesh.name } attached to ${ parentName } (transformed to body space)");
     }
 
 

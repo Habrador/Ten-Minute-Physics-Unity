@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Threading;
 using UnityEngine;
 
-public class Joint
+public class MyJoint
 {
     public enum Types
     {
@@ -61,9 +61,9 @@ public class Joint
     float velocity = 0f;
 
     //public Joint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot = null)
-    public Joint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
+    public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
     {
-        this.type = Joint.Types.None;
+        this.type = MyJoint.Types.None;
         this.body0 = body0;
         this.body1 = body1;
         this.disabled = false;
@@ -163,7 +163,7 @@ public class Joint
 
     public void InitHingeJoint(float swingMin, float swingMax, bool hasTargetAngle, float targetAngle, float compliance, float damping)
     {
-        this.type = Joint.Types.Hinge;
+        this.type = MyJoint.Types.Hinge;
         this.hasTargetDistance = true;
         this.targetDistance = 0f;
         this.swingMin = swingMin;
@@ -176,7 +176,7 @@ public class Joint
 
     public void InitServo(float swingMin, float swingMax)
                     {
-        this.type = Joint.Types.Servo;
+        this.type = MyJoint.Types.Servo;
         this.hasTargetDistance = true;
         this.targetDistance = 0f;
         this.swingMin = swingMin;
@@ -188,7 +188,7 @@ public class Joint
 
     public void InitMotor(float velocity)
     {
-        this.type = Joint.Types.Motor;
+        this.type = MyJoint.Types.Motor;
         this.hasTargetDistance = true;
         this.targetDistance = 0f;
         this.velocity = velocity;
@@ -197,9 +197,9 @@ public class Joint
         this.targetAngleCompliance = 0f;
     }
 
-    private void InitBallJoint(float swingMax, float twistMin, float twistMax, float damping)
+    public void InitBallJoint(float swingMax, float twistMin, float twistMax, float damping)
     {
-        this.type = Joint.Types.Ball;
+        this.type = MyJoint.Types.Ball;
         this.hasTargetDistance = true;
         this.targetDistance = 0f;
         this.swingMin = 0f;
@@ -209,9 +209,9 @@ public class Joint
         this.angularDampingCoeff = damping;
     }
 
-    private void InitPrismaticJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, bool hasTarget, float targetDistance, float targetCompliance, float damping)
+    public void InitPrismaticJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, bool hasTarget, float targetDistance, float targetCompliance, float damping)
     {
-        this.type = Joint.Types.Prismatic;
+        this.type = MyJoint.Types.Prismatic;
         this.distanceMin = distanceMin;
         this.distanceMax = distanceMax;
         this.swingMin = 0f;
@@ -226,7 +226,7 @@ public class Joint
 
     public void InitCylinderJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, float hasTargetDistance, float restDistance, float compliance, float damping)
     {
-        this.type = Joint.Types.Cylinder;
+        this.type = MyJoint.Types.Cylinder;
         this.distanceMin = distanceMin;
         this.distanceMax = distanceMax;
         this.swingMin = 0f;
@@ -239,7 +239,7 @@ public class Joint
 
     public void InitDistanceJoint(float restDistance, float compliance, float damping)
                     {
-        this.type = Joint.Types.Distance;
+        this.type = MyJoint.Types.Distance;
         this.hasTargetDistance = true;
         this.targetDistance = restDistance;
         this.distanceCompliance = compliance;
@@ -540,8 +540,8 @@ public class Joint
 
     //visFrame is the tiny axis???
     //visDIstance is the red line going between the visFrame axis???
-    //private void AddVisuals(scene, width = 0.004, size = 0.08)
-    //{
+    public void AddVisuals(float width = 0.004f, float size = 0.08f)
+    {
     //    if (this.visFrame0 == null)
     //    {
     //        this.visFrame0 = new VisualFrame(scene, width, size);
@@ -553,7 +553,7 @@ public class Joint
     //        this.visDistance = new VisualDistance(scene, width);
     //    }
     //    this.updateVisuals();
-    //}
+    }
 
     private void UpdateVisuals()
     {
