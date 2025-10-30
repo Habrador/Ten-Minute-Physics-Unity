@@ -199,6 +199,7 @@ public class SceneImporter
     }
 
 
+
     //Given a set of vertices, calculate the bounding box
     private Vector3 CalculateBoundingBox(float[] vertices)
     {
@@ -232,31 +233,28 @@ public class SceneImporter
     //Given a set of vertices, calculate the max radius 
     private float CalculateBoundingSphere(float[] vertices)
     {
-        //Find center which is the average?
-        float centerX = 0f, centerY = 0f, centerZ = 0f;
-        int numVerts = vertices.Length / 3;
+        //Find center
+        Vector3 center = Vector3.zero;
 
         for (int i = 0; i < vertices.Length; i += 3)
         {
-            centerX += vertices[i];
-            centerY += vertices[i + 1];
-            centerZ += vertices[i + 2];
+            Vector3 thisVert = new(vertices[i], vertices[i + 1], vertices[i + 2]);
+
+            center += thisVert;
         }
 
-        centerX /= numVerts;
-        centerY /= numVerts;
-        centerZ /= numVerts;
+        int numVerts = vertices.Length / 3;
+
+        center /= numVerts;
 
         //Find maximum distance from center
         float maxRadius = 0;
         
         for (int i = 0; i < vertices.Length; i += 3)
         {
-            float dx = vertices[i] - centerX;
-            float dy = vertices[i + 1] - centerY;
-            float dz = vertices[i + 2] - centerZ;
+            Vector3 thisVert = new(vertices[i], vertices[i + 1], vertices[i + 2]);
             
-            float radius = Mathf.Sqrt(dx * dx + dy * dy + dz * dz);
+            float radius = (thisVert - center).magnitude;
             
             maxRadius = Mathf.Max(maxRadius, radius);
         }
