@@ -85,7 +85,7 @@ public class RigidBodySimulator
         //Update vel and angular vel by using pos and rot before and after integrate() and solve()
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
-            allRigidBodies[i].UpdateVelocities(dt);
+            allRigidBodies[i].FixVelocities(dt);
         }
     }
 
@@ -97,7 +97,7 @@ public class RigidBodySimulator
         //Update meshes so they have correct orientation and position
         for (int i = 0; i < allRigidBodies.Count; i++)
         {
-            allRigidBodies[i].UpdateMesh();
+            allRigidBodies[i].UpdateMeshes();
         }
 
         for (int i = 0; i < allDistanceConstraints.Count; i++)

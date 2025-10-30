@@ -48,6 +48,12 @@ public class MyRigidBody
     public readonly GameObject rbVisualObj;
     //Faster to cache it
     private readonly Transform rbVisualTrans;
+    //In future tutorials we add a more complicated mesh above this mesh
+    //and we should be able to switch between them
+    private bool showVisuals = true;
+    //The more detailed object
+    public GameObject rbDetailedObj;
+    public Transform rbDetailedTrans;
 
     //Font size determines if we should display rb data on the screen
     private int fontSize;
@@ -163,15 +169,29 @@ public class MyRigidBody
         this.fontSize = fontSize;
 
 
-        UpdateMesh();
+        UpdateMeshes();
     }
 
 
 
-    //Move mesh to the simulated position and rotation
-    public void UpdateMesh()
+    //Move game object to the simulated position and rotation
+    public void UpdateMeshes()
     {
         this.rbVisualTrans.SetPositionAndRotation(this.pos, this.rot);
+        
+        if (this.rbDetailedObj != null && !this.showVisuals)
+        {
+            this.rbDetailedTrans.SetPositionAndRotation(this.pos, this.rot);
+        }
+    }
+
+
+
+    //Switch between showing the basic mesh or the more detailed mesh
+    public void ShowSimulationView(bool show)
+    {
+        this.showVisuals = show;
+        this.UpdateMeshes();
     }
 
 
@@ -306,8 +326,8 @@ public class MyRigidBody
     //The velocities calculated in Integrate() are not the velocities we want
     //because they make the simulation unstable because we havent take into
     //consideration the constraints which changes the position
-    //Add damping
-    public void UpdateVelocities(float dt)
+    //Also add damping
+    public void FixVelocities(float dt)
     {
         if (this.invMass == 0f)
         {

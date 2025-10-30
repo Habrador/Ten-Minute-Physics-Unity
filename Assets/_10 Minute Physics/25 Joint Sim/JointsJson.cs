@@ -45,8 +45,8 @@ public class JointTransform
 public class JointProperties
 {
     public string simType; //RigidBox, Visual, or the name of the joint type
-    //These parameters depent on which joint we have
-    //Get default values if doesnt exist in json file
+    //These parameters depend on what we import
+    //Get default values if doesnt exist in json file, we actually want them to be null...
     public float density;
     public string parent1;
     public string parent2;
