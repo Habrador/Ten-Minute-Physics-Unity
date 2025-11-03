@@ -6,7 +6,7 @@ using UnityEngine;
 namespace XPBD
 {
     //Simulate rigid bodies, constraints, joints using XPBD: Extended Position Based Dynamics
-    public class RigidBodySimulator
+    public class XPBDPhysicsSimulator
     {
         private readonly Vector3 gravity;
 
@@ -21,7 +21,7 @@ namespace XPBD
 
 
 
-        public RigidBodySimulator(Vector3 gravity)
+        public XPBDPhysicsSimulator(Vector3 gravity)
         {
             this.gravity = gravity;
         }

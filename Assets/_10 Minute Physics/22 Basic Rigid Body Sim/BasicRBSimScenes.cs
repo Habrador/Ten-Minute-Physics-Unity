@@ -11,7 +11,7 @@ public static class BasicRBSimScenes
     //   __|__     0 <- the center of this one is at the same height as the bar to the left of it
     //  |     |     
     //__|__   0
-    public static void InitCribMobileScene(RigidBodySimulator rbSimulator, float density)
+    public static void InitCribMobileScene(XPBDPhysicsSimulator rbSimulator, float density)
     {
         bool unilateral = true;
         float compliance = 0f;
@@ -118,7 +118,7 @@ public static class BasicRBSimScenes
     //       |___|
     //        _|_
     //       |___|
-    public static void InitChainScene(RigidBodySimulator rbSimulator, float density)
+    public static void InitChainScene(XPBDPhysicsSimulator rbSimulator, float density)
     {
         bool unilateral = false;
         float compliance = 0.001f;

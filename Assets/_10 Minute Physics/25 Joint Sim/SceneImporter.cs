@@ -9,7 +9,7 @@ using XPBD;
 
 public class SceneImporter
 {
-    private RigidBodySimulator simulator;
+    private XPBDPhysicsSimulator simulator;
 
     //name -> RigidBody lookup
     //Used to connect joints to rbs
@@ -18,7 +18,7 @@ public class SceneImporter
 
 
     //public SceneImporter(simulator, scene)
-    public SceneImporter(RigidBodySimulator simulator)
+    public SceneImporter(XPBDPhysicsSimulator simulator)
     {
         this.simulator = simulator;
         //this.scene = scene;

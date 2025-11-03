@@ -73,7 +73,6 @@ namespace XPBD
 
 
 
-        //When we want to delete the physical object we call Dispose()
         //If fontSize = 0 we wont display any text
         //size - radius if we have a sphere, length of side if we have a box
         public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, int fontSize = 0)

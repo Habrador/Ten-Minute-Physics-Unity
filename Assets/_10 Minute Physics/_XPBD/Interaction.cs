@@ -10,11 +10,11 @@ namespace XPBD
         private float d;
         private readonly Camera thisCamera;
 
-        private readonly RigidBodySimulator rbSimulator;
+        private readonly XPBDPhysicsSimulator rbSimulator;
 
 
 
-        public Interaction(Camera camera, RigidBodySimulator rbSimulator)
+        public Interaction(Camera camera, XPBDPhysicsSimulator rbSimulator)
         {
             this.thisCamera = camera;
             this.rbSimulator = rbSimulator;

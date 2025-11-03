@@ -16,7 +16,7 @@ using XPBD;
 //- Use some kind of sphere texture to easier see rotation, the tutorial is using hafl red half white
 public class BasicRBSimController : MonoBehaviour
 {
-    private RigidBodySimulator rbSimulator;
+    private XPBDPhysicsSimulator rbSimulator;
 
     //The scenes we can chose from
     private enum Scenes
@@ -99,7 +99,7 @@ public class BasicRBSimController : MonoBehaviour
         }
     
         //Create a new rb simulator
-        rbSimulator = new RigidBodySimulator(gravity);
+        rbSimulator = new XPBDPhysicsSimulator(gravity);
 
         //Childs crib mobile but several connected to each other
         if (scene == Scenes.CribMobile)

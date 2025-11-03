@@ -8,7 +8,7 @@ using XPBD;
 //Simulate joints with XPBD - Extended Position Based Dynamics
 public class JointSimulationController : MonoBehaviour
 {
-    private RigidBodySimulator rbSimulator;
+    private XPBDPhysicsSimulator rbSimulator;
 
     //The scenes we can chose from
     private enum Scenes
@@ -109,7 +109,7 @@ public class JointSimulationController : MonoBehaviour
         }
 
         //Create a new rb simulator
-        rbSimulator = new RigidBodySimulator(gravity);
+        rbSimulator = new XPBDPhysicsSimulator(gravity);
 
         sceneImporter.LoadScene(jointScenes[scene]);
     }
