@@ -140,7 +140,7 @@ public class JointSimulationController : MonoBehaviour
                 foreach (MyRigidBody thisRb in allRigidBodies)
                 {
                     //If the ids match
-                    if (thisRb.rbVisualObj.GetInstanceID() == id)
+                    if (thisRb.visualObjects.ID == id)
                     {
                         //Debug.Log("Identified the rb");
 

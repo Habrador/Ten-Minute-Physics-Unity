@@ -13,7 +13,7 @@ namespace XPBD
             Sphere
         }
 
-        private Types type;
+        private readonly Types type;
 
         //A rigidbody has the following properties:
         //Position pos
@@ -45,16 +45,9 @@ namespace XPBD
         //Multiply velocity with this damping 
         public float damping;
 
-        //The gameobject that represents this rigidbody
-        public readonly GameObject rbVisualObj;
-        //Faster to cache it
-        private readonly Transform rbVisualTrans;
-        //In future tutorials we add a more complicated mesh above this mesh
-        //and we should be able to switch between them
-        private bool showVisuals = true;
-        //The more detailed object
-        public GameObject rbDetailedObj;
-        public Transform rbDetailedTrans;
+        //The gameobjects showing how this rigid body looks
+        //Is also the collider when raycasting
+        public MyRigidBodyVisuals visualObjects;
 
         //Font size determines if we should display rb data on the screen
         private int fontSize;
@@ -106,8 +99,7 @@ namespace XPBD
 
                 newBoxObj.transform.localScale = size;
 
-                this.rbVisualObj = newBoxObj;
-                this.rbVisualTrans = newBoxObj.transform;
+                this.visualObjects = new MyRigidBodyVisuals(newBoxObj);
 
                 //Init box data
                 if (density > 0f)
@@ -139,8 +131,9 @@ namespace XPBD
 
                 newSphereObj.transform.localScale = size.x * Vector3.one;
 
-                this.rbVisualObj = newSphereObj;
-                this.rbVisualTrans = newSphereObj.transform;
+                //this.rbVisualObj = newSphereObj;
+                //this.rbVisualTrans = newSphereObj.transform;
+                this.visualObjects = new MyRigidBodyVisuals(newSphereObj);
 
                 //Init Sphere data
                 if (density > 0f)
@@ -161,10 +154,6 @@ namespace XPBD
                 }
             }
 
-            //Change settings for all meshes
-            this.rbVisualObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.white;
-
-
             //
             this.fontSize = fontSize;
 
@@ -174,15 +163,10 @@ namespace XPBD
 
 
 
-        //Move game object to the simulated position and rotation
+        //Move the visual meshes to the simulated position and rotation
         public void UpdateMeshes()
         {
-            this.rbVisualTrans.SetPositionAndRotation(this.pos, this.rot);
-
-            if (this.rbDetailedObj != null && !this.showVisuals)
-            {
-                this.rbDetailedTrans.SetPositionAndRotation(this.pos, this.rot);
-            }
+            this.visualObjects.UpdateVisualObjects(this.pos, this.rot);
         }
 
 
@@ -190,7 +174,7 @@ namespace XPBD
         //Switch between showing the basic mesh or the more detailed mesh
         public void ShowSimulationView(bool show)
         {
-            this.showVisuals = show;
+            this.visualObjects.showVisualObj = show;
             this.UpdateMeshes();
         }
 
@@ -621,7 +605,7 @@ namespace XPBD
 
         public void Dispose()
         {
-            GameObject.Destroy(rbVisualObj);
+            this.visualObjects.Dispose();
         }
 
     }

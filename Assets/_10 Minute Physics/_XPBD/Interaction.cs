@@ -48,7 +48,7 @@ namespace XPBD
                         //Debug.Log(thisRb.rbVisualObj.GetInstanceID());
                     
                         //If the ids match
-                        if (thisRb.rbVisualObj.GetInstanceID() == id)
+                        if (thisRb.visualObjects.ID == id)
                         {
                             //Debug.Log("Identified the rb");
 

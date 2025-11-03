@@ -497,8 +497,10 @@ public class SceneImporter
         //visualMesh.GetComponent<MeshCollider>().sharedMesh = parentBody.rbVisualObj.GetComponent<MeshFilter>().sharedMesh;
         //We dont have to do this, default mesh collider is the mesh in mesh filter... maybe form performance reasons?
 
-        parentBody.rbDetailedObj = visualMesh;
-        parentBody.rbDetailedTrans = visualMesh.transform;
+        parentBody.visualObjects.SetDetailedObject(visualMesh);
+
+        //parentBody.rbDetailedObj = visualMesh;
+        //parentBody.rbDetailedTrans = visualMesh.transform;
 
         parentBody.UpdateMeshes();
 
