@@ -69,13 +69,13 @@ namespace XPBD
             }
 
             //Constraints
-            //Update pos and rot
+            //Update pos and rot och the constraints that connects rbs
             for (int i = 0; i < allDistanceConstraints.Count; i++)
             {
                 allDistanceConstraints[i].Solve(dt);
             }
 
-            //Move stuff with mouse
+            //Update pos and rot of the constraint we use when moving rbs with mouse
             if (this.dragConstraint != null)
             {
                 this.dragConstraint.Solve(dt);

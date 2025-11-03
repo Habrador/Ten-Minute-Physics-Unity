@@ -8,9 +8,9 @@ namespace XPBD
     {
         private bool hasSelectedRb = false;
         private float d;
-        private Camera thisCamera;
+        private readonly Camera thisCamera;
 
-        private RigidBodySimulator rbSimulator;
+        private readonly RigidBodySimulator rbSimulator;
 
 
 
