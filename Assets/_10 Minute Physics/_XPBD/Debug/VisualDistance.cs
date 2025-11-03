@@ -11,6 +11,8 @@ namespace XPBD
         private readonly GameObject cylinderObj;
         private readonly Transform cylinderTrans;
 
+        public Vector3 Pos => cylinderTrans.position;
+
 
 
         //Default color doesnt work...
@@ -19,9 +21,12 @@ namespace XPBD
             //Create a cylinder for visualization
             this.cylinderObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
-            this.cylinderObj.transform.localScale = new Vector3(width, width, 1f);
+            this.cylinderObj.transform.localScale = new Vector3(width, 1f, width);
 
             this.cylinderObj.GetComponent<Renderer>().material.color = color;
+
+            //Remove collider because the constraint is not part of the raycasting
+            this.cylinderObj.GetComponent<Collider>().enabled = false;
 
             this.cylinderTrans = this.cylinderObj.transform;
         }
@@ -45,7 +50,11 @@ namespace XPBD
             //Update cylinder's transformation
             this.cylinderTrans.transform.SetPositionAndRotation(center, quaternion);
 
-            this.cylinderTrans.transform.localScale = new Vector3(1f, length, 1f);
+            Vector3 currentScale = this.cylinderTrans.transform.localScale;
+
+            currentScale.y = length;
+
+            this.cylinderTrans.transform.localScale = currentScale;
 
             return length;
         }
@@ -55,6 +64,16 @@ namespace XPBD
         public void SetVisible(bool visible)
         {
             this.cylinderObj.SetActive(visible);
+        }
+
+
+
+        public void Dispose()
+        {
+            if (this.cylinderObj)
+            {
+                GameObject.Destroy(this.cylinderObj);
+            }
         }
     }
 }

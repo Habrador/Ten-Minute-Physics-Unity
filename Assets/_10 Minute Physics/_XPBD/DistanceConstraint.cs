@@ -26,14 +26,14 @@ namespace XPBD
         //Inverse of physical stiffness (alpha in equations) [m/N]
         private readonly float compliance;
 
-        private readonly GameObject displayConstraintObj;
-        private readonly Transform displayConstraintTrans;
+        //For displaying the distance with a red line
+        private readonly VisualDistance displayConstraintObj;
 
-        //For displaying
+        //For displaying constraint data
         private float force;
         private float elongation;
         //Font size determines if we should display rb data on the screen
-        private int fontSize;
+        private readonly int fontSize;
 
 
 
@@ -65,24 +65,12 @@ namespace XPBD
 
 
             //Create a cylinder for visualization
-            GameObject newCylinderObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            this.displayConstraintObj = new VisualDistance(UnityEngine.Color.red, width);
 
-            newCylinderObj.transform.localScale = new Vector3(width, 1f, width);
-
-            newCylinderObj.GetComponent<MeshRenderer>().material.color = UnityEngine.Color.red;
-
-            //Remove collider because the constraint is not part of the raycasting
-            newCylinderObj.GetComponent<Collider>().enabled = false;
-
-            this.displayConstraintObj = newCylinderObj;
-            this.displayConstraintTrans = newCylinderObj.transform;
-
+            UpdateMesh();
 
             //
             this.fontSize = fontSize;
-
-
-            UpdateMesh();
         }
 
 
@@ -140,56 +128,11 @@ namespace XPBD
 
 
 
-        //Move and rotate the mesh we use to display the constraint
+        //Move, rotate, adns cale the mesh we use to display the constraint
         //so it goes between the attachment points
         public void UpdateMesh()
         {
-            Vector3 start = this.worldPos0;
-            Vector3 end = this.worldPos1;
-
-            //Depending on the number of iterations we might have to recalculate these even though we cache them in FixedUpdate
-            //start = this.body0.LocalToWorld(this.localPos0);
-
-            //if (this.body1 != null)
-            //{
-            //    end = this.body1.LocalToWorld(this.localPos1);
-            //}
-
-            //Debug.DrawLine(start, end, UnityEngine.Color.blue);
-
-            //return;
-
-            //Position
-
-            //Calculate the center point
-            Vector3 center = (start + end) * 0.5f;
-
-            //Rotation
-
-            //Calculate the direction vector
-            Vector3 direction = end - start;
-
-            //Create a rotation quaternion
-            Quaternion quaternion = new Quaternion();
-
-            quaternion = Quaternion.LookRotation(direction.normalized, Vector3.up);
-
-            //Rotate 90 degrees to align it properly
-            quaternion *= Quaternion.Euler(90f, 0f, 0f);
-
-            //Update cylinder's transformation
-            this.displayConstraintTrans.SetPositionAndRotation(center, quaternion);
-
-
-            //Scale
-            Vector3 currentScale = this.displayConstraintTrans.localScale;
-
-            float length = direction.magnitude;
-
-            //In Unity we have to multiply the length by 0.5
-            length *= 0.5f;
-
-            this.displayConstraintTrans.localScale = new Vector3(currentScale.x, length, currentScale.z);
+            this.displayConstraintObj.UpdateMesh(this.worldPos0, this.worldPos1);
         }
 
 
@@ -204,16 +147,16 @@ namespace XPBD
 
             string displayText = Mathf.RoundToInt(Mathf.Abs(this.force)) + "N" + ", " + this.elongation + "m";
 
-            BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.displayConstraintTrans.position);
+            BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.displayConstraintObj.Pos);
         }
 
 
 
         public void Dispose()
         {
-            if (this.displayConstraintObj)
+            if (this.displayConstraintObj != null)
             {
-                GameObject.Destroy(this.displayConstraintObj);
+                this.displayConstraintObj.Dispose();
             }
         }
     }
