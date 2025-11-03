@@ -52,7 +52,7 @@ namespace XPBD
 
             Vector3 currentScale = this.cylinderTrans.transform.localScale;
 
-            currentScale.y = length;
+            currentScale.y = length * 0.5f;
 
             this.cylinderTrans.transform.localScale = currentScale;
 
