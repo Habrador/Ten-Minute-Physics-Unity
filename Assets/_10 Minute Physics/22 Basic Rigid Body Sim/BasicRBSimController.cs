@@ -44,7 +44,7 @@ public class BasicRBSimController : MonoBehaviour
         //Default scene
         InitScene(Scenes.Chain);
 
-        this.interaction = new Interaction(Camera.main, this.rbSimulator);
+        this.interaction = new Interaction(Camera.main);
     }
 
 
@@ -54,7 +54,7 @@ public class BasicRBSimController : MonoBehaviour
         rbSimulator.MyUpdate();
 
         //Should maybe be in LateUpdate()???
-        this.interaction.DragWithMouse();
+        this.interaction.DragWithMouse(this.rbSimulator);
     }
 
 

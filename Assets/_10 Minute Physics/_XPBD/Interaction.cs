@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace XPBD
 {
@@ -10,26 +11,24 @@ namespace XPBD
         private float d;
         private readonly Camera thisCamera;
 
-        private readonly XPBDPhysicsSimulator rbSimulator;
 
 
-
-        public Interaction(Camera camera, XPBDPhysicsSimulator rbSimulator)
+        public Interaction(Camera camera)
         {
             this.thisCamera = camera;
-            this.rbSimulator = rbSimulator;
         }
 
 
 
-        public void DragWithMouse()
+        //Have to pass simulator as parameter because we create a new one when we switch scenes
+        public void DragWithMouse(XPBDPhysicsSimulator rbSimulator)
         {
             //Try to select rb
             if (Input.GetMouseButtonDown(0) && hasSelectedRb == false)
             {
                 //Raycasting
                 Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
-
+                
                 //If we hit a collider
                 if (Physics.Raycast(ray, out RaycastHit hit))
                 {
@@ -44,6 +43,8 @@ namespace XPBD
 
                     foreach (MyRigidBody thisRb in allRigidBodies)
                     {
+                        //Debug.Log(thisRb.rbVisualObj.GetInstanceID());
+                    
                         //If the ids match
                         if (thisRb.rbVisualObj.GetInstanceID() == id)
                         {
