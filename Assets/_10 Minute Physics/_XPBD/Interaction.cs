@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
+
 
 namespace XPBD
 {
+    //Interact with the physics simulator by dragging the rbs around with the mouse
     public class Interaction
     {
         private bool hasSelectedRb = false;
+        //Distance from position we hit to mouse position
         private float d;
         private readonly Camera thisCamera;
 
@@ -50,12 +52,6 @@ namespace XPBD
                         {
                             //Debug.Log("Identified the rb");
 
-                            //Data
-
-                            //p_m - position where ray intersects with the collider
-                            Vector3 p = hit.point;
-
-                            //d - distance from position we hit to mouse
                             this.d = hit.distance;
 
                             //Create a distance constraint
@@ -72,13 +68,13 @@ namespace XPBD
 
 
             //Drag selected rb
-            if (hasSelectedRb == true)
+            else if (!Input.GetMouseButtonUp(0) && hasSelectedRb == true)
             {
                 //On mouse move -> update p by using distance d and new mouse ray
                 Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
 
                 //Update p_m using d
-                Vector3 p_m = ray.origin + ray.direction * d;
+                Vector3 p_m = ray.origin + ray.direction * this.d;
 
                 rbSimulator.Drag(p_m);
 
