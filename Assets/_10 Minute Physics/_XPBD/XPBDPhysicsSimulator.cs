@@ -29,20 +29,11 @@ namespace XPBD
 
 
         //Add stuff to the physics simulation
-        public void AddRigidBody(MyRigidBody rigidBody)
-        {
-            allRigidBodies.Add(rigidBody);
-        }
+        public void AddRigidBody(MyRigidBody rb) => allRigidBodies.Add(rb);
 
-        public void AddDistanceConstraint(DistanceConstraint distanceConstraint)
-        {
-            allDistanceConstraints.Add(distanceConstraint);
-        }
+        public void AddDistanceConstraint(DistanceConstraint dc) => allDistanceConstraints.Add(dc);
 
-        public void AddJoint(MyJoint joint)
-        {
-            allJoints.Add(joint);
-        }
+        public void AddJoint(MyJoint joint) => allJoints.Add(joint);
 
 
 
@@ -69,7 +60,7 @@ namespace XPBD
             }
 
             //Constraints
-            //Update pos and rot och the constraints that connects rbs
+            //Update pos and rot of the constraints that connects rbs
             for (int i = 0; i < allDistanceConstraints.Count; i++)
             {
                 allDistanceConstraints[i].Solve(dt);
