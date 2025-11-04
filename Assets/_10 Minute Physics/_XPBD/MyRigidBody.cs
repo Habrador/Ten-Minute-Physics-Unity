@@ -15,33 +15,35 @@ namespace XPBD
 
         private readonly Types type;
 
-        //A rigidbody has the following properties:
-        //Position pos
+        //A rigid body has the following properties:
+        //Position
         public Vector3 pos;
-        //Velocity v
+        //Velocity
         private Vector3 vel;
-        //Rotation q
+        //Rotation
         public Quaternion rot;
         //Inverse rot q^-1 = q* / |q|^2
         private Quaternion invRot;
-        //Angular velocity omega
+        //Angular velocity
         //omega.magnitude -> speed of rotation
         private Vector3 omega;
-        //Inverse mass m^-1
-        private float invMass;
-        //Moment of inertia I (resistance to torque)
+        //Mass m
+        //We are going to use inverse mass m^-1
+        private readonly float invMass;
+        //Moment of inertia (resistance to torque)
         //Is a 3x3 matrix
-        //if the body is aligned witht he x,y,z axis we can treat it as a 3 dimensional vector
+        //if the body is aligned witht the x,y,z axis we can treat it as a 3d vector
         //I = |I_xx 0    0   | -> I = (I_xx, I_yy, I_zz)
         //    |0    I_yy 0   |
         //    |0    0    I_zz|
         //and do calculations in local space by transforming everything needed to local space
-        //Inverse moment of inertia I^-1
+        //We are going to use inverse moment of inertia I^-1
         private Vector3 invInertia;
 
-        //For simulation
+        //For XPBD simulation we cache these to fix velocities
         private Vector3 prevPos;
         private Quaternion prevRot;
+
         //Multiply velocity with this damping 
         public float damping;
 
@@ -50,19 +52,7 @@ namespace XPBD
         public MyRigidBodyVisuals visualObjects;
 
         //Font size determines if we should display rb data on the screen
-        private int fontSize;
-
-        //Local pos to world pos and world pos to local pos
-        // - a is a point on the rb in local space
-        // - a' is the same point but in world space
-        // - q is the quaternion
-        // - x is the position of rb (center of mass)
-
-        //a' = x + q * a 
-        public Vector3 LocalToWorld(Vector3 localPos) => this.pos + this.rot * localPos;
-
-        //a = q^-1 * (a' - x)
-        public Vector3 WorldToLocal(Vector3 worldPos) => this.invRot * (worldPos - this.pos);
+        private readonly int fontSize;
 
 
 
@@ -71,6 +61,8 @@ namespace XPBD
         public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, int fontSize = 0)
         {
             this.type = type;
+
+            this.fontSize = fontSize;
 
             this.damping = 0f;
 
@@ -84,14 +76,14 @@ namespace XPBD
             //Inverts this quaternion
             this.invRot = Quaternion.Inverse(this.rot);
 
+            //Init these with some values
             this.vel = Vector3.zero;
             this.omega = Vector3.zero;
 
             this.prevPos = this.pos;
             this.prevRot = this.rot;
 
-            //Create the object we can see
-            //Calculate inverse mass and inverse moment of inertia
+            //Data that depends on the rbs geometry
             if (type == Types.Box)
             {
                 //Create the obj we can see
@@ -101,7 +93,6 @@ namespace XPBD
 
                 this.visualObjects = new MyRigidBodyVisuals(newBoxObj);
 
-                //Init box data
                 if (density > 0f)
                 {
                     //mass = volume * density
@@ -131,11 +122,8 @@ namespace XPBD
 
                 newSphereObj.transform.localScale = size.x * Vector3.one;
 
-                //this.rbVisualObj = newSphereObj;
-                //this.rbVisualTrans = newSphereObj.transform;
                 this.visualObjects = new MyRigidBodyVisuals(newSphereObj);
 
-                //Init Sphere data
                 if (density > 0f)
                 {
                     float r = size.x;
@@ -153,10 +141,6 @@ namespace XPBD
                     this.invInertia = new Vector3(1f / I, 1f / I, 1f / I);
                 }
             }
-
-            //
-            this.fontSize = fontSize;
-
 
             UpdateMeshes();
         }
@@ -192,6 +176,23 @@ namespace XPBD
 
             BasicRBGUI.DisplayDataNextToRB(displayText, this.fontSize, this.pos);
         }
+
+
+
+        //
+        // Local pos to world pos and world pos to local pos
+        //
+
+        // a is a point on the rb in local space
+        // a' is the same point but in world space
+        // q is the quaternion
+        // x is the position of rb (center of mass)
+
+        //a' = x + q * a 
+        public Vector3 LocalToWorld(Vector3 localPos) => this.pos + this.rot * localPos;
+
+        //a = q^-1 * (a' - x)
+        public Vector3 WorldToLocal(Vector3 worldPos) => this.invRot * (worldPos - this.pos);
 
 
 
