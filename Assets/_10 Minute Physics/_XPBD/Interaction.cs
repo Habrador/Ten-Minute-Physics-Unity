@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 
 namespace XPBD
@@ -12,6 +13,7 @@ namespace XPBD
         //Distance from position we hit to mouse position
         private float d;
         private readonly Camera thisCamera;
+        public readonly float dragCompliance = 0.001f;
 
 
 
@@ -54,8 +56,13 @@ namespace XPBD
 
                             this.d = hit.distance;
 
+                            Vector3 hitPos = hit.point;
+
                             //Create a distance constraint
-                            rbSimulator.StartDrag(thisRb, hit.point);
+                            //TODO: this is some default parameter in the original code and doesnt say what it is in this section, so might be true or false
+                            bool unilateral = false;
+
+                            rbSimulator.dragConstraint = new DistanceConstraint(thisRb, null, hitPos, hitPos, 0f, this.dragCompliance, unilateral);
 
                             hasSelectedRb = true;
 
@@ -74,13 +81,16 @@ namespace XPBD
                 Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
 
                 //Update p_m using d
-                Vector3 p_m = ray.origin + ray.direction * this.d;
+                Vector3 newPos = ray.origin + ray.direction * this.d;
 
-                rbSimulator.Drag(p_m);
+                if (rbSimulator.dragConstraint != null)
+                {
+                    rbSimulator.dragConstraint.worldPos1 = newPos;
+                }
 
                 //Vector3 p0 = rbSimulator.dragConstraint.worldPos0;
 
-                //Debug.DrawLine(p0, p_m, UnityEngine.Color.blue);
+                //Debug.DrawLine(p0, newPos, UnityEngine.Color.blue);
             }
 
 
@@ -88,7 +98,11 @@ namespace XPBD
             //Deselect rb
             if (Input.GetMouseButtonUp(0) && hasSelectedRb == true)
             {
-                rbSimulator.EndDrag();
+                if (rbSimulator.dragConstraint != null)
+                {
+                    rbSimulator.dragConstraint.Dispose();
+                    rbSimulator.dragConstraint = null;
+                }
 
                 hasSelectedRb = false;
             }

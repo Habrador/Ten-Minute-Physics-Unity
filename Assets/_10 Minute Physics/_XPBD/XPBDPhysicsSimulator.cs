@@ -15,9 +15,8 @@ namespace XPBD
         public List<DistanceConstraint> allDistanceConstraints = new();
         public List<MyJoint> allJoints = new();
 
-        //Dragconstraint, meaning if we drag with mouse to interact we add a temp distance constraint
+        //If we drag with mouse to interact we add a temp distance constraint
         public DistanceConstraint dragConstraint = null;
-        private readonly float dragCompliance = 0.001f;
 
 
 
@@ -100,38 +99,6 @@ namespace XPBD
             if (this.dragConstraint != null)
             {
                 this.dragConstraint.UpdateMesh();
-            }
-        }
-
-
-
-        //
-        // Mouse interactions
-        //
-
-        //pos is in world coordinates
-        public void StartDrag(MyRigidBody body, Vector3 pos)
-        {
-            //TODO: this is some default parameter in the original code and doesnt say what it is in this section, so might be true or false
-            bool unilateral = false;
-
-            this.dragConstraint = new DistanceConstraint(body, null, pos, pos, 0f, this.dragCompliance, unilateral);
-        }
-
-        public void Drag(Vector3 pos)
-        {
-            if (this.dragConstraint != null)
-            {
-                this.dragConstraint.worldPos1 = pos;
-            }
-        }
-
-        public void EndDrag()
-        {
-            if (this.dragConstraint != null)
-            {
-                this.dragConstraint.Dispose();
-                this.dragConstraint = null;
             }
         }
 
