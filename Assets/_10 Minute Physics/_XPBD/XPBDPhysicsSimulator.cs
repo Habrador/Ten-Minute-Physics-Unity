@@ -16,7 +16,7 @@ namespace XPBD
         public List<MyJoint> allJoints = new();
 
         //If we drag with mouse to interact we add a temp distance constraint
-        public DistanceConstraint dragConstraint = null;
+        public DistanceConstraint dragConstraint;
 
 
 
@@ -53,29 +53,26 @@ namespace XPBD
         private void Simulate(float dt)
         {
             //Update pos, vel, rot, angular vel
-            for (int i = 0; i < allRigidBodies.Count; i++)
+            foreach (MyRigidBody rb in allRigidBodies)
             {
-                allRigidBodies[i].Integrate(dt, this.gravity);
+                rb.Integrate(dt, this.gravity);
             }
 
             //Constraints
             //Update pos and rot of the constraints that connects rbs
-            for (int i = 0; i < allDistanceConstraints.Count; i++)
+            foreach (DistanceConstraint dc in allDistanceConstraints)
             {
-                allDistanceConstraints[i].Solve(dt);
+                dc.Solve(dt);
             }
 
             //Update pos and rot of the constraint we use when moving rbs with mouse
-            if (this.dragConstraint != null)
-            {
-                this.dragConstraint.Solve(dt);
-            }
+            this.dragConstraint?.Solve(dt);
 
             //The velocities we calculated in integrate() make the simulation unstable
             //Update vel and angular vel by using pos and rot before and after integrate() and solve()
-            for (int i = 0; i < allRigidBodies.Count; i++)
+            foreach (MyRigidBody rb in allRigidBodies)
             {
-                allRigidBodies[i].FixVelocities(dt);
+                rb.FixVelocities(dt);
             }
         }
 
@@ -85,21 +82,17 @@ namespace XPBD
         public void MyUpdate()
         {
             //Update meshes so they have correct orientation and position
-            for (int i = 0; i < allRigidBodies.Count; i++)
+            foreach (MyRigidBody rb in allRigidBodies)
             {
-                allRigidBodies[i].UpdateMeshes();
+                rb.UpdateMeshes();
             }
 
-            for (int i = 0; i < allDistanceConstraints.Count; i++)
+            foreach (DistanceConstraint dc in allDistanceConstraints)
             {
-                allDistanceConstraints[i].UpdateMesh();
+                dc.UpdateMesh();
             }
 
-            //Move stuff with mouse
-            if (this.dragConstraint != null)
-            {
-                this.dragConstraint.UpdateMesh();
-            }
+            this.dragConstraint?.UpdateMesh();
         }
 
 
@@ -107,20 +100,17 @@ namespace XPBD
         //Cleanup when simulation is over
         public void Dispose()
         {
-            for (int i = 0; i < this.allRigidBodies.Count; i++)
+            foreach (MyRigidBody rb in allRigidBodies)
             {
-                this.allRigidBodies[i].Dispose();
+                rb.Dispose();
+            }
+        
+            foreach (DistanceConstraint dc in allDistanceConstraints)
+            {
+                dc.Dispose();
             }
 
-            for (int i = 0; i < this.allDistanceConstraints.Count; i++)
-            {
-                this.allDistanceConstraints[i].Dispose();
-            }
-
-            if (this.dragConstraint != null)
-            {
-                this.dragConstraint.Dispose();
-            }
+            this.dragConstraint?.Dispose();
         }
     }
 }
