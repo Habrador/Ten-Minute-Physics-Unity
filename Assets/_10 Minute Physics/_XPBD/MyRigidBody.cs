@@ -197,10 +197,8 @@ namespace XPBD
 
 
         //
-        // Begin simulation functions
+        // Update position, velocity, angular velocity, and rotation by using semi-implicit Euler
         //
-
-        //Update position, velocity, angular velocity, and rotation by using semi-implicit Euler
         public void Integrate(float dt, Vector3 gravity)
         {
             if (this.invMass == 0f)
@@ -310,7 +308,10 @@ namespace XPBD
 
 
 
-        //Fix velocity and angular velocity
+        //
+        // Fix velocity and angular velocity
+        //
+        
         //The velocities calculated in Integrate() are not the velocities we want
         //because they make the simulation unstable
         //Also add damping
@@ -352,9 +353,12 @@ namespace XPBD
 
 
 
-        //Get the generalized inverse mass
+        //
+        // Calculate generalized inverse mass
+        //
+        
         //normal - direction between constraints
-        //pos - where the constraint attaches to this body
+        //pos - where the constraint attaches to this body in world space
         //Why can pos sometimes be undefined???
         //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
         //m - mass
@@ -439,6 +443,88 @@ namespace XPBD
 
 
 
+        //
+        // Fix the constraint
+        //
+
+        //This doesnt have to be a distance constrain as there are many other constraints...
+        //compliance - inverse of physical stiffness (alpha in equations)
+        //corr - C = l - l_0 (with direction baked into it)
+        //pos - where the constraint attaches to this body in world space
+        //otherBody - the connected rb (if any, might be a fixed object for collision)
+        //otherPos - where the constraint attaches to the other rb in world space
+        //dt - time step needed for force calculations
+        //Returns the force on this constraint
+        public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
+        {
+            //In the paper you see
+            //delta_lambda = (-c - (alpha_tilde * lambda)) / (w_1 + w_2 + alpha_tilde)
+            //alpha_tilde = alpha / dt^2
+            //lambda = lambda + delta_lambda
+            //and instead of lambda * normal they use delta_lambda * normal
+            //BUT according to the YT video "09 Getting ready to simulate the world with XPBD"
+            //we dont need to keep track of the lagrange multiplier per constraint
+            //if we iterate over the constraints just once
+            //Notice that iteration and substeps are not the same
+            //Some are iterating over the constraints multiple times each substep
+            //But we are doing it just once because it generates a better result
+
+            //C = l - l_0
+            //l_0 - wanted length
+            //l - current length
+            //Constraint direction:
+            //n = (a2 - 1)/|a2 - a1|
+            //a - point on body where constraint attaches (not center of mass)
+            if (corr.sqrMagnitude == 0f)
+            {
+                return 0f;
+            }
+
+            float C = corr.magnitude;
+
+            Vector3 normal = corr.normalized;
+
+            //Generalized inverse masses
+            //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+            float w_tot = this.GetGeneralizedInverseMass(normal, pos);
+
+            if (otherBody != null)
+            {
+                w_tot += otherBody.GetGeneralizedInverseMass(normal, otherPos);
+            }
+
+            if (w_tot == 0f)
+            {
+                return 0f;
+            }
+
+            //Lagrange multiplyer
+            //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
+            float lambda = -C / (w_tot + (compliance / (dt * dt)));
+
+            //Update pos and rot
+            //x_i = x_i +- w_i * lambda * n
+            //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
+            Vector3 lambda_normal = normal * -lambda;
+
+            UpdatePosAndRot(lambda_normal, pos);
+
+            if (otherBody != null)
+            {
+                lambda_normal *= -1f;
+                otherBody.UpdatePosAndRot(lambda_normal, otherPos);
+            }
+
+            //Constraint force
+            //F = (lambda * n) / dt^2
+            //We dont need direction so ignore n
+            float constraintForce = lambda / (dt * dt);
+
+            return constraintForce;
+        }
+
+
+
         //Update pos and rot to enforce distance constraints
         //lambda_normal is lambda*normal and is the positional impulse (also knownn as p)
         public void UpdatePosAndRot(Vector3 lambda_normal, Vector3 pos)
@@ -455,8 +541,8 @@ namespace XPBD
             this.pos += this.invMass * lambda_normal;
 
             //Angular correction
-            //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i <- From tutorial
-            //q_i = q_i + 0.5 * [I_i^-1 * (r_i x lambda_normal), 0] * q_i <- From paper
+            //q_i = q_i +- 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i <- From tutorial
+            //q_i = q_i +- 0.5 * [I_i^-1 * (r_i x lambda_normal), 0] * q_i <- From paper
 
             //dOmega <- lambda * [I_i^-1 * (r_i x n), 0]
 
@@ -478,14 +564,10 @@ namespace XPBD
             //Tansforms dOmega back into the original coordinate frame after the inverse rotation was applied earlier
             dOmega = this.rot * dOmega;
 
+            //Same as during Integrate() except for the dt which is now 1
             //dRot <- dOmega * q_i
             //lambda * [I_i^-1 * (r_i x n), 0]
-            Quaternion dRot = new Quaternion(
-                dOmega.x,
-                dOmega.y,
-                dOmega.z,
-                0f
-            );
+            Quaternion dRot = new(dOmega.x, dOmega.y, dOmega.z, 0f);
 
             //lambda * [I_i^-1 * (r_i x n), 0] * q_i
             dRot *= this.rot;
@@ -505,101 +587,8 @@ namespace XPBD
 
 
 
-        //Fix the distance constraint between this body and the other body
-        //compliance - inverse of physical stiffness (alpha in equations)
-        //corr - vector between this body and another body
-        //pos - where the constraint attaches to this body in world space
-        //otherBody - the connected rb
-        //otherPos - where the constraint attaches to the other rb in world space
-        //Returns the force on this constraint
-        public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
-        {
-            //When you pull the bodies closer you also make the bodies rotate
-            //The rotations are distributed according to I^-1
-
-            //Constraint distance:
-            //C = l - l_0
-            //l_0 - wanted length
-            //l - current length
-            //Constraint direction:
-            //n = (a2 - 1)/|a2 - a1|
-            //a - point on body where constraint attaches (not center of mass)
-            //Generalized inverse masses:
-            //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
-            //r - vector from center of mass to attachment point (stored in local frame of the body)
-            //Lagrange multiplyer:
-            //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
-            //Update pos:
-            //x_i = x_i +- w_i * lambda * n
-            //Update rot:
-            //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
-            //Constraint force:
-            //F = (lambda * n) / dt^2
-
-            //In the paper you see
-            //delta_lambda = (-c - (alpha_tilde * lambda)) / (w_1 + w_2 + alpha_tilde)
-            //alpha_tilde = alpha / dt^2
-            //lambda = lambda + delta_lambda
-            //and instead of lambda * normal they use delta_lambda * normal
-            //BUT according to the YT video "09 Getting ready to simulate the world with XPBD"
-            //we dont need to keep track of the lagrange multiplier per constraint
-            //if we iterate over the constraints just once
-            //Notice that iteration and substeps are not the same
-            //Some are iterating over the constraints multiple times each substep
-            //But we are doing it just once because it generates a better result
-
-            if (corr.sqrMagnitude == 0f)
-            {
-                return 0f;
-            }
-
-            float C = corr.magnitude;
-
-            Vector3 normal = corr.normalized;
-
-            float w_tot = this.GetGeneralizedInverseMass(normal, pos);
-
-            if (otherBody != null)
-            {
-                w_tot += otherBody.GetGeneralizedInverseMass(normal, otherPos);
-            }
-
-            if (w_tot == 0f)
-            {
-                return 0f;
-            }
-
-            //XPBD
-
-            //Lagrange multiplyer
-            //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
-            float lambda = -C / (w_tot + (compliance / (dt * dt)));
-
-            //Update pos and rot
-            //x_i = x_i +- w_i * lambda * n
-            //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
-            Vector3 lambda_normal = normal * -lambda;
-
-            UpdatePosAndRot(lambda_normal, pos);
-
-            if (otherBody != null)
-            {
-                lambda_normal *= -1f;
-                otherBody.UpdatePosAndRot(lambda_normal, otherPos);
-            }
-
-            //Constraint force
-            //F = (lambda * n) / dt^2
-            //n is normalized -> lambda_normal.magnitude = lambda
-            float constraintForce = lambda / (dt * dt);
-
-            return constraintForce;
-        }
-
-
-
         //
-        // End simulation functions
+        // End simulation methods
         //
 
         public void Dispose()

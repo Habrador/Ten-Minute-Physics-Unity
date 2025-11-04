@@ -9,14 +9,15 @@ namespace XPBD
     public class DistanceConstraint
     {
         //Null if attachment point is fixed
-        private MyRigidBody body0;
-        private MyRigidBody body1;
+        private readonly MyRigidBody body0;
+        private readonly MyRigidBody body1;
 
         //One sided, limit motion in one direction 
         private bool unilateral;
 
-        public Vector3 worldPos0;
+        //Attachment points
         //Public so we can access it when we drag with mouse 
+        public Vector3 worldPos0;
         public Vector3 worldPos1;
         private Vector3 localPos0;
         private Vector3 localPos1;
@@ -26,7 +27,7 @@ namespace XPBD
         //Inverse of physical stiffness (alpha in equations) [m/N]
         private readonly float compliance;
 
-        //For displaying the distance with a red line
+        //For displaying the distance with a red cylinder
         private readonly VisualDistance displayConstraintObj;
 
         //For displaying constraint data
@@ -63,19 +64,19 @@ namespace XPBD
             this.wantedDistance = distance;
             this.compliance = compliance;
 
+            this.fontSize = fontSize;
 
             //Create a cylinder for visualization
             this.displayConstraintObj = new VisualDistance(UnityEngine.Color.red, width);
 
             UpdateMesh();
-
-            //
-            this.fontSize = fontSize;
         }
 
 
 
         //Make sure the constraint has the correct length
+        //When you pull the bodies closer you also make the bodies rotate
+        //The rotations are distributed according to I^-1
         //a - attachment points are defined relative to a rb's center of mass
         //r - vector from center of mass to a 
         //l_0 - wanted length
@@ -86,12 +87,11 @@ namespace XPBD
         //Compute generalized inverse mass for rb i
         //w_i = m_i^-1 * (r_i x n)^T * I_i^-1 * (r_i x n)
         //Compute Lagrange multiplier
-        //lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1 where 
-        //alpha is physical inverse stiffness
-        //Update pos and rot
+        //lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1 where alpha is physical inverse stiffness
+        //Update pos and rot (+- because we have two rbs and we use + for one and - for the other)
         //x_i = x_i +- w_i * lambda * n
-        //q_i = q_i + 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
-        //Constraint force
+        //q_i = q_i +- 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        //Constraint force (only needed for display purposes)
         //F = (lambda * n) / dt^2
         public void Solve(float dt)
         {
@@ -128,8 +128,7 @@ namespace XPBD
 
 
 
-        //Move, rotate, adns cale the mesh we use to display the constraint
-        //so it goes between the attachment points
+        //Transform the mesh we use to display the constraint so it goes between the attachment points
         public void UpdateMesh()
         {
             this.displayConstraintObj.UpdateMesh(this.worldPos0, this.worldPos1);
@@ -154,10 +153,7 @@ namespace XPBD
 
         public void Dispose()
         {
-            if (this.displayConstraintObj != null)
-            {
-                this.displayConstraintObj.Dispose();
-            }
+            this.displayConstraintObj?.Dispose();
         }
     }
 }
