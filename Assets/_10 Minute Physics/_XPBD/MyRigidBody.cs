@@ -356,7 +356,8 @@ namespace XPBD
         //
         // Calculate generalized inverse mass
         //
-        
+
+        //The term "generalized" refers to the fact that the matrix accounts for both linear and angular motion?
         //normal - direction between constraints
         //pos - where the constraint attaches to this body in world space
         //Why can pos sometimes be undefined???
@@ -374,14 +375,12 @@ namespace XPBD
                 return 0f;
             }
 
-            //w = m^-1 + (r x n)^T * I^-1 * (r x n)
-
             Vector3 r = pos - this.pos;
 
             //rn = r x n
             Vector3 rn = Vector3.Cross(r, normal);
 
-            //To be able to use the inertia vector3 which is only useful in local space
+            //Global -> local because we gonna use the Inertia
             rn = this.invRot * rn;
 
             //(r x n)^T * I^-1 * (r x n) = rn^T * I^-1 * rn
@@ -393,13 +392,13 @@ namespace XPBD
             //|rn.x rn.y rn.z| * |rn.x * invI.x|
             //                   |rn.y * invI.y|
             //                   |rn.z * invI.z|
-            float w =
+            float rnT_IInv_rn =
                 rn.x * rn.x * this.invInertia.x +
                 rn.y * rn.y * this.invInertia.y +
                 rn.z * rn.z * this.invInertia.z;
 
             //w = m^-1 + rn^T * I^-1 * rn
-            w += this.invMass;
+            float w = this.invMass + rnT_IInv_rn;
 
             return w;
         }
