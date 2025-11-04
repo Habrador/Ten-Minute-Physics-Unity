@@ -215,11 +215,11 @@ namespace XPBD
             this.prevPos = this.pos;
 
             //Calculate the new positon and velocity after this time step
+            
             //vel = vel + dt * a
-            //pos = pos + dt * vel
-
             this.vel += gravity * dt;
-
+            
+            //pos = pos + dt * vel
             this.pos += this.vel * dt;
 
 
@@ -228,9 +228,10 @@ namespace XPBD
             //Cache the rot as we need it later
             this.prevRot = this.rot;
 
-            //From the tutorial:
+            //From the YouTube tutorial:
             //Update angular velocity:
             //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
+            //We dont need to to it here because tau_ext = 0 -> omega = omega
             //Update rotation:
             //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q
 
@@ -242,8 +243,6 @@ namespace XPBD
             //In the tutorial theres a v before [omega_x, omega_y, omega_z, 0]
             //but I think it was a missprint because in the paper it doesnt exist
             //(sometimes you see h instead of dt)
-            //Normalize
-            //q = q / |q|
 
             //Derivation of the above equations:
             //tau = I * aa -> aa = I^-1 * tau (which is why we use inverse inertia)
@@ -278,17 +277,21 @@ namespace XPBD
             //and ensures that the rate of change of the quaternion correctly represents the physical rotation
             //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
 
+            //Update angular velocity:
             //omega = omega + 0 because we have no external torque
             //The tutorial is not taking into account the body's own rotational behavior (omega x (I * omega)???
+
+            //Update rotation:
+            //q = q + 0.5 * dt * [omega_x, omega_y, omega_z, 0] * q
 
             //Put the angular velocity in quaternion form so we can multiply it by a quaternion
             //This is known as a pure quaternion (a quaternion with a real part of zero: w = 0)
             //[omega_x, omega_y, omega_z, 0]
             //Some sources say it should be [0, omega_x, omega_y, omega_z],
             //but it depends on how the quaternion is implemented 
-            Quaternion dRot = new Quaternion(this.omega.x, this.omega.y, this.omega.z, 0f);
+            Quaternion dRot = new(this.omega.x, this.omega.y, this.omega.z, 0f);
 
-            //[omega_x, omega_y, omega_z, 0] * q
+            //dRot = [omega_x, omega_y, omega_z, 0] * q
             dRot *= this.rot;
 
             //q = q + 0.5 * dt * dRot
@@ -309,8 +312,7 @@ namespace XPBD
 
         //Fix velocity and angular velocity
         //The velocities calculated in Integrate() are not the velocities we want
-        //because they make the simulation unstable because we havent take into
-        //consideration the constraints which changes the position
+        //because they make the simulation unstable
         //Also add damping
         public void FixVelocities(float dt)
         {
@@ -325,27 +327,22 @@ namespace XPBD
 
             //Angular motion
             //Compute the relative rotation between the two quaternions
-            //The transformation that transforms the body from the frame before the solve into the frame after the solve
+            //This is the transformation that transforms the body from the frame before the solve into the frame after the solve
             //This operation is often used to determine the difference or change in orientation between two rotations
-            //delta_q = q * q_prev^-1
-            //Quaternions represent rotations using half-angles, so to convert back to full angles, you multiply by 2
-            //Similar to vel = (pos - pos_prev) / dt
-            //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
-            //If delta_q.w is negative, the resulting angular velocity might point in the opposite direction of the intended rotation
-            //If it is negative, negating the entire angular velocity vector omega corrects the direction to be consistent with the intended rotation
-            //omega = (delta_q.w >= 0) ? omega : -omega
-
             //delta_q = q * q_prev^-1
             Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
             //Turn the transformation into an angular velocity
+            //Quaternions represent rotations using half-angles, so to convert back to full angles, you multiply by 2
+            //Similar to vel = delta_pos / dt
             //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
             this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
+            //If delta_q.w is negative, the resulting angular velocity might point in the opposite direction of the intended rotation
             //omega = (delta_q.w >= 0) ? omega : -omega
             if (delta_q.w < 0f)
             {
-                //Negate
+                //Negating the entire angular velocity vector corrects the direction to be consistent with the intended rotation
                 this.omega *= -1f;
             }
 
@@ -364,6 +361,47 @@ namespace XPBD
         //n - correction direction
         //r - vector from center of mass to contact point
         //Derivation at the end of the paper "Detailed rb simulation with xpbd"
+
+        //As in the code in the video (not on github)
+        private float GetGeneralizedInverseMass(Vector3 normal, Vector3 pos)
+        {
+            if (this.invMass == 0f)
+            {
+                return 0f;
+            }
+
+            //w = m^-1 + (r x n)^T * I^-1 * (r x n)
+
+            Vector3 r = pos - this.pos;
+
+            //rn = r x n
+            Vector3 rn = Vector3.Cross(r, normal);
+
+            //To be able to use the inertia vector3 which is only useful in local space
+            rn = this.invRot * rn;
+
+            //(r x n)^T * I^-1 * (r x n) = rn^T * I^-1 * rn
+            //3x3 * 3x1 = 3x1
+            //|invI.x 0      0     | * |rn.x| = |rn.x * invI.x|
+            //|0      invI.y 0     |   |rn.y|   |rn.y * invI.y|
+            //|0      0      invI.z|   |rn.z|   |rn.z * invI.z|
+            //1x3 * 3x1 = 1x1
+            //|rn.x rn.y rn.z| * |rn.x * invI.x|
+            //                   |rn.y * invI.y|
+            //                   |rn.z * invI.z|
+            float w =
+                rn.x * rn.x * this.invInertia.x +
+                rn.y * rn.y * this.invInertia.y +
+                rn.z * rn.z * this.invInertia.z;
+
+            //w = m^-1 + rn^T * I^-1 * rn
+            w += this.invMass;
+
+            return w;
+        }
+
+
+
         private float GetGeneralizedInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
         {
             if (this.invMass == 0f)
@@ -395,46 +433,6 @@ namespace XPBD
             {
                 w += this.invMass;
             }
-
-            return w;
-        }
-
-        //As in the code in the video (not on github)
-        private float GetGeneralizedInverseMass(Vector3 normal, Vector3 pos)
-        {
-            if (this.invMass == 0f)
-            {
-                return 0f;
-            }
-
-            //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
-
-            //r_i
-            Vector3 r = pos - this.pos;
-
-            //(r_i x n)
-            Vector3 rn = Vector3.Cross(r, normal);
-
-            //To be able to use the inertia vector3 which is only useful in local space
-            rn = this.invRot * rn;
-
-            //(r_i x n)^T * I_i^-1 * (r_i x n)
-            //rn^T * I_i^-1 * rn
-            //3x3 * 3x1 = 3x1
-            //|invI.x 0      0     | * |rn.x| = |rn.x * invI.x|
-            //|0      invI.y 0     |   |rn.y|   |rn.y * invI.y|
-            //|0      0      invI.z|   |rn.z|   |rn.z * invI.z|
-            //1x3 * 3x1 = 1x1
-            //|rn.x rn.y rn.z| * |rn.x * invI.x|
-            //                   |rn.y * invI.y|
-            //                   |rn.z * invI.z|
-            float w =
-                rn.x * rn.x * this.invInertia.x +
-                rn.y * rn.y * this.invInertia.y +
-                rn.z * rn.z * this.invInertia.z;
-
-            //m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
-            w += this.invMass;
 
             return w;
         }
