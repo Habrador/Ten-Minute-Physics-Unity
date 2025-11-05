@@ -6,6 +6,8 @@ using UnityEngine;
 namespace XPBD
 {
     //Simulate rigid bodies, constraints, joints using XPBD: Extended Position Based Dynamics
+    //"Position Based" means you manipulate particle positions (and rotations) directly,
+    //unlike other methods which use forces or velocities
     public class XPBDPhysicsSimulator
     {
         private readonly Vector3 gravity;
@@ -59,6 +61,12 @@ namespace XPBD
             }
 
             //Constraints
+
+            //Iterate over the constraints just once
+            //Some are iterating over them multiple times each step
+            //but then you have to cache a lagrange multiplier which is currently ignored
+            //Its better to use substeps and iterate over the constraints (and all other things) just once each substep
+
             //Update pos and rot of the constraints that connects rbs
             foreach (DistanceConstraint dc in allDistanceConstraints)
             {

@@ -15,6 +15,7 @@ namespace XPBD
             Sphere
         }
 
+        //For debugging
         private readonly Types type;
 
         //A rigid body has the following properties:
@@ -31,7 +32,7 @@ namespace XPBD
         private Vector3 omega;
         //Mass m
         //We are going to use inverse mass m^-1
-        private readonly float invMass;
+        public float invMass;
         //Moment of inertia (resistance to torque)
         //Is a 3x3 matrix
         //if the body is aligned witht the x,y,z axis we can treat it as a 3d vector
@@ -40,7 +41,7 @@ namespace XPBD
         //    |0    0    I_zz|
         //and do calculations in local space by transforming everything needed to local space
         //We are going to use inverse moment of inertia I^-1
-        private Vector3 invInertia;
+        public Vector3 invInertia;
 
         //For XPBD simulation we cache these to fix velocities
         private Vector3 prevPos;
@@ -88,60 +89,11 @@ namespace XPBD
             //Data that depends on the rbs geometry
             if (type == Types.Box)
             {
-                //Create the obj we can see
-                GameObject newBoxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                newBoxObj.transform.localScale = size;
-
-                this.visualObjects = new MyRigidBodyVisuals(newBoxObj);
-
-                if (density > 0f)
-                {
-                    //mass = volume * density
-                    float mass = density * size.x * size.y * size.z;
-
-                    this.invMass = 1f / mass;
-
-                    //I (solid rectangular cuboid)
-                    //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
-                    //h,w,d = height,width,depth
-                    //I_h = 1/12 * m * (w^2 + d^2)
-                    //I_w = 1/12 * m * (h^2 + d^2)
-                    //I_d = 1/12 * m * (h^2 + w^2)
-                    float Ix = 1f / 12f * mass * (size.y * size.y + size.z * size.z);
-                    float Iy = 1f / 12f * mass * (size.x * size.x + size.z * size.z);
-                    float Iz = 1f / 12f * mass * (size.x * size.x + size.y * size.y);
-
-                    this.invInertia = new Vector3(1f / Ix, 1f / Iy, 1f / Iz);
-                }
+                MyRigidBodyData.InitBox(this, size, density);
             }
             else if (type == Types.Sphere)
             {
-                //Create the obj we can see
-                //The tutorial is using two half-spheres where one is white and other is red
-                //to easier see the rotations, we can maybe use a texture instead???
-                GameObject newSphereObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-
-                newSphereObj.transform.localScale = size.x * Vector3.one;
-
-                this.visualObjects = new MyRigidBodyVisuals(newSphereObj);
-
-                if (density > 0f)
-                {
-                    float r = size.x;
-
-                    //mass = volume * density = 4/3 * pi * r^3 * density
-                    float mass = 4f / 3f * Mathf.PI * r * r * r * density;
-
-                    this.invMass = 1f / mass;
-
-                    //I (solid sphere)
-                    //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
-                    //I = 2/5 * m * r^2
-                    float I = 2f / 5f * mass * r * r;
-
-                    this.invInertia = new Vector3(1f / I, 1f / I, 1f / I);
-                }
+                MyRigidBodyData.InitSphere(this, size, density);
             }
 
             UpdateMeshes();
@@ -195,6 +147,21 @@ namespace XPBD
 
         //a = q^-1 * (a' - x)
         public Vector3 WorldToLocal(Vector3 worldPos) => this.invRot * (worldPos - this.pos);
+
+
+
+        //
+        // The velocity of a point on the body
+        //
+
+        public Vector3 PointVel(Vector3 point)
+        {
+            Vector3 r = point - this.pos;
+
+            Vector3 pointVel = this.vel + Vector3.Cross(this.omega, r);
+
+            return pointVel;
+        }
 
 
 
@@ -354,7 +321,7 @@ namespace XPBD
         //But I shall use two methods because we cant set Vector3 to null so it becomes messy to combine
 
 
-        //Positional
+        //Positional constraints
         
         //The inverse mass is just 1/m 
         //But In order to keep energy conservation when transferring positional kinetic energy to rotational kinetic energy
@@ -404,8 +371,10 @@ namespace XPBD
 
 
 
-        //Angular
+        //Angular constraints
+
         //w = n^T * I^-1 * n
+        //normal - direction between constraints???
         private float GetGeneralizedInverseMass(Vector3 normal)
         {
             if (this.invMass == 0f)
@@ -448,7 +417,7 @@ namespace XPBD
             //alpha_tilde = alpha / dt^2
             //lambda = lambda + delta_lambda
             //and instead of lambda * normal they use delta_lambda * normal
-            //BUT according to the YT video "09 Getting ready to simulate the world with XPBD"
+            //BUT according to the YT video "09 Getting ready to simulate the world with XPBD" (7:15)
             //we dont need to keep track of the lagrange multiplier per constraint
             //if we iterate over the constraints just once
             //Notice that iteration and substeps are not the same
