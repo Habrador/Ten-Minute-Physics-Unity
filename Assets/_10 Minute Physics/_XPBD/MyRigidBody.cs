@@ -293,10 +293,15 @@ namespace XPBD
         //
         // Fix velocity and angular velocity
         //
-        
+
         //The velocities calculated in Integrate() are not the velocities we want
         //because they make the simulation unstable
         //Also add damping
+        //From "Detailed rigid body simulation with xpbd"
+        //v = (x_prev - x) / h
+        //delta_q = q * q_prev^-1
+        //omega = 2 * [delta_q_x, delta_q_y, delta_q_z] / h
+        //omega = (delta_q_w >= 0) ? omega : -omega
         public void FixVelocities(float dt)
         {
             if (this.invMass == 0f)
@@ -304,11 +309,17 @@ namespace XPBD
                 return;
             }
 
+
             //Linear motion
-            //vel = (pos - pos_prev) / dt
+            //v = (x_prev - x) / h
             this.vel = (this.pos - this.prevPos) / dt;
 
+            //Damping (should maybe be in its own method)
+            this.vel *= Mathf.Max(1f - this.damping * dt, 0f);
+
+
             //Angular motion
+
             //Compute the relative rotation between the two quaternions
             //This is the transformation that transforms the body from the frame before the solve into the frame after the solve
             //This operation is often used to determine the difference or change in orientation between two rotations
@@ -317,20 +328,15 @@ namespace XPBD
 
             //Turn the transformation into an angular velocity
             //Quaternions represent rotations using half-angles, so to convert back to full angles, you multiply by 2
-            //Similar to vel = delta_pos / dt
-            //omega = 2 * (delta_q_x, delta_q_y, delta_q_z) / dt
+            //omega = 2 * [delta_q_x, delta_q_y, delta_q_z] / h
             this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
             //If delta_q.w is negative, the resulting angular velocity might point in the opposite direction of the intended rotation
             //omega = (delta_q.w >= 0) ? omega : -omega
             if (delta_q.w < 0f)
             {
-                //Negating the entire angular velocity vector corrects the direction to be consistent with the intended rotation
                 this.omega *= -1f;
             }
-
-            //Damping (should maybe be in its own method)
-            this.vel *= Mathf.Max(1f - this.damping * dt, 0f);
         }
 
 
