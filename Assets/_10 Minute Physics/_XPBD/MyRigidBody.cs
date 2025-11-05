@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.EventSystems.EventTrigger;
+
+
 
 namespace XPBD
 {
@@ -345,6 +345,17 @@ namespace XPBD
         // Calculate generalized inverse mass
         //
 
+        //We have to constraints: positional (distance) and angular
+        //For positional the generalized inverse mass is:
+        //w = m^-1 + (r x n)^T* I^-1 * (r x n)
+        //For angular the generalized inverse mass is:
+        //w = n^T * I^-1 * n
+        //The code on github combines them into one method
+        //But I shall use two methods because we cant set Vector3 to null so it becomes messy to combine
+
+
+        //Positional
+        
         //The inverse mass is just 1/m 
         //But In order to keep energy conservation when transferring positional kinetic energy to rotational kinetic energy
         //we need a different value for inverse mass: the generalized inverse mass
@@ -354,7 +365,6 @@ namespace XPBD
         //r - vector from center of mass to contact point
         //Derivation at the end of the paper "Detailed rb simulation with xpbd"
 
-        //As in the code in the video (not on github)
         //normal - direction between constraints
         //pos - where the constraint attaches to this body in world space
         private float GetGeneralizedInverseMass(Vector3 normal, Vector3 pos)
@@ -394,38 +404,25 @@ namespace XPBD
 
 
 
-        //Alternative version froun on github where pos sometimes is undefined?
-        private float GetGeneralizedInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
+        //Angular
+        //w = n^T * I^-1 * n
+        private float GetGeneralizedInverseMass(Vector3 normal)
         {
             if (this.invMass == 0f)
             {
                 return 0f;
             }
 
-            Vector3 rn = normal;
+            Vector3 n = normal;
 
-            //Angular case
-            if (isPosUndefined)
-            {
-                rn = this.invRot * rn;
-            }
-            //Linear case (which is what exists in the video but in the code on github theres also this if/else)
-            else
-            {
-                rn = pos - this.pos;
-                rn = Vector3.Cross(rn, normal);
-                rn = this.invRot * rn; //To be able to use the inertia vector3 instead of the tensor?
-            }
+            //Global -> local because we gonna use the Inertia
+            n = this.invRot * n;
 
+            //w = n^T * I^-1 * n
             float w =
-                rn.x * rn.x * this.invInertia.x +
-                rn.y * rn.y * this.invInertia.y +
-                rn.z * rn.z * this.invInertia.z;
-
-            if (isPosUndefined)
-            {
-                w += this.invMass;
-            }
+                n.x * n.x * this.invInertia.x +
+                n.y * n.y * this.invInertia.y +
+                n.z * n.z * this.invInertia.z;
 
             return w;
         }
