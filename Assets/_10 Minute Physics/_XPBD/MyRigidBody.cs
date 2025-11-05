@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace XPBD
 {
@@ -199,6 +201,41 @@ namespace XPBD
         //
         // Update position, velocity, angular velocity, and rotation by using semi-implicit Euler
         //
+
+        //From "Detailed rigid body simulation with xpbd"
+        //h = dt / numSubsteps
+        //Update pos:
+        //x_prev = x
+        //v = v + h * f_ext / m
+        //x = x + h * v
+        //Update rot:
+        //q_prev = q
+        //omega = omega + h * I^-1 * (tau_ext - (omega x (I * omega)))
+        //q = q + h * 0.5 * [omega_x, omega_y, omega_z, 0] * q
+        //Normailize: q = q / |q|
+        
+        //From YT tutorial
+        //omega = omega + h * I^-1 * tau_ext (Where did (omega x (I * omega)) go??
+        //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q (I think the v is a misprint)
+        
+        //Derivation of the above equations:
+        
+        //Angular velocity
+        //The angular equation of motion:
+        //Takes into account both external influences and the body's own rotational behavior.
+        //Sum(M_cg) = dH_cg / dt = I * (domega/dt) + (omega x (I * omega))
+        //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
+        //Which is the equation from the paper:
+        //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
+        //omega x (I * omega) represents the effect of the body's current rotation on its angular momentum, contributing to the overall torque.
+        //I^-1 Scales the effect of the torques based on the body's resistance to changes in its rotational motion.
+        
+        //Rotation
+        //How a quaternion changes over time due to the angular velocity:
+        //dRot = dq/dt = 0.5 * omega * q -> q_next = q + 0.5 * omega * q * dt
+        //The factor of 0.5 arises from the mathematical properties of quaternions (they use half-angles)
+        //and ensures that the rate of change of the quaternion correctly represents the physical rotation
+        //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
         public void Integrate(float dt, Vector3 gravity)
         {
             if (this.invMass == 0f)
@@ -213,11 +250,8 @@ namespace XPBD
             this.prevPos = this.pos;
 
             //Calculate the new positon and velocity after this time step
-            
-            //vel = vel + dt * a
             this.vel += gravity * dt;
-            
-            //pos = pos + dt * vel
+           
             this.pos += this.vel * dt;
 
 
@@ -226,80 +260,28 @@ namespace XPBD
             //Cache the rot as we need it later
             this.prevRot = this.rot;
 
-            //From the YouTube tutorial:
             //Update angular velocity:
-            //omega = omega + dt * I^-1 * tau_ext, where tau_ext is external torque
-            //We dont need to to it here because tau_ext = 0 -> omega = omega
-            //Update rotation:
-            //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q
-
-            //From the paper "Detailed rb simulation with xpbd":
-            //Update angular velocity:
-            //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
-            //Update rotation:
-            //q = q + 0.5 * dt * [omega_x, omega_y, omega_z, 0] * q
-            //In the tutorial theres a v before [omega_x, omega_y, omega_z, 0]
-            //but I think it was a missprint because in the paper it doesnt exist
-            //(sometimes you see h instead of dt)
-
-            //Derivation of the above equations:
-            //tau = I * aa -> aa = I^-1 * tau (which is why we use inverse inertia)
-            //where:
-            // tau - torque (external), tau = r x F where r is vector from center of mass to where you apply the force
-            // aa - angular acceleration
-            // I - moment of inertia (resistance to torque)
-            //Which is similar to F = m * a -> a = m^-1 * F
-            //To update angular velocity, we do something similar as when we update velocity vel = vel + a * dt;
-            //omega = omega + aa * dt = omega + I^-1 * tau * dt
-            //To update rotation we do something similar as when we update position pos = pos + vel * dt
-            //q = q + omega * dt
-            //This works fine in 2d where the rb can only rotate around the z axis (up direction):
-            //omega.z = omega.z + tau.z * I.z^-1 * dt
-            //rot.z = rot.z + omega.z * dt
-            //BUT in 3d it gets more complicated
-            //
-            //Angular velocity
-            //The angular equation of motion:
-            //Takes into account both external influences and the body's own rotational behavior.
-            //Sum(M_cg) = dH_cg / dt = I * (domega/dt) + (omega x (I * omega))
-            //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
-            //Which is the equation from the paper:
-            //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
-            //omega x (I * omega) represents the effect of the body's current rotation on its angular momentum, contributing to the overall torque.
-            //I^-1 Scales the effect of the torques based on the body's resistance to changes in its rotational motion.
-            //
-            //Rotation
-            //How a quaternion, which represents the orientation of an object, changes over time due to the angular velocity:
-            //dq/dt = 0.5 * omega * q -> q_next = q + 0.5 * omega * q * dt
-            //The factor of 0.5 arises from the mathematical properties of quaternions (they use half-angles)
-            //and ensures that the rate of change of the quaternion correctly represents the physical rotation
-            //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
-
-            //Update angular velocity:
-            //omega = omega + 0 because we have no external torque
-            //The tutorial is not taking into account the body's own rotational behavior (omega x (I * omega)???
+            //omega = omega + h * I^-1 * tau_ext = omega (because we have no external torque)
+            //The tutorial is not taking into account the body's own rotational behavior (omega x (I * omega)...
 
             //Update rotation:
-            //q = q + 0.5 * dt * [omega_x, omega_y, omega_z, 0] * q
+            //q = q + dt * 0.5 * [omega_x, omega_y, omega_z, 0] * q
 
             //Put the angular velocity in quaternion form so we can multiply it by a quaternion
             //This is known as a pure quaternion (a quaternion with a real part of zero: w = 0)
-            //[omega_x, omega_y, omega_z, 0]
-            //Some sources say it should be [0, omega_x, omega_y, omega_z],
-            //but it depends on how the quaternion is implemented 
-            Quaternion dRot = new(this.omega.x, this.omega.y, this.omega.z, 0f);
+            //Sometimes you see [0, omega_x, omega_y, omega_z], but it depends on the quaternion class
+            Quaternion omegaAsQuaternion = new(this.omega.x, this.omega.y, this.omega.z, 0f);
 
-            //dRot = [omega_x, omega_y, omega_z, 0] * q
-            dRot *= this.rot;
+            //dRot before multiplying by 0.5 (which we cant just do with a quaternion: 0.5 * q is not allowed)
+            Quaternion dRot = omegaAsQuaternion * this.rot;
 
-            //q = q + 0.5 * dt * dRot
+            //q = q + dt * 0.5 * dRot
             this.rot.x += 0.5f * dt * dRot.x;
             this.rot.y += 0.5f * dt * dRot.y;
             this.rot.z += 0.5f * dt * dRot.z;
             this.rot.w += 0.5f * dt * dRot.w;
 
-            //The orientation quaternion must be a unit quaternion
-            //q = q / |q|
+            //The orientation quaternion must be a unit quaternion: q = q / |q|
             this.rot.Normalize();
 
             //Update the inverse rot with the new values
@@ -357,17 +339,18 @@ namespace XPBD
         // Calculate generalized inverse mass
         //
 
-        //The term "generalized" refers to the fact that the matrix accounts for both linear and angular motion?
-        //normal - direction between constraints
-        //pos - where the constraint attaches to this body in world space
-        //Why can pos sometimes be undefined???
-        //Generalized inverse masses w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+        //The inverse mass is just 1/m 
+        //But In order to keep energy conservation when transferring positional kinetic energy to rotational kinetic energy
+        //we need a different value for inverse mass: the generalized inverse mass
+        //Generalized inverse masses w = m^-1 + (r x n)^T * I^-1 * (r x n)
         //m - mass
         //n - correction direction
         //r - vector from center of mass to contact point
         //Derivation at the end of the paper "Detailed rb simulation with xpbd"
 
         //As in the code in the video (not on github)
+        //normal - direction between constraints
+        //pos - where the constraint attaches to this body in world space
         private float GetGeneralizedInverseMass(Vector3 normal, Vector3 pos)
         {
             if (this.invMass == 0f)
@@ -405,6 +388,7 @@ namespace XPBD
 
 
 
+        //Alternative version froun on github where pos sometimes is undefined?
         private float GetGeneralizedInverseMass2(Vector3 normal, Vector3 pos, bool isPosUndefined = false)
         {
             if (this.invMass == 0f)
