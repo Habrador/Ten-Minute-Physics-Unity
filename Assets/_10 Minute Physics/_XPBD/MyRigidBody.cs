@@ -216,7 +216,7 @@ namespace XPBD
             //Cache the pos as we need it later
             this.prevPos = this.pos;
 
-            //Calculate the new positon and velocity after this time step
+            //Calculate the new positon and velocity
             this.vel += gravity * dt;
            
             this.pos += this.vel * dt;
@@ -265,7 +265,7 @@ namespace XPBD
         //because they make the simulation unstable
         //Also add damping
         //From "Detailed rigid body simulation with xpbd"
-        //v = (x_prev - x) / h
+        //v = (x - x_prev) / h
         //delta_q = q * q_prev^-1
         //omega = 2 * [delta_q_x, delta_q_y, delta_q_z] / h
         //omega = (delta_q_w >= 0) ? omega : -omega
@@ -278,7 +278,8 @@ namespace XPBD
 
 
             //Linear motion
-            //v = (x_prev - x) / h
+            //v = (x - x_prev) / h
+            //Cant be (x_prev - x)!
             this.vel = (this.pos - this.prevPos) / dt;
 
             //Damping (should maybe be in its own method)
@@ -294,12 +295,12 @@ namespace XPBD
             Quaternion delta_q = this.rot * Quaternion.Inverse(this.prevRot);
 
             //Turn the transformation into an angular velocity
-            //Quaternions represent rotations using half-angles, so to convert back to full angles, you multiply by 2
+            //Quaternions represent rotations using half-angles, to convert back to full angles, you multiply by 2
+            //and then divide by dt to get the angular velocity
             //omega = 2 * [delta_q_x, delta_q_y, delta_q_z] / h
             this.omega = new Vector3(delta_q.x, delta_q.y, delta_q.z) * 2f / dt;
 
-            //If delta_q.w is negative, the resulting angular velocity might point in the opposite direction of the intended rotation
-            //omega = (delta_q.w >= 0) ? omega : -omega
+            //If delta_q.w is negative, the resulting angular velocity points in the opposite direction of the intended rotation
             if (delta_q.w < 0f)
             {
                 this.omega *= -1f;

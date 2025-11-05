@@ -128,7 +128,7 @@ TODO
 
 ## 22. Basic rigid body simulator
 
-Simulating rigid bodies using XPBD. 
+Simulating rigid bodies in 3d using XPBD (Extended Position Based Dynamics) physics simulation. 
 
 <img src="/_media/22-basic-rb-simulator.png" width="400">
 
