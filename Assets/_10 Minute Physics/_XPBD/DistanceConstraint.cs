@@ -13,7 +13,7 @@ namespace XPBD
         private readonly MyRigidBody body0;
         private readonly MyRigidBody body1;
 
-        //One sided, limit motion in one direction 
+        //A unilateral constraint restricts motion or interaction in one direction but allows freedom in the opposite direction 
         //If true, we wont apply the correction if currentLength < wantedLength
         private readonly bool unilateral;
 
