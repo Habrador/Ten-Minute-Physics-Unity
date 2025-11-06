@@ -189,13 +189,13 @@ namespace XPBD
         //omega = omega + h * I^-1 * (tau_ext - (omega x (I * omega)))
         //q = q + h * 0.5 * [omega_x, omega_y, omega_z, 0] * q
         //Normailize: q = q / |q|
-        
+
         //From YT tutorial
         //omega = omega + h * I^-1 * tau_ext (Where did (omega x (I * omega)) go??
         //q = q + 0.5 * dt * v[omega_x, omega_y, omega_z, 0] * q (I think the v is a misprint)
-        
+
         //Derivation of the above equations:
-        
+
         //Angular velocity
         //The angular equation of motion:
         //Takes into account both external influences and the body's own rotational behavior.
@@ -203,9 +203,17 @@ namespace XPBD
         //-> domega/dt = I^-1 * [Sum(M) - (omega x (I * omega))]
         //Which is the equation from the paper:
         //omega = omega + dt * I^-1 * (tau_ext - (omega x (I * omega))
-        //omega x (I * omega) represents the effect of the body's current rotation on its angular momentum, contributing to the overall torque.
+        //omega x (I * omega) represents the effect of the body's current rotation on its angular momentum, contributing to the overall torque aka Gyroscopic torque.
+        //The tutorial is not taking into account the Gyroscopic effects: (omega x (I * omega)...
+        //According to Mistral AI, the Gyroscopic effects can often be ignored if 
+        //- slow rotation
+        //- symmetric bodies
+        //- small time steps 
+        //- dominant external torques
+        //- if you are building a simplified model
+        //I^-1 * (tau_ext - (omega x (I * omega)) is the angular acceleration
         //I^-1 Scales the effect of the torques based on the body's resistance to changes in its rotational motion.
-        
+
         //Rotation
         //How a quaternion changes over time due to the angular velocity:
         //dRot = dq/dt = 0.5 * omega * q -> q_next = q + 0.5 * omega * q * dt
@@ -239,8 +247,7 @@ namespace XPBD
             this.prevRot = this.rot;
 
             //Update angular velocity:
-            //omega = omega + h * I^-1 * tau_ext = omega (because we have no external torque)
-            //The tutorial is not taking into account the body's own rotational behavior (omega x (I * omega)...
+            //omega = omega + h * I^-1 * tau_ext = omega (because tau_ext = 0f)
 
             //Update rotation:
             //q = q + dt * 0.5 * [omega_x, omega_y, omega_z, 0] * q
