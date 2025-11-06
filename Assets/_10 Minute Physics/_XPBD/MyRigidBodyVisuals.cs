@@ -16,9 +16,9 @@ namespace XPBD
         //In future tutorials we add a more complicated mesh above this mesh
         //and we should be able to switch between them
         public bool showVisualObj = true;
-        //The more detailed object
-        public GameObject rbDetailedObj;
-        public Transform rbDetailedTrans;
+        //The more detailed object (there can be multiple meshes connected to the simple mesh)
+        public List<GameObject> rbDetailedObjs = new();
+        public List<Transform> rbDetailedTrans = new();
 
         //Get ID of the collider
         public int ID => rbVisualObj.GetInstanceID();
@@ -39,18 +39,21 @@ namespace XPBD
         {
             this.rbVisualTrans.SetPositionAndRotation(pos, rot);
 
-            if (this.rbDetailedObj != null && !this.showVisualObj)
+            if (!this.showVisualObj)
             {
-                this.rbDetailedTrans.SetPositionAndRotation(pos, rot);
+                foreach (Transform detailedObjTrans in rbDetailedTrans)
+                {
+                    detailedObjTrans.SetPositionAndRotation(pos, rot);
+                }
             }
         }
 
 
 
-        public void SetDetailedObject(GameObject detailedObj)
+        public void AddDetailedObject(GameObject detailedObj)
         {
-            this.rbDetailedObj = detailedObj;
-            this.rbDetailedTrans = detailedObj.transform;
+            this.rbDetailedObjs.Add(detailedObj);
+            this.rbDetailedTrans.Add(detailedObj.transform);
         }
 
 
@@ -59,9 +62,9 @@ namespace XPBD
         {
             GameObject.Destroy(rbVisualObj);
 
-            if (rbDetailedObj != null)
+            foreach (GameObject detailedObj in rbDetailedObjs)
             {
-                GameObject.Destroy(rbDetailedObj);
+                GameObject.Destroy(detailedObj);
             }
         }
     }

@@ -26,7 +26,7 @@ public class JointSimulationController : MonoBehaviour
         { Scenes.Pendulums, "pendulum.json" },
     };
 
-    SceneImporter sceneImporter;
+    private SceneImporter sceneImporter;
 
     //Simulation settings
     //In this sim gravity is 9.81 - not 10
@@ -66,7 +66,7 @@ public class JointSimulationController : MonoBehaviour
     {
         float dt = Time.fixedDeltaTime;
 
-        rbSimulator.MyFixedUpdate(dt, numSubSteps);
+        //rbSimulator.MyFixedUpdate(dt, numSubSteps);
     }
 
 
@@ -81,21 +81,21 @@ public class JointSimulationController : MonoBehaviour
     //Create a new rb simulation envrionment with some objects we want to simulate
     private void InitScene(Scenes scene)
     {
-        if (sceneImporter == null)
+        if (this.sceneImporter == null)
         {
-            sceneImporter = new SceneImporter(this.rbSimulator);
+            this.sceneImporter = new SceneImporter();
         }
     
         //Destroy previous scene
-        if (rbSimulator != null)
+        if (this.rbSimulator != null)
         {
-            rbSimulator.Dispose();
+            this.rbSimulator.Dispose();
         }
 
         //Create a new rb simulator
-        rbSimulator = new XPBDPhysicsSimulator(gravity);
+        this.rbSimulator = new XPBDPhysicsSimulator(gravity);
 
-        sceneImporter.LoadScene(jointScenes[scene]);
+        sceneImporter.LoadScene(jointScenes[scene], this.rbSimulator);
     }
 
 

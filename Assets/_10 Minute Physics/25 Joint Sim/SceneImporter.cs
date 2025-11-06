@@ -18,19 +18,19 @@ public class SceneImporter
 
 
     //public SceneImporter(simulator, scene)
-    public SceneImporter(XPBDPhysicsSimulator simulator)
+    public SceneImporter()
     {
-        this.simulator = simulator;
-        //this.scene = scene;
         this.rigidBodies = new();
     }
 
 
 
-    public void LoadScene(string fileName)
+    public void LoadScene(string fileName, XPBDPhysicsSimulator simulator)
     {
+        this.simulator = simulator;
+    
         //string fileName = "basicJoints.json";
-
+        
         string filePathEditor = "Assets/_10 Minute Physics/25 Joint Sim/Scenes/";
 
         //filePathEditor includes a last /
@@ -51,11 +51,10 @@ public class SceneImporter
 
         //DisplayMeshData(mesh);
 
-        //Clear existing simulation (we do this outside this method in the Controller)
-        //this.simulator.Clear();
+        //Clear existing simulation
         this.rigidBodies.Clear();
 
-        //We need to separate the meshes which are RigidBox, ...Joint or Visual. The RigidBox are the cubic meshes and Visual the more detailed meshes overlaying the simple ones
+        //We need to separate the meshes which are RigidBox, ...Joint, or Visual. The RigidBox are the cubic meshes and Visual the more detailed meshes overlaying the simple ones
         //We need to show both and change between them by pressing "Toggle View" button
 
         int rigidCount = 0;
@@ -160,9 +159,6 @@ public class SceneImporter
         //Extract position and rotation from transform
         ExtractPosAndRot(mesh, out Vector3 pos, out Quaternion quat);
 
-        //Arent eurler and angles the same here???
-        //const euler = new THREE.Euler().setFromQuaternion(quat);
-        //const angles = new THREE.Vector3(euler.x, euler.y, euler.z);
         Vector3 angles = quat.eulerAngles;
 
         MyRigidBody rigidBody;
@@ -181,7 +177,7 @@ public class SceneImporter
             
             Vector3 size = new(radius, radius, radius);
             
-            rigidBody = new MyRigidBody(MyRigidBody.Types.Box, size, props.density, pos, angles);
+            rigidBody = new MyRigidBody(MyRigidBody.Types.Sphere, size, props.density, pos, angles);
         }
         else
         {
@@ -189,6 +185,8 @@ public class SceneImporter
 
             return;
         }
+
+        rigidBody.visualObjects.rbVisualObj.name = mesh.name;
 
         //Store in lookup table
         this.rigidBodies[mesh.name] = rigidBody;
@@ -401,11 +399,11 @@ public class SceneImporter
             return;
         }
 
-        //Add visuals (the small coordinate system showing how the joint connetcs)
+        //Add visuals (the small coordinate system showing how the joint connects)
         joint.AddVisuals();
 
         //Register with simulator
-        //this.simulator.addJoint(joint);
+        this.simulator.AddJoint(joint);
 
         Debug.Log($"Created ${ simType}: ${ mesh.name } connecting ${ props.parent1 } to ${ props.parent2}");
     }
@@ -492,19 +490,14 @@ public class SceneImporter
 
         visualMesh.GetComponent<MeshRenderer>().material.color = color;
 
-        //Not sure what this means? The simplifed mesh is the collider???
-        //visualMesh.body = parentBody; // For raycasting
-        //visualMesh.GetComponent<MeshCollider>().sharedMesh = parentBody.rbVisualObj.GetComponent<MeshFilter>().sharedMesh;
-        //We dont have to do this, default mesh collider is the mesh in mesh filter... maybe form performance reasons?
+        //Deactivate the collider
+        visualMesh.GetComponent<Collider>().enabled = false;
 
-        parentBody.visualObjects.SetDetailedObject(visualMesh);
+        visualMesh.name = mesh.name;
 
-        //parentBody.rbDetailedObj = visualMesh;
-        //parentBody.rbDetailedTrans = visualMesh.transform;
+        parentBody.visualObjects.AddDetailedObject(visualMesh);
 
         parentBody.UpdateMeshes();
-
-        //this.scene.add(visualMesh);
 
         Debug.Log($"Created visual mesh: ${ mesh.name } attached to ${ parentName } (transformed to body space)");
     }
