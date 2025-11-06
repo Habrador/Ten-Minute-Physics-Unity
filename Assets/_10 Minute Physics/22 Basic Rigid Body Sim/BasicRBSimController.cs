@@ -119,8 +119,7 @@ public class BasicRBSimController : MonoBehaviour
 
 
 
-    //Buttons to select which collision algorithm to use
-    //Text to display info to see the difference between the algorithms
+    //Buttons to select which scene to simulate
     private void MainGUI()
     {
         GUILayout.BeginHorizontal("box");

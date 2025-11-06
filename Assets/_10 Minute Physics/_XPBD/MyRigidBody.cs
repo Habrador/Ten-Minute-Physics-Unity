@@ -57,6 +57,8 @@ namespace XPBD
         //Font size determines if we should display rb data on the screen
         private readonly int fontSize;
 
+        //Was added in joints, we cache dt in Integrate()
+        private float dt;
 
 
         //If fontSize = 0 we wont display any text
@@ -154,10 +156,17 @@ namespace XPBD
         // The velocity of a point on the body
         //
 
-        public Vector3 PointVel(Vector3 point)
+        public Vector3 GetVelocityAt(Vector3 pos)
         {
-            Vector3 r = point - this.pos;
+            if (this.invMass == 0f)
+            {
+                return Vector3.zero;
+            }
 
+            Vector3 r = pos - this.pos;
+
+            //In the ref code, hes multiplying Vector3.Cross(this.omega, r) by -1
+            //But I think its because his r is inverted???
             Vector3 pointVel = this.vel + Vector3.Cross(this.omega, r);
 
             return pointVel;
@@ -205,6 +214,8 @@ namespace XPBD
         //(If omega is in body coordinates, you use dq/dt = 0.5 * q * omega)
         public void Integrate(float dt, Vector3 gravity)
         {
+            this.dt = dt;
+        
             if (this.invMass == 0f)
             {
                 return;
@@ -409,9 +420,9 @@ namespace XPBD
         //pos: where the constraint attaches to this body in world space
         //otherBody: the connected rb (if any, might be a fixed object for collision)
         //otherPos: where the constraint attaches to the other rb in world space
-        //dt: time step needed for force calculations
+        //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations
         //Returns the force on this constraint
-        public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
+        public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, bool velocityLevel = false)
         {
             //In the paper you see
             //delta_lambda = (-c - (alpha_tilde * lambda)) / (w_1 + w_2 + alpha_tilde)
@@ -452,7 +463,7 @@ namespace XPBD
 
             //Compute Lagrange multiplier
             // lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1
-            float lambda = -C / (w_tot + (compliance / (dt * dt)));
+            float lambda = -C / (w_tot + (compliance / (this.dt * this.dt)));
 
             //Update pos and rot
             //x_i = x_i +- w_i * lambda * n
@@ -470,7 +481,7 @@ namespace XPBD
             //Constraint force
             //F = (lambda * n) / dt^2
             //We dont need direction so ignore n
-            float constraintForce = lambda / (dt * dt);
+            float constraintForce = lambda / (this.dt * this.dt);
 
             return constraintForce;
         }
