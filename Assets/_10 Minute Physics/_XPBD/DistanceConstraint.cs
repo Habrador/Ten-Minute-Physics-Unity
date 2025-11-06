@@ -14,7 +14,8 @@ namespace XPBD
         private readonly MyRigidBody body1;
 
         //One sided, limit motion in one direction 
-        private bool unilateral;
+        //If true, we wont apply the correction if currentLength < wantedLength
+        private readonly bool unilateral;
 
         //Attachment points
         //Public so we can access it when we drag with mouse 
@@ -97,7 +98,8 @@ namespace XPBD
         // - alpha: physical inverse stiffness
         //
         //Update pos and rot (+- because we have two rbs and we use + for one and - for the other)
-        // x = x +- w * lambda * n (w = 1/m and not the generalized inverse mass as it is in the paper???)
+        // x = x +- w * lambda * n
+        // (w = 1/m and not the generalized inverse mass as in the YT video. It says 1/m in the paper... and he uses 1/m in the code)
         // q = q +- 0.5 * lambda * (I^-1 * (r x n), 0) * q
         //
         //Constraint force (only needed for display purposes)
@@ -142,6 +144,7 @@ namespace XPBD
 
             //Why do we ignore this if currentLength < wantedLength?
             //Whats the meaning of unilateral?
+            //It means we wont apply the correction if currentLength < wantedLength
             if (this.unilateral && currentLength < this.wantedLength)
             {
                 return;
