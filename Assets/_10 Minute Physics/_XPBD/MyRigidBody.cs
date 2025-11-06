@@ -404,12 +404,12 @@ namespace XPBD
         //
 
         //This doesnt have to be a distance constrain as there are many other constraints...
-        //compliance - inverse of physical stiffness (alpha in equations)
-        //corr - C = l - l_0 (with direction baked into it)
-        //pos - where the constraint attaches to this body in world space
-        //otherBody - the connected rb (if any, might be a fixed object for collision)
-        //otherPos - where the constraint attaches to the other rb in world space
-        //dt - time step needed for force calculations
+        //compliance: inverse of physical stiffness (alpha in equations)
+        //corr: n * C = n * (l - l_0) (direction times elongation)
+        //pos: where the constraint attaches to this body in world space
+        //otherBody: the connected rb (if any, might be a fixed object for collision)
+        //otherPos: where the constraint attaches to the other rb in world space
+        //dt: time step needed for force calculations
         //Returns the force on this constraint
         public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, float dt)
         {
@@ -425,23 +425,19 @@ namespace XPBD
             //Some are iterating over the constraints multiple times each substep
             //But we are doing it just once because it generates a better result
 
-            //C = l - l_0
-            //l_0 - wanted length
-            //l - current length
-            //Constraint direction:
-            //n = (a2 - 1)/|a2 - a1|
-            //a - point on body where constraint attaches (not center of mass)
+            //If no elongation
             if (corr.sqrMagnitude == 0f)
             {
                 return 0f;
             }
 
+            //Find C and n from corr which is C * n
             float C = corr.magnitude;
 
             Vector3 normal = corr.normalized;
 
-            //Generalized inverse masses
-            //w_i = m_i^-1 + (r_i x n)^T * I_i^-1 * (r_i x n)
+            //Compute generalized inverse mass for each rb
+            // w = m^-1 * (r x n)^T * I^-1 * (r x n)
             float w_tot = this.GetGeneralizedInverseMass(normal, pos);
 
             if (otherBody != null)
@@ -454,8 +450,8 @@ namespace XPBD
                 return 0f;
             }
 
-            //Lagrange multiplyer
-            //lambda = -C * (w_1 + w_2 + alpha/dt^2)^-1
+            //Compute Lagrange multiplier
+            // lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1
             float lambda = -C / (w_tot + (compliance / (dt * dt)));
 
             //Update pos and rot
@@ -482,50 +478,56 @@ namespace XPBD
 
 
         //Update pos and rot to enforce distance constraints
-        //lambda_normal is lambda*normal and is the positional impulse (also knownn as p)
-        public void UpdatePosAndRot(Vector3 lambda_normal, Vector3 pos)
+        //Equations are from "Detailed rigid body simulation with xpbd"
+        // x = x +- p / m
+        // q = q +- 0.5 * (I^-1 * (r x p), 0) * q
+        //where the positional impulse p = lambda * n 
+        //because we are using lambda and not delta_lambda!
+        public void UpdatePosAndRot(Vector3 p, Vector3 pos)
         {
             if (this.invMass == 0f)
             {
                 return;
             }
 
+
             //Linear correction
-            //+- Because we move in different directions because we have two rb
-            //x_i = x_i +- w_i * lambda * n
-            //lambda_normal already has this +- in it
-            this.pos += this.invMass * lambda_normal;
+            // x = x +- p / m
+            // +- Because we move in different directions because we have two rb
+            // p already has the +- in it
+            this.pos += this.invMass * p;
+
 
             //Angular correction
-            //q_i = q_i +- 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i <- From tutorial
-            //q_i = q_i +- 0.5 * [I_i^-1 * (r_i x lambda_normal), 0] * q_i <- From paper
+            // q = q +- 0.5 * (I^-1 * (r x p), 0) * q
 
-            //dOmega <- lambda * [I_i^-1 * (r_i x n), 0]
-
-            //r_i
+            //r
             Vector3 r = pos - this.pos;
 
-            //r_i x n
-            Vector3 dOmega = Vector3.Cross(r, lambda_normal);
+            //r x p
+            Vector3 r_cross_p = Vector3.Cross(r, p);
 
             //Transform dOmega to local space so we can use the simplifed moment of inertia
-            dOmega = this.invRot * dOmega;
+            r_cross_p = this.invRot * r_cross_p;
 
             //Scales dOmega by the inverse inertia
-            //invInertia is a tensor - not a vector, so component-wise multiplication
-            dOmega.x *= this.invInertia.x;
-            dOmega.y *= this.invInertia.y;
-            dOmega.z *= this.invInertia.z;
+            //Why is it called dOmega?
+            //I^-1 * (r x p)
+            Vector3 dOmega = Vector3.zero;
 
-            //Tansforms dOmega back into the original coordinate frame after the inverse rotation was applied earlier
+            dOmega.x = r_cross_p.x * this.invInertia.x;
+            dOmega.y = r_cross_p.y * this.invInertia.y;
+            dOmega.z = r_cross_p.z * this.invInertia.z;
+
+            //Transforms dOmega back into the original coordinate frame after the inverse rotation was applied earlier
             dOmega = this.rot * dOmega;
 
             //Same as during Integrate() except for the dt which is now 1
             //dRot <- dOmega * q_i
-            //lambda * [I_i^-1 * (r_i x n), 0]
+            //[I^-1 * (r x p), 0]
             Quaternion dRot = new(dOmega.x, dOmega.y, dOmega.z, 0f);
 
-            //lambda * [I_i^-1 * (r_i x n), 0] * q_i
+            //[I^-1 * (r x p), 0] * q
             dRot *= this.rot;
 
             //q_i = q_i + 0.5 * dRot
@@ -534,7 +536,7 @@ namespace XPBD
             this.rot.z += 0.5f * dRot.z;
             this.rot.w += 0.5f * dRot.w;
 
-            //Always normnalize when we update rotation
+            //Always normalize when we update rotation
             this.rot.Normalize();
 
             //Cache the inverse

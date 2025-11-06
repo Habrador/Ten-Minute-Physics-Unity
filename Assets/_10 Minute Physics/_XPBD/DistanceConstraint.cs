@@ -6,9 +6,10 @@ namespace XPBD
 {
 
     //Distance between two rbs or one rb and fixed point
+    //Aka Position constraint
     public class DistanceConstraint
     {
-        //Null if attachment point is fixed
+        //Null if attachment point is fixed (always body1 is attachment point)
         private readonly MyRigidBody body0;
         private readonly MyRigidBody body1;
 
@@ -17,13 +18,15 @@ namespace XPBD
 
         //Attachment points
         //Public so we can access it when we drag with mouse 
+        //Why do we need to chache world pos? Becomes confusing...
+        //If fixed attachment point???
         public Vector3 worldPos0;
         public Vector3 worldPos1;
         private Vector3 localPos0;
         private Vector3 localPos1;
 
-        //The rest distance 
-        private readonly float wantedDistance;
+        //The rest distance (length)
+        private readonly float wantedLength;
         //Inverse of physical stiffness (alpha in equations) [m/N]
         private readonly float compliance;
 
@@ -61,7 +64,7 @@ namespace XPBD
                 this.localPos1 = this.body1.WorldToLocal(pos1);
             }
 
-            this.wantedDistance = distance;
+            this.wantedLength = distance;
             this.compliance = compliance;
 
             this.fontSize = fontSize;
@@ -75,24 +78,50 @@ namespace XPBD
 
 
         //Make sure the constraint has the correct length
-        //When you pull the bodies closer you also make the bodies rotate
-        //The rotations are distributed according to I^-1
-        //a - attachment points are defined relative to a rb's center of mass
-        //r - vector from center of mass to a 
-        //l_0 - wanted length
-        //l - current length
-        //Move each rb delta_x which is proportional to m^-1 and I^-1
-        //n = (a_2 - a_1) / |a_2 - a_1|
-        //C = l - l_0
-        //Compute generalized inverse mass for rb i
-        //w_i = m_i^-1 * (r_i x n)^T * I_i^-1 * (r_i x n)
+        //We have:
+        // - a: attachment points are defined relative to a rb's center of mass
+        // - r: vector from center of mass to a 
+        // - l_0: wanted length
+        // - l: current length
+        //
+        //Distance constraint:
+        // n = (a2 - a1) / |a2 - a1|
+        // C = l - l_0
+        //
+        //Compute generalized inverse mass for each rb
+        // w = m^-1 * (r x n)^T * I^-1 * (r x n)
+        //
         //Compute Lagrange multiplier
-        //lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1 where alpha is physical inverse stiffness
+        // lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1
+        // where
+        // - alpha: physical inverse stiffness
+        //
         //Update pos and rot (+- because we have two rbs and we use + for one and - for the other)
-        //x_i = x_i +- w_i * lambda * n
-        //q_i = q_i +- 0.5 * lambda * (I_i^-1 * (r_i x n), 0) * q_i
+        // x = x +- w * lambda * n (w = 1/m and not the generalized inverse mass as it is in the paper???)
+        // q = q +- 0.5 * lambda * (I^-1 * (r x n), 0) * q
+        //
         //Constraint force (only needed for display purposes)
-        //F = (lambda * n) / dt^2
+        // F = (lambda * n) / dt^2
+        //
+        //From "Detailed rigid body simulation with xpbd"
+        //The difference is that they compute the Lagrange multipler updates
+        // delta_lambda = (-c - alpha_tilde * lambda) / (w1 + w2 + alpha_tilde)
+        //where
+        // - alpha_tilde = alpha / dt^2
+        // lambda = lambda + delta_lambda
+        //BUT according to the YT video "09 Getting ready to simulate the world with XPBD" (7:15)
+        //we dont need to keep track of the lagrange multiplier per constraint
+        //if we iterate over the constraints just once
+        //Notice that iteration and substeps are not the same
+        //Some are iterating over the constraints multiple times each substep
+        //But we are doing it just once because it generates a better result
+        //
+        //Update pos and rot
+        // x = x +- p / m
+        // q = q +- 0.5 * (I^-1 * (r x p), 0) * q
+        // where
+        // p = delta_lambda * n
+        //BUT we dont use delta_lambda so we get p = lambda * n
         public void Solve(float dt)
         {
             //Local -> global
@@ -103,25 +132,33 @@ namespace XPBD
                 this.worldPos1 = this.body1.LocalToWorld(this.localPos1);
             }
 
-            //Constraint distance C = l - l_0
-            Vector3 corr = this.worldPos1 - this.worldPos0;
+            //Distance constraint so we need to calculate:
+            // n = (a2 - a1) / |a2 - a1|
+            // C = l - l_0
 
-            float distance = corr.magnitude;
+            Vector3 a2_minus_a1 = this.worldPos1 - this.worldPos0;
 
-            corr = corr.normalized;
+            float currentLength = a2_minus_a1.magnitude;
 
-            if (this.unilateral && distance < this.wantedDistance)
+            //Why do we ignore this if currentLength < wantedLength?
+            //Whats the meaning of unilateral?
+            if (this.unilateral && currentLength < this.wantedLength)
             {
                 return;
             }
 
-            corr *= distance - this.wantedDistance;
+            Vector3 n = a2_minus_a1.normalized;
+
+            float C = currentLength - this.wantedLength;
+
+            //n * C
+            Vector3 corr = n * C;
 
             this.force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, dt);
 
 
             //Data for display purposes
-            float elongation = distance - this.wantedDistance;
+            float elongation = currentLength - this.wantedLength;
 
             this.elongation = Mathf.Round(elongation * 100f) / 100f;
         }
