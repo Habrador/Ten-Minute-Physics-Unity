@@ -416,11 +416,11 @@ public class SceneImporter
 
     private void CreateVisualMesh(JointMesh mesh)
     {
-         JointProperties props = mesh.properties;
+        JointProperties props = mesh.properties;
     
-         string parentName = props.parent;
+        string parentName = props.parent;
 
-        // Look up parent body
+        //Look up parent body
         if (!this.rigidBodies.TryGetValue(parentName, out MyRigidBody parentBody))
         {
             Debug.Log($"Parent body not found for visual mesh: ${ parentName}");

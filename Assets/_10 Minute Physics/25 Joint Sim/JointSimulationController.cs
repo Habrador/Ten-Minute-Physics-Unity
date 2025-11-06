@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 using XPBD;
 
 //Based on "25 Joint simulation made simple"
@@ -39,6 +40,9 @@ public class JointSimulationController : MonoBehaviour
 
     //Mouse interaction
     Interaction interaction;
+
+    //Show simple or complicated meshes
+    private bool showVisuals = true;
 
 
 
@@ -119,6 +123,14 @@ public class JointSimulationController : MonoBehaviour
             margin = offset
         };
 
+        GUIStyle textStyle = new(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        GUILayout.Label("Scenes:", textStyle);
+
         if (GUILayout.Button($"Basic joints", buttonStyle))
         {
             InitScene(Scenes.BasicJoints);
@@ -130,6 +142,20 @@ public class JointSimulationController : MonoBehaviour
         if (GUILayout.Button("Pendulums", buttonStyle))
         {
             InitScene(Scenes.Pendulums);
+        }
+
+        GUILayout.Label("Settings:", textStyle);
+
+        if (GUILayout.Button("Toggle View", buttonStyle))
+        {
+            showVisuals = !showVisuals;
+
+            List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;
+
+            foreach (MyRigidBody rb in allRbs)
+            {
+                rb.ShowSimulationView(showVisuals);
+            }
         }
 
         GUILayout.EndHorizontal();
