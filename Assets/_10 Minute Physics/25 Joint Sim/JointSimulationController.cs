@@ -74,20 +74,6 @@ public class JointSimulationController : MonoBehaviour
     private void OnGUI()
     {
         MainGUI();
-
-        //List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;
-
-        //foreach (MyRigidBody thisRb in allRbs)
-        //{
-        //    thisRb.DisplayData();
-        //}
-
-        //List<DistanceConstraint> allConstraints = rbSimulator.allDistanceConstraints;
-
-        //foreach (DistanceConstraint thisConstraint in allConstraints)
-        //{
-        //    thisConstraint.DisplayData();
-        //}
     }
 
 

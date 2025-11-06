@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 
 
@@ -250,6 +251,7 @@ namespace XPBD
             //omega = omega + h * I^-1 * tau_ext = omega (because tau_ext = 0f)
 
             //Update rotation:
+            //The result is a new quaternion representing the updated orientation after time dt
             //q = q + dt * 0.5 * [omega_x, omega_y, omega_z, 0] * q
 
             //Put the angular velocity in quaternion form so we can multiply it by a quaternion
@@ -257,6 +259,8 @@ namespace XPBD
             //Sometimes you see [0, omega_x, omega_y, omega_z], but it depends on the quaternion class
             Quaternion omegaAsQuaternion = new(this.omega.x, this.omega.y, this.omega.z, 0f);
 
+            //To update the orientation, you need to account for how the angular velocity affects the current orientation
+            //The result is a new quaternion that represents the orientation after an infinitesimal time step
             //dRot before multiplying by 0.5 (which we cant just do with a quaternion: 0.5 * q is not allowed)
             Quaternion dRot = omegaAsQuaternion * this.rot;
 
@@ -331,13 +335,13 @@ namespace XPBD
         // Calculate generalized inverse mass
         //
 
-        //We have to constraints: positional (distance) and angular
+        //We have two constraints: positional (distance) and angular
         //For positional the generalized inverse mass is:
         //w = m^-1 + (r x n)^T* I^-1 * (r x n)
         //For angular the generalized inverse mass is:
         //w = n^T * I^-1 * n
         //The code on github combines them into one method
-        //But I shall use two methods because we cant set Vector3 to null so it becomes messy to combine
+        //But we shall use two methods because we cant set Vector3 to null so it becomes messy to combine
 
 
         //Positional constraints
