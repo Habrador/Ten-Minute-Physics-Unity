@@ -316,7 +316,7 @@ public class SceneImporter
             float twistMax = float.MaxValue;
             float damping = 0f;
 
-            joint.InitBallJoint(swingMax, twistMin, twistMax, damping);
+            joint.type.InitBallJoint(swingMax, twistMin, twistMax, damping);
         }
         else if (simType == "HingeJoint")
         {
@@ -334,7 +334,7 @@ public class SceneImporter
             float compliance = props.targetAngleCompliance;
             float damping = props.damping;
 
-            joint.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
+            joint.type.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
         }
         else if (simType == "ServoJoint")
         {
@@ -344,7 +344,7 @@ public class SceneImporter
             float swingMin = props.swingMin;
             float swingMax = props.swingMax;
 
-            joint.InitServo(swingMin, swingMax);
+            joint.type.InitServo(swingMin, swingMax);
         }
         else if (simType == "MotorJoint")
         {
@@ -353,7 +353,7 @@ public class SceneImporter
             //Why is he stting velocity to 3, because he forgot to add it in the json???
             float velocity = 3f;
             
-            joint.InitMotor(velocity);
+            joint.type.InitMotor(velocity);
         }
         else if (simType == "DistanceJoint")
         {
@@ -361,7 +361,7 @@ public class SceneImporter
             float compliance = props.compliance;
             float damping = props.damping;
 
-            joint.InitDistanceJoint(restDistance, compliance, damping);
+            joint.type.InitDistanceJoint(restDistance, compliance, damping);
         }
         else if (simType == "PrismaticJoint")
         {
@@ -383,7 +383,7 @@ public class SceneImporter
             float twistMin = props.twistMin;
             float twistMax = props.twistMax;
 
-            joint.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
+            joint.type.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
         }
         else if (simType == "CylinderJoint")
         {

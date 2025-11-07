@@ -6,21 +6,6 @@ namespace XPBD
 {
     public class MyJoint
     {
-        public enum Types
-        {
-            None,
-            Distance,
-            Hinge,
-            Servo,
-            Motor,
-            Ball,
-            Prismatic,
-            Cylinder,
-            Fixed
-        };
-
-        Types type;
-
         //Pos
         private Vector3 globalPos0;
         private Vector3 globalPos1;
@@ -41,28 +26,10 @@ namespace XPBD
 
         private bool disabled;
 
-        Quaternion globalFrameRot;
+        //Quaternion globalFrameRot;
 
-        //Distance
-        bool hasTargetDistance = false;
-        float targetDistance = 0f;
-        float distanceCompliance = 0f;
-        float distanceMin = -float.MaxValue;
-        float distanceMax = float.MaxValue;
-        float linearDampingCoeff = 0f;
-
-        //Orientation
-        float swingMin = -float.MaxValue;
-        float swingMax = float.MaxValue;
-        float twistMin = -float.MaxValue;
-        float twistMax = float.MaxValue;
-        float targetAngle = 0f;
-        bool hasTargetAngle = false;
-        float targetAngleCompliance = 0f;
-        float angularDampingCoeff = 0f;
-
-        //Motor
-        float velocity = 0f;
+        //All settings for the joint type 
+        public MyJointType type;
 
         //Debug objects
 
@@ -79,7 +46,8 @@ namespace XPBD
 
         public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
         {
-            this.type = MyJoint.Types.None;
+            this.type = new();
+        
             this.body0 = body0;
             this.body1 = body1;
             this.disabled = false;
@@ -174,112 +142,34 @@ namespace XPBD
 
 
         //
-        // Init the different joints
-        //
-
-        public void InitHingeJoint(float swingMin, float swingMax, bool hasTargetAngle, float targetAngle, float compliance, float damping)
-        {
-            this.type = MyJoint.Types.Hinge;
-            this.hasTargetDistance = true;
-            this.targetDistance = 0f;
-            this.swingMin = swingMin;
-            this.swingMax = swingMax;
-            this.hasTargetAngle = hasTargetAngle;
-            this.targetAngle = targetAngle;
-            this.targetAngleCompliance = compliance;
-            this.angularDampingCoeff = damping;
-        }
-
-        public void InitServo(float swingMin, float swingMax)
-        {
-            this.type = MyJoint.Types.Servo;
-            this.hasTargetDistance = true;
-            this.targetDistance = 0f;
-            this.swingMin = swingMin;
-            this.swingMax = swingMax;
-            this.hasTargetAngle = true;
-            this.targetAngle = 0f;
-            this.targetAngleCompliance = 0f;
-        }
-
-        public void InitMotor(float velocity)
-        {
-            this.type = MyJoint.Types.Motor;
-            this.hasTargetDistance = true;
-            this.targetDistance = 0f;
-            this.velocity = velocity;
-            this.hasTargetAngle = true;
-            this.targetAngle = 0f;
-            this.targetAngleCompliance = 0f;
-        }
-
-        public void InitBallJoint(float swingMax, float twistMin, float twistMax, float damping)
-        {
-            this.type = MyJoint.Types.Ball;
-            this.hasTargetDistance = true;
-            this.targetDistance = 0f;
-            this.swingMin = 0f;
-            this.swingMax = swingMax;
-            this.twistMin = twistMin;
-            this.twistMax = twistMax;
-            this.angularDampingCoeff = damping;
-        }
-
-        public void InitPrismaticJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, bool hasTarget, float targetDistance, float targetCompliance, float damping)
-        {
-            this.type = MyJoint.Types.Prismatic;
-            this.distanceMin = distanceMin;
-            this.distanceMax = distanceMax;
-            this.swingMin = 0f;
-            this.swingMax = 0f;
-            this.twistMin = twistMin;
-            this.twistMax = twistMax;
-            this.hasTargetDistance = hasTarget;
-            this.targetDistance = targetDistance;
-            this.distanceCompliance = targetCompliance;
-            this.linearDampingCoeff = damping;
-        }
-
-        public void InitCylinderJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, float hasTargetDistance, float restDistance, float compliance, float damping)
-        {
-            this.type = MyJoint.Types.Cylinder;
-            this.distanceMin = distanceMin;
-            this.distanceMax = distanceMax;
-            this.swingMin = 0f;
-            this.swingMax = 0f;
-            this.twistMin = twistMin;
-            this.twistMax = twistMax;
-            this.hasTargetDistance = true;
-            this.distanceCompliance = 0f;
-        }
-
-        public void InitDistanceJoint(float restDistance, float compliance, float damping)
-        {
-            this.type = MyJoint.Types.Distance;
-            this.hasTargetDistance = true;
-            this.targetDistance = restDistance;
-            this.distanceCompliance = compliance;
-            this.linearDampingCoeff = damping;
-        }
-
-
-
-        //
         // Move joint
         //
 
-        private void ApplyTorque(float dt, float torque)
+        private void Solve(float dt)
         {
-            //UpdateGlobalFrames();
-
-            //// assumng x-axis is the hinge axis
-            //let corr = new THREE.Vector3(1.0, 0.0, 0.0);
-            //corr.applyQuaternion(this.globalRot0);
-            //corr.multiplyScalar(torque * dt);
-
-            //this.body0.applyCorrection(0.0, corr, null, this.body1, null, true);
+            SolvePosition(dt);
+            SolveOrientation(dt);
         }
 
+
+
+        private void ApplyTorque(float dt, float torque)
+        {
+            UpdateGlobalFrames();
+
+            //Assuming x-axis is the hinge axis
+            Vector3 corr = new(1f, 0f, 0f);
+
+            corr = this.globalRot0 * corr;
+
+            corr *= torque * dt;
+
+            //this.body0.ApplyCorrection(0f, corr, null, this.body1, null, true);
+        }
+
+
+
+        //Position constraint
         private void SolvePosition(float dt)
         {
             //let hardCompliance = 0.0;
@@ -333,61 +223,85 @@ namespace XPBD
             //}
         }
 
+
+
         //Calculate the actual world positions for joint attachment points
         private void UpdateGlobalFrames()
         {
-            //if (this.body0)
-            //{
-            //    this.globalPos0.copy(this.localPos0);
-            //    this.globalPos0.applyQuaternion(this.body0.rot);
-            //    this.globalPos0.add(this.body0.pos);
-            //    this.globalRot0.multiplyQuaternions(this.body0.rot, this.localRot0);
-            //}
+            if (this.body0 != null)
+            {
+                this.globalPos0 = this.localPos0;
+                this.globalPos0 = this.body0.rot * this.globalPos0;
+                this.globalPos0 += this.body0.pos;
+                
+                this.globalRot0 = this.body0.rot * this.localRot0;
+            }
 
-            //if (this.body1)
-            //{
-            //    this.globalPos1.copy(this.localPos1);
-            //    this.globalPos1.applyQuaternion(this.body1.rot);
-            //    this.globalPos1.add(this.body1.pos);
-            //    this.globalRot1.multiplyQuaternions(this.body1.rot, this.localRot1);
-            //}
-            //else
-            //{
-            //    this.globalPos1.copy(this.localPos1);
-            //    this.globalRot1.copy(this.localRot1);
-            //}
+            if (this.body1 != null)
+            {
+                this.globalPos1 = this.localPos1;
+                this.globalPos1 = this.body1.rot * this.globalPos1;
+                this.globalPos1 += this.body1.pos;
+
+                this.globalRot1 = this.body1.rot * this.localRot0;
+            }
+            else
+            {
+                this.globalPos1 = this.localPos1;
+                this.globalRot1 = this.localRot1;
+            }
         }
+
+
 
         private float GetAngle(Vector3 n, Vector3 a, Vector3 b)
         {
-            //const c = new THREE.Vector3().crossVectors(a, b);
-            //let phi = Math.asin(c.dot(n));
-            //if (a.dot(b) < 0.0)
-            //    phi = Math.PI - phi;
-            //if (phi > Math.PI)
-            //    phi -= 2.0 * Math.PI;
-            //if (phi < -Math.PI)
-            //    phi += 2.0 * Math.PI;
-            //return phi;
+            Vector3 c = Vector3.Cross(a, b);
 
-            return 0f;
+            float phi = Mathf.Asin(Vector3.Dot(c, n));
+
+            if (Vector3.Dot(a, b) < 0f)
+            {
+                phi = Mathf.PI - phi;
+            }
+            if (phi > Mathf.PI)
+            {
+                phi -= 2f * Mathf.PI;
+            }
+            if (phi < -Mathf.PI)
+            { 
+                phi += 2f * Mathf.PI;
+            }
+
+            return phi;
         }
+
+
 
         private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
         {
-            //let phi = this.getAngle(n, a, b);
+            float phi = GetAngle(n, a, b);
 
-            //if (minAngle <= phi && phi <= maxAngle)
-            //    return;
-            //phi = Math.max(minAngle, Math.min(phi, maxAngle));
+            if (minAngle <= phi && phi <= maxAngle)
+            {
+                return;
+            }
+            
+            phi = Mathf.Max(minAngle, Mathf.Min(phi, maxAngle));
 
-            //let ra = a.clone();
+            Vector3 ra = a;
+
             //ra.applyAxisAngle(n, phi);
+            ra = Quaternion.AngleAxis(phi * Mathf.Rad2Deg, n) * ra;
 
-            //let corr = new THREE.Vector3().crossVectors(ra, b);
-            //this.body0.applyCorrection(compliance, corr, null, this.body1, null);
+            Vector3 corr = Vector3.Cross(ra, b);
+            
+            //this.body0.ApplyCorrection(compliance, corr, null, this.body1, null);
         }
 
+
+
+        //Orientation constraint
         private void SolveOrientation(float dt)
         {
             //if (this.disabled || this.type == Joint.TYPES.NONE || this.type == Joint.TYPES.DISTANCE)
@@ -501,12 +415,9 @@ namespace XPBD
             //}
         }
 
-        private void Solve(float dt)
-        {
-            SolvePosition(dt);
-            SolveOrientation(dt);
-        }
 
+
+        //Linear damping
         private void ApplyLinearDamping(float dt)
         {
             //this.updateGlobalFrames();
@@ -525,7 +436,14 @@ namespace XPBD
             //this.body0.applyCorrection(0.0, n, this.globalPos0, this.body1, this.globalPos1, true);
         }
 
-        //private void ApplyAngularDamping(float dt, float coeff = this.angularDampingCoeff)
+
+
+        //Angular damping
+        private void ApplyAngularDamping(float dt)
+        {
+            ApplyAngularDamping(dt, this.type.angularDampingCoeff);
+        }
+
         private void ApplyAngularDamping(float dt, float coeff)
         {
             //this.updateGlobalFrames();
