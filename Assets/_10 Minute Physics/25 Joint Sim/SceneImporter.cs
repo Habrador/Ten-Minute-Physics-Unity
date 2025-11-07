@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using XPBD;
+using static UnityEngine.Rendering.DebugUI;
 
 
 
@@ -161,6 +162,8 @@ public class SceneImporter
 
         Vector3 angles = quat.eulerAngles;
 
+        //angles.y += 180f;
+
         MyRigidBody rigidBody;
 
         if (simType == "RigidBox")
@@ -293,7 +296,7 @@ public class SceneImporter
         //Create joint
         MyJoint joint = new(body0, body1, jointPos, jointRot);
 
-        // Configure joint based on type
+        //Configure joint based on type
         if (simType == "BallJoint")
         {
             //float swingMax = props.swingMax ?? Number.MAX_VALUE
@@ -302,10 +305,16 @@ public class SceneImporter
             //float damping = props.damping ?? 0.0;
 
             //Our floats cant be null, not sure how setting it to Number.MAX_VALUE will affect stuff later on...
-            float swingMax = props.swingMax;
-            float twistMin = props.twistMin;
-            float twistMax = props.twistMax;
-            float damping = props.damping;
+            //float swingMax = props.swingMax;
+            //float twistMin = props.twistMin;
+            //float twistMax = props.twistMax;
+            //float damping = props.damping;
+
+            //Use max values for testing
+            float swingMax = float.MaxValue;
+            float twistMin = -float.MaxValue;
+            float twistMax = float.MaxValue;
+            float damping = 0f;
 
             joint.InitBallJoint(swingMax, twistMin, twistMax, damping);
         }
@@ -432,6 +441,28 @@ public class SceneImporter
 
         //Transform visual mesh to parent body local space
 
+        List<Vector3> vertices = new();
+
+        for (int i = 0; i < mesh.vertices.Length; i += 3)
+        {
+            Vector3 vertex = new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+
+            vertices.Add(vertex);
+        }
+
+        List<Vector3> normals = new();
+
+        if (mesh.normals != null)
+        {
+            for (int i = 0; i < mesh.normals.Length; i += 3)
+            {
+                Vector3 normal = new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
+
+                normals.Add(normal);
+            }
+        }
+
+        /*
         //const q_rel = parentBody.rot.clone().conjugate().multiply(visualRot);
         //For unit quaternions (which are normalized), the conjugate is the same as the inverse.
         Quaternion q_rel = Quaternion.Inverse(parentBody.rot) * visualRot;
@@ -466,6 +497,7 @@ public class SceneImporter
                 transformedNormals.Add(normal);
             }
         }
+        */
 
         //Create Unity geometry from transformed data
         GameObject visualMesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -473,9 +505,9 @@ public class SceneImporter
         //Add new mesh
         Mesh actualMesh = new()
         {
-            vertices = transformedVertices.ToArray(),
+            vertices = vertices.ToArray(),
             triangles = mesh.triangles,
-            normals = transformedNormals.ToArray()
+            normals = normals.ToArray()
         };
 
         visualMesh.GetComponent<MeshFilter>().mesh = actualMesh;

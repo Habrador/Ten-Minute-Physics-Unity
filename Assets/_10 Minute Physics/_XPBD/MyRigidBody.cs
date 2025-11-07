@@ -27,7 +27,7 @@ namespace XPBD
         //Rotation
         public Quaternion rot;
         //Inverse rot q^-1 = q* / |q|^2
-        private Quaternion invRot;
+        public Quaternion invRot;
         //Angular velocity
         //omega.magnitude -> speed of rotation
         private Vector3 omega;

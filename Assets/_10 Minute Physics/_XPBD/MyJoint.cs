@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Threading;
 using UnityEngine;
 
 namespace XPBD
@@ -20,24 +18,28 @@ namespace XPBD
             Cylinder,
             Fixed
         };
-        //static TYPES = {
-        //                NONE: 'none',
-        //                DISTANCE: 'distance',
-        //                HINGE: 'hinge',
-        //                SERVO: 'servo',
-        //                MOTOR: 'motor',
-        //                BALL: 'ball',
-        //                PRISMATIC: 'prismatic',
-        //                CYLINDER: 'cylinder',
-        //                FIXED: 'fixed',
-        //            };
 
         Types type;
 
-        MyRigidBody body0;
-        MyRigidBody body1;
+        //Pos
+        private Vector3 globalPos0;
+        private Vector3 globalPos1;
+        //Rot
+        private Quaternion globalRot0;
+        private Quaternion globalRot1;
 
-        bool disabled;
+        //Pos
+        private Vector3 localPos0;
+        private Vector3 localPos1;
+        //Rot
+        private Quaternion localRot0;
+        private Quaternion localRot1;
+
+        //Connected rbs
+        private MyRigidBody body0;
+        private MyRigidBody body1;
+
+        private bool disabled;
 
         Quaternion globalFrameRot;
 
@@ -62,7 +64,19 @@ namespace XPBD
         //Motor
         float velocity = 0f;
 
-        //public Joint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot = null)
+        //Debug objects
+
+        //The tiny axis showing where joints attach
+        private VisualFrame visFrame0;
+        private VisualFrame visFrame1;
+        
+        //The red line going between attachment points
+        private VisualDistance visDistance;
+
+
+
+        public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos) : this(body0, body1, globalFramePos, Quaternion.identity) { }
+
         public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
         {
             this.type = MyJoint.Types.None;
@@ -70,87 +84,87 @@ namespace XPBD
             this.body1 = body1;
             this.disabled = false;
 
-            //if (!globalFrameRot)
-            //{
-            //    globalFrameRot = new THREE.Quaternion(0.0, 0.0, 0.0, 1.0);
-            //}
+            this.globalPos0 = globalFramePos;
+            this.globalRot0 = globalFrameRot;
+            this.globalPos1 = globalFramePos;
+            this.globalRot1 = globalFrameRot;
 
-            //this.globalPos0 = globalFramePos.clone();
-            //this.globalRot0 = globalFrameRot.clone();
-            //this.globalPos1 = globalFramePos.clone();
-            //this.globalRot1 = globalFrameRot.clone();
+            this.localPos0 = globalFramePos;
+            this.localRot0 = globalFrameRot;
+            this.localPos1 = globalFramePos;
+            this.localRot1 = globalFrameRot;
 
-            //this.localPos0 = globalFramePos.clone();
-            //this.localRot0 = globalFrameRot.clone();
-            //this.localPos1 = globalFramePos.clone();
-            //this.localRot1 = globalFrameRot.clone();
-
-            //this.setFrames(globalFramePos, globalFrameRot);
-
-            //this.visFrame0 = null;
-            //this.visFrame1 = null;
-            //this.visDistance = null;
+            SetFrames(globalFramePos, globalFrameRot);
         }
 
-        //private void SetFrames(Vector3 globalFramePos, Quaternion globalFrameRot = null)
-        private void SetFrames(Vector3 globalFramePos, Quaternion globalFrameRot)
+
+
+        //Whats happening here???
+        private void SetFrames(Vector3 globalFramePos)
         {
-            //if (!globalFrameRot)
-            //{
-            //    globalFrameRot = new THREE.Quaternion(0.0, 0.0, 0.0, 1.0);
-            //}
-
-            //if (this.body0 != null)
-            //{
-            //    //Store the local position relative to body0
-            //    this.localPos0.subVectors(globalFramePos, this.body0.pos);
-            //    this.localPos0.applyQuaternion(this.body0.invRot);
-
-            //    //Store the local rotation relative to body0
-            //    this.localRot0.copy(globalFrameRot);
-            //    //Factor out the body's rotation
-            //    if (globalFrameRot)
-            //    {
-            //        this.localRot0.premultiply(this.body0.invRot);
-            //    }
-            //}
-            //else
-            //{
-            //    this.localPos0.copy(globalFramePos);
-            //    this.localRot0.copy(globalFrameRot);
-            //}
-
-            //if (this.body1 != null)
-            //{
-            //    //Store the local position relative to body1
-            //    this.localPos1.subVectors(globalFramePos, this.body1.pos);
-            //    this.localPos1.applyQuaternion(this.body1.invRot);
-
-            //    //Store the local rotation relative to body1
-            //    this.localRot1.copy(globalFrameRot);
-            //    //Factor out the body's rotation
-            //    if (globalFrameRot)
-            //    {
-            //        this.localRot1.premultiply(this.body1.invRot);
-            //    }
-            //}
-            //else
-            //{
-            //    this.localPos1.copy(globalFramePos);
-            //    this.localRot1.copy(globalFrameRot);
-            //}
+            SetFrames(globalFramePos, Quaternion.identity, isGlobalFrameRot: false);
         }
 
+        //We cant set globalFrameRot to null so we have to use isGlobalFrameRot
+        private void SetFrames(Vector3 globalFramePos, Quaternion globalFrameRot, bool isGlobalFrameRot = true)
+        {
+            if (this.body0 != null)
+            {
+                //Store the local position relative to body0
+                this.localPos0 = globalFramePos - this.body0.pos;
+                this.localPos0 = this.body0.invRot * this.localPos0;
+
+                //Store the local rotation relative to body0
+                this.localRot0 = globalFrameRot;
+
+                //Factor out the body's rotation
+                if (isGlobalFrameRot)
+                {
+                    this.localRot0 = this.body0.invRot * this.localRot0;
+                }
+            }
+            else
+            {
+                this.localPos0 = globalFramePos;
+                this.localRot0 = globalFrameRot;
+            }
+
+            if (this.body1 != null)
+            {
+                //Store the local position relative to body1
+                this.localPos1 = globalFramePos - this.body1.pos;
+                this.localPos1 = this.body1.invRot * this.localPos1;
+
+                //Store the local rotation relative to body1
+                this.localRot1 = globalFrameRot;
+                
+                //Factor out the body's rotation
+                if (isGlobalFrameRot)
+                {
+                    this.localRot1 = this.body1.invRot * this.localRot1;
+                }
+            }
+            else
+            {
+                this.localPos1 = globalFramePos;
+                this.localRot1 = globalFrameRot;
+            }
+        }
+
+
+
+        //Show/hide debug objects
         private void SetVisible(bool visible)
         {
-            //if (this.visFrame0 != null)
-            //    this.visFrame0.setVisible(visible);
-            //if (this.visFrame1 != null)
-            //    this.visFrame1.setVisible(visible);
-            //if (this.visDistance != null)
-            //    this.visDistance.setVisible(visible);
+            this.visFrame0?.SetVisible(visible);
+            this.visFrame1?.SetVisible(visible);
+
+            this.visDistance?.SetVisible(visible);
         }
 
+
+
+        //Disable the joint
         private void SetDisabled(bool disabled)
         {
             this.disabled = disabled;
@@ -254,7 +268,7 @@ namespace XPBD
         // Move joint
         //
 
-        private void applyTorque(float dt, float torque)
+        private void ApplyTorque(float dt, float torque)
         {
             //UpdateGlobalFrames();
 
@@ -319,6 +333,7 @@ namespace XPBD
             //}
         }
 
+        //Calculate the actual world positions for joint attachment points
         private void UpdateGlobalFrames()
         {
             //if (this.body0)
@@ -540,36 +555,39 @@ namespace XPBD
         // Visuals showing where the hinges connect and the distance between the connections
         //
 
-        //visFrame is the tiny axis???
-        //visDIstance is the red line going between the visFrame axis???
         public void AddVisuals(float width = 0.004f, float size = 0.08f)
         {
-            //    if (this.visFrame0 == null)
-            //    {
-            //        this.visFrame0 = new VisualFrame(scene, width, size);
-            //        this.visFrame1 = new VisualFrame(scene, width, size);
-            //    }
+            if (this.visFrame0 == null)
+            {
+                this.visFrame0 = new VisualFrame(width, size);
+                this.visFrame1 = new VisualFrame(width, size);
+            }
 
-            //    if (this.visDistance == null)
-            //    {
-            //        this.visDistance = new VisualDistance(scene, width);
-            //    }
-            //    this.updateVisuals();
+            if (this.visDistance == null)
+            {
+                this.visDistance = new VisualDistance(UnityEngine.Color.red, width);
+            }
+            
+            UpdateVisuals();
         }
+
+
 
         private void UpdateVisuals()
         {
-            //if (this.disabled)
-            //    return;
+            if (this.disabled)
+            {
+                return;
+            }
 
-            //this.updateGlobalFrames();                    // Calculate the actual world positions for joint attachment points
+            //Calculate the actual world positions for joint attachment points
+            UpdateGlobalFrames();
 
-            //if (this.visFrame0)
-            //    this.visFrame0.updateMesh(this.globalPos0, this.globalRot0);
-            //if (this.visFrame1)
-            //    this.visFrame1.updateMesh(this.globalPos1, this.globalRot1);
-            //if (this.visDistance != null)
-            //    this.visDistance.updateMesh(this.globalPos0, this.globalPos1);
+            //If not null update meshes
+            this.visFrame0?.UpdateMesh(this.globalPos0, this.globalRot0);
+            this.visFrame1?.UpdateMesh(this.globalPos1, this.globalRot1);
+
+            this.visDistance?.UpdateMesh(this.globalPos0, this.globalPos1);
         }
     }
 }
