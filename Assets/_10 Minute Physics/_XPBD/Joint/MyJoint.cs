@@ -29,7 +29,9 @@ namespace XPBD
         //Quaternion globalFrameRot;
 
         //All settings for the joint type 
-        public MyJointType type;
+        public MyJointType jointType;
+
+        public MyJointType.Types Type() => this.jointType.type;
 
         //Debug objects
 
@@ -46,7 +48,7 @@ namespace XPBD
 
         public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
         {
-            this.type = new();
+            this.jointType = new();
         
             this.body0 = body0;
             this.body1 = body1;
@@ -172,55 +174,77 @@ namespace XPBD
         //Position constraint
         private void SolvePosition(float dt)
         {
-            //let hardCompliance = 0.0;
+            //float hardCompliance = 0f;
 
-            //if (this.disabled || this.type == Joint.TYPES.NONE)
-            //    return;
+            if (this.disabled || this.jointType.type == MyJointType.Types.None)
+            {
+                return;
+            }
 
-            //let corr = new THREE.Vector3();
+            Vector3 corr = Vector3.zero;
 
-            //// align
+            //Align
+            if (this.Type() == MyJointType.Types.Prismatic || this.Type() == MyJointType.Types.Cylinder)
+            {
+                float targetDistance = Mathf.Max(this.jointType.distanceMin, Mathf.Min(this.jointType.targetDistance, this.jointType.distanceMax));
+                
+                float hardCompliance = 0f;
+                
+                UpdateGlobalFrames();
+                
+                corr = this.globalPos1 - this.globalPos0;
 
-            //if (this.type == Joint.TYPES.PRISMATIC || this.type == Joint.TYPES.CYLINDER)
-            //{
-            //    this.targetDistance = Math.max(this.distanceMin, Math.min(this.targetDistance, this.distanceMax));
-            //    let hardCompliance = 0.0;
-            //    this.updateGlobalFrames();
-            //    corr.subVectors(this.globalPos1, this.globalPos0);
+                corr = this.globalRot0.Conjugate() * corr;
 
-            //    corr.applyQuaternion(this.globalRot0.clone().conjugate());
-            //    if (this.type == Joint.TYPES.CYLINDER)
-            //        corr.x -= this.targetDistance;
-            //    else if (corr.x > this.distanceMax)
-            //        corr.x -= this.distanceMax;
-            //    else if (corr.x < this.distanceMin)
-            //        corr.x -= this.distanceMin;
-            //    else
-            //        corr.x = 0.0;
+                if (this.Type() == MyJointType.Types.Cylinder)
+                {
+                    corr.x -= this.jointType.targetDistance;
+                }
+                else if (corr.x > this.jointType.distanceMax)
+                {
+                    corr.x -= this.jointType.distanceMax;
+                }
+                else if (corr.x < this.jointType.distanceMin)
+                {
+                    corr.x -= this.jointType.distanceMin;
+                }
+                else
+                {
+                    corr.x = 0f;
+                }
 
-            //    corr.applyQuaternion(this.globalRot0);
-            //    this.body0.applyCorrection(hardCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
-            //}
+                corr = this.globalRot0 * corr;
+                
+                //this.body0.applyCorrection(hardCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
+            }
 
-            //// solve distance
+            //Solve distance
+            if (this.Type() != MyJointType.Types.Cylinder && this.jointType.hasTargetDistance)
+            {
+                UpdateGlobalFrames();
+                
+                corr = this.globalPos1 - this.globalPos0;
+                
+                float distance = corr.magnitude;
+                
+                if (distance == 0f)
+                {
+                    corr = new Vector3(0f, 0f, 1f);
 
-            //if (this.type != Joint.TYPES.CYLINDER && this.hasTargetDistance)
-            //{
-            //    this.updateGlobalFrames();
-            //    corr.subVectors(this.globalPos1, this.globalPos0);
-            //    let distance = corr.length();
-            //    if (distance == 0.0)
-            //    {
-            //        corr.set(0.0, 0.0, 1.0);
-            //        corr.applyQuaternion(this.globalRot0);
-            //    }
-            //    else
-            //        corr.normalize();
+                    corr = this.globalRot0 * corr;
+                }
+                else
+                {
+                    corr = Vector3.Normalize(corr);
+                }
+                    
 
-            //    corr.multiplyScalar(this.targetDistance - distance);
-            //    corr.multiplyScalar(-1.0);
-            //    this.body0.applyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
-            //}
+                corr *= this.jointType.targetDistance - distance;
+
+                corr *= -1f;
+                
+                //this.body0.applyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
+            }
         }
 
 
@@ -420,19 +444,24 @@ namespace XPBD
         //Linear damping
         private void ApplyLinearDamping(float dt)
         {
-            //this.updateGlobalFrames();
+            UpdateGlobalFrames();
 
-            //let dVel = this.body0.getVelocityAt(this.globalPos0);
-            //if (this.body1 != null)
-            //    dVel.sub(this.body1.getVelocityAt(this.globalPos1));
+            Vector3 dVel = this.body0.GetVelocityAt(this.globalPos0);
 
-            //// only damp along the distance vector
+            if (this.body1 != null)
+            {
+                dVel -= this.body1.GetVelocityAt(this.globalPos1);
+            }
 
-            //let n = new THREE.Vector3();
-            //n.subVectors(this.globalPos1, this.globalPos0);
-            //n.normalize();
-            //n.multiplyScalar(-dVel.dot(n));
-            //n.multiplyScalar(Math.min(this.linearDampingCoeff * dt, 1.0));
+            //Only damp along the distance vector
+            Vector3 n = this.globalPos1 - this.globalPos0;
+
+            n.Normalize();
+            
+            n *= Vector3.Dot(-dVel,n);
+
+            n *= Mathf.Min(this.jointType.linearDampingCoeff * dt, 1f);
+            
             //this.body0.applyCorrection(0.0, n, this.globalPos0, this.body1, this.globalPos1, true);
         }
 
@@ -441,30 +470,47 @@ namespace XPBD
         //Angular damping
         private void ApplyAngularDamping(float dt)
         {
-            ApplyAngularDamping(dt, this.type.angularDampingCoeff);
+            ApplyAngularDamping(dt, this.jointType.angularDampingCoeff);
         }
 
         private void ApplyAngularDamping(float dt, float coeff)
         {
-            //this.updateGlobalFrames();
+            UpdateGlobalFrames();
 
-            //let dOmega = this.body0.omega.clone();
-            //if (this.body1 != null)
-            //    dOmega.sub(this.body1.omega);
+            Vector3 dOmega = this.body0.omega;
 
-            //if (this.type == Joint.TYPES.HINGE)
-            //{
-            //    // damp along the hinge axis
-            //    let n = new THREE.Vector3(1.0, 0.0, 0.0);
-            //    n.applyQuaternion(this.globalRot0);
-            //    n.multiplyScalar(dOmega.dot(n));
-            //    dOmega.copy(n);
-            //}
-            //if (this.type == Joint.TYPES.CYLINDER || this.type == Joint.TYPES.PRISMATIC || this.type == Joint.TYPES.FIXED)
-            //    dOmega.multiplyScalar(-1.0); // maximum damping
-            //else
-            //    dOmega.multiplyScalar(-Math.min(this.angularDampingCoeff * dt, 1.0));
-            //this.body0.applyCorrection(0.0, dOmega, null, this.body1, null, true);
+            if (this.body1 != null)
+            {
+                //dOmega.sub(this.body1.omega);
+                dOmega -= this.body1.omega;
+            }
+
+
+            if (this.jointType.type == MyJointType.Types.Hinge)
+            {
+                //Damp along the hinge axis
+                Vector3 n = new Vector3(1f, 0f, 0f);
+
+                n = this.globalRot0 * n;
+
+                n *= Vector3.Dot(dOmega, n); 
+                
+                dOmega = n;
+            }
+            if (
+                this.jointType.type == MyJointType.Types.Cylinder ||
+                this.jointType.type == MyJointType.Types.Prismatic ||
+                this.jointType.type == MyJointType.Types.Fixed)
+            {
+                //Maximum damping
+                dOmega *= -1f;
+            }
+            else
+            {
+                dOmega *= -Mathf.Min(this.jointType.angularDampingCoeff * dt, 1f);
+            }
+
+            //this.body0.ApplyCorrection(0.0, dOmega, null, this.body1, null, true);
         }
 
 

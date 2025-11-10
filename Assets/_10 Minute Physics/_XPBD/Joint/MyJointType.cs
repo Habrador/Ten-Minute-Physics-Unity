@@ -19,28 +19,28 @@ namespace XPBD
             Fixed
         };
 
-        Types type = Types.None;
+        public Types type = Types.None;
 
         //Distance
-        bool hasTargetDistance = false;
-        float targetDistance = 0f;
-        float distanceCompliance = 0f;
-        float distanceMin = -float.MaxValue;
-        float distanceMax = float.MaxValue;
-        float linearDampingCoeff = 0f;
+        public bool hasTargetDistance = false;
+        public float targetDistance = 0f;
+        public float distanceCompliance = 0f;
+        public float distanceMin = -float.MaxValue;
+        public float distanceMax = float.MaxValue;
+        public float linearDampingCoeff = 0f;
 
         //Orientation
-        float swingMin = -float.MaxValue;
-        float swingMax = float.MaxValue;
-        float twistMin = -float.MaxValue;
-        float twistMax = float.MaxValue;
-        float targetAngle = 0f;
-        bool hasTargetAngle = false;
-        float targetAngleCompliance = 0f;
+        public float swingMin = -float.MaxValue;
+        public float swingMax = float.MaxValue;
+        public float twistMin = -float.MaxValue;
+        public float twistMax = float.MaxValue;
+        public float targetAngle = 0f;
+        public bool hasTargetAngle = false;
+        public float targetAngleCompliance = 0f;
         public float angularDampingCoeff = 0f;
 
         //Motor
-        float velocity = 0f;
+        public float velocity = 0f;
 
 
         //

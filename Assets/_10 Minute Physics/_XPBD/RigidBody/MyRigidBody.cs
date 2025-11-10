@@ -30,7 +30,7 @@ namespace XPBD
         public Quaternion invRot;
         //Angular velocity
         //omega.magnitude -> speed of rotation
-        private Vector3 omega;
+        public Vector3 omega;
         //Mass m
         //We are going to use inverse mass m^-1
         public float invMass;
