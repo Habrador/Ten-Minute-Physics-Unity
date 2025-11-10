@@ -470,7 +470,7 @@ namespace XPBD
 
 
         //
-        // Visuals showing where the hinges connect and the distance between the connections
+        // Visuals showing where the joints connect to the rb and the distance between the connections
         //
 
         public void AddVisuals(float width = 0.004f, float size = 0.08f)
