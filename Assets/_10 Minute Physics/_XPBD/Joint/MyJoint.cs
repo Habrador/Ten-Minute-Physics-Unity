@@ -6,6 +6,8 @@ namespace XPBD
 {
     public class MyJoint
     {
+        //Joint attachment points
+        
         //Pos
         private Vector3 globalPos0;
         private Vector3 globalPos1;
@@ -59,17 +61,18 @@ namespace XPBD
             this.globalPos1 = globalFramePos;
             this.globalRot1 = globalFrameRot;
 
-            this.localPos0 = globalFramePos;
-            this.localRot0 = globalFrameRot;
-            this.localPos1 = globalFramePos;
-            this.localRot1 = globalFrameRot;
+            //this.localPos0 = globalFramePos;
+            //this.localRot0 = globalFrameRot;
+            //this.localPos1 = globalFramePos;
+            //this.localRot1 = globalFrameRot;
 
             SetFrames(globalFramePos, globalFrameRot);
         }
 
 
 
-        //Whats happening here???
+        //In video he uses something called Attachment Frames (2d)
+        //Which is a position p_rest and perpendicular axis a_rest, b_rest in local space
         private void SetFrames(Vector3 globalFramePos)
         {
             SetFrames(globalFramePos, Quaternion.identity, isGlobalFrameRot: false);
@@ -147,7 +150,8 @@ namespace XPBD
         // Move joint
         //
 
-        private void Solve(float dt)
+        //Called from FixedUpdate()
+        public void Solve(float dt)
         {
             SolvePosition(dt);
             SolveOrientation(dt);
@@ -174,14 +178,10 @@ namespace XPBD
         //Position constraint
         private void SolvePosition(float dt)
         {
-            //float hardCompliance = 0f;
-
             if (this.disabled || this.jointType.type == MyJointType.Types.None)
             {
                 return;
             }
-
-            Vector3 corr = Vector3.zero;
 
             //Align
             if (this.Type() == MyJointType.Types.Prismatic || this.Type() == MyJointType.Types.Cylinder)
@@ -192,7 +192,7 @@ namespace XPBD
                 
                 UpdateGlobalFrames();
                 
-                corr = this.globalPos1 - this.globalPos0;
+                Vector3 corr = this.globalPos1 - this.globalPos0;
 
                 corr = this.globalRot0.Conjugate() * corr;
 
@@ -223,7 +223,7 @@ namespace XPBD
             {
                 UpdateGlobalFrames();
                 
-                corr = this.globalPos1 - this.globalPos0;
+                Vector3 corr = this.globalPos1 - this.globalPos0;
                 
                 float distance = corr.magnitude;
                 
@@ -254,20 +254,14 @@ namespace XPBD
         {
             if (this.body0 != null)
             {
-                this.globalPos0 = this.localPos0;
-                this.globalPos0 = this.body0.rot * this.globalPos0;
-                this.globalPos0 += this.body0.pos;
-                
+                this.globalPos0 = this.body0.pos + this.body0.rot * this.localPos0;
                 this.globalRot0 = this.body0.rot * this.localRot0;
             }
 
             if (this.body1 != null)
             {
-                this.globalPos1 = this.localPos1;
-                this.globalPos1 = this.body1.rot * this.globalPos1;
-                this.globalPos1 += this.body1.pos;
-
-                this.globalRot1 = this.body1.rot * this.localRot0;
+                this.globalPos1 = this.body1.pos + this.body1.rot * this.localPos1;
+                this.globalRot1 = this.body1.rot * this.localRot1;
             }
             else
             {
@@ -471,8 +465,12 @@ namespace XPBD
 
 
 
+        //
+        // Damping (called from FixedUpdate())
+        //
+
         //Linear damping
-        private void ApplyLinearDamping(float dt)
+        public void ApplyLinearDamping(float dt)
         {
             UpdateGlobalFrames();
 
@@ -498,7 +496,7 @@ namespace XPBD
 
 
         //Angular damping
-        private void ApplyAngularDamping(float dt)
+        public void ApplyAngularDamping(float dt)
         {
             ApplyAngularDamping(dt, this.jointType.angularDampingCoeff);
         }
@@ -540,7 +538,7 @@ namespace XPBD
                 dOmega *= -Mathf.Min(this.jointType.angularDampingCoeff * dt, 1f);
             }
 
-            //this.body0.ApplyCorrection(0.0, dOmega, null, this.body1, null, true);
+            //this.body0.ApplyCorrection(0f, dOmega, null, this.body1, null, true);
         }
 
 

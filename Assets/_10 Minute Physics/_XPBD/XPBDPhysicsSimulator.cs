@@ -76,11 +76,24 @@ namespace XPBD
             //Update pos and rot of the constraint we use when moving rbs with mouse
             this.dragConstraint?.Solve(dt);
 
+            //Update joints which uses two constraints
+            foreach (MyJoint joint in allJoints)
+            {
+                joint.Solve(dt);
+            }
+
             //The velocities we calculated in integrate() make the simulation unstable
             //Update vel and angular vel by using pos and rot before and after integrate() and solve()
             foreach (MyRigidBody rb in allRigidBodies)
             {
                 rb.FixVelocities(dt);
+            }
+
+            //Update joint damping (should come after fix velocities)
+            foreach (MyJoint joint in allJoints)
+            {
+                joint.ApplyLinearDamping(dt);
+                joint.ApplyAngularDamping(dt);
             }
         }
 

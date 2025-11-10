@@ -10,12 +10,12 @@ namespace XPBD
         {
             None,
             Distance,
-            Hinge,
+            Hinge, //Rotation around one axis
             Servo,
             Motor,
-            Ball,
-            Prismatic,
-            Cylinder,
+            Ball, //No translation, only rotation
+            Prismatic, //Movement in 1d
+            Cylinder, //Similar to prismatic but the cylinder can rotate around the movement axis
             Fixed
         };
 

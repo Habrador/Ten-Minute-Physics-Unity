@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 
@@ -431,7 +432,7 @@ namespace XPBD
         //pos: where the constraint attaches to this body in world space
         //otherBody: the connected rb (if any, might be a fixed object for collision)
         //otherPos: where the constraint attaches to the other rb in world space
-        //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations
+        //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations (dt is cached each FixedUpdate)
         //Returns the force on this constraint
         public float ApplyCorrection(float compliance, Vector3 corr, Vector3 pos, MyRigidBody otherBody, Vector3 otherPos, bool velocityLevel = false)
         {
@@ -518,6 +519,135 @@ namespace XPBD
             // +- Because we move in different directions because we have two rb
             // p already has the +- in it
             this.pos += this.invMass * p;
+
+
+            //Angular correction
+            // q = q +- 0.5 * (I^-1 * (r x p), 0) * q
+
+            //r
+            Vector3 r = pos - this.pos;
+
+            //r x p
+            Vector3 r_cross_p = Vector3.Cross(r, p);
+
+            //Transform dOmega to local space so we can use the simplifed moment of inertia
+            r_cross_p = this.invRot * r_cross_p;
+
+            //Scales dOmega by the inverse inertia
+            //Why is it called dOmega?
+            //I^-1 * (r x p)
+            Vector3 dOmega = Vector3.zero;
+
+            dOmega.x = r_cross_p.x * this.invInertia.x;
+            dOmega.y = r_cross_p.y * this.invInertia.y;
+            dOmega.z = r_cross_p.z * this.invInertia.z;
+
+            //Transforms dOmega back into the original coordinate frame after the inverse rotation was applied earlier
+            dOmega = this.rot * dOmega;
+
+            //Same as during Integrate() except for the dt which is now 1
+            //dRot <- dOmega * q_i
+            //[I^-1 * (r x p), 0]
+            Quaternion dRot = new(dOmega.x, dOmega.y, dOmega.z, 0f);
+
+            //[I^-1 * (r x p), 0] * q
+            dRot *= this.rot;
+
+            //q_i = q_i + 0.5 * dRot
+            this.rot.x += 0.5f * dRot.x;
+            this.rot.y += 0.5f * dRot.y;
+            this.rot.z += 0.5f * dRot.z;
+            this.rot.w += 0.5f * dRot.w;
+
+            //Always normalize when we update rotation
+            this.rot.Normalize();
+
+            //Cache the inverse
+            this.invRot = Quaternion.Inverse(this.rot);
+        }
+
+
+
+        //For rotational constraints
+        //In the tutorial the psotional and roational constraints are combined
+        //But we cant set pos and otherPos to null so easier to split them into two
+        public float ApplyCorrection(float compliance, Vector3 corr, MyRigidBody otherBody, bool velocityLevel = false)
+        {
+            //If no elongation
+            if (corr.sqrMagnitude == 0f)
+            {
+                return 0f;
+            }
+
+            //Find C and n from corr which is C * n
+            float C = corr.magnitude;
+
+            Vector3 normal = corr.normalized;
+
+            //This is different for rational constraint,
+            //it uses no pos when calculating generalized inverse mass
+            //Compute generalized inverse mass for each rb
+            // w = m^-1 * (r x n)^T * I^-1 * (r x n)
+            float w_tot = this.GetGeneralizedInverseMass(normal);
+
+            if (otherBody != null)
+            {
+                w_tot += otherBody.GetGeneralizedInverseMass(normal);
+            }
+
+            if (w_tot == 0f)
+            {
+                return 0f;
+            }
+
+            //Compute Lagrange multiplier
+            // lambda = -C * (w_1 + w_2 + alpha / dt^2)^-1
+            //float lambda = -C / (w_tot + (compliance / (this.dt * this.dt)));
+            float lambda = -C / w_tot;
+
+            if (!velocityLevel)
+            {
+                // XPBD
+                float alpha = compliance / this.dt / this.dt;
+                lambda = -C / (w_tot + alpha);
+            }
+
+            //Update pos and rot
+            //x_i = x_i +- w_i * lambda * n
+            //q_i = q_i + 0.5 * lambda * [I_i^-1 * (r_i x n), 0] * q_i
+            Vector3 lambda_normal = normal * -lambda;
+
+            UpdatePosAndRot(lambda_normal, velocityLevel);
+
+            if (otherBody != null)
+            {
+                lambda_normal *= -1f;
+                otherBody.UpdatePosAndRot(lambda_normal, velocityLevel);
+            }
+
+            //Constraint force
+            //F = (lambda * n) / dt^2
+            //We dont need direction so ignore n
+            float constraintForce = lambda / (this.dt * this.dt);
+
+            return constraintForce;
+        }
+
+
+
+        public void UpdatePosAndRot(Vector3 p, bool velocityLevel)
+        {
+            if (this.invMass == 0f)
+            {
+                return;
+            }
+
+
+            //Linear correction
+            // x = x +- p / m
+            // +- Because we move in different directions because we have two rb
+            // p already has the +- in it
+            //this.pos += this.invMass * p;
 
 
             //Angular correction
