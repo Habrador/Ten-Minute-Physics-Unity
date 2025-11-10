@@ -328,115 +328,145 @@ namespace XPBD
         //Orientation constraint
         private void SolveOrientation(float dt)
         {
-            //if (this.disabled || this.type == Joint.TYPES.NONE || this.type == Joint.TYPES.DISTANCE)
-            //{
-            //    return;
-            //}
+            if (this.disabled || this.Type() == MyJointType.Types.None || this.Type() == MyJointType.Types.Distance)
+            {
+                return;
+            }
 
-            //if (this.type == Joint.TYPES.MOTOR)
-            //{
-            //    let aAngle = Math.min(Math.max(this.velocity * dt, -1.0), 1.0);
-            //    this.targetAngle += aAngle;
-            //}
+            if (this.Type() == MyJointType.Types.Motor)
+            {
+                float aAngle = Mathf.Min(Mathf.Max(this.jointType.velocity * dt, -1f), 1f);
 
-            //let hardCompliance = 0.0;
-            //let axis0 = new THREE.Vector3(1.0, 0.0, 0.0);
-            //let axis1 = new THREE.Vector3(0.0, 1.0, 0.0);
-            //let a0 = new THREE.Vector3();
-            //let a1 = new THREE.Vector3();
-            //let n = new THREE.Vector3();
-            //let corr = new THREE.Vector3();
+                this.jointType.targetAngle += aAngle;
+            }
 
-            //if (this.type == Joint.TYPES.HINGE || this.type == Joint.TYPES.SERVO || this.type == Joint.TYPES.MOTOR)
-            //{
-            //    // align axes
+            float hardCompliance = 0f;
 
-            //    this.updateGlobalFrames();
+            Vector3 axis0 = new Vector3(1f, 0f, 0f);
+            Vector3 axis1 = new Vector3(0f, 1f, 0f);
+            
+            Vector3 a0 = new Vector3();
+            Vector3 a1 = new Vector3();
+            Vector3 n = new Vector3();
+            Vector3 corr = new Vector3();
 
-            //    a0.copy(axis0);
-            //    a0.applyQuaternion(this.globalRot0);
-            //    a1.copy(axis0);
-            //    a1.applyQuaternion(this.globalRot1);
-            //    corr.crossVectors(a0, a1);
-            //    this.body0.applyCorrection(hardCompliance, corr, null, this.body1, null);
+            if (
+                this.Type() == MyJointType.Types.Hinge || 
+                this.Type() == MyJointType.Types.Servo || 
+                this.Type() == MyJointType.Types.Motor)
+            {
+                //Align axes
 
-            //    if (this.hasTargetAngle)
-            //    {
-            //        this.updateGlobalFrames();
-            //        n.copy(axis0);
-            //        n.applyQuaternion(this.globalRot0);
-            //        a0.copy(axis1);
-            //        a0.applyQuaternion(this.globalRot0);
-            //        a1.copy(axis1);
-            //        a1.applyQuaternion(this.globalRot1);
-            //        this.limitAngle(n, a0, a1, this.targetAngle, this.targetAngle, this.targetAngleCompliance);
-            //    }
+                UpdateGlobalFrames();
 
-            //    // joint limits
+                a0 = axis0;
+                a0 = this.globalRot0 * a0;
 
-            //    if (this.swingMin > -Number.MAX_VALUE || this.swingMax < Number.MAX_VALUE)
-            //    {
-            //        this.updateGlobalFrames();
+                a1 = axis0;
+                a1 = this.globalRot1 * a0;
 
-            //        n.copy(axis0);
-            //        n.applyQuaternion(this.globalRot0);
-            //        a0.copy(axis1);
-            //        a0.applyQuaternion(this.globalRot0);
-            //        a1.copy(axis1);
-            //        a1.applyQuaternion(this.globalRot1);
-            //        this.limitAngle(n, a0, a1, this.swingMin, this.swingMax, hardCompliance);
-            //    }
-            //}
-            //else if (this.type == Joint.TYPES.BALL || this.type == Joint.TYPES.PRISMATIC || this.type == Joint.TYPES.CYLINDER)
-            //{
-            //    // swing limit
+                corr = Vector3.Cross(a0, a1);
+                
+                //this.body0.ApplyCorrection(hardCompliance, corr, null, this.body1, null);
 
-            //    this.updateGlobalFrames();
+                if (this.jointType.hasTargetAngle)
+                {
+                    UpdateGlobalFrames();
 
-            //    a0.copy(axis0);
-            //    a0.applyQuaternion(this.globalRot0);
-            //    a1.copy(axis0);
-            //    a1.applyQuaternion(this.globalRot1);
-            //    n.crossVectors(a0, a1);
-            //    n.normalize();
-            //    this.limitAngle(n, a0, a1, this.swingMin, this.swingMax, hardCompliance);
+                    n = axis0;
+                    n = this.globalRot0 * n;
+                    
+                    a0 = axis1;
+                    a0 = this.globalRot0 * a0;
 
-            //    // twist limit
+                    a1 = axis1;
+                    a1 = this.globalRot1 * a1;
 
-            //    this.updateGlobalFrames();
+                    LimitAngle(n, a0, a1, this.jointType.targetAngle, this.jointType.targetAngle, this.jointType.targetAngleCompliance);
+                }
 
-            //    a0.copy(axis0);
-            //    a0.applyQuaternion(this.globalRot0);
-            //    a1.copy(axis0);
-            //    a1.applyQuaternion(this.globalRot1);
-            //    n.addVectors(a0, a1);
-            //    n.normalize();
+                //Joint limits
+                if (this.jointType.swingMin > -float.MaxValue || this.jointType.swingMax < float.MaxValue)
+                {
+                    UpdateGlobalFrames();
 
-            //    a0.copy(axis1);
-            //    a0.applyQuaternion(this.globalRot0);
-            //    a1.copy(axis1);
-            //    a1.applyQuaternion(this.globalRot1);
+                    n = axis0;
+                    n = this.globalRot0 * n;
 
-            //    a0.addScaledVector(n, -n.dot(a0));
-            //    a0.normalize();
-            //    a1.addScaledVector(n, -n.dot(a1));
-            //    a1.normalize();
-            //    this.limitAngle(n, a0, a1, this.twistMin, this.twistMax, hardCompliance);
-            //}
-            //else if (this.type == Joint.TYPES.FIXED)
-            //{
-            //    // align orientations
+                    a0 = axis1;
+                    a0 = this.globalRot0 * a0;
+                    
+                    a1 = axis1;
+                    a1 = this.globalRot1 * a1;
+                    
+                    LimitAngle(n, a0, a1, this.jointType.swingMin, this.jointType.swingMax, hardCompliance);
+                }
+            }
+            else if (
+                this.Type() == MyJointType.Types.Ball || 
+                this.Type() == MyJointType.Types.Prismatic || 
+                this.Type() == MyJointType.Types.Cylinder)
+            {
+                //Swing limit
 
-            //    this.updateGlobalFrames();
+                UpdateGlobalFrames();
 
-            //    let dq = new THREE.Quaternion();
-            //    dq.multiplyQuaternions(this.globalRot0, this.globalRot1.conjugate());
-            //    corr.set(2.0 * dq.x, 2.0 * dq.y, 2.0 * dq.z);
-            //    if (dq.w > 0.0)
-            //        corr.multiplyScalar(-1.0);
+                a0 = axis0;
+                a0 = this.globalRot0 * a0;
+                
+                a1 = axis0;
+                a1 = this.globalRot1 * a1;
+                
+                n = Vector3.Cross(a0, a1);
+                n = Vector3.Normalize(n);
 
-            //    this.body0.applyCorrection(hardCompliance, corr, null, this.body1, null);
-            //}
+                LimitAngle(n, a0, a1, this.jointType.swingMin, this.jointType.swingMax, hardCompliance);
+
+
+                //Twist limit
+
+                UpdateGlobalFrames();
+
+                a0 = axis0;
+                a0 = this.globalRot0 * a0;
+                
+                a1 = axis0;
+                a1 = this.globalRot1 * a1;
+                
+                n = a0 + a1;
+                n = Vector3.Normalize(n);
+
+                a0 = axis1;
+                a0 = this.globalRot0 * a0;
+
+                a1 = axis1;
+                a1 = this.globalRot1 * a1;
+
+                a0 += n * Vector3.Dot(-n, a0);
+                a0 = Vector3.Normalize(a0);
+
+                a1 += n * Vector3.Dot(-n, a1);
+                a1 = Vector3.Normalize(a1);
+
+                LimitAngle(n, a0, a1, this.jointType.twistMin, this.jointType.twistMax, hardCompliance);
+            }
+            else if (this.Type() == MyJointType.Types.Fixed)
+            {
+                //Align orientations
+
+                UpdateGlobalFrames();
+
+                Quaternion dq = this.globalRot0 * this.globalRot1.Conjugate();
+                
+                corr = new Vector3(2f * dq.x, 2f * dq.y, 2f * dq.z);
+
+                if (dq.w > 0f)
+                {
+                    corr *= -1f;
+                }
+
+                //this.body0.applyCorrection(hardCompliance, corr, null, this.body1, null);
+            }
         }
 
 
