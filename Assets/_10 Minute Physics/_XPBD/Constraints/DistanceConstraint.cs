@@ -157,7 +157,9 @@ namespace XPBD
             //n * C
             Vector3 corr = n * C;
 
-            this.force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, velocityLevel: true);
+            //this.force = this.body0.ApplyCorrection(this.compliance, corr, this.worldPos0, this.body1, this.worldPos1, velocityLevel: true);
+
+            this.force = PositionalConstraint.ApplyCorrection(this.compliance, corr, this.body0, this.worldPos0, this.body1, this.worldPos1, velocityLevel: true);
 
 
             //Data for display purposes

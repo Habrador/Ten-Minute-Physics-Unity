@@ -89,7 +89,7 @@ namespace XPBD
                 rb.FixVelocities(dt);
             }
 
-            //Update joint damping (should come after fix velocities)
+            //Update joint damping (should come after XPBD, meaning after fix velocities)
             foreach (MyJoint joint in allJoints)
             {
                 joint.ApplyLinearDamping(dt);
