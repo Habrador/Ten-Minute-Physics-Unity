@@ -52,6 +52,7 @@ namespace XPBD
 
 
         //The XPBD simulation loop
+        //Algorithm 2 in the XPBD paper
         private void Simulate(float dt)
         {
             //Step 1. Update pos (x), vel (v), rot (q), angular vel (omega)

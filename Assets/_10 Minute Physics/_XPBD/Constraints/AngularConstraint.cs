@@ -51,7 +51,9 @@ namespace XPBD
         //alpha: inverse of physical stiffness (sometimes called compliance)
         //delta_phi: rotation vector
         //rb1, rb2: connected rigid bodies
-        public static float ApplyCorrection(float alpha, Vector3 delta_phi, MyRigidBody rb1, MyRigidBody rb2, bool velocityLevel = false)
+        //velocityLevel was removed and is in its own class to make it less confusing
+        //In the YT video the guy combined Position and rotational constraints and velocity level...
+        public static float ApplyCorrection(float alpha, Vector3 delta_phi, MyRigidBody rb1, MyRigidBody rb2)
         {
             //If no correction
             if (delta_phi.sqrMagnitude == 0f)
@@ -90,12 +92,12 @@ namespace XPBD
             //q = q +- 0.5 * lambda * [I^-1 * n, 0] * q
             Vector3 lambda_normal = normal * -lambda;
 
-            UpdateRot(rb1, lambda_normal, velocityLevel);
+            UpdateRot(rb1, lambda_normal);
 
             if (rb2 != null)
             {
                 lambda_normal *= -1f;
-                UpdateRot(rb2, lambda_normal, velocityLevel);
+                UpdateRot(rb2, lambda_normal);
             }
 
             //Constraint torque [Nm]
@@ -110,7 +112,8 @@ namespace XPBD
         //Update rot
         //q = q +- 0.5 * lambda * [I^-1 * n, 0] * q = q +- 0.5 * [I^-1 * p, 0] * q
         //p is lambda_normal
-        public static void UpdateRot(MyRigidBody body, Vector3 p, bool velocityLevel)
+        //velocityLevel was removed and is in its own class
+        public static void UpdateRot(MyRigidBody body, Vector3 p)
         {
             if (body.invMass == 0f)
             {

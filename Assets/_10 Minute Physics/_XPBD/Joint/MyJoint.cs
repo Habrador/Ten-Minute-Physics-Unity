@@ -272,11 +272,10 @@ namespace XPBD
 
 
 
+        //Algorithm 3 in the XPBD paper
         private float GetAngle(Vector3 n, Vector3 a, Vector3 b)
         {
-            Vector3 c = Vector3.Cross(a, b);
-
-            float phi = Mathf.Asin(Vector3.Dot(c, n));
+            float phi = Mathf.Asin(Vector3.Dot(Vector3.Cross(a, b), n));
 
             if (Vector3.Dot(a, b) < 0f)
             {
@@ -284,11 +283,11 @@ namespace XPBD
             }
             if (phi > Mathf.PI)
             {
-                phi -= 2f * Mathf.PI;
+                phi = phi - 2f * Mathf.PI;
             }
             if (phi < -Mathf.PI)
             { 
-                phi += 2f * Mathf.PI;
+                phi = phi + 2f * Mathf.PI;
             }
 
             return phi;
@@ -296,6 +295,10 @@ namespace XPBD
 
 
 
+        //Algorithm 3 in the XPBD paper
+        //Limits the angle between the axes a and b of two bodies
+        //to be in the interval [minAngle, maxAngle] 
+        //using the common roation axis n
         private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
         {
             float phi = GetAngle(n, a, b);
@@ -305,16 +308,20 @@ namespace XPBD
                 return;
             }
             
+            //Clamp(phi, minAngle, maxAngle) 
             phi = Mathf.Max(minAngle, Mathf.Min(phi, maxAngle));
 
+            //n1 = rot(n, phi) * n1
             Vector3 ra = a;
 
             //ra.applyAxisAngle(n, phi);
             ra = Quaternion.AngleAxis(phi * Mathf.Rad2Deg, n) * ra;
 
+            //delta_q_limit = n1 x n2
             Vector3 corr = Vector3.Cross(ra, b);
-            
+
             //this.body0.ApplyCorrection(compliance, corr, null, this.body1, null);
+            AngularConstraint.ApplyCorrection(compliance, corr, this.body0, this.body1);
         }
 
 
