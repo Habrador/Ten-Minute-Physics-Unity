@@ -54,20 +54,21 @@ namespace XPBD
         //The XPBD simulation loop
         private void Simulate(float dt)
         {
-            //Update pos, vel, rot, angular vel
+            //Step 1. Update pos (x), vel (v), rot (q), angular vel (omega)
             foreach (MyRigidBody rb in allRigidBodies)
             {
                 rb.Integrate(dt, this.gravity);
             }
 
-            //Constraints
+
+            //Step 2. Handle constraints
 
             //Iterate over the constraints just once
             //Some are iterating over them multiple times each step
             //but then you have to cache a lagrange multiplier which is currently ignored
             //Its better to use substeps and iterate over the constraints (and all other things) just once each substep
 
-            //Update pos and rot of the constraints that connects rbs
+            //Update pos and rot of the constraints
             foreach (DistanceConstraint dc in allDistanceConstraints)
             {
                 dc.Solve(dt);
@@ -76,12 +77,14 @@ namespace XPBD
             //Update pos and rot of the constraint we use when moving rbs with mouse
             this.dragConstraint?.Solve(dt);
 
-            //Update joints which uses two constraints
+            //Update joints which uses positional and angular constraints
             foreach (MyJoint joint in allJoints)
             {
                 joint.Solve(dt);
             }
 
+
+            //Step 3. Fix velocities
             //The velocities we calculated in integrate() make the simulation unstable
             //Update vel and angular vel by using pos and rot before and after integrate() and solve()
             foreach (MyRigidBody rb in allRigidBodies)
@@ -89,7 +92,12 @@ namespace XPBD
                 rb.FixVelocities(dt);
             }
 
-            //Update joint damping (should come after XPBD, meaning after fix velocities)
+
+            //Step 4. Velocity level
+            //In the paper you see SolveVelocities(v_1,...,v_n, omega_1,...,omega_n), which 
+            //is used to handle dynamic friction, restitution (collisions), and joint damping
+            
+            //Update joint damping
             foreach (MyJoint joint in allJoints)
             {
                 joint.ApplyLinearDamping(dt);

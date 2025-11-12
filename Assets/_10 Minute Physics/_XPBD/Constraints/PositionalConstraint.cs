@@ -60,7 +60,7 @@ namespace XPBD
         //corr: n * C = n * (l - l_0) (direction times elongation)
         //p1,p2: where the constraint attaches to this body in world space
         //rb1, rb2: connected rigid bodies
-        //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations (dt is cached each FixedUpdate) Is related to damping calculations???
+        //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations (dt is cached each FixedUpdate). From paper: velocityLevel is used to handle dynamic friction, restitution, and joint damping
         //Returns the force on this constraint
         public static float ApplyCorrection(float alpha, Vector3 corr, MyRigidBody rb1, Vector3 p1, MyRigidBody rb2, Vector3 p2, bool velocityLevel = false)
         {
