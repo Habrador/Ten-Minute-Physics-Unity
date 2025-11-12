@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 namespace XPBD
 {
@@ -157,6 +158,90 @@ namespace XPBD
             SolveOrientation(dt);
         }
 
+
+        //In the video he has some building blocks that make up these joints
+
+        //Attach Bodies
+        //Attach 2 rbs at points p1 and p2, with distance d_rest between them
+        //Similar to DistanceConstraint from tutorial 1 on xpbd
+        //Attach(p1, p2, d_rest, alpha)
+        //{
+        //  d = |p2 - p1|
+        //  n = (p2 - p1) / d
+        //  ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha)
+        //}
+
+        //Restrict to axis
+        //Restrict p2 to be on an axis with direction a going thorugh p1
+        //RestrictToAxis(a, p1, p2, p_min, p_max, alpha)
+        //{
+        //  p = p2 - p1
+        //  p_italics = a * p (to make it slide along axis we compute component of p along a)
+        //
+        //  //Clamp
+        //  if p_italics < p_min: p_italics = p_min
+        //  if p_italics > p_max: p_italics = p_max
+        //
+        //  p = p - p_italics * a
+        //
+        //  ApplyLinearCorrection(p1, p2, -p, alpha)
+        //}
+
+        //Align two axes
+        //Make direction a1 going through p1 and direction a2 going through p2 be in the same direction
+        //AlignAxes(a1, a2, alpha)
+        //{
+        //  ApplyAngularCorrection((-a1) cross a2, alpha) //Only valid for small angles
+        //}
+
+        //Limit angle
+        //Limit the angle (phi) going between axis a1 and a2 (going from same point)
+        //where n is the perpendicular axis (rotation axis) 
+        //LimitAngle(n, a1, a2, phi_min, phi_max, alpha)
+        //{
+        //  phi = angle(n, a1, a2) //Calculate the current angle
+        //
+        //  if (phi < phi_min or phi > phi max) //If angle is not within bounds
+        //  {
+        //      phi = clamp(phi, phi_min, phi_max) //Clamp based on the limits
+        //      q = roation(n, phi)
+        //      a2' = q dot a1 //Rotate a1 by angle phi. This is the dir a2 should have to form the desired angle
+        //
+        //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
+        //  }
+        //}
+
+        //How to simulate different joints
+
+        //Hinge
+        //Attach(p1, p2, d_rest = 0, alpha = 0)
+        //AlignAxes(a1, a2, alpha = 0)
+        //If restriced: LimitAngle(n, a1, a2, phi_min, phi_max, alpha = 0)
+        //If servo: LimitAngle(n, a1, a2, phi_servo, phi_servo, alpha = 0)
+        //If motor:
+        // LimitAngle(n, a1, a2, phi_motor, phi_motor, alpha = 0)
+        // phi_motor = phi_motor + dt * omega_motor
+
+        //Ball joint
+        //Attach(p1, p2, d_rest = 0, alpha = 0)
+        //If swing-limit:
+        // n = (a1 x a2) / |a1 x a2|
+        // LimitAngle(n, a1, a2, 0f, phi_swing_max, alpha = 0)
+        //If twist-limit:
+        // n = (a1 x a2) / |a1 x a2| //Average
+        // b1' = b1 - n(b * b1)
+        // b2' = b2 - n(b * b2)
+        // LimitAngle(n, b1', b2', phi_twist_min, phi_twist_max, alpha = 0)
+
+        //Prismatic 
+        //RestrictToAxis(a, p1, p2, p_min, p_max, alpha)
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
+
+        //Cyliner
+        //RestrictToAxis(a, p1, p2, p_target, p_target, alpha)
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
 
 
         private void ApplyTorque(float dt, float torque)
@@ -475,6 +560,9 @@ namespace XPBD
         //
         // Damping (called from FixedUpdate())
         //
+
+        //From YT:
+
 
         //Linear damping
         public void ApplyLinearDamping(float dt)
