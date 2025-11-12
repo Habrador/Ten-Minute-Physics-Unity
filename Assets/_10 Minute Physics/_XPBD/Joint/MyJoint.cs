@@ -256,6 +256,17 @@ namespace XPBD
             corr *= torque * dt;
 
             //this.body0.ApplyCorrection(0f, corr, null, this.body1, null, true);
+
+            //In the YT video:
+            //ApplyAngularVelocityCorrection(tau / delta_t * a)
+        }
+
+
+        //Theres also an ApplyFoorce in the YT video
+        private void ApplyForce(float f)
+        {
+            //a is the axis youn want to apply the force along
+            //ApplyLinearVelocityCorrection(p1, p2, f/delta_t * a)
         }
 
 
@@ -561,10 +572,19 @@ namespace XPBD
         // Damping (called from FixedUpdate())
         //
 
-        //From YT:
-        //DampLinear
-
         //Linear damping
+
+        //From YT:
+        //Damp along direction n
+        //c_linear: damping coefficient
+        //DampLinear(p1, p2, n, c_linear)
+        //{
+        //  delta_v = v2 + (p2 - x2) x omega2 - v1 - (p1 - x1) x omega1 //Relative velocity
+        //  delta_v_scalar = n * delta_v //Extract vel along axis n
+        //  delta_v_scalar = delta_v_scalar * min(delta_t * c_linear, 1) //Damp
+        //  ApplyLinearVelocityCorrection(p1, p2, -delta_eta * n)
+        //}
+
         public void ApplyLinearDamping(float dt)
         {
             UpdateGlobalFrames();
@@ -591,6 +611,18 @@ namespace XPBD
 
 
         //Angular damping
+
+        //From YT:
+        //Damp along rotation axis n
+        //c_linear: damping coefficient
+        //DampAngular(n, c_angular)
+        //{
+        //  delta_omega = omega2 - omega1 //Relative angular velocity
+        //  delta_omega_Scalar = n * delta_omega //Extract vel along axis n
+        //  delta_omega_scalar = delta_omega_scalar * min(delta_t * c_angular, 1) //Damp
+        //  ApplyAngularVelocityCorrection(-delta_omega_scalar * n)
+        //}
+
         public void ApplyAngularDamping(float dt)
         {
             ApplyAngularDamping(dt, this.jointType.angularDampingCoeff);
