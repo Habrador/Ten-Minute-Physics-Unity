@@ -79,11 +79,11 @@ namespace XPBD
 
             //Compute generalized inverse mass for each rb
             // w = m^-1 * (r x n)^T * I^-1 * (r x n)
-            float w_tot = GeneralizedInverseMass.Calculate(rb1, normal, p1);
+            float w_tot = GeneralizedInverseMass.Positional(rb1, normal, p1);
 
             if (rb2 != null)
             {
-                w_tot += GeneralizedInverseMass.Calculate(rb2, normal, p2);
+                w_tot += GeneralizedInverseMass.Positional(rb2, normal, p2);
             }
 
             if (w_tot == 0f)

@@ -71,11 +71,11 @@ namespace XPBD
             //it uses no pos when calculating generalized inverse mass
             //Compute generalized inverse mass for each rb
             // w = n^T * I^-1 * n
-            float w_tot = GeneralizedInverseMass.Calculate(rb1, normal);
+            float w_tot = GeneralizedInverseMass.Angular(rb1, normal);
 
             if (rb2 != null)
             {
-                w_tot += GeneralizedInverseMass.Calculate(rb2, normal);
+                w_tot += GeneralizedInverseMass.Angular(rb2, normal);
             }
 
             if (w_tot == 0f)

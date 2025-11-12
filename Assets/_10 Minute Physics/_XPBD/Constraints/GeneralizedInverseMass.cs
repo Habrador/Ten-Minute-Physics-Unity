@@ -32,7 +32,7 @@ namespace XPBD
 
         //normal - direction between constraints
         //pos - where the constraint attaches to this body in world space
-        public static float Calculate(MyRigidBody rb, Vector3 normal, Vector3 pos)
+        public static float Positional(MyRigidBody rb, Vector3 normal, Vector3 pos)
         {
             if (rb.invMass == 0f)
             {
@@ -73,7 +73,7 @@ namespace XPBD
 
         //w = n^T * I^-1 * n
         //normal - direction between constraints???
-        public static float Calculate(MyRigidBody rb, Vector3 normal)
+        public static float Angular(MyRigidBody rb, Vector3 normal)
         {
             if (rb.invMass == 0f)
             {
