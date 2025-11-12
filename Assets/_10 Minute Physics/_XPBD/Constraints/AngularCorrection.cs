@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace XPBD
 {
-    public static class AngularConstraint
+    public static class AngularCorrection
     {
         //From YT video
         //delta_phi: orientation correction vector
@@ -53,7 +53,7 @@ namespace XPBD
         //rb1, rb2: connected rigid bodies
         //velocityLevel was removed and is in its own class to make it less confusing
         //In the YT video the guy combined Position and rotational constraints and velocity level...
-        public static float ApplyCorrection(float alpha, Vector3 delta_phi, MyRigidBody rb1, MyRigidBody rb2)
+        public static float Apply(float alpha, Vector3 delta_phi, MyRigidBody rb1, MyRigidBody rb2)
         {
             //If no correction
             if (delta_phi.sqrMagnitude == 0f)

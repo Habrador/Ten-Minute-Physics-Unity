@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace XPBD
 {
-    //Aka Linear constraint
-    public static class PositionalConstraint
+    //Aka Linear correction
+    public static class PositionalCorrection
     {
         //From YT video
         //p1,p2: locations of attachment points
@@ -63,7 +63,7 @@ namespace XPBD
         //velocityLevel: Was dt but is replaced by a bool in joints, and determines if we should use dt in some calculations (dt is cached each FixedUpdate). From paper: velocityLevel is used to handle dynamic friction, restitution, and joint damping
         //Returns the force on this constraint. Calculations for velocityLevel should be in its own class to make it less confusing
         //Was removed. In the YT video the guy combined Position and rotational constraints and velocity level...
-        public static float ApplyCorrection(float alpha, Vector3 corr, MyRigidBody rb1, Vector3 p1, MyRigidBody rb2, Vector3 p2)
+        public static float Apply(float alpha, Vector3 corr, MyRigidBody rb1, Vector3 p1, MyRigidBody rb2, Vector3 p2)
         {
             //If no elongation
             if (corr.sqrMagnitude == 0f)

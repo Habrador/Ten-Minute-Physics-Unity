@@ -406,7 +406,7 @@ namespace XPBD
             Vector3 corr = Vector3.Cross(ra, b);
 
             //this.body0.ApplyCorrection(compliance, corr, null, this.body1, null);
-            AngularConstraint.ApplyCorrection(compliance, corr, this.body0, this.body1);
+            AngularCorrection.Apply(compliance, corr, this.body0, this.body1);
         }
 
 
@@ -562,7 +562,7 @@ namespace XPBD
         //
 
         //From YT:
-
+        //DampLinear
 
         //Linear damping
         public void ApplyLinearDamping(float dt)
