@@ -4,12 +4,14 @@ using UnityEngine;
 
 namespace XPBD
 {
-    //A coordinate axis
+    //A coordinate axis where each axis is represented by a cylinder with rgb color
     class VisualFrame
     {
-        private GameObject xObj;
-        private GameObject yObj;
-        private GameObject zObj;
+        private readonly GameObject xObj;
+        private readonly GameObject yObj;
+        private readonly GameObject zObj;
+
+
 
         public VisualFrame(float width, float size = 0.1f)
         {
@@ -21,6 +23,7 @@ namespace XPBD
 
 
 
+        //Create the cylinder
         private GameObject CreateAxis(float width, float size, UnityEngine.Color color)
         {
             //Create a line representing an axis
@@ -45,24 +48,19 @@ namespace XPBD
             Vector3 yAxis = rot * new Vector3(0f, 1f, 0f);
             Vector3 zAxis = rot * new Vector3(0f, 0f, 1f);
 
-            //Update X axis (red)
+            //Calculate the rotations
             Quaternion xRot = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), xAxis.normalized);
-
-            this.xObj.transform.SetPositionAndRotation(pos, xRot);
-
-            //Update Y axis (green)
             Quaternion yRot = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), yAxis.normalized);
-
-            this.yObj.transform.SetPositionAndRotation(pos, yRot);
-
-            //Update Z axis (blue)
             Quaternion zRot = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), zAxis.normalized);
 
+            this.xObj.transform.SetPositionAndRotation(pos, xRot);
+            this.yObj.transform.SetPositionAndRotation(pos, yRot);
             this.zObj.transform.SetPositionAndRotation(pos, zRot);
         }
 
 
 
+        //Show/hide the coordinate axis
         public void SetVisible(bool visible)
         {
             this.xObj.SetActive(visible);
