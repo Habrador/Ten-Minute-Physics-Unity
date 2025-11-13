@@ -26,7 +26,7 @@ namespace XPBD
             //Create a line representing an axis
             GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
-            line.transform.localPosition = new Vector3(width, width, size);
+            line.transform.localScale = new Vector3(width, width, size);
 
             line.GetComponent<Renderer>().material.color = color;
 
