@@ -53,6 +53,7 @@ namespace XPBD
             Quaternion yRot = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), yAxis.normalized);
             Quaternion zRot = Quaternion.FromToRotation(new Vector3(0f, 1f, 0f), zAxis.normalized);
 
+            //Add pos and rot 
             this.xObj.transform.SetPositionAndRotation(pos, xRot);
             this.yObj.transform.SetPositionAndRotation(pos, yRot);
             this.zObj.transform.SetPositionAndRotation(pos, zRot);

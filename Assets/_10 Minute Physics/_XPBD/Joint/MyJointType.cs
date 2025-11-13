@@ -110,7 +110,9 @@ namespace XPBD
             this.linearDampingCoeff = damping;
         }
 
-        public void InitCylinderJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, float hasTargetDistance, float restDistance, float compliance, float damping)
+        //The importer uses only the first 4 parameters while the init joint uses 4 unused parameters as well?
+        public void InitCylinderJoint(float distanceMin, float distanceMax, float twistMin, float twistMax)
+        //public void InitCylinderJoint(float distanceMin, float distanceMax, float twistMin, float twistMax, float hasTargetDistance, float restDistance, float compliance, float damping)
         {
             this.type = Types.Cylinder;
             this.distanceMin = distanceMin;

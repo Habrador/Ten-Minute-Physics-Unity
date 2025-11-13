@@ -128,21 +128,15 @@ public class SceneImporter
 
 
 
-    //Extract position and rotation from transform
+    //Extract position and rotation from mesh.transform
     private void ExtractPosAndRot(JointMesh mesh, out Vector3 pos, out Quaternion rot)
     {
-        pos = new(
-            mesh.transform.position[0],
-            mesh.transform.position[1],
-            mesh.transform.position[2]
-        );
+        float[] posArray = mesh.transform.position;
+        float[] rotArray = mesh.transform.rotation;
 
-        rot = new(
-            mesh.transform.rotation[0],
-            mesh.transform.rotation[1],
-            mesh.transform.rotation[2],
-            mesh.transform.rotation[3]
-        );
+        pos = new(posArray[0], posArray[1], posArray[2]);
+
+        rot = new(rotArray[0], rotArray[1], rotArray[2], rotArray[3]);
     }
 
 
@@ -157,14 +151,21 @@ public class SceneImporter
 
         string simType = props.simType;
 
-        //Extract position and rotation from transform
+        //Extract position and rotation from mesh.transform
         ExtractPosAndRot(mesh, out Vector3 pos, out Quaternion quat);
 
-        Vector3 angles = quat.eulerAngles;
-
-        //angles.y += 180f;
+        //The objects are mirrored most likely because Blender is using some other coordinate system
+        //Inverteing z seems to solve it for now
+        pos.z *= -1f;
 
         MyRigidBody rigidBody;
+
+        //Our rb system wants angles not quaternions when init a rb
+        Vector3 angles = quat.eulerAngles;
+
+        //Test that nullable works
+        //This is a rb and it has never a damping because thats joint specific
+        //Debug.Log(mesh.properties.damping);
 
         if (simType == "RigidBox")
         {
@@ -202,11 +203,20 @@ public class SceneImporter
 
 
 
+    //
+    // Find the bounding box or sphere
+    //
+    
+    //We are not using the mesh we get from the importer as the rb mesh
+    //We are instead using that mesh to find the size of the box or the sphere
+    //we then create when init the rb
+
     //Given a set of vertices, calculate the bounding box
     private Vector3 CalculateBoundingBox(float[] vertices)
     {
-        float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-        float maxX = -float.MaxValue, maxY = -float.MaxValue, maxZ = -float.MaxValue;
+        float minX = float.MaxValue, maxX = -float.MaxValue;
+        float minY = float.MaxValue, maxY = -float.MaxValue;
+        float minZ = float.MaxValue, maxZ = -float.MaxValue;
 
         //Vertices are stored as [x, y, z, x, y, z, ...]
         for (int i = 0; i < vertices.Length; i += 3)
@@ -299,57 +309,35 @@ public class SceneImporter
         //Configure joint based on type
         if (simType == "BallJoint")
         {
-            //float swingMax = props.swingMax ?? Number.MAX_VALUE
-            //float twistMin = props.twistMin ?? -Number.MAX_VALUE
-            //float twistMax = props.twistMax ?? Number.MAX_VALUE
-            //float damping = props.damping ?? 0.0;
-
-            //Our floats cant be null, not sure how setting it to Number.MAX_VALUE will affect stuff later on...
-            //float swingMax = props.swingMax;
-            //float twistMin = props.twistMin;
-            //float twistMax = props.twistMax;
-            //float damping = props.damping;
-
-            //Use max values for testing
-            float swingMax = float.MaxValue;
-            float twistMin = -float.MaxValue;
-            float twistMax = float.MaxValue;
-            float damping = 0f;
+            float swingMax = props.swingMax ?? float.MaxValue;
+            float twistMin = props.twistMin ?? -float.MaxValue;
+            float twistMax = props.twistMax ?? float.MaxValue;
+            float damping = props.damping ?? 0f;
 
             joint.jointType.InitBallJoint(swingMax, twistMin, twistMax, damping);
         }
         else if (simType == "HingeJoint")
         {
-            //float swingMin = props.swingMin ?? -Number.MAX_VALUE
-            //float swingMax = props.swingMax ?? Number.MAX_VALUE;
-            //bool hasTargetAngle = props.targetAngle !== undefined;
-            //float targetAngle = props.targetAngle ?? 0.0;
-            //float compliance = props.targetAngleCompliance ?? 0.0;
-            //float damping = props.damping ?? 0.0;
-
-            float swingMin = props.swingMin;
-            float swingMax = props.swingMax;
-            bool hasTargetAngle = true; //TODO FIX THIS
-            float targetAngle = props.targetAngle;
-            float compliance = props.targetAngleCompliance;
-            float damping = props.damping;
+            float swingMin = props.swingMin ?? -float.MaxValue;
+            float swingMax = props.swingMax ?? float.MaxValue;
+            bool hasTargetAngle = props.targetAngle != null;
+            float targetAngle = props.targetAngle ?? 0f;
+            float compliance = props.targetAngleCompliance ?? 0f;
+            float damping = props.damping ?? 0f;
 
             joint.jointType.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
         }
         else if (simType == "ServoJoint")
         {
-            //let swingMin = props.swingMin ?? -Number.MAX_VALUE
-            //let swingMax = props.swingMax ?? Number.MAX_VALUE;
-
-            float swingMin = props.swingMin;
-            float swingMax = props.swingMax;
+            float swingMin = props.swingMin ?? -float.MaxValue;
+            float swingMax = props.swingMax ?? float.MaxValue;
 
             joint.jointType.InitServo(swingMin, swingMax);
         }
         else if (simType == "MotorJoint")
         {
-            //float velocity = props.velocity;
-            
+            //float velocity = props.velocity ?? 0f;
+
             //Why is he stting velocity to 3, because he forgot to add it in the json???
             float velocity = 3f;
             
@@ -357,50 +345,35 @@ public class SceneImporter
         }
         else if (simType == "DistanceJoint")
         {
-            float restDistance = props.restDistance;
-            float compliance = props.compliance;
-            float damping = props.damping;
+            float restDistance = props.restDistance ?? 0f;
+            float compliance = props.compliance ?? 0f;
+            float damping = props.damping ?? 0f;
 
             joint.jointType.InitDistanceJoint(restDistance, compliance, damping);
         }
         else if (simType == "PrismaticJoint")
         {
-            //let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
-            //let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
-            //let compliance = props.compliance ?? 0.0;
-            //let damping = props.damping ?? 0.0;
-            //let hasTarget = props.distanceTarget !== undefined;
-            //let targetDistance = props.posTarget ?? 0.0;
-            //let twistMin = props.twistMin ?? -Number.MAX_VALUE;
-            //let twistMax = props.twistMax ?? Number.MAX_VALUE;
-
-            float distanceMin = props.distanceMin;
-            float distanceMax = props.distanceMax;
-            float compliance = props.compliance;
-            float damping = props.damping;
-            bool hasTarget = true; //TODO FIX THIS
-            float targetDistance = props.posTarget;
-            float twistMin = props.twistMin;
-            float twistMax = props.twistMax;
+            float distanceMin = props.distanceMin ?? -float.MaxValue;
+            float distanceMax = props.distanceMax ?? float.MaxValue;
+            float compliance = props.compliance ?? 0f;
+            float damping = props.damping ?? 0f;
+            bool hasTarget = props.distanceTarget != null;
+            float targetDistance = props.posTarget ?? 0f;
+            float twistMin = props.twistMin ?? -float.MaxValue;
+            float twistMax = props.twistMax ?? float.MaxValue;
 
             joint.jointType.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
         }
         else if (simType == "CylinderJoint")
         {
-            //let hasDistanceLimits = props.distanceMin !== undefined && props.distanceMax !== undefined;
-            //let distanceMin = props.distanceMin ?? -Number.MAX_VALUE
-            //let distanceMax = props.distanceMax ?? Number.MAX_VALUE;
-            //let twistMin = props.twistMin ?? -Number.MAX_VALUE;
-            //let twistMax = props.twistMax ?? Number.MAX_VALUE;
-
-            //let hasDistanceLimits = props.distanceMin !== undefined && props.distanceMax !== undefined;
-            float distanceMin = props.distanceMin;
-            float distanceMax = props.distanceMax;
-            float twistMin = props.twistMin;
-            float twistMax = props.twistMax;
+            bool hasDistanceLimits = props.distanceMin != null && props.distanceMax != null;
+            float distanceMin = props.distanceMin ?? -float.MaxValue;
+            float distanceMax = props.distanceMax ?? float.MaxValue;
+            float twistMin = props.twistMin ?? -float.MaxValue;
+            float twistMax = props.twistMax ?? float.MaxValue;
 
             //Has 8 parameters, why is he using only 4???
-            //joint.InitCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
+            joint.jointType.InitCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
         }
         else
         {

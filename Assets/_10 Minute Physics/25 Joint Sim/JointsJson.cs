@@ -46,27 +46,27 @@ public class JointProperties
 {
     public string simType; //RigidBox, Visual, or the name of the joint type
     //These parameters depend on what we import
-    //Get default values if doesnt exist in json file, we actually want them to be null...
+    //Some of them can be null
     public float density;
     public string parent1;
     public string parent2;
-    public float swingMax;
-    public float swingMin;
-    public float twistMax;
-    public float twistMin;
-    public float damping;
-    public float compliance;
-    public float distanceMax;
-    public float distanceMin;
-    public float distanceTarget;
-    public float posTarget;
+    public float? swingMax;
+    public float? swingMin;
+    public float? twistMax;
+    public float? twistMin;
+    public float? damping;
+    public float? compliance;
+    public float? distanceMax;
+    public float? distanceMin;
+    public float? distanceTarget;
+    public float? posTarget;
     public float velocityMax;
     public float velocityMin;
-    public float targetAngle;
-    public float targetAngleCompliance;
+    public float? targetAngle;
+    public float? targetAngleCompliance;
     public float[] color;
     public string parent;
-    public float restDistance;
+    public float? restDistance;
 }
 
 
