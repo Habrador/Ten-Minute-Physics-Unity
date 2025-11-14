@@ -73,19 +73,9 @@ namespace XPBD
 
         public void Dispose()
         {
-            if (this.xObj != null)
-            { 
-                GameObject.Destroy(this.xObj); 
-            }
-            if (this.yObj != null)
-            {
-                GameObject.Destroy(this.yObj);
-            }
-            if (this.zObj != null)
-            {
-                GameObject.Destroy(this.zObj);
-            }
-
+            GameObject.Destroy(this.xObj);
+            GameObject.Destroy(this.yObj);
+            GameObject.Destroy(this.zObj);
         }
     }
 }
