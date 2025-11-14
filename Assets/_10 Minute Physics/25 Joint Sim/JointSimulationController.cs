@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 using XPBD;
 
 //Based on "25 Joint simulation made simple"
@@ -20,6 +19,7 @@ public class JointSimulationController : MonoBehaviour
     }
 
     //The scene data is in json files with data for all meshes, joints, etc
+    //json files can be found on the 10 minute physics github
     private readonly Dictionary<Scenes, string> jointScenes = new()
     {
         { Scenes.BasicJoints, "basicJoints.json" },
@@ -35,6 +35,10 @@ public class JointSimulationController : MonoBehaviour
     //How many steps each FixedUpdate
     //Was 20 in tutorial
     private readonly int numSubSteps = 20;
+    //Tutorial is using dt = 0.03333; // 30 FPS
+    //Default Unity dt in FixedUpdate is 0.02
+    //which corresponds to 50 fixed updates per second
+    //Time.fixedDeltaTime = 0.03333f;
 
     //Mouse interaction
     Interaction interaction;
@@ -158,6 +162,4 @@ public class JointSimulationController : MonoBehaviour
 
         GUILayout.EndHorizontal();
     }
-
-
 }
