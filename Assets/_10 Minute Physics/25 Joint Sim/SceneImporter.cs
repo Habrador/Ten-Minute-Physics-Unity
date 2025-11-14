@@ -156,7 +156,8 @@ public class SceneImporter
 
         //The objects are mirrored most likely because Blender is using some other coordinate system
         //Inverteing z seems to solve it for now
-        pos.z *= -1f;
+        //This screws up then visual mesh...
+        //pos.z *= -1f;
 
         MyRigidBody rigidBody;
 
@@ -413,35 +414,9 @@ public class SceneImporter
         ExtractPosAndRot(mesh, out Vector3 visualPos, out Quaternion visualRot);
 
         //Transform visual mesh to parent body local space
+        Quaternion q_rel = parentBody.rot.Conjugate() * visualRot;
 
-        List<Vector3> vertices = new();
-
-        for (int i = 0; i < mesh.vertices.Length; i += 3)
-        {
-            Vector3 vertex = new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
-
-            vertices.Add(vertex);
-        }
-
-        List<Vector3> normals = new();
-
-        if (mesh.normals != null)
-        {
-            for (int i = 0; i < mesh.normals.Length; i += 3)
-            {
-                Vector3 normal = new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
-
-                normals.Add(normal);
-            }
-        }
-
-        /*
-        //const q_rel = parentBody.rot.clone().conjugate().multiply(visualRot);
-        //For unit quaternions (which are normalized), the conjugate is the same as the inverse.
-        Quaternion q_rel = Quaternion.Inverse(parentBody.rot) * visualRot;
-
-        //const p_rel = visualPos.clone().sub(parentBody.pos).applyQuaternion(parentBody.rot.clone().conjugate());
-        Vector3 p_rel = Quaternion.Inverse(parentBody.rot) * (parentBody.pos - visualPos); //???
+        Vector3 p_rel = parentBody.rot.Conjugate() * (visualPos - parentBody.pos);
 
         List<Vector3> transformedVertices = new();
 
@@ -449,8 +424,8 @@ public class SceneImporter
         {
             Vector3 vertex = new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
 
-            //vertex.applyQuaternion(q_rel);
-            //vertex.add(p_rel);
+            //p_rel *= -1f;
+
             vertex = q_rel * vertex + p_rel;
 
             transformedVertices.Add(vertex);
@@ -464,13 +439,12 @@ public class SceneImporter
             {
                 Vector3 normal = new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
 
-                //normal.applyQuaternion(q_rel);
                 normal = q_rel * normal;
                 
                 transformedNormals.Add(normal);
             }
         }
-        */
+        
 
         //Create Unity geometry from transformed data
         GameObject visualMesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -478,9 +452,9 @@ public class SceneImporter
         //Add new mesh
         Mesh actualMesh = new()
         {
-            vertices = vertices.ToArray(),
+            vertices = transformedVertices.ToArray(),
             triangles = mesh.triangles,
-            normals = normals.ToArray()
+            normals = transformedNormals.ToArray()
         };
 
         visualMesh.GetComponent<MeshFilter>().mesh = actualMesh;
