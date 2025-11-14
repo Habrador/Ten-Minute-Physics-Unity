@@ -141,6 +141,11 @@ namespace XPBD
             }
 
             this.dragConstraint?.Dispose();
+
+            foreach (MyJoint joint in allJoints)
+            {
+                joint.Dispose();
+            }
         }
     }
 }

@@ -68,5 +68,24 @@ namespace XPBD
             this.yObj.SetActive(visible);
             this.zObj.SetActive(visible);
         }
+
+
+
+        public void Dispose()
+        {
+            if (this.xObj != null)
+            { 
+                GameObject.Destroy(this.xObj); 
+            }
+            if (this.yObj != null)
+            {
+                GameObject.Destroy(this.yObj);
+            }
+            if (this.zObj != null)
+            {
+                GameObject.Destroy(this.zObj);
+            }
+
+        }
     }
 }

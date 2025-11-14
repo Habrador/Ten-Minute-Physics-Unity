@@ -708,5 +708,19 @@ namespace XPBD
 
             this.visDistance?.UpdateMesh(this.globalPos0, this.globalPos1);
         }
+
+
+
+        //
+        // End simulation methods
+        //
+
+        public void Dispose()
+        {
+            this.visFrame0?.Dispose();
+            this.visFrame1?.Dispose();
+
+            this.visDistance?.Dispose();
+        }
     }
 }
