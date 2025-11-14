@@ -123,6 +123,11 @@ namespace XPBD
             }
 
             this.dragConstraint?.UpdateMesh();
+
+            foreach (MyJoint joint in allJoints)
+            {
+                joint.UpdateMesh();
+            }
         }
 
 

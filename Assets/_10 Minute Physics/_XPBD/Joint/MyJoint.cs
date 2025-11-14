@@ -158,6 +158,14 @@ namespace XPBD
             SolveOrientation(dt);
         }
 
+        //Called from Update()
+        public void UpdateMesh()
+        {
+            UpdateVisuals();
+
+            //The meshes connected to the rb are not updated here!
+        }
+
 
         //In the video he has some building blocks that make up these joints
 
