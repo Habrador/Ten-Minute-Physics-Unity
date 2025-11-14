@@ -316,7 +316,7 @@ public class SceneImporter
             float twistMax = props.twistMax ?? float.MaxValue;
             float damping = props.damping ?? 0f;
 
-            joint.jointType.InitBallJoint(swingMax, twistMin, twistMax, damping);
+            joint.jointSettings.InitBallJoint(swingMax, twistMin, twistMax, damping);
         }
         else if (simType == "HingeJoint")
         {
@@ -327,23 +327,24 @@ public class SceneImporter
             float compliance = props.targetAngleCompliance ?? 0f;
             float damping = props.damping ?? 0f;
 
-            joint.jointType.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
+            joint.jointSettings.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
         }
         else if (simType == "ServoJoint")
         {
             float swingMin = props.swingMin ?? -float.MaxValue;
             float swingMax = props.swingMax ?? float.MaxValue;
 
-            joint.jointType.InitServo(swingMin, swingMax);
+            joint.jointSettings.InitServo(swingMin, swingMax);
         }
         else if (simType == "MotorJoint")
         {
             //float velocity = props.velocity ?? 0f;
 
-            //Why is he stting velocity to 3, because he forgot to add it in the json???
+            //Why is he stting velocity to 3, because he forgot to add it in the json!
+            //The MotorJoint only has velocityMax and velocityMin, which are unused...
             float velocity = 3f;
             
-            joint.jointType.InitMotor(velocity);
+            joint.jointSettings.InitMotor(velocity);
         }
         else if (simType == "DistanceJoint")
         {
@@ -351,7 +352,7 @@ public class SceneImporter
             float compliance = props.compliance ?? 0f;
             float damping = props.damping ?? 0f;
 
-            joint.jointType.InitDistanceJoint(restDistance, compliance, damping);
+            joint.jointSettings.InitDistanceJoint(restDistance, compliance, damping);
         }
         else if (simType == "PrismaticJoint")
         {
@@ -364,7 +365,7 @@ public class SceneImporter
             float twistMin = props.twistMin ?? -float.MaxValue;
             float twistMax = props.twistMax ?? float.MaxValue;
 
-            joint.jointType.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
+            joint.jointSettings.InitPrismaticJoint(distanceMin, distanceMax, twistMin, twistMax, hasTarget, targetDistance, compliance, damping);
         }
         else if (simType == "CylinderJoint")
         {
@@ -375,7 +376,7 @@ public class SceneImporter
             float twistMax = props.twistMax ?? float.MaxValue;
 
             //Has 8 parameters, why is he using only 4???
-            joint.jointType.InitCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
+            joint.jointSettings.InitCylinderJoint(distanceMin, distanceMax, twistMin, twistMax);
         }
         else
         {

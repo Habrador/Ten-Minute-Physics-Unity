@@ -24,17 +24,17 @@ namespace XPBD
         private Quaternion localRot1;
 
         //Connected rbs
-        private MyRigidBody body0;
-        private MyRigidBody body1;
+        private readonly MyRigidBody body0;
+        private readonly MyRigidBody body1;
 
         private bool disabled;
 
         //Quaternion globalFrameRot;
 
         //All settings for the joint type 
-        public MyJointType jointType;
+        public MyJointSettings jointSettings;
 
-        public MyJointType.Types Type() => this.jointType.type;
+        public MyJointSettings.Types Type() => this.jointSettings.type;
 
         //Debug objects
 
@@ -51,7 +51,7 @@ namespace XPBD
 
         public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
         {
-            this.jointType = new();
+            this.jointSettings = new();
         
             this.body0 = body0;
             this.body1 = body1;
@@ -282,15 +282,15 @@ namespace XPBD
         //Position constraint
         private void SolvePosition(float dt)
         {
-            if (this.disabled || this.jointType.type == MyJointType.Types.None)
+            if (this.disabled || this.jointSettings.type == MyJointSettings.Types.None)
             {
                 return;
             }
 
             //Align
-            if (this.Type() == MyJointType.Types.Prismatic || this.Type() == MyJointType.Types.Cylinder)
+            if (this.Type() == MyJointSettings.Types.Prismatic || this.Type() == MyJointSettings.Types.Cylinder)
             {
-                float targetDistance = Mathf.Max(this.jointType.distanceMin, Mathf.Min(this.jointType.targetDistance, this.jointType.distanceMax));
+                float targetDistance = Mathf.Max(this.jointSettings.distanceMin, Mathf.Min(this.jointSettings.targetDistance, this.jointSettings.distanceMax));
                 
                 float hardCompliance = 0f;
                 
@@ -300,17 +300,17 @@ namespace XPBD
 
                 corr = this.globalRot0.Conjugate() * corr;
 
-                if (this.Type() == MyJointType.Types.Cylinder)
+                if (this.Type() == MyJointSettings.Types.Cylinder)
                 {
-                    corr.x -= this.jointType.targetDistance;
+                    corr.x -= this.jointSettings.targetDistance;
                 }
-                else if (corr.x > this.jointType.distanceMax)
+                else if (corr.x > this.jointSettings.distanceMax)
                 {
-                    corr.x -= this.jointType.distanceMax;
+                    corr.x -= this.jointSettings.distanceMax;
                 }
-                else if (corr.x < this.jointType.distanceMin)
+                else if (corr.x < this.jointSettings.distanceMin)
                 {
-                    corr.x -= this.jointType.distanceMin;
+                    corr.x -= this.jointSettings.distanceMin;
                 }
                 else
                 {
@@ -323,7 +323,7 @@ namespace XPBD
             }
 
             //Solve distance
-            if (this.Type() != MyJointType.Types.Cylinder && this.jointType.hasTargetDistance)
+            if (this.Type() != MyJointSettings.Types.Cylinder && this.jointSettings.hasTargetDistance)
             {
                 UpdateGlobalFrames();
                 
@@ -343,7 +343,7 @@ namespace XPBD
                 }
                     
 
-                corr *= this.jointType.targetDistance - distance;
+                corr *= this.jointSettings.targetDistance - distance;
 
                 corr *= -1f;
                 
@@ -433,16 +433,16 @@ namespace XPBD
         //Orientation constraint
         private void SolveOrientation(float dt)
         {
-            if (this.disabled || this.Type() == MyJointType.Types.None || this.Type() == MyJointType.Types.Distance)
+            if (this.disabled || this.Type() == MyJointSettings.Types.None || this.Type() == MyJointSettings.Types.Distance)
             {
                 return;
             }
 
-            if (this.Type() == MyJointType.Types.Motor)
+            if (this.Type() == MyJointSettings.Types.Motor)
             {
-                float aAngle = Mathf.Min(Mathf.Max(this.jointType.velocity * dt, -1f), 1f);
+                float aAngle = Mathf.Min(Mathf.Max(this.jointSettings.velocity * dt, -1f), 1f);
 
-                this.jointType.targetAngle += aAngle;
+                this.jointSettings.targetAngle += aAngle;
             }
 
             float hardCompliance = 0f;
@@ -456,9 +456,9 @@ namespace XPBD
             Vector3 corr = new Vector3();
 
             if (
-                this.Type() == MyJointType.Types.Hinge || 
-                this.Type() == MyJointType.Types.Servo || 
-                this.Type() == MyJointType.Types.Motor)
+                this.Type() == MyJointSettings.Types.Hinge || 
+                this.Type() == MyJointSettings.Types.Servo || 
+                this.Type() == MyJointSettings.Types.Motor)
             {
                 //Align axes
 
@@ -474,7 +474,7 @@ namespace XPBD
                 
                 //this.body0.ApplyCorrection(hardCompliance, corr, null, this.body1, null);
 
-                if (this.jointType.hasTargetAngle)
+                if (this.jointSettings.hasTargetAngle)
                 {
                     UpdateGlobalFrames();
 
@@ -487,11 +487,11 @@ namespace XPBD
                     a1 = axis1;
                     a1 = this.globalRot1 * a1;
 
-                    LimitAngle(n, a0, a1, this.jointType.targetAngle, this.jointType.targetAngle, this.jointType.targetAngleCompliance);
+                    LimitAngle(n, a0, a1, this.jointSettings.targetAngle, this.jointSettings.targetAngle, this.jointSettings.targetAngleCompliance);
                 }
 
                 //Joint limits
-                if (this.jointType.swingMin > -float.MaxValue || this.jointType.swingMax < float.MaxValue)
+                if (this.jointSettings.swingMin > -float.MaxValue || this.jointSettings.swingMax < float.MaxValue)
                 {
                     UpdateGlobalFrames();
 
@@ -504,13 +504,13 @@ namespace XPBD
                     a1 = axis1;
                     a1 = this.globalRot1 * a1;
                     
-                    LimitAngle(n, a0, a1, this.jointType.swingMin, this.jointType.swingMax, hardCompliance);
+                    LimitAngle(n, a0, a1, this.jointSettings.swingMin, this.jointSettings.swingMax, hardCompliance);
                 }
             }
             else if (
-                this.Type() == MyJointType.Types.Ball || 
-                this.Type() == MyJointType.Types.Prismatic || 
-                this.Type() == MyJointType.Types.Cylinder)
+                this.Type() == MyJointSettings.Types.Ball || 
+                this.Type() == MyJointSettings.Types.Prismatic || 
+                this.Type() == MyJointSettings.Types.Cylinder)
             {
                 //Swing limit
 
@@ -525,7 +525,7 @@ namespace XPBD
                 n = Vector3.Cross(a0, a1);
                 n = Vector3.Normalize(n);
 
-                LimitAngle(n, a0, a1, this.jointType.swingMin, this.jointType.swingMax, hardCompliance);
+                LimitAngle(n, a0, a1, this.jointSettings.swingMin, this.jointSettings.swingMax, hardCompliance);
 
 
                 //Twist limit
@@ -553,9 +553,9 @@ namespace XPBD
                 a1 += n * Vector3.Dot(-n, a1);
                 a1 = Vector3.Normalize(a1);
 
-                LimitAngle(n, a0, a1, this.jointType.twistMin, this.jointType.twistMax, hardCompliance);
+                LimitAngle(n, a0, a1, this.jointSettings.twistMin, this.jointSettings.twistMax, hardCompliance);
             }
-            else if (this.Type() == MyJointType.Types.Fixed)
+            else if (this.Type() == MyJointSettings.Types.Fixed)
             {
                 //Align orientations
 
@@ -611,7 +611,7 @@ namespace XPBD
             
             n *= Vector3.Dot(-dVel,n);
 
-            n *= Mathf.Min(this.jointType.linearDampingCoeff * dt, 1f);
+            n *= Mathf.Min(this.jointSettings.linearDampingCoeff * dt, 1f);
             
             //this.body0.applyCorrection(0.0, n, this.globalPos0, this.body1, this.globalPos1, true);
         }
@@ -633,7 +633,7 @@ namespace XPBD
 
         public void ApplyAngularDamping(float dt)
         {
-            ApplyAngularDamping(dt, this.jointType.angularDampingCoeff);
+            ApplyAngularDamping(dt, this.jointSettings.angularDampingCoeff);
         }
 
         private void ApplyAngularDamping(float dt, float coeff)
@@ -649,7 +649,7 @@ namespace XPBD
             }
 
 
-            if (this.jointType.type == MyJointType.Types.Hinge)
+            if (this.jointSettings.type == MyJointSettings.Types.Hinge)
             {
                 //Damp along the hinge axis
                 Vector3 n = new Vector3(1f, 0f, 0f);
@@ -661,16 +661,16 @@ namespace XPBD
                 dOmega = n;
             }
             if (
-                this.jointType.type == MyJointType.Types.Cylinder ||
-                this.jointType.type == MyJointType.Types.Prismatic ||
-                this.jointType.type == MyJointType.Types.Fixed)
+                this.jointSettings.type == MyJointSettings.Types.Cylinder ||
+                this.jointSettings.type == MyJointSettings.Types.Prismatic ||
+                this.jointSettings.type == MyJointSettings.Types.Fixed)
             {
                 //Maximum damping
                 dOmega *= -1f;
             }
             else
             {
-                dOmega *= -Mathf.Min(this.jointType.angularDampingCoeff * dt, 1f);
+                dOmega *= -Mathf.Min(this.jointSettings.angularDampingCoeff * dt, 1f);
             }
 
             //this.body0.ApplyCorrection(0f, dOmega, null, this.body1, null, true);

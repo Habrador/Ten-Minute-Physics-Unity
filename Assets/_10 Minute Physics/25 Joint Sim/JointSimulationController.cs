@@ -32,8 +32,6 @@ public class JointSimulationController : MonoBehaviour
     //Simulation settings
     //In this sim gravity is 9.81 - not 10
     private Vector3 gravity = new(0f, -9.81f, 0f);
-    //Needed to calculate mass
-    //private readonly float density = 1000f;
     //How many steps each FixedUpdate
     //Was 20 in tutorial
     private readonly int numSubSteps = 20;
@@ -104,7 +102,7 @@ public class JointSimulationController : MonoBehaviour
 
 
 
-    //Buttons to select which scene to simulate
+    //Buttons to select which scene to simulate and some settings
     private void MainGUI()
     {
         GUILayout.BeginHorizontal("box");

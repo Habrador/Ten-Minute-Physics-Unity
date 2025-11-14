@@ -4,15 +4,16 @@ using UnityEngine;
 
 namespace XPBD
 {
-    public class MyJointType 
+    //Settings for the different joints to make the joint class less messy
+    public class MyJointSettings 
     {
         public enum Types
         {
             None,
             Distance,
             Hinge, //Rotation around one axis
-            Servo,
-            Motor,
+            Servo, //Can rotate to a specific angle and hold that position
+            Motor, //Runs continuously in one direction 
             Ball, //No translation, only rotation
             Prismatic, //Movement in 1d
             Cylinder, //Similar to prismatic but the cylinder can rotate around the movement axis
