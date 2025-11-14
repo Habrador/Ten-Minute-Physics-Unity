@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using XPBD;
 
 //Based on "25 Joint simulation made simple"
@@ -45,6 +48,9 @@ public class JointSimulationController : MonoBehaviour
 
     //Show simple or complicated meshes
     private bool showVisuals = true;
+    //To control the joints (tutorial is using a touch control) but we shall use sliders
+    private Vector2 controlVector;
+    private Vector2 controlVelocity;
 
 
 
@@ -70,6 +76,8 @@ public class JointSimulationController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        UpdateControl();
+    
         float dt = Time.fixedDeltaTime;
 
         //rbSimulator.MyFixedUpdate(dt, numSubSteps);
@@ -102,6 +110,46 @@ public class JointSimulationController : MonoBehaviour
         this.rbSimulator = new XPBDPhysicsSimulator(gravity);
 
         sceneImporter.LoadScene(jointScenes[scene], this.rbSimulator);
+    }
+
+
+
+    //Control motors and servers with sliders
+    private void UpdateControl()
+    {
+        //Update control vector with velocity
+
+        //Adjust this value to control return speed
+        //float returnSpeed = 5f;
+        
+        //this.controlVelocity.x = -this.controlVector.x * returnSpeed;
+        //this.controlVelocity.y = -this.controlVector.y * returnSpeed;
+
+        //this.controlVector += this.controlVelocity * Time.deltaTime;
+
+        //Apply control to motors and servos
+        List<MyJoint> allJoints = rbSimulator.allJoints;
+
+        for (int i = 0; i < allJoints.Count; i++)
+        {
+            MyJoint joint = allJoints[i];
+            
+            if (joint.Type() == MyJointSettings.Types.Motor)
+            {
+                //Scale factor for motor speed
+                joint.settings.velocity = this.controlVector.y * 5f;
+            }
+            else if (joint.Type() == MyJointSettings.Types.Servo)
+            {
+                //Scale factor for steering angle
+                joint.settings.targetAngle = this.controlVector.x * Mathf.PI / 4f;
+            }
+            else if (joint.Type() == MyJointSettings.Types.Cylinder)
+            {
+                //Scale factor for offset
+                joint.settings.targetDistance = -this.controlVector.y * 0.1f;
+            }
+        }
     }
 
 
@@ -148,6 +196,7 @@ public class JointSimulationController : MonoBehaviour
 
         GUILayout.Label("Settings:", textStyle);
 
+        //Show the detailed mesh och show the simple rigid bodies and the debug objects?
         if (GUILayout.Button("Toggle View", buttonStyle))
         {
             showVisuals = !showVisuals;
@@ -158,7 +207,32 @@ public class JointSimulationController : MonoBehaviour
             {
                 rb.ShowSimulationView(showVisuals);
             }
+
+            List<MyJoint> allJoints = rbSimulator.allJoints;
+            
+            foreach (MyJoint joint in allJoints)
+            {
+                joint.SetVisible(!showVisuals);
+            }
         }
+
+        GUILayout.EndHorizontal();
+
+
+        GUILayout.BeginHorizontal("box");
+
+        GUILayout.Label("Settings x:", textStyle); 
+        
+        controlVector.x = EditorGUILayout.Slider(controlVector.x, -1f, 1f); 
+
+        GUILayout.EndHorizontal();
+
+
+        GUILayout.BeginHorizontal("box");
+
+        GUILayout.Label("Settings y:", textStyle);
+
+        controlVector.y = EditorGUILayout.Slider(controlVector.y, -1f, 1f);
 
         GUILayout.EndHorizontal();
     }
