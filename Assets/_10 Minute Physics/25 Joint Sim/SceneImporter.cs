@@ -158,7 +158,7 @@ public class SceneImporter
         //The objects are mirrored most likely because Blender is using some other coordinate system
         //Inverteing z seems to solve it for now
         //This screws up then visual mesh...
-        pos.z *= -1f;
+        //pos.z *= -1f;
 
         MyRigidBody rigidBody;
 
@@ -422,7 +422,7 @@ public class SceneImporter
 
         Vector3 parentPos = parentBody.pos;
 
-        parentPos.z *= -1f;
+        //parentPos.z *= -1f;
 
         Vector3 p_rel = parentBody.rot.Conjugate() * (visualPos - parentPos);
 
@@ -434,7 +434,7 @@ public class SceneImporter
 
             vertex = q_rel * vertex + p_rel;
 
-            vertex.y *= -1f;
+            //vertex.y *= -1f;
 
             transformedVertices.Add(vertex);
         }
@@ -449,20 +449,20 @@ public class SceneImporter
 
                 normal = q_rel * normal;
 
-                normal *= -1f;
+                //normal *= -1f;
                 
                 transformedNormals.Add(normal);
             }
         }
 
         //Invert triangles because the flipped mesh was inside out
-        if (mesh.triangles != null)
-        {
-            for (int i = 0; i < mesh.triangles.Length; i += 3)
-            {
-                (mesh.triangles[i + 2], mesh.triangles[i + 0]) = (mesh.triangles[i + 0], mesh.triangles[i + 2]);
-            }
-        }
+        //if (mesh.triangles != null)
+        //{
+        //    for (int i = 0; i < mesh.triangles.Length; i += 3)
+        //    {
+        //        (mesh.triangles[i + 2], mesh.triangles[i + 0]) = (mesh.triangles[i + 0], mesh.triangles[i + 2]);
+        //    }
+        //}
         
 
         //Create Unity geometry from transformed data
