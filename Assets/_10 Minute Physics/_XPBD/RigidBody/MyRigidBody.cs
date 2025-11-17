@@ -111,11 +111,14 @@ namespace XPBD
 
 
 
-        //Switch between showing the basic mesh or the more detailed mesh
+        //Switch between showing the basic (gray) mesh or the more detailed (red) mesh
         public void ShowSimulationView(bool show)
         {
             this.visualObjects.showVisualObj = show;
-            this.UpdateMeshes();
+
+            this.visualObjects.ShowHideObjects();
+            
+            UpdateMeshes();
         }
 
 

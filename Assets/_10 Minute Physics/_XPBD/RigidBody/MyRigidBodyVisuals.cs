@@ -35,6 +35,7 @@ namespace XPBD
 
 
 
+        //Update pos and rot
         public void UpdateVisualObjects(Vector3 pos, Quaternion rot)
         {
             this.rbVisualTrans.SetPositionAndRotation(pos, rot);
@@ -50,6 +51,20 @@ namespace XPBD
 
 
 
+        //Update visibility
+        public void ShowHideObjects()
+        {
+            this.rbVisualObj.SetActive(this.showVisualObj);
+
+            foreach (GameObject obj in this.rbDetailedObjs)
+            {
+                obj.SetActive(!this.showVisualObj);
+            }
+        }
+
+
+
+        //Add detailed obj (red mesh)
         public void AddDetailedObject(GameObject detailedObj)
         {
             this.rbDetailedObjs.Add(detailedObj);
@@ -58,6 +73,7 @@ namespace XPBD
 
 
 
+        //Destroy all objects
         public void Dispose()
         {
             GameObject.Destroy(rbVisualObj);

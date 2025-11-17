@@ -47,6 +47,7 @@ public class JointSimulationController : MonoBehaviour
     Interaction interaction;
 
     //Show simple or complicated meshes
+    //Visuals are the simple objects
     private bool showVisuals = true;
     //To control the joints (tutorial is using a touch control) but we shall use sliders
     private Vector2 controlVector;
@@ -110,6 +111,30 @@ public class JointSimulationController : MonoBehaviour
         this.rbSimulator = new XPBDPhysicsSimulator(gravity);
 
         sceneImporter.LoadScene(jointScenes[scene], this.rbSimulator);
+
+        this.showVisuals = false;
+
+        ToggleView();
+    }
+
+
+
+    //Show the red mesh or they gray mesh + debug objects
+    private void ToggleView()
+    {
+        List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;
+
+        foreach (MyRigidBody rb in allRbs)
+        {
+            rb.ShowSimulationView(showVisuals);
+        }
+
+        List<MyJoint> allJoints = rbSimulator.allJoints;
+
+        foreach (MyJoint joint in allJoints)
+        {
+            joint.SetVisible(!showVisuals);
+        }
     }
 
 
@@ -196,24 +221,12 @@ public class JointSimulationController : MonoBehaviour
 
         GUILayout.Label("Settings:", textStyle);
 
-        //Show the detailed mesh och show the simple rigid bodies and the debug objects?
+        //Show the detailed (red) mesh och show the simple (gray) rigid bodies and the debug objects
         if (GUILayout.Button("Toggle View", buttonStyle))
         {
             showVisuals = !showVisuals;
 
-            List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;
-
-            foreach (MyRigidBody rb in allRbs)
-            {
-                rb.ShowSimulationView(showVisuals);
-            }
-
-            List<MyJoint> allJoints = rbSimulator.allJoints;
-            
-            foreach (MyJoint joint in allJoints)
-            {
-                joint.SetVisible(!showVisuals);
-            }
+            ToggleView();
         }
 
         GUILayout.EndHorizontal();
