@@ -29,12 +29,30 @@ namespace XPBD
             //Create a line representing an axis
             GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 
-            line.transform.localScale = new Vector3(width, width, size);
+            //Set scale
+            line.transform.localScale = new Vector3(width, size / 4f, width);
 
+            //Set color
             line.GetComponent<Renderer>().material.color = color;
 
             //Position the cylinder so it starts at the origin and extends in positive direction
-            line.transform.Translate(new Vector3(0f, size / 2f, 0f));
+            //In our case we have to offset all vertices in the mesh
+            Mesh cylinderMesh = line.GetComponent<MeshFilter>().mesh;
+
+            Vector3[] vertices = cylinderMesh.vertices;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] += new Vector3(0f, 1f, 0f);
+            }
+
+            cylinderMesh.vertices = vertices;
+
+            line.GetComponent<MeshFilter>().mesh = cylinderMesh;
+
+            //Deactivate collider
+            line.GetComponent<Collider>().enabled = false;
+
 
             return line;
         }

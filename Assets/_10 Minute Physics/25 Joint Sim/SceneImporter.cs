@@ -92,9 +92,6 @@ public class SceneImporter
 
         Debug.Log($"Found {rigidCount} RigidBodies, {jointCount} Joints, and {visualCount} Visual meshes = {rigidCount + jointCount + visualCount} meshes. Total should be {data.exportInfo.totalMeshes}");
 
-        //this.simulator.simulationView = false;
-        //this.simulator.toggleView();
-
         Debug.Log($"Loaded scene with ${ this.rigidBodies.Count} rigid bodies");
     }
 

@@ -133,7 +133,7 @@ public class JointSimulationController : MonoBehaviour
 
         foreach (MyJoint joint in allJoints)
         {
-            joint.SetVisible(!showVisuals);
+            joint.SetVisible(showVisuals);
         }
     }
 
