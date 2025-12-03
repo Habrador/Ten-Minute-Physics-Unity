@@ -5,6 +5,7 @@ using UnityEngine;
 namespace XPBD
 {
     //A coordinate axis where each axis is represented by a cylinder with rgb color
+    //TODO: Try to use three go with cylinders as children to one axis obj
     class VisualFrame
     {
         private readonly GameObject xObj;
