@@ -111,7 +111,9 @@ Spoiler: It's just the simulation part that's 200 lines of code. You need a few 
 
 ## 19. Differential equations and calculus from scratch
 
-Nothing to simulate
+Simulate a car showing the graphs of distance, velocity, and acceleration.
+
+<img src="/_media/19-car.png" width="400">
 
 	
 ## 20. Height-field water simulation
