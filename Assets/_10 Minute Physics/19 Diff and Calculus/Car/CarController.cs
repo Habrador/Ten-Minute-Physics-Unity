@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
+//Simulate a basic car
+//You can see the distance (white), velocity (yellow), acceleration (red) in a graph
 //Control car with Left and Right arrows
 public class CarController : MonoBehaviour
 {
