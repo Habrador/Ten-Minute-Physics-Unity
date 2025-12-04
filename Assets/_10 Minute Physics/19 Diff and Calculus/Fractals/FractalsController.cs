@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
@@ -55,6 +56,25 @@ public class FractalsController : MonoBehaviour
         DisplayFractals();
     }
 
+
+
+    private void Update()
+    {
+        float scaleChange = 0.001f;
+
+        if (Input.GetAxis("Mouse ScrollWheel") > 0f)
+        {
+            scale -= scaleChange;
+
+            DisplayFractals();
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0f)
+        {
+            scale += scaleChange;
+
+            DisplayFractals();
+        }
+    }
 
 
     private void DisplayFractals()
