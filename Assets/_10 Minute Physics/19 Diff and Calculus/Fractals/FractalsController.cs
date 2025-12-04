@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
@@ -8,7 +7,7 @@ public class FractalsController : MonoBehaviour
 {
     public GameObject planeObj;
 
-    private int[][] gradientColors = 
+    private readonly int[][] gradientColors = 
     {
         new int[] {15, 2, 66},
         new int[] {191, 41, 12},
@@ -42,6 +41,9 @@ public class FractalsController : MonoBehaviour
         Color[,] colors = GenerateColors(width, height);
 
         //Display the colors on the plane
+        Texture2D texture = GenerateTexture(colors);
+
+        planeObj.GetComponent<MeshRenderer>().material.mainTexture = texture;
     }
 
 
@@ -65,27 +67,17 @@ public class FractalsController : MonoBehaviour
 
                 if (numIters < maxIters)
                 {
-                    if (drawMono)
-                    {
-                        colors[i, j] = new Color(0, 0, 0);
-                    }
-                    else
-                    {
-                        colors[i, j] = GetGradientColor(numIters, 20);
-                    }
+                    colors[i, j] = drawMono ? Color.black : GetGradientColor(numIters, 20);
                 }
                 else
                 {
-                    if (drawMono)
-                    {
-                        colors[i, j] = new Color(255, 192, 0);
-                    }
-                    else
-                    {
-                        colors[i, j] = new Color(0, 0, 0);
-                    }
+                    colors[i, j] = drawMono ? new Color(255, 192, 0) : Color.black;
                 }
+
+                x += scale;
             }
+
+            y += scale;
         }
 
         return colors;
@@ -122,17 +114,57 @@ public class FractalsController : MonoBehaviour
         int col0 = Mathf.FloorToInt(nr / steps) % numCols;
         int col1 = (col0 + 1) % numCols;
         
-        var step = nr % steps;
+        int step = nr % steps;
 
         int[] color = { 0, 0, 0 };
 
-        for (var i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
         {
-            var c0 = gradientColors[col0][i];
-            var c1 = gradientColors[col1][i];
+            int c0 = gradientColors[col0][i];
+            int c1 = gradientColors[col1][i];
+            
             color[i] = Mathf.FloorToInt(c0 + (c1 - c0) / steps * step);
         }
 
         return new Color(color[0], color[1], color[2]);
+    }
+
+
+
+    private Texture2D GenerateTexture(Color[,] colors)
+    {
+        int xRes = colors.GetLength(0);
+        int yRes = colors.GetLength(1);
+
+        Texture2D fractalsTexture = new(xRes, yRes);
+
+        //Texture settings
+        //Dont blend the pixels
+        fractalsTexture.filterMode = FilterMode.Point;
+
+        //Blend the pixels 
+        //fractalsTexture.filterMode = FilterMode.Bilinear;
+
+        //Don't wrap the border with the border on the opposite side of the texture
+        fractalsTexture.wrapMode = TextureWrapMode.Clamp;
+
+        //Add all colors to the texture
+        //2d array -> 1d array
+        Color[] colors1D = new Color[xRes * yRes];
+
+        for (int x = 0; x < xRes; x++)
+        {
+            for (int y = 0; y < yRes; y++)
+            {
+                colors1D[x + (xRes * y)] = colors[x,y];
+            }
+        }
+
+        fractalsTexture.SetPixels(colors1D);
+
+        //Copies changes you've made in a CPU texture to the GPU
+        fractalsTexture.Apply(false);
+
+        return fractalsTexture;
     }
 }
