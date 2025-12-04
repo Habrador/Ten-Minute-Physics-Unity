@@ -52,63 +52,10 @@ public class FractalsController : MonoBehaviour
 
 
 
-    private void OnGUI()
-    {
-        GUILayout.BeginHorizontal("box");
-
-        //Settings
-        int fontSize = 20;
-
-        RectOffset offset = new(5, 5, 5, 5);
-
-        GUIStyle buttonStyle = new(GUI.skin.button)
-        {
-            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
-
-            fontSize = fontSize,
-            margin = offset
-        };
-
-        GUIStyle textStyle = new(GUI.skin.label)
-        {
-            fontSize = fontSize,
-            margin = offset
-        };
-
-        //Buttons and sliders
-        if (GUILayout.Button(!drawMandelbrot ? "Julia" : "Mandelbrot", buttonStyle))
-        {
-            drawMandelbrot = !drawMandelbrot;
-        
-            DisplayFractals();
-        }
-        if (GUILayout.Button(drawMono ? "Mono" : "Gradient", buttonStyle))
-        {
-            drawMono = !drawMono;
-
-            DisplayFractals();
-        }
-
-        GUILayout.Label("Iterations:", textStyle);
-
-        int newMaxIters = (int)EditorGUILayout.Slider(maxIters, 1, 500);
-
-        if (newMaxIters != maxIters)
-        {
-            maxIters = newMaxIters;
-
-            DisplayFractals();
-        }
-
-        GUILayout.EndHorizontal();
-    }
-
-
-
     private void DisplayFractals()
     {
         //Generate the fractal colors
-        Color[,] colors = GenerateColors(width, height);
+        Color32[,] colors = GenerateColors(width, height);
 
         //Display the colors on the plane
         Texture2D texture = GenerateTexture(colors);
@@ -118,9 +65,9 @@ public class FractalsController : MonoBehaviour
 
 
 
-    private Color[,] GenerateColors(int width, int height)
+    private Color32[,] GenerateColors(int width, int height)
     {
-        Color[,] colors = new Color[width, height];
+        Color32[,] colors = new Color32[width, height];
 
         //The start y coordinate in world space
         float y = (centerY - height / 2f) * scale;
@@ -178,7 +125,7 @@ public class FractalsController : MonoBehaviour
 
 
     //Get a gradient color 0->255
-    private Color GetGradientColor(int nr, int steps)
+    private Color32 GetGradientColor(int nr, int steps)
     {
         int numCols = gradientColors.Length;
 
@@ -197,13 +144,15 @@ public class FractalsController : MonoBehaviour
             color[i] = Mathf.FloorToInt(c0 + (c1 - c0) / steps * step);
         }
 
-        return new Color(color[0], color[1], color[2]);
+        Color32 finalColor = new((byte)color[0], (byte)color[1], (byte)color[2], (byte)255);
+
+        return finalColor;
     }
 
 
 
     //Generate a texture with colors
-    private Texture2D GenerateTexture(Color[,] colors)
+    private Texture2D GenerateTexture(Color32[,] colors)
     {
         int xRes = colors.GetLength(0);
         int yRes = colors.GetLength(1);
@@ -222,7 +171,7 @@ public class FractalsController : MonoBehaviour
 
         //Add all colors to the texture
         //2d array -> 1d array
-        Color[] colors1D = new Color[xRes * yRes];
+        Color32[] colors1D = new Color32[xRes * yRes];
 
         for (int x = 0; x < xRes; x++)
         {
@@ -232,11 +181,64 @@ public class FractalsController : MonoBehaviour
             }
         }
 
-        fractalsTexture.SetPixels(colors1D);
+        fractalsTexture.SetPixels32(colors1D);
 
         //Copies changes you've made in a CPU texture to the GPU
         fractalsTexture.Apply(false);
 
         return fractalsTexture;
+    }
+
+
+
+    private void OnGUI()
+    {
+        GUILayout.BeginHorizontal("box");
+
+        //Settings
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+        GUIStyle buttonStyle = new(GUI.skin.button)
+        {
+            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
+
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        GUIStyle textStyle = new(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        //Buttons and sliders
+        if (GUILayout.Button(!drawMandelbrot ? "Julia" : "Mandelbrot", buttonStyle))
+        {
+            drawMandelbrot = !drawMandelbrot;
+
+            DisplayFractals();
+        }
+        if (GUILayout.Button(drawMono ? "Mono" : "Gradient", buttonStyle))
+        {
+            drawMono = !drawMono;
+
+            DisplayFractals();
+        }
+
+        GUILayout.Label("Iterations:", textStyle);
+
+        int newMaxIters = (int)EditorGUILayout.Slider(maxIters, 1, 500);
+
+        if (newMaxIters != maxIters)
+        {
+            maxIters = newMaxIters;
+
+            DisplayFractals();
+        }
+
+        GUILayout.EndHorizontal();
     }
 }
