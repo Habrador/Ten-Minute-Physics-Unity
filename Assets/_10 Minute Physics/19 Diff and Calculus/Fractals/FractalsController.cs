@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
@@ -7,6 +8,7 @@ public class FractalsController : MonoBehaviour
 {
     public GameObject planeObj;
 
+    //Gradient color used to display the fractals
     private readonly int[][] gradientColors = 
     {
         new int[] {15, 2, 66},
@@ -18,15 +20,15 @@ public class FractalsController : MonoBehaviour
         new int[] {14, 29, 104}
     };
 
-    int maxIters = 100;
+    private int maxIters = 100;
     //Center of the plane
-    float centerX = 0.0f;
-    float centerY = 0.0f;
+    private float centerX = 0.0f;
+    private float centerY = 0.0f;
     //Zoom level
-    float scale = 0.0035f;
+    private float scale = 0.01f;
     //Parameters
-    float juliaX = -0.62580000000000f;
-    float juliaY = 0.40250000000000f;
+    private float juliaX = -0.62580000000000f;
+    private float juliaY = 0.40250000000000f;
 
     //Which fractal to draw?
     bool drawMandelbrot = false;
@@ -34,14 +36,77 @@ public class FractalsController : MonoBehaviour
     //Should we use the sci-color or just plain mono orange color
     bool drawMono = true;
 
+    //How many pixels does our texture (canvas) have
+    //Our canvas is twice as long as it is high
+    private readonly int height = 200;
+    private int width;
 
 
-    void Start()
+
+    private void Start()
     {
-        //Our canvas is twice as long as it is high
-        int height = 200;
-        int width = 2 * height;
+        width = 2 * height;
 
+        DisplayFractals();
+    }
+
+
+
+    private void OnGUI()
+    {
+        GUILayout.BeginHorizontal("box");
+
+        //Settings
+        int fontSize = 20;
+
+        RectOffset offset = new(5, 5, 5, 5);
+
+        GUIStyle buttonStyle = new(GUI.skin.button)
+        {
+            //buttonStyle.fontSize = 0; //To reset because fontSize is cached after you set it once 
+
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        GUIStyle textStyle = new(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            margin = offset
+        };
+
+        //Buttons and sliders
+        if (GUILayout.Button(!drawMandelbrot ? "Julia" : "Mandelbrot", buttonStyle))
+        {
+            drawMandelbrot = !drawMandelbrot;
+        
+            DisplayFractals();
+        }
+        if (GUILayout.Button(drawMono ? "Mono" : "Gradient", buttonStyle))
+        {
+            drawMono = !drawMono;
+
+            DisplayFractals();
+        }
+
+        GUILayout.Label("Iterations:", textStyle);
+
+        int newMaxIters = (int)EditorGUILayout.Slider(maxIters, 1, 500);
+
+        if (newMaxIters != maxIters)
+        {
+            maxIters = newMaxIters;
+
+            DisplayFractals();
+        }
+
+        GUILayout.EndHorizontal();
+    }
+
+
+
+    private void DisplayFractals()
+    {
         //Generate the fractal colors
         Color[,] colors = GenerateColors(width, height);
 
@@ -56,9 +121,6 @@ public class FractalsController : MonoBehaviour
     private Color[,] GenerateColors(int width, int height)
     {
         Color[,] colors = new Color[width, height];
-
-        //Zoom 
-        scale = 0.01f;
 
         //The start y coordinate in world space
         float y = (centerY - height / 2f) * scale;
@@ -93,6 +155,7 @@ public class FractalsController : MonoBehaviour
 
 
 
+    //The magic function that generates the fractals
     private int GetNumIters(float x1, float x2, float c1, float c2, int maxIters)
     {
         for (int iters = 0; iters < maxIters; iters++)
@@ -114,7 +177,7 @@ public class FractalsController : MonoBehaviour
 
 
 
-    //Get a color 0->255
+    //Get a gradient color 0->255
     private Color GetGradientColor(int nr, int steps)
     {
         int numCols = gradientColors.Length;
@@ -139,6 +202,7 @@ public class FractalsController : MonoBehaviour
 
 
 
+    //Generate a texture with colors
     private Texture2D GenerateTexture(Color[,] colors)
     {
         int xRes = colors.GetLength(0);
