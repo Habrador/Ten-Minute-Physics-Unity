@@ -115,6 +115,10 @@ Simulate a car showing the graphs of distance, velocity, and acceleration.
 
 <img src="/_media/19-car.png" width="400">
 
+Display the Julia set and Mandelbrot fractals
+
+<img src="/_media/19-fractals.png" width="400">
+
 	
 ## 20. Height-field water simulation
 
