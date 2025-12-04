@@ -29,9 +29,11 @@ public class FractalsController : MonoBehaviour
     private float centerY = 0.0f;
     //Zoom level
     private float scale = 0.01f;
-    //Parameters
-    private float juliaX = -0.62580000000000f;
-    private float juliaY = 0.40250000000000f;
+    //Parameters (complex numbers)
+    private float juliaX = -0.6258f;
+    private float juliaY = 0.4025f;
+    //private float juliaX = 0.285f;
+    //private float juliaY = 0.01f;
 
     //Which fractal to draw?
     bool drawMandelbrot = false;
