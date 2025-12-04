@@ -4,6 +4,9 @@ using UnityEditor;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
+//Display the Julia set and Madelbrot fractals
+//Based on "19 Differential equations and calculus from scratch"
+//From: https://matthias-research.github.io/pages/tenMinutePhysics/index.html
 public class FractalsController : MonoBehaviour
 {
     public GameObject planeObj;
