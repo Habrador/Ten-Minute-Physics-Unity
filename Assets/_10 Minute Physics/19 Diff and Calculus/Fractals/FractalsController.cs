@@ -19,22 +19,27 @@ public class FractalsController : MonoBehaviour
     };
 
     int maxIters = 100;
-    bool drawMandelbrot = false;
+    //Center of the plane
     float centerX = 0.0f;
     float centerY = 0.0f;
+    //Zoom level
     float scale = 0.0035f;
-
+    //Parameters
     float juliaX = -0.62580000000000f;
     float juliaY = 0.40250000000000f;
 
-    //Should we use the sci-color or just plain color
+    //Which fractal to draw?
+    bool drawMandelbrot = false;
+
+    //Should we use the sci-color or just plain mono orange color
     bool drawMono = true;
+
 
 
     void Start()
     {
         //Our canvas is twice as long as it is high
-        int height = 100;
+        int height = 200;
         int width = 2 * height;
 
         //Generate the fractal colors
@@ -52,15 +57,18 @@ public class FractalsController : MonoBehaviour
     {
         Color[,] colors = new Color[width, height];
 
+        //Zoom 
+        scale = 0.01f;
+
         //The start y coordinate in world space
-        float y = centerY - height / 2f * scale;
+        float y = (centerY - height / 2f) * scale;
 
         for (int j = 0; j < height; j++)
         {
             //The start x coordinate in world space
-            float x = centerX - width / 2f * scale;
+            float x = (centerX - width / 2f) * scale;
 
-            for (int i = 0; i < height; i++)
+            for (int i = 0; i < width; i++)
             {
                 //Compute the color for this pixel
                 int numIters = GetNumIters(x, y, drawMandelbrot ? x : juliaX, drawMandelbrot ? y : juliaY, maxIters);
