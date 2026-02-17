@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 using XPBD;
 
 //Based on "25 Joint simulation made simple"
@@ -11,6 +10,8 @@ using XPBD;
 //Simulate joints with XPBD - Extended Position Based Dynamics
 public class JointSimulationController : MonoBehaviour
 {
+    //General physics simulator that works for both this project and 
+    //"22 How to write a basic rigid body simulator using position based dynamics"
     private XPBDPhysicsSimulator rbSimulator;
 
     //The scenes we can chose from
@@ -30,6 +31,7 @@ public class JointSimulationController : MonoBehaviour
         { Scenes.Pendulums, "pendulum.json" },
     };
 
+    //From json to Unity gameobjects
     private SceneImporter sceneImporter;
 
     //Simulation settings
@@ -43,10 +45,12 @@ public class JointSimulationController : MonoBehaviour
     //which corresponds to 50 fixed updates per second
     //Time.fixedDeltaTime = 0.03333f;
 
-    //Mouse interaction
+    //Mouse interaction to drag joints around
     Interaction interaction;
 
-    //Show simple or complicated meshes
+    //We use simple objects (rectangles and spheres) to simulate
+    //the physics because it makes calculations easier
+    //We can chose between displaying both 
     //Visuals are the simple objects
     private bool showVisuals = true;
     //To control the joints (tutorial is using a touch control) but we shall use sliders
@@ -119,7 +123,7 @@ public class JointSimulationController : MonoBehaviour
 
 
 
-    //Show the red mesh or they gray mesh + debug objects
+    //Show the detailed red mesh or the simple mesh + debug objects
     private void ToggleView()
     {
         List<MyRigidBody> allRbs = rbSimulator.allRigidBodies;

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//The easiest way to load a json file seems to be to try to recreate a class that corresponds to the json data
+//The easiest way to load a json file seems to be to recreate a class that corresponds to the json data
 //Unless you use an external library...
 
 //Example: basicJoints

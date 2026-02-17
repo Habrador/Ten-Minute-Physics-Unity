@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using XPBD;
-using static UnityEditor.PlayerSettings;
-using static UnityEngine.Rendering.DebugUI;
 
 
 
@@ -33,6 +31,7 @@ public class SceneImporter
     
         //string fileName = "basicJoints.json";
         
+        //Where the json files are located
         string filePathEditor = "Assets/_10 Minute Physics/25 Joint Sim/Scenes/";
 
         //filePathEditor includes a last /
@@ -152,10 +151,10 @@ public class SceneImporter
         //Extract position and rotation from mesh.transform
         ExtractPosAndRot(mesh, out Vector3 pos, out Quaternion quat);
 
+        //PROBLEM
         //The objects are mirrored most likely because Blender is using some other coordinate system
-        //Inverteing z seems to solve it for now
-        //This screws up then visual mesh...
-        //pos.z *= -1f;
+        //Inverteing z doesnt solve it because it screws up the visual mesh!
+        //Dont think theres an easy fix, but it doesnt matter...
 
         MyRigidBody rigidBody;
 
@@ -412,14 +411,10 @@ public class SceneImporter
         //Get visual mesh transform
         ExtractPosAndRot(mesh, out Vector3 visualPos, out Quaternion visualRot);
 
-        //Some extra calculations not in original code to flip the mesh to match Unitys coordinate system
-
         //Transform visual mesh to parent body local space
         Quaternion q_rel = parentBody.rot.Conjugate() * visualRot;
 
         Vector3 parentPos = parentBody.pos;
-
-        //parentPos.z *= -1f;
 
         Vector3 p_rel = parentBody.rot.Conjugate() * (visualPos - parentPos);
 
@@ -430,8 +425,6 @@ public class SceneImporter
             Vector3 vertex = new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
 
             vertex = q_rel * vertex + p_rel;
-
-            //vertex.y *= -1f;
 
             transformedVertices.Add(vertex);
         }
@@ -445,21 +438,10 @@ public class SceneImporter
                 Vector3 normal = new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
 
                 normal = q_rel * normal;
-
-                //normal *= -1f;
                 
                 transformedNormals.Add(normal);
             }
         }
-
-        //Invert triangles because the flipped mesh was inside out
-        //if (mesh.triangles != null)
-        //{
-        //    for (int i = 0; i < mesh.triangles.Length; i += 3)
-        //    {
-        //        (mesh.triangles[i + 2], mesh.triangles[i + 0]) = (mesh.triangles[i + 0], mesh.triangles[i + 2]);
-        //    }
-        //}
         
 
         //Create Unity geometry from transformed data
