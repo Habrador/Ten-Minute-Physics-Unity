@@ -48,7 +48,7 @@ public class JointSimulationController : MonoBehaviour
     //Mouse interaction to drag joints around
     Interaction interaction;
 
-    //We use simple objects (rectangles and spheres) to simulate
+    //We use simple objects (boxes and spheres) to simulate
     //the physics because it makes calculations easier
     //We can chose between displaying both 
     //Visuals are the simple objects

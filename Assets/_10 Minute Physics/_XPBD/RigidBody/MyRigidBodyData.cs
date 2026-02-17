@@ -5,17 +5,24 @@ using UnityEngine;
 namespace XPBD
 {
     //Init rigid bodies
+
+    //Create the obj we use to simulate this rb which is also the collider
+    //This is also the collider
+    //We can add more detailed objects on top of this simple object
+
+    //Also calculate inverted mass and inverted moments of inertia
     public class MyRigidBodyData
     {
         public static void InitBox(MyRigidBody rb, Vector3 size, float density)
         {
-            //Create the obj we can see
+            //Collider
             GameObject newBoxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
             newBoxObj.transform.localScale = size;
 
             rb.visualObjects = new MyRigidBodyVisuals(newBoxObj);
 
+            //Calculate inverted mass and inverted moments of inertia
             if (density > 0f)
             {
                 //mass = volume * density
@@ -41,15 +48,14 @@ namespace XPBD
 
         public static void InitSphere(MyRigidBody rb, Vector3 size, float density)
         {
-            //Create the obj we can see
-            //The tutorial is using two half-spheres where one is white and other is red
-            //to easier see the rotations, we can maybe use a texture instead???
+            //Collider
             GameObject newSphereObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
             newSphereObj.transform.localScale = size.x * Vector3.one;
 
             rb.visualObjects = new MyRigidBodyVisuals(newSphereObj);
 
+            //Calculate inverted mass and inverted moments of inertia
             if (density > 0f)
             {
                 float r = size.x;

@@ -43,7 +43,7 @@ namespace XPBD
         //We are going to use inverse moment of inertia I^-1
         public Vector3 invInertia;
 
-        //For XPBD simulation we cache these to fix velocities
+        //For XPBD simulation we cache these to calculate velocities at the end of each sim step
         private Vector3 prevPos;
         private Quaternion prevRot;
 

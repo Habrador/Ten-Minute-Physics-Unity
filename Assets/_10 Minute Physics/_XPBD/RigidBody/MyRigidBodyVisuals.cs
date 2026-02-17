@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace XPBD
 {
-    //The visual objects shwoing the rigidbody
+    //The visual objects showing the rigidbody
     //Can maybe be seen as Unitys Gameobject
     public class MyRigidBodyVisuals
     {
