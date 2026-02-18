@@ -56,6 +56,8 @@ namespace XPBD
             //Make sure the physics objects have colliders!
             Ray ray = thisCamera.ScreenPointToRay(Input.mousePosition);
 
+            //Debug.Log("Try hit object");
+
             //If we hit a collider
             if (Physics.Raycast(ray, out RaycastHit hit))
             {

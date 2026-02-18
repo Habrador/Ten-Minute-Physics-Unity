@@ -56,7 +56,9 @@ namespace XPBD
         //Update visibility
         public void ShowHideObjects()
         {
-            this.rbVisualObj.SetActive(this.showVisualObj);
+            //We cant deactivate the objct because then the collider wont work with raycasting
+            //this.rbVisualObj.SetActive(this.showVisualObj);
+            this.rbVisualObj.GetComponent<MeshRenderer>().enabled = this.showVisualObj;
 
             foreach (GameObject obj in this.rbDetailedObjs)
             {
