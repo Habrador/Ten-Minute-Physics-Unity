@@ -59,6 +59,8 @@ namespace XPBD
             this.targetAngle = targetAngle;
             this.targetAngleCompliance = compliance;
             this.angularDampingCoeff = damping;
+
+            //Debug.Log(swingMin);
         }
 
         public void InitServo(float swingMin, float swingMax)

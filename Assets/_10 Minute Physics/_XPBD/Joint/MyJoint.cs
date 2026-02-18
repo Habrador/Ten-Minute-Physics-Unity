@@ -210,6 +210,30 @@ namespace XPBD
                 Attach();
                 AlignAxes();
 
+                //Limit angle so it cant spin 360 degrees
+                if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
+                {
+                    UpdateGlobalFrames();
+
+                    //Debug.Log("sup");
+
+                    float hardCompliance = 0f;
+
+                    Vector3 axis0 = new Vector3(1f, 0f, 0f);
+                    Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+                    Vector3 n = axis0;
+                    n = this.globalRot0 * n;
+
+                    Vector3 a0 = axis1;
+                    a0 = this.globalRot0 * a0;
+
+                    Vector3 a1 = axis1;
+                    a1 = this.globalRot1 * a1;
+
+                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, hardCompliance);
+                }
+
                 //TODO: One of these should be damped, how do we take that into account?
             }
             //Hinge joint that where we can control the angle
@@ -342,56 +366,6 @@ namespace XPBD
             AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
         }
 
-        //Limit angle
-        //Limit the angle (phi) going between axis a1 and a2 (going from same point)
-        //where n is the perpendicular axis (rotation axis) 
-        //LimitAngle(n, a1, a2, phi_min, phi_max, alpha)
-        //{
-        //  phi = angle(n, a1, a2) //Calculate the current angle
-        //
-        //  if (phi < phi_min or phi > phi max) //If angle is not within bounds
-        //  {
-        //      phi = clamp(phi, phi_min, phi_max) //Clamp based on the limits
-        //      q = roation(n, phi)
-        //      a2' = q dot a1 //Rotate a1 by angle phi. This is the dir a2 should have to form the desired angle
-        //
-        //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
-        //  }
-        //}
-
-        //How to simulate different joints
-
-        //Hinge
-        //Attach(p1, p2, d_rest = 0, alpha = 0)
-        //AlignAxes(a1, a2, alpha = 0)
-        //If restriced: LimitAngle(n, a1, a2, phi_min, phi_max, alpha = 0)
-        //If servo: LimitAngle(n, a1, a2, phi_servo, phi_servo, alpha = 0)
-        //If motor:
-        // LimitAngle(n, a1, a2, phi_motor, phi_motor, alpha = 0)
-        // phi_motor = phi_motor + dt * omega_motor
-
-        //Ball joint
-        //Attach(p1, p2, d_rest = 0, alpha = 0)
-        //If swing-limit:
-        // n = (a1 x a2) / |a1 x a2|
-        // LimitAngle(n, a1, a2, 0f, phi_swing_max, alpha = 0)
-        //If twist-limit:
-        // n = (a1 x a2) / |a1 x a2| //Average
-        // b1' = b1 - n(b * b1)
-        // b2' = b2 - n(b * b2)
-        // LimitAngle(n, b1', b2', phi_twist_min, phi_twist_max, alpha = 0)
-
-        //Prismatic 
-        //RestrictToAxis(a, p1, p2, p_min, p_max, alpha)
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
-
-        //Cyliner
-        //RestrictToAxis(a, p1, p2, p_target, p_target, alpha)
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
-
-
 
 
 
@@ -496,10 +470,28 @@ namespace XPBD
         //Limits the angle between the axes a and b of two bodies
         //to be in the interval [minAngle, maxAngle] 
         //using the common roation axis n
+        //From YT video:
+        //Limit angle
+        //Limit the angle (phi) going between axis a1 and a2 (going from same point)
+        //where n is the perpendicular axis (rotation axis) 
+        //LimitAngle(n, a1, a2, phi_min, phi_max, alpha)
+        //{
+        //  phi = angle(n, a1, a2) //Calculate the current angle
+        //
+        //  if (phi < phi_min or phi > phi max) //If angle is not within bounds
+        //  {
+        //      phi = clamp(phi, phi_min, phi_max) //Clamp based on the limits
+        //      q = roation(n, phi)
+        //      a2' = q dot a1 //Rotate a1 by angle phi. This is the dir a2 should have to form the desired angle
+        //
+        //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
+        //  }
+        //}
         private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
         {
             float phi = GetAngle(n, a, b);
 
+            //If angle is within the bounds
             if (minAngle <= phi && phi <= maxAngle)
             {
                 return;
@@ -517,7 +509,6 @@ namespace XPBD
             //delta_q_limit = n1 x n2
             Vector3 corr = Vector3.Cross(ra, b);
 
-            //this.body0.ApplyCorrection(compliance, corr, null, this.body1, null);
             AngularCorrection.Apply(compliance, corr, this.body0, this.body1);
         }
 

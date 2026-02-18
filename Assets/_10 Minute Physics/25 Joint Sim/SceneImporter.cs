@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using XPBD;
+using Newtonsoft.Json;
 
 
 
@@ -37,7 +38,11 @@ public class SceneImporter
         //filePathEditor includes a last /
         string JSONAsString = File.ReadAllText(filePathEditor + fileName);
 
-        JointsJson data = JsonUtility.FromJson<JointsJson>(JSONAsString);
+        //Built in JsonUtility doesnt work when nullables are in an hierarchy
+        //JointsJson data = JsonUtility.FromJson<JointsJson>(JSONAsString);
+
+        //Download package Newtonsoft which can handle nullables in an hierarchy
+        JointsJson data = JsonConvert.DeserializeObject<JointsJson>(JSONAsString);
 
         //Check if scene data is empty
         if (data == null || data.meshes == null || data.meshes.Length == 0)
@@ -322,6 +327,19 @@ public class SceneImporter
             float targetAngle = props.targetAngle ?? 0f;
             float compliance = props.targetAngleCompliance ?? 0f;
             float damping = props.damping ?? 0f;
+
+            //if (props.swingMin.HasValue)
+            //{
+            //    Debug.Log("swingMin: " + props.swingMin.Value);
+            //}
+            //else
+            //{
+            //    Debug.Log("swingMin is null");
+            //}
+
+            //float swingMin = props.swingMin.Value;
+
+            //Debug.Log(swingMin);
 
             joint.settings.InitHingeJoint(swingMin, swingMax, hasTargetAngle, targetAngle, compliance, damping);
         }
