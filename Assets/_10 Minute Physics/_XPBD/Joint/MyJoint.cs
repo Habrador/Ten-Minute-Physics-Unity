@@ -34,7 +34,7 @@ namespace XPBD
         //All settings for the joint type 
         public MyJointSettings settings;
 
-        public MyJointSettings.Types Type() => this.settings.type;
+        public MyJointSettings.Types JointType => this.settings.type;
 
         //Debug objects
 
@@ -127,6 +127,29 @@ namespace XPBD
 
 
 
+        //Calculate the actual world positions for joint attachment points
+        private void UpdateGlobalFrames()
+        {
+            if (this.body0 != null)
+            {
+                this.globalPos0 = this.body0.pos + this.body0.rot * this.localPos0;
+                this.globalRot0 = this.body0.rot * this.localRot0;
+            }
+
+            if (this.body1 != null)
+            {
+                this.globalPos1 = this.body1.pos + this.body1.rot * this.localPos1;
+                this.globalRot1 = this.body1.rot * this.localRot1;
+            }
+            else
+            {
+                this.globalPos1 = this.localPos1;
+                this.globalRot1 = this.localRot1;
+            }
+        }
+
+
+
         //Show/hide debug objects
         public void SetVisible(bool visible)
         {
@@ -154,8 +177,9 @@ namespace XPBD
         //Called from FixedUpdate()
         public void Solve(float dt)
         {
-            SolvePosition(dt);
-            SolveOrientation(dt);
+            //SolvePosition(dt);
+            //SolveOrientation(dt);
+            SolveJoint(dt);
         }
 
         //Called from Update()
@@ -169,6 +193,24 @@ namespace XPBD
 
         //In the video he has some building blocks that make up these joints
         //But in the code he squeezes them into two large methods maing it messy
+        private void SolveJoint(float dt)
+        {
+            if (this.disabled || this.settings.type == MyJointSettings.Types.None)
+            {
+                return;
+            }
+
+            //Hinge joing
+            if (this.JointType == MyJointSettings.Types.Hinge)
+            {
+                //Debug.Log("Hello Im a hinge joint");
+                //Attach(p1, p2, d_rest : 0f, alpha : 0f);
+                //AlignAxes(a1, a2, alpha = 0)
+                Attach();
+                AlignAxes();
+            }
+
+        }
 
         //Attach Bodies
         //Attach 2 rbs at points p1 and p2, with distance d_rest between them
@@ -179,6 +221,38 @@ namespace XPBD
         //  n = (p2 - p1) / d
         //  ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha)
         //}
+        //private void Attach(Vector3 p1, Vector3 p2, float d_rest, float alpha)
+        private void Attach()
+        {
+            //Vector3 d = (p2 - p1).normalized;
+
+            //float n = d.magnitude;
+
+            //ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha);
+
+            UpdateGlobalFrames();
+
+            Vector3 corr = this.globalPos1 - this.globalPos0;
+
+            float distance = corr.magnitude;
+
+            if (distance == 0f)
+            {
+                corr = new Vector3(0f, 0f, 1f);
+
+                corr = this.globalRot0 * corr;
+            }
+            else
+            {
+                corr = Vector3.Normalize(corr);
+            }
+
+            corr *= this.settings.targetDistance - distance;
+
+            corr *= -1f;
+
+            PositionalCorrection.Apply(this.settings.distanceCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
+        }
 
         //Restrict to axis
         //Restrict p2 to be on an axis with direction a going thorugh p1
@@ -202,6 +276,26 @@ namespace XPBD
         //{
         //  ApplyAngularCorrection((-a1) cross a2, alpha) //Only valid for small angles
         //}
+        private void AlignAxes()
+        {
+            Vector3 axis0 = new Vector3(1f, 0f, 0f);
+            Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+            //Align axes
+
+            UpdateGlobalFrames();
+
+            Vector3 a0 = this.globalRot0 * axis0;
+
+            //Vector3 a1 = axis0;
+            Vector3 a1 = this.globalRot1 * axis0; //axis0 again???
+
+            Vector3 corr = Vector3.Cross(a0, a1);
+
+            float hardCompliance = 0f;
+
+            AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
+        }
 
         //Limit angle
         //Limit the angle (phi) going between axis a1 and a2 (going from same point)
@@ -253,30 +347,6 @@ namespace XPBD
         //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
 
 
-        private void ApplyTorque(float dt, float torque)
-        {
-            UpdateGlobalFrames();
-
-            //Assuming x-axis is the hinge axis
-            Vector3 corr = new(1f, 0f, 0f);
-
-            corr = this.globalRot0 * corr;
-
-            corr *= torque * dt;
-
-            //this.body0.ApplyCorrection(0f, corr, null, this.body1, null, true);
-
-            //In the YT video:
-            //ApplyAngularVelocityCorrection(tau / delta_t * a)
-        }
-
-
-        //Theres also an ApplyFoorce in the YT video
-        private void ApplyForce(float f)
-        {
-            //a is the axis youn want to apply the force along
-            //ApplyLinearVelocityCorrection(p1, p2, f/delta_t * a)
-        }
 
 
 
@@ -289,7 +359,7 @@ namespace XPBD
             }
 
             //Align
-            if (this.Type() == MyJointSettings.Types.Prismatic || this.Type() == MyJointSettings.Types.Cylinder)
+            if (this.JointType == MyJointSettings.Types.Prismatic || this.JointType == MyJointSettings.Types.Cylinder)
             {
                 float targetDistance = Mathf.Max(this.settings.distanceMin, Mathf.Min(this.settings.targetDistance, this.settings.distanceMax));
                 
@@ -301,7 +371,7 @@ namespace XPBD
 
                 corr = this.globalRot0.Conjugate() * corr;
 
-                if (this.Type() == MyJointSettings.Types.Cylinder)
+                if (this.JointType == MyJointSettings.Types.Cylinder)
                 {
                     corr.x -= this.settings.targetDistance;
                 }
@@ -324,7 +394,7 @@ namespace XPBD
             }
 
             //Solve distance
-            if (this.Type() != MyJointSettings.Types.Cylinder && this.settings.hasTargetDistance)
+            if (this.JointType != MyJointSettings.Types.Cylinder && this.settings.hasTargetDistance)
             {
                 UpdateGlobalFrames();
                 
@@ -348,30 +418,7 @@ namespace XPBD
 
                 corr *= -1f;
                 
-                //this.body0.applyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
-            }
-        }
-
-
-
-        //Calculate the actual world positions for joint attachment points
-        private void UpdateGlobalFrames()
-        {
-            if (this.body0 != null)
-            {
-                this.globalPos0 = this.body0.pos + this.body0.rot * this.localPos0;
-                this.globalRot0 = this.body0.rot * this.localRot0;
-            }
-
-            if (this.body1 != null)
-            {
-                this.globalPos1 = this.body1.pos + this.body1.rot * this.localPos1;
-                this.globalRot1 = this.body1.rot * this.localRot1;
-            }
-            else
-            {
-                this.globalPos1 = this.localPos1;
-                this.globalRot1 = this.localRot1;
+                //this.body0.ApplyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
             }
         }
 
@@ -434,12 +481,12 @@ namespace XPBD
         //Orientation constraint
         private void SolveOrientation(float dt)
         {
-            if (this.disabled || this.Type() == MyJointSettings.Types.None || this.Type() == MyJointSettings.Types.Distance)
+            if (this.disabled || this.JointType == MyJointSettings.Types.None || this.JointType == MyJointSettings.Types.Distance)
             {
                 return;
             }
 
-            if (this.Type() == MyJointSettings.Types.Motor)
+            if (this.JointType == MyJointSettings.Types.Motor)
             {
                 float aAngle = Mathf.Min(Mathf.Max(this.settings.velocity * dt, -1f), 1f);
 
@@ -457,9 +504,9 @@ namespace XPBD
             Vector3 corr = new Vector3();
 
             if (
-                this.Type() == MyJointSettings.Types.Hinge || 
-                this.Type() == MyJointSettings.Types.Servo || 
-                this.Type() == MyJointSettings.Types.Motor)
+                this.JointType == MyJointSettings.Types.Hinge || 
+                this.JointType == MyJointSettings.Types.Servo || 
+                this.JointType == MyJointSettings.Types.Motor)
             {
                 //Align axes
 
@@ -509,9 +556,9 @@ namespace XPBD
                 }
             }
             else if (
-                this.Type() == MyJointSettings.Types.Ball || 
-                this.Type() == MyJointSettings.Types.Prismatic || 
-                this.Type() == MyJointSettings.Types.Cylinder)
+                this.JointType == MyJointSettings.Types.Ball || 
+                this.JointType == MyJointSettings.Types.Prismatic || 
+                this.JointType == MyJointSettings.Types.Cylinder)
             {
                 //Swing limit
 
@@ -556,7 +603,7 @@ namespace XPBD
 
                 LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, hardCompliance);
             }
-            else if (this.Type() == MyJointSettings.Types.Fixed)
+            else if (this.JointType == MyJointSettings.Types.Fixed)
             {
                 //Align orientations
 
@@ -573,6 +620,33 @@ namespace XPBD
 
                 //this.body0.applyCorrection(hardCompliance, corr, null, this.body1, null);
             }
+        }
+
+
+
+        private void ApplyTorque(float dt, float torque)
+        {
+            UpdateGlobalFrames();
+
+            //Assuming x-axis is the hinge axis
+            Vector3 corr = new(1f, 0f, 0f);
+
+            corr = this.globalRot0 * corr;
+
+            corr *= torque * dt;
+
+            //this.body0.ApplyCorrection(0f, corr, null, this.body1, null, true);
+
+            //In the YT video:
+            //ApplyAngularVelocityCorrection(tau / delta_t * a)
+        }
+
+
+        //Theres also an ApplyFoorce in the YT video
+        private void ApplyForce(float f)
+        {
+            //a is the axis youn want to apply the force along
+            //ApplyLinearVelocityCorrection(p1, p2, f/delta_t * a)
         }
 
 

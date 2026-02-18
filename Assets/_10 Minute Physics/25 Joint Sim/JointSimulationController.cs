@@ -85,7 +85,7 @@ public class JointSimulationController : MonoBehaviour
     
         float dt = Time.fixedDeltaTime;
 
-        //rbSimulator.MyFixedUpdate(dt, numSubSteps);
+        rbSimulator.MyFixedUpdate(dt, numSubSteps);
     }
 
 
@@ -163,17 +163,17 @@ public class JointSimulationController : MonoBehaviour
         {
             MyJoint joint = allJoints[i];
             
-            if (joint.Type() == MyJointSettings.Types.Motor)
+            if (joint.JointType == MyJointSettings.Types.Motor)
             {
                 //Scale factor for motor speed
                 joint.settings.velocity = this.controlVector.y * 5f;
             }
-            else if (joint.Type() == MyJointSettings.Types.Servo)
+            else if (joint.JointType == MyJointSettings.Types.Servo)
             {
                 //Scale factor for steering angle
                 joint.settings.targetAngle = this.controlVector.x * Mathf.PI / 4f;
             }
-            else if (joint.Type() == MyJointSettings.Types.Cylinder)
+            else if (joint.JointType == MyJointSettings.Types.Cylinder)
             {
                 //Scale factor for offset
                 joint.settings.targetDistance = -this.controlVector.y * 0.1f;
