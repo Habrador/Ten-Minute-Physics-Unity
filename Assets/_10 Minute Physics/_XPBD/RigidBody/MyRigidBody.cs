@@ -91,11 +91,11 @@ namespace XPBD
             //Data that depends on the rbs geometry
             if (type == Types.Box)
             {
-                MyRigidBodyData.InitBox(this, size, density);
+                InitMyRigidBody.InitBox(this, size, density);
             }
             else if (type == Types.Sphere)
             {
-                MyRigidBodyData.InitSphere(this, size, density);
+                InitMyRigidBody.InitSphere(this, size, density);
             }
 
             UpdateMeshes();

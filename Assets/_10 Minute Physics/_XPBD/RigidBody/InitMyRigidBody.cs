@@ -6,12 +6,12 @@ namespace XPBD
 {
     //Init rigid bodies
 
-    //Create the obj we use to simulate this rb which is also the collider
+    //Create the obj we use to simulate this rb, box or sphere
     //This is also the collider
     //We can add more detailed objects on top of this simple object
 
     //Also calculate inverted mass and inverted moments of inertia
-    public class MyRigidBodyData
+    public class InitMyRigidBody
     {
         public static void InitBox(MyRigidBody rb, Vector3 size, float density)
         {
