@@ -203,13 +203,60 @@ namespace XPBD
             //Hinge joing
             if (this.JointType == MyJointSettings.Types.Hinge)
             {
-                //Debug.Log("Hello Im a hinge joint");
-                //Attach(p1, p2, d_rest : 0f, alpha : 0f);
+                //Attach(p1, p2, d_rest = 0, alpha = 0);
                 //AlignAxes(a1, a2, alpha = 0)
+                //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
+
                 Attach();
                 AlignAxes();
-            }
 
+                //TODO: One of these should be damped, how do we take that into account?
+            }
+            //Hinge joint that where we can control the angle
+            else if (this.JointType == MyJointSettings.Types.Servo)
+            {
+                //Attach(p1, p2, d_rest = 0, alpha = 0);
+                //AlignAxes(a1, a2, alpha = 0)
+                //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
+            }
+            //Hinge joint that spins endlessly 
+            else if (this.JointType == MyJointSettings.Types.Motor)
+            {
+                //Attach(p1, p2, d_rest = 0, alpha = 0);
+                //AlignAxes(a1, a2, alpha = 0)
+                //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
+                //phi_motor = phi_motor + dt * omega_motor
+            }
+            else if (this.JointType == MyJointSettings.Types.Ball)
+            {
+                //Attach(p1, p2, d_rest = 0, alpha = 0);
+
+                //Swing limit
+                //n = (a1 x a2) / |a1 x a2|
+                //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
+
+                //Twist limit
+                //n = (a1 x a2) / |a1 + a2|
+                //b1' = b1 - n(n dot b1)
+                //b2' = b2 - n(n dot b2)
+                //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
+            }
+            else if (this.JointType == MyJointSettings.Types.Prismatic)
+            {
+                //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
+                //AlignAxes(a1, a2, alpha = 0)
+                //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
+            }
+            else if (this.JointType == MyJointSettings.Types.Cylinder)
+            {
+                //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
+                //AlignAxes(a1, a2, alpha = 0)
+                //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
+            }
+            else if (this.JointType == MyJointSettings.Types.Fixed)
+            {
+
+            }
         }
 
         //Attach Bodies
@@ -279,16 +326,14 @@ namespace XPBD
         private void AlignAxes()
         {
             Vector3 axis0 = new Vector3(1f, 0f, 0f);
-            Vector3 axis1 = new Vector3(0f, 1f, 0f);
+            //Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
             //Align axes
 
             UpdateGlobalFrames();
 
             Vector3 a0 = this.globalRot0 * axis0;
-
-            //Vector3 a1 = axis0;
-            Vector3 a1 = this.globalRot1 * axis0; //axis0 again???
+            Vector3 a1 = this.globalRot1 * axis0;
 
             Vector3 corr = Vector3.Cross(a0, a1);
 
