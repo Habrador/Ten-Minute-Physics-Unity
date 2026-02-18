@@ -5,6 +5,8 @@ using UnityEngine;
 namespace XPBD
 {
     //The visual objects showing the rigidbody
+    //simple object use to simulate the physics and act as collider
+    //and more detailed object for making it look good
     //Can maybe be seen as Unitys Gameobject
     public class MyRigidBodyVisuals
     {
@@ -64,7 +66,7 @@ namespace XPBD
 
 
 
-        //Add detailed obj (red mesh)
+        //Add detailed obj
         public void AddDetailedObject(GameObject detailedObj)
         {
             this.rbDetailedObjs.Add(detailedObj);

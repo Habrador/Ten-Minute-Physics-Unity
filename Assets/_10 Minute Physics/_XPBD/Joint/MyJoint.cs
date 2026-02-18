@@ -168,6 +168,7 @@ namespace XPBD
 
 
         //In the video he has some building blocks that make up these joints
+        //But in the code he squeezes them into two large methods maing it messy
 
         //Attach Bodies
         //Attach 2 rbs at points p1 and p2, with distance d_rest between them
