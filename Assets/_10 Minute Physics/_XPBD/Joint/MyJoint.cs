@@ -44,9 +44,11 @@ namespace XPBD
         //The red line going between attachment points
         private VisualDistance visDistance;
 
-        //For joint rotations
+        //For joint sim calculations
         private Vector3 axis0 = new Vector3(1f, 0f, 0f);
         private Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+        private readonly float hardCompliance = 0f;
 
 
 
@@ -492,19 +494,13 @@ namespace XPBD
         //}
         private void AlignAxes()
         {
-            Vector3 axis0 = new Vector3(1f, 0f, 0f);
-            //Vector3 axis1 = new Vector3(0f, 1f, 0f);
-
-            //Align axes
-
             UpdateGlobalFrames();
 
             Vector3 a0 = this.globalRot0 * axis0;
             Vector3 a1 = this.globalRot1 * axis0;
 
+            //What happened to the minus sign?
             Vector3 corr = Vector3.Cross(a0, a1);
-
-            float hardCompliance = 0f;
 
             AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
         }
