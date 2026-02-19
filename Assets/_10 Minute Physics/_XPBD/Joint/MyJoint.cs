@@ -49,7 +49,7 @@ namespace XPBD
         private Vector3 axis0 = new Vector3(1f, 0f, 0f);
         private Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
-        //Infinite stiffness
+        //Infinite stiffness (compliance is the inverse if stiffness)
         private readonly float hardCompliance = 0f;
 
 
@@ -203,7 +203,7 @@ namespace XPBD
         // - Motor joint where we can control motor speed
         // - Hinge joint with angle limits
         // - Hinge joint with angle limits but damped
-        // - Ball and socket joint with swing and twist limits
+        // - Ball and socket (spherical) joint with swing and twist limits
         // - Prismatic joint with target offset and stiffness
         // - Prismatic joint with target offset and stiffness but damped
         private void SolveJoint(float dt)
