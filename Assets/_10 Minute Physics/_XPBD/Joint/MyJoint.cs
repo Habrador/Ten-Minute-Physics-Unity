@@ -215,8 +215,6 @@ namespace XPBD
                 {
                     UpdateGlobalFrames();
 
-                    float hardCompliance = 0f;
-
                     Vector3 axis0 = new Vector3(1f, 0f, 0f);
                     Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
@@ -229,7 +227,7 @@ namespace XPBD
                     Vector3 a1 = axis1;
                     a1 = this.globalRot1 * a1;
 
-                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, hardCompliance);
+                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
                 }
 
                 //TODO: One of these should be damped, how do we take that into account?
@@ -262,6 +260,44 @@ namespace XPBD
                 //b1' = b1 - n(n dot b1)
                 //b2' = b2 - n(n dot b2)
                 //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
+
+                Attach();
+
+                //Swing limit
+
+                UpdateGlobalFrames();
+
+                Vector3 axis0 = new Vector3(1f, 0f, 0f);
+                Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+                Vector3 a0 = this.globalRot0 * axis0;
+                Vector3 a1 = this.globalRot1 * axis0;
+
+                Vector3 n = Vector3.Cross(a0, a1);
+                n = Vector3.Normalize(n);
+
+                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+
+                //Twist limit
+
+                UpdateGlobalFrames();
+
+                a0 = this.globalRot0 * axis0;
+                a1 = this.globalRot1 * axis0;
+                
+                n = a0 + a1;
+                n = Vector3.Normalize(n);
+
+                a0 = this.globalRot0 * axis1;
+                a1 = this.globalRot1 * axis1;
+
+                a0 += n * Vector3.Dot(-n, a0);
+                a0 = Vector3.Normalize(a0);
+
+                a1 += n * Vector3.Dot(-n, a1);
+                a1 = Vector3.Normalize(a1);
+
+                LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
             }
             else if (this.JointType == MyJointSettings.Types.Prismatic)
             {
