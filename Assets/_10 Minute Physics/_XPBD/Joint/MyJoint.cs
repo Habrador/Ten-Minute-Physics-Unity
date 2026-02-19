@@ -207,10 +207,17 @@ namespace XPBD
                 //AlignAxes(a1, a2, alpha = 0)
                 //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
 
-                Attach();
+                //Pos
+                UpdateGlobalFrames();
+
+                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+                
+
+                //Rot
                 AlignAxes();
 
-                //Limit angle so it cant spin 360 degrees
+
+                //Limit angle so it cant spin 360 degrees if needed
                 if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
                 {
                     UpdateGlobalFrames();
@@ -261,7 +268,9 @@ namespace XPBD
                 //b2' = b2 - n(n dot b2)
                 //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
 
-                Attach();
+                UpdateGlobalFrames();
+
+                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
 
                 //Swing limit
 
@@ -299,12 +308,14 @@ namespace XPBD
 
                 LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
             }
+            //Only linear motion
             else if (this.JointType == MyJointSettings.Types.Prismatic)
             {
                 //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
                 //AlignAxes(a1, a2, alpha = 0)
                 //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
             }
+            //Linear motion + rotational around its main axis
             else if (this.JointType == MyJointSettings.Types.Cylinder)
             {
                 //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
@@ -327,17 +338,9 @@ namespace XPBD
         //  ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha)
         //}
         //private void Attach(Vector3 p1, Vector3 p2, float d_rest, float alpha)
-        private void Attach()
+        private void Attach(Vector3 p1, Vector3 p2, float d_rest, float alpha)
         {
-            //Vector3 d = (p2 - p1).normalized;
-
-            //float n = d.magnitude;
-
-            //ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha);
-
-            UpdateGlobalFrames();
-
-            Vector3 corr = this.globalPos1 - this.globalPos0;
+            Vector3 corr = p2 - p1;
 
             float distance = corr.magnitude;
 
@@ -356,7 +359,7 @@ namespace XPBD
 
             corr *= -1f;
 
-            PositionalCorrection.Apply(this.settings.distanceCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
+            PositionalCorrection.Apply(alpha, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
         }
 
         //Restrict to axis
