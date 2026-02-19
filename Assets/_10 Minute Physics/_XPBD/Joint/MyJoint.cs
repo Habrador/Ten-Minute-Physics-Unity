@@ -314,6 +314,33 @@ namespace XPBD
                 //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
                 //AlignAxes(a1, a2, alpha = 0)
                 //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
+
+                RestrictToAxis();
+                AlignAxes();
+
+                //Twist limit
+
+                UpdateGlobalFrames();
+
+                Vector3 axis0 = new Vector3(1f, 0f, 0f);
+                Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+                Vector3 a0 = this.globalRot0 * axis0;
+                Vector3 a1 = this.globalRot1 * axis0;
+
+                Vector3 n = a0 + a1;
+                n = Vector3.Normalize(n);
+
+                a0 = this.globalRot0 * axis1;
+                a1 = this.globalRot1 * axis1;
+
+                a0 += n * Vector3.Dot(-n, a0);
+                a0 = Vector3.Normalize(a0);
+
+                a1 += n * Vector3.Dot(-n, a1);
+                a1 = Vector3.Normalize(a1);
+
+                LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
             }
             //Linear motion + rotational around its main axis
             else if (this.JointType == MyJointSettings.Types.Cylinder)
@@ -377,6 +404,36 @@ namespace XPBD
         //
         //  ApplyLinearCorrection(p1, p2, -p, alpha)
         //}
+        private void RestrictToAxis()
+        {
+            float targetDistance = Mathf.Max(this.settings.distanceMin, Mathf.Min(this.settings.targetDistance, this.settings.distanceMax));
+
+            float hardCompliance = 0f;
+
+            UpdateGlobalFrames();
+
+            Vector3 corr = this.globalPos1 - this.globalPos0;
+
+            corr = this.globalRot0.Conjugate() * corr;
+
+            //Clamp
+            if (corr.x > this.settings.distanceMax)
+            {
+                corr.x -= this.settings.distanceMax;
+            }
+            else if (corr.x < this.settings.distanceMin)
+            {
+                corr.x -= this.settings.distanceMin;
+            }
+            else
+            {
+                corr.x = 0f;
+            }
+
+            corr = this.globalRot0 * corr;
+
+            PositionalCorrection.Apply(hardCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
+        }
 
         //Align two axes
         //Make direction a1 going through p1 and direction a2 going through p2 be in the same direction
