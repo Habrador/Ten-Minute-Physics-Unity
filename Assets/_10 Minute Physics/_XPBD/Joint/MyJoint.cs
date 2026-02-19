@@ -215,8 +215,6 @@ namespace XPBD
                 {
                     UpdateGlobalFrames();
 
-                    //Debug.Log("sup");
-
                     float hardCompliance = 0f;
 
                     Vector3 axis0 = new Vector3(1f, 0f, 0f);

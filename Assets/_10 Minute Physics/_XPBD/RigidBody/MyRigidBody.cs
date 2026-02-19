@@ -63,6 +63,7 @@ namespace XPBD
 
         //If fontSize = 0 we wont display any text
         //size - radius if we have a sphere, length of side if we have a box
+        //density - setting it to zero means the rb will not move
         public MyRigidBody(Types type, Vector3 size, float density, Vector3 pos, Vector3 angles, int fontSize = 0)
         {
             this.type = type;
