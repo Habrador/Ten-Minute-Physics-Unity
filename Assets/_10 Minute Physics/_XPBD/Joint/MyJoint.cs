@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using UnityEngine;
 
 namespace XPBD
@@ -195,9 +196,15 @@ namespace XPBD
             //The meshes connected to the rb are not updated here!
         }
 
-
-        //In the video he has some building blocks that make up these joints
-        //But in the code he squeezes them into two large methods maing it messy
+        //Cylinders from left to right in the demo scene:
+        // - Cylinder joint where we control the offset
+        // - Servo joint where we control the angle
+        // - Motor joint where we can control motor speed
+        // - Hinge joint with angle limits
+        // - Hinge joint with angle limits but damped
+        // - Ball and socket joint with swing and twist limits
+        // - Prismatic joint with target offset and stiffness
+        // - Prismatic joint with target offset and stiffness but damped
         private void SolveJoint(float dt)
         {
             if (this.disabled || this.settings.type == MyJointSettings.Types.None)
@@ -205,206 +212,42 @@ namespace XPBD
                 return;
             }
 
-            //Hinge joing
+
             if (this.JointType == MyJointSettings.Types.Hinge)
             {
-                //Attach(p1, p2, d_rest = 0, alpha = 0);
-                //AlignAxes(a1, a2, alpha = 0)
-                //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
-
-                //Pos
-                UpdateGlobalFrames();
-
-                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
-                
-
-                //Rot
-                AlignAxes();
-
-
-                //Limit angle so it cant spin 360 degrees if needed
-                if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
-                {
-                    UpdateGlobalFrames();
-
-                    Vector3 n = this.globalRot0 * axis0;
-
-                    Vector3 a0 = this.globalRot0 * axis1;
-                    Vector3 a1 = this.globalRot1 * axis1;
-
-                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
-                }
-
-                //TODO: One of these should be damped, how do we take that into account?
+                HingeJoint();
             }
-            //Hinge joint that where we can control the angle with x slider
             else if (this.JointType == MyJointSettings.Types.Servo)
             {
-                //Attach(p1, p2, d_rest = 0, alpha = 0);
-                //AlignAxes(a1, a2, alpha = 0)
-                //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
-
-                UpdateGlobalFrames();
-
-                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
-
-                AlignAxes();
-
-                if (this.settings.hasTargetAngle)
-                {
-                    UpdateGlobalFrames();
-                    
-                    Vector3 n = this.globalRot0 * axis0;
-
-                    Vector3 a0 = this.globalRot0 * axis1;
-                    Vector3 a1 = this.globalRot1 * axis1;
-
-                    LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
-                }
-
-                //Joint limits
-                if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
-                {
-                    UpdateGlobalFrames();
-
-                    Vector3 n = this.globalRot0 * axis0;
-
-                    Vector3 a0 = this.globalRot0 * axis1;
-                    Vector3 a1 = this.globalRot1 * axis1;
-
-                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
-                }
+                ServoJoint();
             }
-            //Hinge joint that spins endlessly 
             else if (this.JointType == MyJointSettings.Types.Motor)
             {
-                //Attach(p1, p2, d_rest = 0, alpha = 0);
-                //AlignAxes(a1, a2, alpha = 0)
-                //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
-                //phi_motor = phi_motor + dt * omega_motor
-
-                //Pos
-                UpdateGlobalFrames();
-
-                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
-
-
-                //Rot
-                AlignAxes();
-
-                if (this.settings.hasTargetAngle)
-                {
-                    UpdateGlobalFrames();
-
-                    Vector3 n = this.globalRot0 * axis0;
-
-                    Vector3 a0 = this.globalRot0 * axis1;
-                    Vector3 a1 = this.globalRot1 * axis1;
-
-                    LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
-                }
-
-                float aAngle = Mathf.Min(Mathf.Max(this.settings.velocity * dt, -1f), 1f);
-
-                this.settings.targetAngle += aAngle;
+                MotorJoint(dt);
             }
             else if (this.JointType == MyJointSettings.Types.Ball)
             {
-                //Attach(p1, p2, d_rest = 0, alpha = 0);
-
-                //Swing limit
-                //n = (a1 x a2) / |a1 x a2|
-                //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
-
-                //Twist limit
-                //n = (a1 x a2) / |a1 + a2|
-                //b1' = b1 - n(n dot b1)
-                //b2' = b2 - n(n dot b2)
-                //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
-
-                UpdateGlobalFrames();
-
-                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
-
-                //Swing limit
-
-                UpdateGlobalFrames();
-
-                Vector3 a0 = this.globalRot0 * axis0;
-                Vector3 a1 = this.globalRot1 * axis0;
-
-                Vector3 n = Vector3.Cross(a0, a1);
-                n = Vector3.Normalize(n);
-
-                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
-
-                //Twist limit
-
-                UpdateGlobalFrames();
-
-                a0 = this.globalRot0 * axis0;
-                a1 = this.globalRot1 * axis0;
-                
-                n = a0 + a1;
-                n = Vector3.Normalize(n);
-
-                a0 = this.globalRot0 * axis1;
-                a1 = this.globalRot1 * axis1;
-
-                a0 += n * Vector3.Dot(-n, a0);
-                a0 = Vector3.Normalize(a0);
-
-                a1 += n * Vector3.Dot(-n, a1);
-                a1 = Vector3.Normalize(a1);
-
-                LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
+                BallJoint();
             }
-            //Only linear motion
             else if (this.JointType == MyJointSettings.Types.Prismatic)
             {
-                //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
-                //AlignAxes(a1, a2, alpha = 0)
-                //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
-
-                RestrictToAxis();
-                AlignAxes();
-
-                //Twist limit
-
-                UpdateGlobalFrames();
-
-                Vector3 axis0 = new Vector3(1f, 0f, 0f);
-                Vector3 axis1 = new Vector3(0f, 1f, 0f);
-
-                Vector3 a0 = this.globalRot0 * axis0;
-                Vector3 a1 = this.globalRot1 * axis0;
-
-                Vector3 n = a0 + a1;
-                n = Vector3.Normalize(n);
-
-                a0 = this.globalRot0 * axis1;
-                a1 = this.globalRot1 * axis1;
-
-                a0 += n * Vector3.Dot(-n, a0);
-                a0 = Vector3.Normalize(a0);
-
-                a1 += n * Vector3.Dot(-n, a1);
-                a1 = Vector3.Normalize(a1);
-
-                LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
+                PrismaticJoint();
             }
-            //Linear motion + rotational around its main axis
             else if (this.JointType == MyJointSettings.Types.Cylinder)
             {
-                //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
-                //AlignAxes(a1, a2, alpha = 0)
-                //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
+                CyilinderJoint();
             }
             else if (this.JointType == MyJointSettings.Types.Fixed)
             {
-
+                FixedJoint();
             }
         }
+
+
+
+        //
+        // Building blocks used to simulate all joints
+        //
 
         //Attach Bodies
         //Attach 2 rbs at points p1 and p2, with distance d_rest between them
@@ -415,7 +258,6 @@ namespace XPBD
         //  n = (p2 - p1) / d
         //  ApplyLinearCorrection(p1, p2, -(d - d_rest) * n, alpha)
         //}
-        //private void Attach(Vector3 p1, Vector3 p2, float d_rest, float alpha)
         private void Attach(Vector3 p1, Vector3 p2, float d_rest, float alpha)
         {
             Vector3 corr = p2 - p1;
@@ -442,6 +284,7 @@ namespace XPBD
 
         //Restrict to axis
         //Restrict p2 to be on an axis with direction a going thorugh p1
+        //We can also provide a lower and upper limit for the offset
         //RestrictToAxis(a, p1, p2, p_min, p_max, alpha)
         //{
         //  p = p2 - p1
@@ -505,8 +348,301 @@ namespace XPBD
             AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
         }
 
+        //Algorithm 3 in the XPBD paper
+        //Limits the angle between the axes a and b of two bodies
+        //to be in the interval [minAngle, maxAngle] 
+        //using the common roation axis n
+        //From YT video:
+        //Limit angle
+        //Limit the angle (phi) going between axis a1 and a2 (going from same point)
+        //where n is the perpendicular axis (rotation axis) 
+        //LimitAngle(n, a1, a2, phi_min, phi_max, alpha)
+        //{
+        //  phi = angle(n, a1, a2) //Calculate the current angle
+        //
+        //  if (phi < phi_min or phi > phi max) //If angle is not within bounds
+        //  {
+        //      phi = clamp(phi, phi_min, phi_max) //Clamp based on the limits
+        //      q = roation(n, phi)
+        //      a2' = q dot a1 //Rotate a1 by angle phi. This is the dir a2 should have to form the desired angle
+        //
+        //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
+        //  }
+        //}
+        private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
+        {
+            float phi = GetAngle(n, a, b);
+
+            //If angle is within the bounds
+            if (minAngle <= phi && phi <= maxAngle)
+            {
+                return;
+            }
+
+            //Clamp(phi, minAngle, maxAngle) 
+            phi = Mathf.Max(minAngle, Mathf.Min(phi, maxAngle));
+
+            //n1 = rot(n, phi) * n1
+            Vector3 ra = a;
+
+            //ra.applyAxisAngle(n, phi);
+            ra = Quaternion.AngleAxis(phi * Mathf.Rad2Deg, n) * ra;
+
+            //delta_q_limit = n1 x n2
+            Vector3 corr = Vector3.Cross(ra, b);
+
+            AngularCorrection.Apply(compliance, corr, this.body0, this.body1);
+        }
+
+        //Algorithm 3 in the XPBD paper
+        private float GetAngle(Vector3 n, Vector3 a, Vector3 b)
+        {
+            float phi = Mathf.Asin(Vector3.Dot(Vector3.Cross(a, b), n));
+
+            if (Vector3.Dot(a, b) < 0f)
+            {
+                phi = Mathf.PI - phi;
+            }
+            if (phi > Mathf.PI)
+            {
+                phi = phi - 2f * Mathf.PI;
+            }
+            if (phi < -Mathf.PI)
+            {
+                phi = phi + 2f * Mathf.PI;
+            }
+
+            return phi;
+        }
 
 
+
+        //
+        // Simulate joints by using the building blocks
+        //
+
+        //p1 and p2 are positions in world space where a constraint is attached
+        //alpha = 0 means infinite stiffness (hard compliance)
+
+        //Hinge joint
+        //Attach(p1, p2, d_rest = 0, alpha = 0);
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
+        private void HingeJoint()
+        {
+            //Pos
+            UpdateGlobalFrames();
+
+            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+
+            //Rot
+            AlignAxes();
+
+
+            //Limit angle so it cant spin 360 degrees if needed
+            if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
+            {
+                UpdateGlobalFrames();
+
+                Vector3 n = this.globalRot0 * axis0;
+
+                Vector3 a0 = this.globalRot0 * axis1;
+                Vector3 a1 = this.globalRot1 * axis1;
+
+                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+            }
+        }
+
+
+
+        //Hinge joint that where we can control the angle with x slider
+        //Attach(p1, p2, d_rest = 0, alpha = 0);
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
+        private void ServoJoint()
+        {
+            UpdateGlobalFrames();
+
+            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+            AlignAxes();
+
+            if (this.settings.hasTargetAngle)
+            {
+                UpdateGlobalFrames();
+
+                Vector3 n = this.globalRot0 * axis0;
+
+                Vector3 a0 = this.globalRot0 * axis1;
+                Vector3 a1 = this.globalRot1 * axis1;
+
+                LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+            }
+
+            //Joint limits
+            if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
+            {
+                UpdateGlobalFrames();
+
+                Vector3 n = this.globalRot0 * axis0;
+
+                Vector3 a0 = this.globalRot0 * axis1;
+                Vector3 a1 = this.globalRot1 * axis1;
+
+                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+            }
+        }
+
+
+
+        //Hinge joint that spins endlessly 
+        //Attach(p1, p2, d_rest = 0, alpha = 0);
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
+        //phi_motor = phi_motor + dt * omega_motor
+        private void MotorJoint(float dt)
+        {
+            //Pos
+            UpdateGlobalFrames();
+
+            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+
+            //Rot
+            AlignAxes();
+
+            if (this.settings.hasTargetAngle)
+            {
+                UpdateGlobalFrames();
+
+                Vector3 n = this.globalRot0 * axis0;
+
+                Vector3 a0 = this.globalRot0 * axis1;
+                Vector3 a1 = this.globalRot1 * axis1;
+
+                LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+            }
+
+            float aAngle = Mathf.Min(Mathf.Max(this.settings.velocity * dt, -1f), 1f);
+
+            this.settings.targetAngle += aAngle;
+        }
+
+
+
+        //Ball-and-socket joint (or spheroid joint) where a ball-shaped surface of one rounded bone fits into the cup-like depression of another bone
+        //Attach(p1, p2, d_rest = 0, alpha = 0);
+
+        //Swing limit
+        //n = (a1 x a2) / |a1 x a2|
+        //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
+
+        //Twist limit
+        //n = (a1 x a2) / |a1 + a2|
+        //b1' = b1 - n(n dot b1)
+        //b2' = b2 - n(n dot b2)
+        //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
+        private void BallJoint()
+        {
+            UpdateGlobalFrames();
+
+            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+            //Swing limit
+
+            UpdateGlobalFrames();
+
+            Vector3 a0 = this.globalRot0 * axis0;
+            Vector3 a1 = this.globalRot1 * axis0;
+
+            Vector3 n = Vector3.Cross(a0, a1);
+            n = Vector3.Normalize(n);
+
+            LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+
+            //Twist limit
+
+            UpdateGlobalFrames();
+
+            a0 = this.globalRot0 * axis0;
+            a1 = this.globalRot1 * axis0;
+
+            n = a0 + a1;
+            n = Vector3.Normalize(n);
+
+            a0 = this.globalRot0 * axis1;
+            a1 = this.globalRot1 * axis1;
+
+            a0 += n * Vector3.Dot(-n, a0);
+            a0 = Vector3.Normalize(a0);
+
+            a1 += n * Vector3.Dot(-n, a1);
+            a1 = Vector3.Normalize(a1);
+
+            LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
+        }
+
+
+
+        //Only linear motion
+        //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
+        private void PrismaticJoint()
+        {
+            RestrictToAxis();
+            AlignAxes();
+
+            //Twist limit
+
+            UpdateGlobalFrames();
+
+            Vector3 axis0 = new Vector3(1f, 0f, 0f);
+            Vector3 axis1 = new Vector3(0f, 1f, 0f);
+
+            Vector3 a0 = this.globalRot0 * axis0;
+            Vector3 a1 = this.globalRot1 * axis0;
+
+            Vector3 n = a0 + a1;
+            n = Vector3.Normalize(n);
+
+            a0 = this.globalRot0 * axis1;
+            a1 = this.globalRot1 * axis1;
+
+            a0 += n * Vector3.Dot(-n, a0);
+            a0 = Vector3.Normalize(a0);
+
+            a1 += n * Vector3.Dot(-n, a1);
+            a1 = Vector3.Normalize(a1);
+
+            LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
+        }
+
+
+
+        //Linear motion + rotational around its main axis
+        //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
+        //AlignAxes(a1, a2, alpha = 0)
+        //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
+        private void CyilinderJoint()
+        {
+            
+        }
+
+
+        //Fixed
+        private void FixedJoint()
+        {
+            
+        }
+
+
+
+
+        //
+        // Simulate joints by combining the building blocks in two large methods making it messy
+        //
 
         //Position constraint
         private void SolvePosition(float dt)
@@ -578,77 +714,6 @@ namespace XPBD
                 
                 //this.body0.ApplyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
             }
-        }
-
-
-
-        //Algorithm 3 in the XPBD paper
-        private float GetAngle(Vector3 n, Vector3 a, Vector3 b)
-        {
-            float phi = Mathf.Asin(Vector3.Dot(Vector3.Cross(a, b), n));
-
-            if (Vector3.Dot(a, b) < 0f)
-            {
-                phi = Mathf.PI - phi;
-            }
-            if (phi > Mathf.PI)
-            {
-                phi = phi - 2f * Mathf.PI;
-            }
-            if (phi < -Mathf.PI)
-            { 
-                phi = phi + 2f * Mathf.PI;
-            }
-
-            return phi;
-        }
-
-
-
-        //Algorithm 3 in the XPBD paper
-        //Limits the angle between the axes a and b of two bodies
-        //to be in the interval [minAngle, maxAngle] 
-        //using the common roation axis n
-        //From YT video:
-        //Limit angle
-        //Limit the angle (phi) going between axis a1 and a2 (going from same point)
-        //where n is the perpendicular axis (rotation axis) 
-        //LimitAngle(n, a1, a2, phi_min, phi_max, alpha)
-        //{
-        //  phi = angle(n, a1, a2) //Calculate the current angle
-        //
-        //  if (phi < phi_min or phi > phi max) //If angle is not within bounds
-        //  {
-        //      phi = clamp(phi, phi_min, phi_max) //Clamp based on the limits
-        //      q = roation(n, phi)
-        //      a2' = q dot a1 //Rotate a1 by angle phi. This is the dir a2 should have to form the desired angle
-        //
-        //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
-        //  }
-        //}
-        private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
-        {
-            float phi = GetAngle(n, a, b);
-
-            //If angle is within the bounds
-            if (minAngle <= phi && phi <= maxAngle)
-            {
-                return;
-            }
-            
-            //Clamp(phi, minAngle, maxAngle) 
-            phi = Mathf.Max(minAngle, Mathf.Min(phi, maxAngle));
-
-            //n1 = rot(n, phi) * n1
-            Vector3 ra = a;
-
-            //ra.applyAxisAngle(n, phi);
-            ra = Quaternion.AngleAxis(phi * Mathf.Rad2Deg, n) * ra;
-
-            //delta_q_limit = n1 x n2
-            Vector3 corr = Vector3.Cross(ra, b);
-
-            AngularCorrection.Apply(compliance, corr, this.body0, this.body1);
         }
 
 
@@ -799,6 +864,11 @@ namespace XPBD
 
 
 
+        //
+        // Torque, force, and damping
+        //
+
+
         private void ApplyTorque(float dt, float torque)
         {
             UpdateGlobalFrames();
@@ -817,7 +887,8 @@ namespace XPBD
         }
 
 
-        //Theres also an ApplyFoorce in the YT video
+
+        //Theres also an ApplyForce in the YT video
         private void ApplyForce(float f)
         {
             //a is the axis youn want to apply the force along
@@ -826,11 +897,7 @@ namespace XPBD
 
 
 
-        //
-        // Damping (called from FixedUpdate())
-        //
-
-        //Linear damping
+        //Linear damping (called from FixedUpdate())
 
         //From YT:
         //Damp along direction n
