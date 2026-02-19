@@ -280,6 +280,31 @@ namespace XPBD
                 //AlignAxes(a1, a2, alpha = 0)
                 //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
                 //phi_motor = phi_motor + dt * omega_motor
+
+                //Pos
+                UpdateGlobalFrames();
+
+                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+
+                //Rot
+                AlignAxes();
+
+                if (this.settings.hasTargetAngle)
+                {
+                    UpdateGlobalFrames();
+
+                    Vector3 n = this.globalRot0 * axis0;
+
+                    Vector3 a0 = this.globalRot0 * axis1;
+                    Vector3 a1 = this.globalRot1 * axis1;
+
+                    LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+                }
+
+                float aAngle = Mathf.Min(Mathf.Max(this.settings.velocity * dt, -1f), 1f);
+
+                this.settings.targetAngle += aAngle;
             }
             else if (this.JointType == MyJointSettings.Types.Ball)
             {
