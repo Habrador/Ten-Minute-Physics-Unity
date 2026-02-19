@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 namespace XPBD
 {
@@ -44,6 +43,10 @@ namespace XPBD
         
         //The red line going between attachment points
         private VisualDistance visDistance;
+
+        //For joint rotations
+        private Vector3 axis0 = new Vector3(1f, 0f, 0f);
+        private Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
 
 
@@ -222,29 +225,53 @@ namespace XPBD
                 {
                     UpdateGlobalFrames();
 
-                    Vector3 axis0 = new Vector3(1f, 0f, 0f);
-                    Vector3 axis1 = new Vector3(0f, 1f, 0f);
+                    Vector3 n = this.globalRot0 * axis0;
 
-                    Vector3 n = axis0;
-                    n = this.globalRot0 * n;
-
-                    Vector3 a0 = axis1;
-                    a0 = this.globalRot0 * a0;
-
-                    Vector3 a1 = axis1;
-                    a1 = this.globalRot1 * a1;
+                    Vector3 a0 = this.globalRot0 * axis1;
+                    Vector3 a1 = this.globalRot1 * axis1;
 
                     LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
                 }
 
                 //TODO: One of these should be damped, how do we take that into account?
             }
-            //Hinge joint that where we can control the angle
+            //Hinge joint that where we can control the angle with x slider
             else if (this.JointType == MyJointSettings.Types.Servo)
             {
                 //Attach(p1, p2, d_rest = 0, alpha = 0);
                 //AlignAxes(a1, a2, alpha = 0)
                 //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
+
+                UpdateGlobalFrames();
+
+                Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+
+                AlignAxes();
+
+                if (this.settings.hasTargetAngle)
+                {
+                    UpdateGlobalFrames();
+                    
+                    Vector3 n = this.globalRot0 * axis0;
+
+                    Vector3 a0 = this.globalRot0 * axis1;
+                    Vector3 a1 = this.globalRot1 * axis1;
+
+                    LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+                }
+
+                //Joint limits
+                if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
+                {
+                    UpdateGlobalFrames();
+
+                    Vector3 n = this.globalRot0 * axis0;
+
+                    Vector3 a0 = this.globalRot0 * axis1;
+                    Vector3 a1 = this.globalRot1 * axis1;
+
+                    LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+                }
             }
             //Hinge joint that spins endlessly 
             else if (this.JointType == MyJointSettings.Types.Motor)
@@ -275,9 +302,6 @@ namespace XPBD
                 //Swing limit
 
                 UpdateGlobalFrames();
-
-                Vector3 axis0 = new Vector3(1f, 0f, 0f);
-                Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
                 Vector3 a0 = this.globalRot0 * axis0;
                 Vector3 a1 = this.globalRot1 * axis0;
