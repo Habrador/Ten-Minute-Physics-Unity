@@ -71,7 +71,7 @@ namespace XPBD
             this.swingMin = swingMin;
             this.swingMax = swingMax;
             this.hasTargetAngle = true;
-            this.targetAngle = 0f;
+            this.targetAngle = 0f; //The angle we can control
             this.targetAngleCompliance = 0f;
         }
 
@@ -80,7 +80,7 @@ namespace XPBD
             this.type = Types.Motor;
             this.hasTargetDistance = true;
             this.targetDistance = 0f;
-            this.velocity = velocity;
+            this.velocity = velocity; //Motor speed we can control
             this.hasTargetAngle = true;
             this.targetAngle = 0f;
             this.targetAngleCompliance = 0f;
@@ -126,6 +126,7 @@ namespace XPBD
             this.twistMax = twistMax;
             this.hasTargetDistance = true;
             this.distanceCompliance = 0f;
+            //We control this cylinder by changing targetDistance
         }
 
         public void InitDistanceJoint(float restDistance, float compliance, float damping)

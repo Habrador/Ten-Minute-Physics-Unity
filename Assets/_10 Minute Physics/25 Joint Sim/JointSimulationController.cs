@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEditor;
 using UnityEngine;
 using XPBD;
@@ -53,10 +52,10 @@ public class JointSimulationController : MonoBehaviour
     //We can chose between displaying both 
     //Visuals are the simple objects
     private bool showVisuals = true;
-    //To control the joints (tutorial is using a touch control) but we shall use sliders
+    //To control the cylinder, servo, and motor joints
+    //The tutorial is using a touch control but we shall use sliders!
     private Vector2 controlVector;
-    private Vector2 controlVelocity;
-
+    
 
 
     private void Start()
@@ -143,20 +142,9 @@ public class JointSimulationController : MonoBehaviour
 
 
 
-    //Control motors and servers with sliders
+    //Control motors and servers and cylinders with sliders
     private void UpdateControl()
     {
-        //Update control vector with velocity
-
-        //Adjust this value to control return speed
-        //float returnSpeed = 5f;
-        
-        //this.controlVelocity.x = -this.controlVector.x * returnSpeed;
-        //this.controlVelocity.y = -this.controlVector.y * returnSpeed;
-
-        //this.controlVector += this.controlVelocity * Time.deltaTime;
-
-        //Apply control to motors and servos
         List<MyJoint> allJoints = rbSimulator.allJoints;
 
         for (int i = 0; i < allJoints.Count; i++)

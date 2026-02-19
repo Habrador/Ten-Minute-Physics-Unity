@@ -18,7 +18,6 @@ public class SceneImporter
 
 
 
-    //public SceneImporter(simulator, scene)
     public SceneImporter()
     {
         this.rigidBodies = new();
@@ -89,7 +88,7 @@ public class SceneImporter
             }
             else if (IsVisual(mesh))
             {
-                CreateVisualMesh(mesh);
+                CreateDetailedMesh(mesh);
                 visualCount += 1;
             }
         }
@@ -410,10 +409,10 @@ public class SceneImporter
 
 
     //
-    // Init a visual mesh
+    // Init a detailed mesh
     //
 
-    private void CreateVisualMesh(JointMesh mesh)
+    private void CreateDetailedMesh(JointMesh mesh)
     {
         JointProperties props = mesh.properties;
     
@@ -499,6 +498,7 @@ public class SceneImporter
 
 
 
+    //Debug
     private static void DisplayMeshData(JointMesh mesh)
     {
         Debug.Log("Name: " + mesh.name);
