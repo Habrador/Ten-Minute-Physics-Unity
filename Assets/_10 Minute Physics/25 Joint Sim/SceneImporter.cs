@@ -200,7 +200,7 @@ public class SceneImporter
         //Register with simulator
         this.simulator.AddRigidBody(rigidBody);
 
-        Debug.Log($"Created ${ simType }: ${ mesh.name }");
+        //Debug.Log($"Created ${ simType }: ${ mesh.name }");
     }
 
 
@@ -403,7 +403,7 @@ public class SceneImporter
         //Register with simulator
         this.simulator.AddJoint(joint);
 
-        Debug.Log($"Created ${ simType}: ${ mesh.name } connecting ${ props.parent1 } to ${ props.parent2}");
+        //Debug.Log($"Created ${ simType}: ${ mesh.name } connecting ${ props.parent1 } to ${ props.parent2}");
     }
 
 
@@ -493,7 +493,7 @@ public class SceneImporter
 
         parentBody.UpdateMeshes();
 
-        Debug.Log($"Created visual mesh: ${ mesh.name } attached to ${ parentName } (transformed to body space)");
+        //Debug.Log($"Created visual mesh: ${ mesh.name } attached to ${ parentName } (transformed to body space)");
     }
 
 

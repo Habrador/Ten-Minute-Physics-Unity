@@ -49,6 +49,7 @@ namespace XPBD
         private Vector3 axis0 = new Vector3(1f, 0f, 0f);
         private Vector3 axis1 = new Vector3(0f, 1f, 0f);
 
+        //Infinite stiffness
         private readonly float hardCompliance = 0f;
 
 
@@ -621,7 +622,7 @@ namespace XPBD
 
 
 
-        //Linear motion + rotational around its main axis
+        //Like a prismatic joint but we can control the movement like the servo
         //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
         //AlignAxes(a1, a2, alpha = 0)
         //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
@@ -868,8 +869,10 @@ namespace XPBD
         // Torque, force, and damping
         //
 
-
-        private void ApplyTorque(float dt, float torque)
+        //ApplyTorque (not used here but was in the YT video)
+        //ApplyAngularVelocityCorrection(tau/dt * a)
+        //where a is the main axis
+        private void ApplyTorque(float torque, float dt)
         {
             UpdateGlobalFrames();
 
@@ -888,11 +891,13 @@ namespace XPBD
 
 
 
-        //Theres also an ApplyForce in the YT video
-        private void ApplyForce(float f)
+        //ApplyForce (not used here but was in the YT video)
+        //a is the axis youn want to apply the force along
+        //ApplyLinearVelocityCorrection(p1, p2, f/dt * a)
+        //where a is the main axis
+        private void ApplyForce(float f, float dt)
         {
-            //a is the axis youn want to apply the force along
-            //ApplyLinearVelocityCorrection(p1, p2, f/delta_t * a)
+            
         }
 
 
@@ -906,7 +911,7 @@ namespace XPBD
         //{
         //  delta_v = v2 + (p2 - x2) x omega2 - v1 - (p1 - x1) x omega1 //Relative velocity
         //  delta_v_scalar = n * delta_v //Extract vel along axis n
-        //  delta_v_scalar = delta_v_scalar * min(delta_t * c_linear, 1) //Damp
+        //  delta_v_scalar = delta_v_scalar * min(delta_t * c_linear, 1) //Damp and make it stable
         //  ApplyLinearVelocityCorrection(p1, p2, -delta_eta * n)
         //}
 
