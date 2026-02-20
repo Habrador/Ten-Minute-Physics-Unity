@@ -298,10 +298,8 @@ namespace XPBD
         //
         //  ApplyLinearCorrection(p1, p2, -p, alpha)
         //}
-        private void RestrictToAxis()
+        private void RestrictToAxis(float distanceMin, float distanceMax)
         {
-            float targetDistance = Mathf.Max(this.settings.distanceMin, Mathf.Min(this.settings.targetDistance, this.settings.distanceMax));
-
             UpdateGlobalFrames();
 
             Vector3 corr = this.globalPos1 - this.globalPos0;
@@ -309,13 +307,13 @@ namespace XPBD
             corr = this.globalRot0.Conjugate() * corr;
 
             //Clamp
-            if (corr.x > this.settings.distanceMax)
+            if (corr.x > distanceMax)
             {
-                corr.x -= this.settings.distanceMax;
+                corr.x -= distanceMax;
             }
-            else if (corr.x < this.settings.distanceMin)
+            else if (corr.x < distanceMin)
             {
-                corr.x -= this.settings.distanceMin;
+                corr.x -= distanceMin;
             }
             else
             {
@@ -589,7 +587,7 @@ namespace XPBD
         //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
         private void PrismaticJoint()
         {
-            RestrictToAxis();
+            RestrictToAxis(this.settings.distanceMin, this.settings.distanceMax);
 
             AlignAxes();
 
@@ -636,7 +634,43 @@ namespace XPBD
         //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
         private void CylinderJoint()
         {
-            
+            RestrictToAxis(this.settings.targetDistance, this.settings.targetDistance);
+
+            AlignAxes();
+
+            //Swing limit
+
+            UpdateGlobalFrames();
+
+            Vector3 a0 = this.globalRot0 * axis0;
+            Vector3 a1 = this.globalRot1 * axis0;
+
+            Vector3 n = Vector3.Cross(a0, a1);
+            n = Vector3.Normalize(n);
+
+            LimitAngle(n, a0, a1, 0f, 0f, hardCompliance);
+
+
+            //Twist limit
+
+            UpdateGlobalFrames();
+
+            a0 = this.globalRot0 * axis0;
+            a1 = this.globalRot1 * axis0;
+
+            n = a0 + a1;
+            n = Vector3.Normalize(n);
+
+            a0 = this.globalRot0 * axis1;
+            a1 = this.globalRot1 * axis1;
+
+            a0 += n * Vector3.Dot(-n, a0);
+            a0 = Vector3.Normalize(a0);
+
+            a1 += n * Vector3.Dot(-n, a1);
+            a1 = Vector3.Normalize(a1);
+
+            LimitAngle(n, a0, a1, 0f, 0f, hardCompliance);
         }
 
 
