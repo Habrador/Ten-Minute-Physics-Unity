@@ -248,9 +248,9 @@ namespace XPBD
         {
             Vector3 corr = p2 - p1;
 
-            float distance = corr.magnitude;
+            float d = corr.magnitude;
 
-            if (distance == 0f)
+            if (d == 0f)
             {
                 corr = new Vector3(0f, 0f, 1f);
 
@@ -261,9 +261,7 @@ namespace XPBD
                 corr = Vector3.Normalize(corr);
             }
 
-            corr *= this.settings.targetDistance - distance;
-
-            corr *= -1f;
+            corr = -(d - d_rest) * corr * -1f;
 
             PositionalCorrection.Apply(alpha, corr, this.body1, p1, this.body2, p2);
         }
@@ -286,31 +284,29 @@ namespace XPBD
         //
         //  ApplyLinearCorrection(p1, p2, -p, alpha)
         //}
-        private void RestrictToAxis(float distanceMin, float distanceMax)
+        private void RestrictToAxis(Quaternion a, Vector3 p1, Vector3 p2, float p_min, float p_max, float alpha)
         {
-            UpdateGlobalFrames();
+            Vector3 corr = p2 - p1;
 
-            Vector3 corr = this.globalPos2 - this.globalPos1;
-
-            corr = this.globalRot1.Conjugate() * corr;
+            corr = a.Conjugate() * corr;
 
             //Clamp
-            if (corr.x > distanceMax)
+            if (corr.x > p_max)
             {
-                corr.x -= distanceMax;
+                corr.x -= p_max;
             }
-            else if (corr.x < distanceMin)
+            else if (corr.x < p_min)
             {
-                corr.x -= distanceMin;
+                corr.x -= p_min;
             }
             else
             {
                 corr.x = 0f;
             }
 
-            corr = this.globalRot1 * corr;
+            corr = a * corr;
 
-            PositionalCorrection.Apply(hardCompliance, corr, this.body1, this.globalPos1, this.body2, this.globalPos2);
+            PositionalCorrection.Apply(alpha, corr, this.body1, p1, this.body2, p2);
         }
 
 
@@ -569,45 +565,68 @@ namespace XPBD
 
 
         //Only linear motion
-        //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
         private void PrismaticJoint()
         {
-            RestrictToAxis(this.settings.distanceMin, this.settings.distanceMax);
+            //RestrictToAxis(a1, p1, p2, p_min, p_max, alpha)
+            UpdateGlobalFrames();
 
+            Quaternion a1 = this.globalRot1;
+
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            float p_min = this.settings.distanceMin;
+            float p_max = this.settings.distanceMax;
+
+            RestrictToAxis(a1, p1, p2, p_min, p_max, alpha: 0f);
+
+
+            //AlignAxes(a1, a2, alpha = 0)
             AlignAxes();
 
+
+            //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
             UpdateGlobalFrames();
 
             Vector3 n = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot1 * axis1;
-            Vector3 a1 = this.globalRot2 * axis1;
+            Vector3 b1 = this.globalRot1 * axis1;
+            Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, a0, a1, 0f, 0f, compliance: 0f);
+            LimitAngle(n, b1, b2, 0f, 0f, compliance: 0f);
         }
 
 
 
         //Like a prismatic joint but we can control the movement like the servo
-        //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
         private void CylinderJoint()
         {
-            RestrictToAxis(this.settings.targetDistance, this.settings.targetDistance);
+            //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
+            UpdateGlobalFrames();
 
+            Quaternion a1 = this.globalRot1;
+
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            float p_target = this.settings.targetDistance;
+
+            RestrictToAxis(a1, p1, p2, p_target, p_target, alpha: 0f);
+
+
+            //AlignAxes(a1, a2, alpha = 0)
             AlignAxes();
 
+
+            //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
             UpdateGlobalFrames();
 
             Vector3 n = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot1 * axis1;
-            Vector3 a1 = this.globalRot2 * axis1;
+            Vector3 b1 = this.globalRot1 * axis1;
+            Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, a0, a1, 0f, 0f, compliance: 0f);
+            LimitAngle(n, b1, b2, 0f, 0f, compliance: 0f);
         }
 
 
