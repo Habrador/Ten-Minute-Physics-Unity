@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace XPBD
@@ -167,7 +168,7 @@ namespace XPBD
 
 
         //
-        // Move joint
+        // Simulate joint
         //
 
         //Called from FixedUpdate()
@@ -728,15 +729,21 @@ namespace XPBD
 
         //Linear damping (called from FixedUpdate())
 
+        //Typically used to damp a prismatic joint
+
         //From YT:
         //Damp along direction n
         //c_linear: damping coefficient
         //DampLinear(p1, p2, n, c_linear)
         //{
-        //  delta_v = v2 + (p2 - x2) x omega2 - v1 - (p1 - x1) x omega1 //Relative velocity
-        //  delta_v_scalar = n * delta_v //Extract vel along axis n
-        //  delta_v_scalar = delta_v_scalar * min(delta_t * c_linear, 1) //Damp and make it stable
-        //  ApplyLinearVelocityCorrection(p1, p2, -delta_eta * n)
+        //  The difference of velocities at the attachment points
+        //  This is the relative velocity of p2 wrt p1
+        //  delta_v = v2 + (p2 - x2) x omega2 - v1 - (p1 - x1) x omega1 
+        //  Extract vel along axis n
+        //  delta_v_scalar = n dot delta_v 
+        //  Damp and make it stable
+        //  delta_v_scalar = delta_v_scalar * min(delta_t * c_linear, 1)
+        //  ApplyLinearVelocityCorrection(p1, p2, -delta_v_scalar * n)
         //}
 
         public void ApplyLinearDamping(float dt)
@@ -751,29 +758,33 @@ namespace XPBD
             }
 
             //Only damp along the distance vector
-            Vector3 n = this.globalPos2 - this.globalPos1;
-
-            n.Normalize();
+            Vector3 n = (this.globalPos2 - this.globalPos1).normalized;
             
             n *= Vector3.Dot(-dVel,n);
 
             n *= Mathf.Min(this.settings.linearDampingCoeff * dt, 1f);
-            
+
             //this.body0.applyCorrection(0.0, n, this.globalPos0, this.body1, this.globalPos1, true);
+            LinearVelocityCorrection.Apply(this.body1, this.globalPos1, this.body2, this.globalPos2, n);
         }
 
 
 
         //Angular damping
 
+        //Typically used to damp a hinge joint
+
         //From YT:
         //Damp along rotation axis n
         //c_linear: damping coefficient
         //DampAngular(n, c_angular)
         //{
-        //  delta_omega = omega2 - omega1 //Relative angular velocity
-        //  delta_omega_Scalar = n * delta_omega //Extract vel along axis n
-        //  delta_omega_scalar = delta_omega_scalar * min(delta_t * c_angular, 1) //Damp
+        //  Relative angular velocity
+        //  delta_omega = omega2 - omega1
+        //  Extract vel along axis n
+        //  delta_omega_Scalar = n dot delta_omega 
+        //  Damp
+        //  delta_omega_scalar = delta_omega_scalar * min(delta_t * c_angular, 1)
         //  ApplyAngularVelocityCorrection(-delta_omega_scalar * n)
         //}
 
@@ -790,7 +801,6 @@ namespace XPBD
 
             if (this.body2 != null)
             {
-                //dOmega.sub(this.body1.omega);
                 dOmega -= this.body2.omega;
             }
 
@@ -820,6 +830,7 @@ namespace XPBD
             }
 
             //this.body0.ApplyCorrection(0f, dOmega, null, this.body1, null, true);
+            AngularVelocityCorrection.Apply(this.body1, this.body2, dOmega);
         }
 
 

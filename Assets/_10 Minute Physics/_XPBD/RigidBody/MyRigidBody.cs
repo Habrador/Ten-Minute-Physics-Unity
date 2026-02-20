@@ -22,7 +22,7 @@ namespace XPBD
         //Position
         public Vector3 pos;
         //Velocity
-        private Vector3 vel;
+        public Vector3 vel;
         //Rotation
         public Quaternion rot;
         //Inverse rot q^-1 = q* / |q|^2
