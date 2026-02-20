@@ -443,7 +443,7 @@ namespace XPBD
 
 
 
-        //Hinge joint that where we can control the angle with x slider
+        //Hinge joint where we can control the angle
         private void ServoJoint()
         {
             //Attach(p1, p2, d_rest = 0, alpha = 0);
@@ -493,7 +493,7 @@ namespace XPBD
 
 
 
-        //Hinge joint that spins endlessly 
+        //Hinge joint powered by a motor spinning endlessly
         private void MotorJoint(float dt)
         {
             //Attach(p1, p2, d_rest = 0, alpha = 0);
