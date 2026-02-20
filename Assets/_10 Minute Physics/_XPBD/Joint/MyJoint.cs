@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using UnityEngine;
 
 namespace XPBD
@@ -236,7 +235,7 @@ namespace XPBD
             }
             else if (this.JointType == MyJointSettings.Types.Cylinder)
             {
-                CyilinderJoint();
+                CylinderJoint();
             }
             else if (this.JointType == MyJointSettings.Types.Fixed)
             {
@@ -302,8 +301,6 @@ namespace XPBD
         private void RestrictToAxis()
         {
             float targetDistance = Mathf.Max(this.settings.distanceMin, Mathf.Min(this.settings.targetDistance, this.settings.distanceMax));
-
-            float hardCompliance = 0f;
 
             UpdateGlobalFrames();
 
@@ -593,19 +590,30 @@ namespace XPBD
         private void PrismaticJoint()
         {
             RestrictToAxis();
+
             AlignAxes();
+
+            //Swing limit
+
+            UpdateGlobalFrames();
+
+            Vector3 a0 = this.globalRot0 * axis0;
+            Vector3 a1 = this.globalRot1 * axis0;
+
+            Vector3 n = Vector3.Cross(a0, a1);
+            n = Vector3.Normalize(n);
+
+            LimitAngle(n, a0, a1, 0f, 0f, hardCompliance);
+
 
             //Twist limit
 
             UpdateGlobalFrames();
 
-            Vector3 axis0 = new Vector3(1f, 0f, 0f);
-            Vector3 axis1 = new Vector3(0f, 1f, 0f);
+            a0 = this.globalRot0 * axis0;
+            a1 = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot0 * axis0;
-            Vector3 a1 = this.globalRot1 * axis0;
-
-            Vector3 n = a0 + a1;
+            n = a0 + a1;
             n = Vector3.Normalize(n);
 
             a0 = this.globalRot0 * axis1;
@@ -617,7 +625,7 @@ namespace XPBD
             a1 += n * Vector3.Dot(-n, a1);
             a1 = Vector3.Normalize(a1);
 
-            LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, compliance: 0f);
+            LimitAngle(n, a0, a1, 0f, 0f, hardCompliance);
         }
 
 
@@ -626,7 +634,7 @@ namespace XPBD
         //RestrictToAxis(a1, p1, p2, p_target, p_target, alpha = 0)
         //AlignAxes(a1, a2, alpha = 0)
         //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
-        private void CyilinderJoint()
+        private void CylinderJoint()
         {
             
         }
@@ -684,8 +692,9 @@ namespace XPBD
                 }
 
                 corr = this.globalRot0 * corr;
-                
+
                 //this.body0.applyCorrection(hardCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
+                PositionalCorrection.Apply(hardCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
             }
 
             //Solve distance
@@ -712,8 +721,9 @@ namespace XPBD
                 corr *= this.settings.targetDistance - distance;
 
                 corr *= -1f;
-                
+
                 //this.body0.ApplyCorrection(this.distanceCompliance, corr, this.globalPos0, this.body1, this.globalPos1);
+                PositionalCorrection.Apply(hardCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
             }
         }
 
@@ -760,8 +770,9 @@ namespace XPBD
                 a1 = this.globalRot1 * a0;
 
                 corr = Vector3.Cross(a0, a1);
-                
+
                 //this.body0.ApplyCorrection(hardCompliance, corr, null, this.body1, null);
+                AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
 
                 if (this.settings.hasTargetAngle)
                 {
@@ -860,6 +871,7 @@ namespace XPBD
                 }
 
                 //this.body0.applyCorrection(hardCompliance, corr, null, this.body1, null);
+                AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
             }
         }
 
