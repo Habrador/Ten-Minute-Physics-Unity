@@ -9,22 +9,22 @@ namespace XPBD
         //Joint attachment points
         
         //Pos
-        private Vector3 globalPos0;
         private Vector3 globalPos1;
+        private Vector3 globalPos2;
         //Rot
-        private Quaternion globalRot0;
         private Quaternion globalRot1;
+        private Quaternion globalRot2;
 
         //Pos
-        private Vector3 localPos0;
         private Vector3 localPos1;
+        private Vector3 localPos2;
         //Rot
-        private Quaternion localRot0;
         private Quaternion localRot1;
+        private Quaternion localRot2;
 
         //Connected rbs
-        private readonly MyRigidBody body0;
         private readonly MyRigidBody body1;
+        private readonly MyRigidBody body2;
 
         private bool disabled;
 
@@ -53,25 +53,15 @@ namespace XPBD
 
 
 
-        public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos) : this(body0, body1, globalFramePos, Quaternion.identity) { }
+        public MyJoint(MyRigidBody body1, MyRigidBody body2, Vector3 globalFramePos) : this(body1, body2, globalFramePos, Quaternion.identity) { }
 
-        public MyJoint(MyRigidBody body0, MyRigidBody body1, Vector3 globalFramePos, Quaternion globalFrameRot)
+        public MyJoint(MyRigidBody body1, MyRigidBody body2, Vector3 globalFramePos, Quaternion globalFrameRot)
         {
             this.settings = new();
         
-            this.body0 = body0;
             this.body1 = body1;
+            this.body2 = body2;
             this.disabled = false;
-
-            this.globalPos0 = globalFramePos;
-            this.globalRot0 = globalFrameRot;
-            this.globalPos1 = globalFramePos;
-            this.globalRot1 = globalFrameRot;
-
-            //this.localPos0 = globalFramePos;
-            //this.localRot0 = globalFrameRot;
-            //this.localPos1 = globalFramePos;
-            //this.localRot1 = globalFrameRot;
 
             SetFrames(globalFramePos, globalFrameRot);
         }
@@ -88,36 +78,15 @@ namespace XPBD
         //We cant set globalFrameRot to null so we have to use isGlobalFrameRot
         private void SetFrames(Vector3 globalFramePos, Quaternion globalFrameRot, bool isGlobalFrameRot = true)
         {
-            if (this.body0 != null)
-            {
-                //Store the local position relative to body0
-                this.localPos0 = globalFramePos - this.body0.pos;
-                this.localPos0 = this.body0.invRot * this.localPos0;
-
-                //Store the local rotation relative to body0
-                this.localRot0 = globalFrameRot;
-
-                //Factor out the body's rotation
-                if (isGlobalFrameRot)
-                {
-                    this.localRot0 = this.body0.invRot * this.localRot0;
-                }
-            }
-            else
-            {
-                this.localPos0 = globalFramePos;
-                this.localRot0 = globalFrameRot;
-            }
-
             if (this.body1 != null)
             {
-                //Store the local position relative to body1
+                //Store the local position relative to body0
                 this.localPos1 = globalFramePos - this.body1.pos;
                 this.localPos1 = this.body1.invRot * this.localPos1;
 
-                //Store the local rotation relative to body1
+                //Store the local rotation relative to body0
                 this.localRot1 = globalFrameRot;
-                
+
                 //Factor out the body's rotation
                 if (isGlobalFrameRot)
                 {
@@ -129,6 +98,27 @@ namespace XPBD
                 this.localPos1 = globalFramePos;
                 this.localRot1 = globalFrameRot;
             }
+
+            if (this.body2 != null)
+            {
+                //Store the local position relative to body1
+                this.localPos2 = globalFramePos - this.body2.pos;
+                this.localPos2 = this.body2.invRot * this.localPos2;
+
+                //Store the local rotation relative to body1
+                this.localRot2 = globalFrameRot;
+                
+                //Factor out the body's rotation
+                if (isGlobalFrameRot)
+                {
+                    this.localRot2 = this.body2.invRot * this.localRot2;
+                }
+            }
+            else
+            {
+                this.localPos2 = globalFramePos;
+                this.localRot2 = globalFrameRot;
+            }
         }
 
 
@@ -136,21 +126,21 @@ namespace XPBD
         //Calculate the actual world positions for joint attachment points
         private void UpdateGlobalFrames()
         {
-            if (this.body0 != null)
-            {
-                this.globalPos0 = this.body0.pos + this.body0.rot * this.localPos0;
-                this.globalRot0 = this.body0.rot * this.localRot0;
-            }
-
             if (this.body1 != null)
             {
                 this.globalPos1 = this.body1.pos + this.body1.rot * this.localPos1;
                 this.globalRot1 = this.body1.rot * this.localRot1;
             }
+
+            if (this.body2 != null)
+            {
+                this.globalPos2 = this.body2.pos + this.body2.rot * this.localPos2;
+                this.globalRot2 = this.body2.rot * this.localRot2;
+            }
             else
             {
-                this.globalPos1 = this.localPos1;
-                this.globalRot1 = this.localRot1;
+                this.globalPos2 = this.localPos2;
+                this.globalRot2 = this.localRot2;
             }
         }
 
@@ -181,21 +171,7 @@ namespace XPBD
         //
 
         //Called from FixedUpdate()
-        public void Solve(float dt)
-        {
-            //SolvePosition(dt);
-            //SolveOrientation(dt);
-            SolveJoint(dt);
-        }
-
-        //Called from Update()
-        public void UpdateMesh()
-        {
-            UpdateVisuals();
-
-            //The meshes connected to the rb are not updated here!
-        }
-
+        //
         //Cylinders from left to right in the demo scene:
         // - Cylinder joint where we control the offset
         // - Servo joint where we control the angle
@@ -205,7 +181,7 @@ namespace XPBD
         // - Ball and socket (spherical) joint with swing and twist limits
         // - Prismatic joint with target offset and stiffness
         // - Prismatic joint with target offset and stiffness but damped
-        private void SolveJoint(float dt)
+        public void Solve(float dt)
         {
             if (this.disabled || this.settings.type == MyJointSettings.Types.None)
             {
@@ -245,6 +221,16 @@ namespace XPBD
 
 
 
+        //Called from Update()
+        public void UpdateMesh()
+        {
+            UpdateVisuals();
+
+            //The meshes connected to the rb are not updated here!
+        }
+
+
+
         //
         // Building blocks used to simulate all joints
         //
@@ -268,7 +254,7 @@ namespace XPBD
             {
                 corr = new Vector3(0f, 0f, 1f);
 
-                corr = this.globalRot0 * corr;
+                corr = this.globalRot1 * corr;
             }
             else
             {
@@ -279,8 +265,10 @@ namespace XPBD
 
             corr *= -1f;
 
-            PositionalCorrection.Apply(alpha, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
+            PositionalCorrection.Apply(alpha, corr, this.body1, p1, this.body2, p2);
         }
+
+
 
         //Restrict to axis
         //Restrict p2 to be on an axis with direction a going thorugh p1
@@ -302,9 +290,9 @@ namespace XPBD
         {
             UpdateGlobalFrames();
 
-            Vector3 corr = this.globalPos1 - this.globalPos0;
+            Vector3 corr = this.globalPos2 - this.globalPos1;
 
-            corr = this.globalRot0.Conjugate() * corr;
+            corr = this.globalRot1.Conjugate() * corr;
 
             //Clamp
             if (corr.x > distanceMax)
@@ -320,10 +308,12 @@ namespace XPBD
                 corr.x = 0f;
             }
 
-            corr = this.globalRot0 * corr;
+            corr = this.globalRot1 * corr;
 
-            PositionalCorrection.Apply(hardCompliance, corr, this.body0, this.globalPos0, this.body1, this.globalPos1);
+            PositionalCorrection.Apply(hardCompliance, corr, this.body1, this.globalPos1, this.body2, this.globalPos2);
         }
+
+
 
         //Align two axes
         //Make direction a1 going through p1 and direction a2 going through p2 be in the same direction
@@ -335,14 +325,16 @@ namespace XPBD
         {
             UpdateGlobalFrames();
 
-            Vector3 a0 = this.globalRot0 * axis0;
-            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a0 = this.globalRot1 * axis0;
+            Vector3 a1 = this.globalRot2 * axis0;
 
             //What happened to the minus sign?
             Vector3 corr = Vector3.Cross(a0, a1);
 
-            AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
+            AngularCorrection.Apply(hardCompliance, corr, this.body1, this.body2);
         }
+
+
 
         //Algorithm 3 in the XPBD paper
         //Limits the angle between the axes a and b of two bodies
@@ -387,8 +379,10 @@ namespace XPBD
             //delta_q_limit = n1 x n2
             Vector3 corr = Vector3.Cross(ra, b);
 
-            AngularCorrection.Apply(compliance, corr, this.body0, this.body1);
+            AngularCorrection.Apply(compliance, corr, this.body1, this.body2);
         }
+
+
 
         //Algorithm 3 in the XPBD paper
         private float GetAngle(Vector3 n, Vector3 a, Vector3 b)
@@ -421,30 +415,28 @@ namespace XPBD
         //alpha = 0 means infinite stiffness (hard compliance)
 
         //Hinge joint
-        //Attach(p1, p2, d_rest = 0, alpha = 0);
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
         private void HingeJoint()
         {
-            //Pos
+            //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
 
 
-            //Rot
+            //AlignAxes(a1, a2, alpha = 0)
             AlignAxes();
 
 
+            //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
             //Limit angle so it cant spin 360 degrees if needed
             if (this.settings.swingMin > -float.MaxValue || this.settings.swingMax < float.MaxValue)
             {
                 UpdateGlobalFrames();
 
-                Vector3 n = this.globalRot0 * axis0;
+                Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot0 * axis1;
-                Vector3 a1 = this.globalRot1 * axis1;
+                Vector3 a0 = this.globalRot1 * axis1;
+                Vector3 a1 = this.globalRot2 * axis1;
 
                 LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
             }
@@ -453,25 +445,27 @@ namespace XPBD
 
 
         //Hinge joint that where we can control the angle with x slider
-        //Attach(p1, p2, d_rest = 0, alpha = 0);
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
         private void ServoJoint()
         {
+            //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
 
+
+            //AlignAxes(a1, a2, alpha = 0)
             AlignAxes();
 
+
+            //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
             if (this.settings.hasTargetAngle)
             {
                 UpdateGlobalFrames();
 
-                Vector3 n = this.globalRot0 * axis0;
+                Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot0 * axis1;
-                Vector3 a1 = this.globalRot1 * axis1;
+                Vector3 a0 = this.globalRot1 * axis1;
+                Vector3 a1 = this.globalRot2 * axis1;
 
                 LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
             }
@@ -481,10 +475,10 @@ namespace XPBD
             {
                 UpdateGlobalFrames();
 
-                Vector3 n = this.globalRot0 * axis0;
+                Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot0 * axis1;
-                Vector3 a1 = this.globalRot1 * axis1;
+                Vector3 a0 = this.globalRot1 * axis1;
+                Vector3 a1 = this.globalRot2 * axis1;
 
                 LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
             }
@@ -493,33 +487,30 @@ namespace XPBD
 
 
         //Hinge joint that spins endlessly 
-        //Attach(p1, p2, d_rest = 0, alpha = 0);
-        //AlignAxes(a1, a2, alpha = 0)
-        //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
-        //phi_motor = phi_motor + dt * omega_motor
         private void MotorJoint(float dt)
         {
-            //Pos
+            //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
 
 
-            //Rot
+            //AlignAxes(a1, a2, alpha = 0)
             AlignAxes();
 
-            if (this.settings.hasTargetAngle)
-            {
-                UpdateGlobalFrames();
 
-                Vector3 n = this.globalRot0 * axis0;
+            //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
+            UpdateGlobalFrames();
 
-                Vector3 a0 = this.globalRot0 * axis1;
-                Vector3 a1 = this.globalRot1 * axis1;
+            Vector3 n = this.globalRot1 * axis0;
 
-                LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
-            }
+            Vector3 a0 = this.globalRot1 * axis1;
+            Vector3 a1 = this.globalRot2 * axis1;
 
+            LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+
+
+            //phi_motor = phi_motor + dt * omega_motor
             float aAngle = Mathf.Min(Mathf.Max(this.settings.velocity * dt, -1f), 1f);
 
             this.settings.targetAngle += aAngle;
@@ -528,29 +519,21 @@ namespace XPBD
 
 
         //Ball-and-socket joint (or spheroid joint) where a ball-shaped surface of one rounded bone fits into the cup-like depression of another bone
-        //Attach(p1, p2, d_rest = 0, alpha = 0);
-
-        //Swing limit
-        //n = (a1 x a2) / |a1 x a2|
-        //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
-
-        //Twist limit
-        //n = (a1 x a2) / |a1 + a2|
-        //b1' = b1 - n(n dot b1)
-        //b2' = b2 - n(n dot b2)
-        //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
         private void BallJoint()
         {
+            //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos0, this.globalPos1, this.settings.targetDistance, this.settings.distanceCompliance);
+            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
+
 
             //Swing limit
-
+            //n = (a1 x a2) / |a1 x a2|
+            //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
             UpdateGlobalFrames();
 
-            Vector3 a0 = this.globalRot0 * axis0;
-            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a0 = this.globalRot1 * axis0;
+            Vector3 a1 = this.globalRot2 * axis0;
 
             Vector3 n = Vector3.Cross(a0, a1);
             n = Vector3.Normalize(n);
@@ -559,17 +542,20 @@ namespace XPBD
 
 
             //Twist limit
-
+            //n = (a1 x a2) / |a1 + a2|
+            //b1' = b1 - n(n dot b1)
+            //b2' = b2 - n(n dot b2)
+            //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
             UpdateGlobalFrames();
 
-            a0 = this.globalRot0 * axis0;
-            a1 = this.globalRot1 * axis0;
+            a0 = this.globalRot1 * axis0;
+            a1 = this.globalRot2 * axis0;
 
             n = a0 + a1;
             n = Vector3.Normalize(n);
 
-            a0 = this.globalRot0 * axis1;
-            a1 = this.globalRot1 * axis1;
+            a0 = this.globalRot1 * axis1;
+            a1 = this.globalRot2 * axis1;
 
             a0 += n * Vector3.Dot(-n, a0);
             a0 = Vector3.Normalize(a0);
@@ -594,10 +580,10 @@ namespace XPBD
 
             UpdateGlobalFrames();
 
-            Vector3 n = this.globalRot0 * axis0;
+            Vector3 n = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot0 * axis1;
-            Vector3 a1 = this.globalRot1 * axis1;
+            Vector3 a0 = this.globalRot1 * axis1;
+            Vector3 a1 = this.globalRot2 * axis1;
 
             LimitAngle(n, a0, a1, 0f, 0f, compliance: 0f);
         }
@@ -616,10 +602,10 @@ namespace XPBD
 
             UpdateGlobalFrames();
 
-            Vector3 n = this.globalRot0 * axis0;
+            Vector3 n = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot0 * axis1;
-            Vector3 a1 = this.globalRot1 * axis1;
+            Vector3 a0 = this.globalRot1 * axis1;
+            Vector3 a1 = this.globalRot2 * axis1;
 
             LimitAngle(n, a0, a1, 0f, 0f, compliance: 0f);
         }
@@ -633,7 +619,7 @@ namespace XPBD
 
             UpdateGlobalFrames();
 
-            Quaternion dq = this.globalRot0 * this.globalRot1.Conjugate();
+            Quaternion dq = this.globalRot1 * this.globalRot2.Conjugate();
 
             Vector3 corr = new Vector3(2f * dq.x, 2f * dq.y, 2f * dq.z);
 
@@ -642,7 +628,7 @@ namespace XPBD
                 corr *= -1f;
             }
 
-            AngularCorrection.Apply(hardCompliance, corr, this.body0, this.body1);
+            AngularCorrection.Apply(hardCompliance, corr, this.body1, this.body2);
         }
 
 
@@ -661,7 +647,7 @@ namespace XPBD
             //Assuming x-axis is the hinge axis
             Vector3 corr = new(1f, 0f, 0f);
 
-            corr = this.globalRot0 * corr;
+            corr = this.globalRot1 * corr;
 
             corr *= torque * dt;
 
@@ -701,15 +687,15 @@ namespace XPBD
         {
             UpdateGlobalFrames();
 
-            Vector3 dVel = this.body0.GetVelocityAt(this.globalPos0);
+            Vector3 dVel = this.body1.GetVelocityAt(this.globalPos1);
 
-            if (this.body1 != null)
+            if (this.body2 != null)
             {
-                dVel -= this.body1.GetVelocityAt(this.globalPos1);
+                dVel -= this.body2.GetVelocityAt(this.globalPos2);
             }
 
             //Only damp along the distance vector
-            Vector3 n = this.globalPos1 - this.globalPos0;
+            Vector3 n = this.globalPos2 - this.globalPos1;
 
             n.Normalize();
             
@@ -744,12 +730,12 @@ namespace XPBD
         {
             UpdateGlobalFrames();
 
-            Vector3 dOmega = this.body0.omega;
+            Vector3 dOmega = this.body1.omega;
 
-            if (this.body1 != null)
+            if (this.body2 != null)
             {
                 //dOmega.sub(this.body1.omega);
-                dOmega -= this.body1.omega;
+                dOmega -= this.body2.omega;
             }
 
 
@@ -758,7 +744,7 @@ namespace XPBD
                 //Damp along the hinge axis
                 Vector3 n = new Vector3(1f, 0f, 0f);
 
-                n = this.globalRot0 * n;
+                n = this.globalRot1 * n;
 
                 n *= Vector3.Dot(dOmega, n); 
                 
@@ -815,10 +801,10 @@ namespace XPBD
             UpdateGlobalFrames();
 
             //If not null update meshes
-            this.visFrame0?.UpdateMesh(this.globalPos0, this.globalRot0);
-            this.visFrame1?.UpdateMesh(this.globalPos1, this.globalRot1);
+            this.visFrame0?.UpdateMesh(this.globalPos1, this.globalRot1);
+            this.visFrame1?.UpdateMesh(this.globalPos2, this.globalRot2);
 
-            this.visDistance?.UpdateMesh(this.globalPos0, this.globalPos1);
+            this.visDistance?.UpdateMesh(this.globalPos1, this.globalPos2);
         }
 
 
