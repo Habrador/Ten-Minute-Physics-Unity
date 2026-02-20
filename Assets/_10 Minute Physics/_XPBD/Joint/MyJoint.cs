@@ -555,14 +555,16 @@ namespace XPBD
 
             Vector3 n = Vector3.Cross(a1, a2).normalized;
 
-            LimitAngle(n, a1, a2, this.settings.swingMin, this.settings.swingMax, 0f);
+            float phi_swing_max = this.settings.swingMax;
+
+            LimitAngle(n, a1, a2, 0f, phi_swing_max, 0f);
 
 
             //Twist limit
             //n = (a1 + a2) / |a1 + a2|
             //b1' = b1 - n(n dot b1)
             //b2' = b2 - n(n dot b2)
-            //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
+            //LimitAngle(n, b1', b2', phi_twist_min, phi_twist_max, alpha = 0)
             UpdateGlobalFrames();
 
             a1 = this.globalRot1 * axis0;
@@ -579,7 +581,10 @@ namespace XPBD
             b1_prim = b1_prim.normalized;
             b2_prim = b2_prim.normalized;
 
-            LimitAngle(n, b1_prim, b2_prim, this.settings.twistMin, this.settings.twistMax, alpha: 0f);
+            float phi_twist_min = this.settings.twistMin;
+            float phi_twist_max = this.settings.twistMax;
+
+            LimitAngle(n, b1_prim, b2_prim, phi_twist_min, phi_twist_max, alpha: 0f);
         }
 
 
@@ -656,7 +661,9 @@ namespace XPBD
             Vector3 b1 = this.globalRot1 * axis1;
             Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, b1, b2, 0f, 0f, alpha: 0f);
+            float phi_cylinder = 0f;
+
+            LimitAngle(n, b1, b2, phi_cylinder, phi_cylinder, alpha: 0f);
         }
 
 
