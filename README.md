@@ -153,7 +153,9 @@ TODO
 
 ## 25. Joint simulation made simple
 
-TODO
+Spoiler: It's not simple :) Anyway some joints are mirrored compared to the demo most likely because difference in coordinate system. Damping might not working but that's a later problem...
+
+<img src="/_media/25-joint-sim.png" width="400">
 
 
 

@@ -764,7 +764,6 @@ namespace XPBD
 
             n *= Mathf.Min(this.settings.linearDampingCoeff * dt, 1f);
 
-            //this.body0.applyCorrection(0.0, n, this.globalPos0, this.body1, this.globalPos1, true);
             LinearVelocityCorrection.Apply(this.body1, this.globalPos1, this.body2, this.globalPos2, n);
         }
 
@@ -829,7 +828,6 @@ namespace XPBD
                 dOmega *= -Mathf.Min(this.settings.angularDampingCoeff * dt, 1f);
             }
 
-            //this.body0.ApplyCorrection(0f, dOmega, null, this.body1, null, true);
             AngularVelocityCorrection.Apply(this.body1, this.body2, dOmega);
         }
 
