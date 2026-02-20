@@ -317,17 +317,12 @@ namespace XPBD
         //{
         //  ApplyAngularCorrection((-a1) cross a2, alpha) //Only valid for small angles
         //}
-        private void AlignAxes()
+        private void AlignAxes(Vector3 a1, Vector3 a2, float alpha)
         {
-            UpdateGlobalFrames();
-
-            Vector3 a0 = this.globalRot1 * axis0;
-            Vector3 a1 = this.globalRot2 * axis0;
-
             //What happened to the minus sign?
-            Vector3 corr = Vector3.Cross(a0, a1);
+            Vector3 corr = Vector3.Cross(a1, a2);
 
-            AngularCorrection.Apply(hardCompliance, corr, this.body1, this.body2);
+            AngularCorrection.Apply(alpha, corr, this.body1, this.body2);
         }
 
 
@@ -353,7 +348,7 @@ namespace XPBD
         //      ApplyAngularCorrection((-a2) cross a2', alpha) //Rotate a2 to a2'
         //  }
         //}
-        private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float compliance)
+        private void LimitAngle(Vector3 n, Vector3 a, Vector3 b, float minAngle, float maxAngle, float alpha)
         {
             float phi = GetAngle(n, a, b);
 
@@ -375,7 +370,7 @@ namespace XPBD
             //delta_q_limit = n1 x n2
             Vector3 corr = Vector3.Cross(ra, b);
 
-            AngularCorrection.Apply(compliance, corr, this.body1, this.body2);
+            AngularCorrection.Apply(alpha, corr, this.body1, this.body2);
         }
 
 
@@ -416,11 +411,19 @@ namespace XPBD
             //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            Attach(p1, p2, d_rest: 0f, alpha: 0f);
 
 
             //AlignAxes(a1, a2, alpha = 0)
-            AlignAxes();
+            UpdateGlobalFrames();
+
+            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a2 = this.globalRot2 * axis0;
+
+            AlignAxes(a1, a2, alpha: 0f);
 
 
             //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha = 0)
@@ -431,10 +434,10 @@ namespace XPBD
 
                 Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot1 * axis1;
-                Vector3 a1 = this.globalRot2 * axis1;
+                Vector3 b1 = this.globalRot1 * axis1;
+                Vector3 b2 = this.globalRot2 * axis1;
 
-                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+                LimitAngle(n, b1, b2, this.settings.swingMin, this.settings.swingMax, alpha: 0f);
             }
         }
 
@@ -446,11 +449,19 @@ namespace XPBD
             //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            Attach(p1, p2, d_rest: 0f, alpha: 0f);
 
 
             //AlignAxes(a1, a2, alpha = 0)
-            AlignAxes();
+            UpdateGlobalFrames();
+
+            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a2 = this.globalRot2 * axis0;
+
+            AlignAxes(a1, a2, alpha: 0f);
 
 
             //LimitAngle(a1, b1, b2, phi_servo, phi_servo, alpha = 0)
@@ -460,10 +471,10 @@ namespace XPBD
 
                 Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot1 * axis1;
-                Vector3 a1 = this.globalRot2 * axis1;
+                Vector3 b1 = this.globalRot1 * axis1;
+                Vector3 b2 = this.globalRot2 * axis1;
 
-                LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+                LimitAngle(n, b1, b2, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
             }
 
             //Joint limits
@@ -473,10 +484,10 @@ namespace XPBD
 
                 Vector3 n = this.globalRot1 * axis0;
 
-                Vector3 a0 = this.globalRot1 * axis1;
-                Vector3 a1 = this.globalRot2 * axis1;
+                Vector3 b1 = this.globalRot1 * axis1;
+                Vector3 b2 = this.globalRot2 * axis1;
 
-                LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, compliance: 0f);
+                LimitAngle(n, b1, b2, this.settings.swingMin, this.settings.swingMax, alpha: 0f);
             }
         }
 
@@ -488,11 +499,19 @@ namespace XPBD
             //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            Attach(p1, p2, d_rest: 0f, alpha: 0f);
 
 
             //AlignAxes(a1, a2, alpha = 0)
-            AlignAxes();
+            UpdateGlobalFrames();
+
+            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a2 = this.globalRot2 * axis0;
+
+            AlignAxes(a1, a2, alpha: 0f);
 
 
             //LimitAngle(a1, b1, b2, phi_motor, phi_motor, alpha = 0)
@@ -500,10 +519,10 @@ namespace XPBD
 
             Vector3 n = this.globalRot1 * axis0;
 
-            Vector3 a0 = this.globalRot1 * axis1;
-            Vector3 a1 = this.globalRot2 * axis1;
+            Vector3 b1 = this.globalRot1 * axis1;
+            Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, a0, a1, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
+            LimitAngle(n, b1, b2, this.settings.targetAngle, this.settings.targetAngle, this.settings.targetAngleCompliance);
 
 
             //phi_motor = phi_motor + dt * omega_motor
@@ -520,7 +539,10 @@ namespace XPBD
             //Attach(p1, p2, d_rest = 0, alpha = 0);
             UpdateGlobalFrames();
 
-            Attach(this.globalPos1, this.globalPos2, d_rest: 0f, alpha: hardCompliance);
+            Vector3 p1 = this.globalPos1;
+            Vector3 p2 = this.globalPos2;
+
+            Attach(p1, p2, d_rest: 0f, alpha: 0f);
 
 
             //Swing limit
@@ -528,38 +550,36 @@ namespace XPBD
             //LimitAngle(n, a1, a2, 0, phi_swing_max, alpha = 0)
             UpdateGlobalFrames();
 
-            Vector3 a0 = this.globalRot1 * axis0;
-            Vector3 a1 = this.globalRot2 * axis0;
+            Vector3 a1 = this.globalRot1 * axis0;
+            Vector3 a2 = this.globalRot2 * axis0;
 
-            Vector3 n = Vector3.Cross(a0, a1);
-            n = Vector3.Normalize(n);
+            Vector3 n = Vector3.Cross(a1, a2).normalized;
 
-            LimitAngle(n, a0, a1, this.settings.swingMin, this.settings.swingMax, hardCompliance);
+            LimitAngle(n, a1, a2, this.settings.swingMin, this.settings.swingMax, 0f);
 
 
             //Twist limit
-            //n = (a1 x a2) / |a1 + a2|
+            //n = (a1 + a2) / |a1 + a2|
             //b1' = b1 - n(n dot b1)
             //b2' = b2 - n(n dot b2)
             //LimitAngle(n, b1', b2', phi_twist_max, phi_twist_max, alpha = 0)
             UpdateGlobalFrames();
 
-            a0 = this.globalRot1 * axis0;
-            a1 = this.globalRot2 * axis0;
+            a1 = this.globalRot1 * axis0;
+            a2 = this.globalRot2 * axis0;
 
-            n = a0 + a1;
-            n = Vector3.Normalize(n);
+            n = (a1 + a2).normalized;
 
-            a0 = this.globalRot1 * axis1;
-            a1 = this.globalRot2 * axis1;
+            Vector3 b1 = this.globalRot1 * axis1;
+            Vector3 b2 = this.globalRot2 * axis1;
 
-            a0 += n * Vector3.Dot(-n, a0);
-            a0 = Vector3.Normalize(a0);
+            Vector3 b1_prim = b1 - n * (Vector3.Dot(n, b1));
+            Vector3 b2_prim = b2 - n * (Vector3.Dot(n, b2));
 
-            a1 += n * Vector3.Dot(-n, a1);
-            a1 = Vector3.Normalize(a1);
+            b1_prim = b1_prim.normalized;
+            b2_prim = b2_prim.normalized;
 
-            LimitAngle(n, a0, a1, this.settings.twistMin, this.settings.twistMax, hardCompliance);
+            LimitAngle(n, b1_prim, b2_prim, this.settings.twistMin, this.settings.twistMax, alpha: 0f);
         }
 
 
@@ -582,7 +602,12 @@ namespace XPBD
 
 
             //AlignAxes(a1, a2, alpha = 0)
-            AlignAxes();
+            UpdateGlobalFrames();
+
+            Vector3 a11 = this.globalRot1 * axis0;
+            Vector3 a22 = this.globalRot2 * axis0;
+
+            AlignAxes(a11, a22, alpha: 0f);
 
 
             //LimitAngle(a1, b1, b2, phi_min, phi_max, alpha)
@@ -593,7 +618,7 @@ namespace XPBD
             Vector3 b1 = this.globalRot1 * axis1;
             Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, b1, b2, 0f, 0f, compliance: 0f);
+            LimitAngle(n, b1, b2, 0f, 0f, alpha: 0f);
         }
 
 
@@ -615,7 +640,12 @@ namespace XPBD
 
 
             //AlignAxes(a1, a2, alpha = 0)
-            AlignAxes();
+            UpdateGlobalFrames();
+
+            Vector3 a11 = this.globalRot1 * axis0;
+            Vector3 a22 = this.globalRot2 * axis0;
+
+            AlignAxes(a11, a22, alpha: 0f);
 
 
             //LimitAngle(a1, b1, b2, phi_cylinder, phi_cylinder, alpha)
@@ -626,7 +656,7 @@ namespace XPBD
             Vector3 b1 = this.globalRot1 * axis1;
             Vector3 b2 = this.globalRot2 * axis1;
 
-            LimitAngle(n, b1, b2, 0f, 0f, compliance: 0f);
+            LimitAngle(n, b1, b2, 0f, 0f, alpha: 0f);
         }
 
 
@@ -647,7 +677,7 @@ namespace XPBD
                 corr *= -1f;
             }
 
-            AngularCorrection.Apply(hardCompliance, corr, this.body1, this.body2);
+            AngularCorrection.Apply(alpha: 0f, corr, this.body1, this.body2);
         }
 
 
